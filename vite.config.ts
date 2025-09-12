@@ -1,12 +1,19 @@
-import { defineConfig } from 'vite'
-import react from '@vitejs/plugin-react'
-import basicSsl from '@vitejs/plugin-basic-ssl';
+import { defineConfig } from 'vite';
+import react from '@vitejs/plugin-react';
 
-// https://vitejs.dev/config/
 export default defineConfig({
-  plugins: [react(), basicSsl()],
+  plugins: [react()],
   build: {
-    outDir: './docs'
+    outDir: './dist',
   },
-  base: '/vite-boilerplate/'
+  base: '/addmyco/',
+  server: {
+    proxy: {
+      '/api': {
+        target: 'https://telegramdirectory.org',
+        changeOrigin: true,
+        secure: false,
+      },
+    },
+  },
 });
