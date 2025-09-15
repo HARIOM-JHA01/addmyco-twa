@@ -1,9 +1,13 @@
 import WebApp from '@twa-dev/sdk'
 import { useEffect } from 'react'
-import HomePage from './pages/HomePage';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import HomePage from './pages/HomePage';
+import Notifications from './pages/Notifications';
 import ProfilePage from './pages/ProfilePage';
 import UpdateProfilePage from './pages/UpdateProfilePage';
+import SubCompanyPage from './pages/SubCompany';
+import ChamberPage from './pages/ChamberPage';
+
 function App() {
   useEffect(() => {
     WebApp.ready();
@@ -20,6 +24,9 @@ function App() {
           <Route path="/" element={<HomePage />} />
           <Route path="/profile" element={<ProfilePage />} />
           <Route path="/update-profile" element={<UpdateProfilePage />} />
+          <Route path="/notifications" element={<Notifications />} />
+          <Route path="/sub-company" element={<SubCompanyPage />} />
+          <Route path="/chamber" element={<ChamberPage />} />
         </Routes>
       </BrowserRouter>
     </>
