@@ -63,7 +63,7 @@ export default function HomePage() {
 
                         <div
                             className="flex justify-center mt-4 space-x-4">
-                            <img src={shareIcon} alt="Share" className="w-12 h-12 rounded-full bg-blue-400 p-2" />
+                            <img src={shareIcon} alt="Share" className="w-12 h-12 rounded-full bg-blue-400" />
                             <img src={qrCode} alt="QR Code" className="w-12 h-12 object-contain" />
                         </div>
                     </div>

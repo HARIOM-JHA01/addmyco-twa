@@ -11,7 +11,7 @@ export default function Header() {
                 <div className="flex items-center gap-1">
                     <img src={logo} alt="Logo" className="w-10 h-10 rounded-full bg-white p-1 shadow" onClick={() => navigate('/')} />
 
-                    <span className="text-white text-3xl font-bold tracking-wide">AddMy.Co</span>
+                    <span className="text-white text-3xl font-space-bold tracking-wide">AddMy.Co</span>
                 </div>
                 <div className="flex items-center gap-2">
                     <img src={settingIcon} alt="Info" className="w-8 h-8 rounded-full border-2 border-white bg-white" onClick={() => window.open('https://t.me/AddmyCompany', '_blank')} />

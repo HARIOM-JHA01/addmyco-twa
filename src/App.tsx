@@ -3,6 +3,7 @@ import { useEffect } from 'react'
 import HomePage from './pages/HomePage';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import ProfilePage from './pages/ProfilePage';
+import UpdateProfilePage from './pages/UpdateProfilePage';
 function App() {
   useEffect(() => {
     WebApp.ready();
@@ -18,6 +19,7 @@ function App() {
         <Routes>
           <Route path="/" element={<HomePage />} />
           <Route path="/profile" element={<ProfilePage />} />
+          <Route path="/update-profile" element={<UpdateProfilePage />} />
         </Routes>
       </BrowserRouter>
     </>

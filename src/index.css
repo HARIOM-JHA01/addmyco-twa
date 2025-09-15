@@ -1,3 +1,10 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@font-face {
+  font-family: 'Space Bold';
+  src: url('./assets/fonts/Space_Bold.otf') format('opentype');
+  font-weight: bold;
+  font-display: swap;
+}

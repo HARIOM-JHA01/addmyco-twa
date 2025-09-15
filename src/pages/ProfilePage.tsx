@@ -7,8 +7,10 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faWhatsapp, faTelegram } from '@fortawesome/free-brands-svg-icons';
 import { faPhone } from '@fortawesome/free-solid-svg-icons';
 import Layout from '../components/Layout';
+import { useNavigate } from 'react-router-dom';
 
 export default function ProfilePage() {
+    const navigate = useNavigate();
     return (
         <Layout>
             <div className="flex flex-col items-center justify-center flex-grow py-4 px-2 pb-32">
@@ -55,9 +57,13 @@ export default function ProfilePage() {
                     <div className="w-full rounded-2xl bg-white bg-opacity-80 p-4 mb-6 shadow">
                         <div className="text-blue-700 font-bold mb-2">Address</div>
                         <div className="text-gray-700">123 Main Street, City, Country</div>
+                        <div className="text-gray-700">123 Main Street, City, Country</div>
+                        <div className="text-gray-700">123 Main Street, City, Country</div>
                     </div>
 
-                    <div className='text-white mb-2 p-3 w-full bg-[#d50078] text-center'>
+                    <div className='text-white mb-2 p-3 w-full bg-[#d50078] text-center'
+                        onClick={() => navigate('/update-profile')}
+                    >
                         Update your Profile
                     </div>
                 </div>
