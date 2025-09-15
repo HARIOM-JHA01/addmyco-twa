@@ -1,9 +1,9 @@
 import profileIcon from '../assets/profileIcon.png';
 import subCompanyIcon from '../assets/subCompany.png'
-import chamberIcon from '../assets/chamber.svg';
+import chamberIcon from '../assets/chamberPage.png';
 import TGDIcon from '../assets/tgdlogo.png'
 import heartIcon from '../assets/heart.png'
-import qrIcone from '../assets/scannerIcon.png'
+import qrIcone from '../assets/scanner-sidebar.png'
 import settingIcon from '../assets/settingIcon.png'
 import { useNavigate } from 'react-router-dom';
 
@@ -25,8 +25,8 @@ export default function Footer() {
                 </div>
                 <img src={TGDIcon} alt="TGD" className="w-16 h-16 rounded-full bg-white  border-[#007cb6] z-10" />
                 <div className='flex gap-2'>
-                    <img src={heartIcon} alt="Heart" className="w-10 h-10 rounded-full" />
-                    <img src={qrIcone} alt="QR" className="w-10 h-10 rounded-full" />
+                    <img src={heartIcon} alt="Heart" className="w-10 h-10 rounded-full" onClick={() => router('/search')} />
+                    <img src={qrIcone} alt="QR" className="w-10 h-10 rounded-full" onClick={() => router('/my-qr')} />
                     <img src={settingIcon} alt="Setting" className="w-10 h-10 rounded-full" />
                 </div>
             </div>

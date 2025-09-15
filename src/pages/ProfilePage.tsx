@@ -15,15 +15,15 @@ export default function ProfilePage() {
         <Layout>
             <div className="flex flex-col items-center justify-center flex-grow py-4 px-2 pb-32">
                 <div className="bg-blue-100 bg-opacity-40 rounded-3xl p-6 w-full max-w-md mx-auto flex flex-col items-center shadow-lg">
-                    <button className="w-full rounded-full bg-[#007cb6] text-white text-xl font-bold py-2 mb-4 flex items-center justify-center">
+                    <button className="w-full rounded-full bg-[#007cb6] text-white text-xl font-bold py-1 mb-2 flex items-center justify-center">
                         Something
                     </button>
-                    <button className="w-full rounded-full bg-[#007cb6] text-white text-xl font-bold py-2 mb-4 flex items-center justify-center">
+                    <button className="w-full rounded-full bg-[#007cb6] text-white text-xl font-bold py-1 mb-2 flex items-center justify-center">
                         something
                     </button>
-                    <div className="flex flex-col items-center mb-6">
+                    <div className="flex flex-col items-center">
                         <div className="rounded-full mb-2">
-                            <img src={logo} alt="Logo" className="w-36 h-36 object-contain" />
+                            <img src={logo} alt="Logo" className="w-[180px] h-[180px] object-contain" />
                         </div>
                         <div className="w-full rounded-full bg-[#007cb6] text-white text-lg font-bold py-2 mb-2 flex items-center justify-center">
                             Hariom Jha
@@ -32,7 +32,7 @@ export default function ProfilePage() {
                             哈里奥姆·賈
                         </div>
                     </div>
-                    <div className="flex items-center justify-center gap-2 mb-6">
+                    <div className="flex items-center justify-center gap-2 mb-2">
                         <img src={leftArrow} alt="Left" className="w-4 h-8" />
                         <div className="w-12 h-12 rounded-full bg-blue-400 flex items-center justify-center p-2 overflow-hidden">
                             <img src={company} alt="Company" className="w-8 h-8 object-contain" />
@@ -54,14 +54,13 @@ export default function ProfilePage() {
                                 </div> */}
                         <img src={rightArrow} alt="Right" className="w-4 h-8" />
                     </div>
-                    <div className="w-full rounded-2xl bg-white bg-opacity-80 p-4 mb-6 shadow">
-                        <div className="text-blue-700 font-bold mb-2">Address</div>
-                        <div className="text-gray-700">123 Main Street, City, Country</div>
-                        <div className="text-gray-700">123 Main Street, City, Country</div>
-                        <div className="text-gray-700">123 Main Street, City, Country</div>
+                    <div className="w-full rounded-md border-2 border-[#007cb6] bg-white p-4 mb-4 shadow">
+                        <div className="text-[#007cb6]">123 Main Street, City, Country</div>
+                        <div className="text-[#007cb6]">123 Main Street, City, Country</div>
+                        <div className="text-[#007cb6]">123 Main Street, City, Country</div>
                     </div>
 
-                    <div className='text-white mb-2 p-3 w-full bg-[#d50078] text-center'
+                    <div className='text-white mb-2 p-2 w-full bg-[#d50078] text-center'
                         onClick={() => navigate('/update-profile')}
                     >
                         Update your Profile

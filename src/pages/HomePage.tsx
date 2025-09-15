@@ -17,24 +17,24 @@ export default function HomePage() {
             <div className=''>
                 <div className="flex flex-col items-center justify-center flex-grow py-4 px-2 pb-32">
                     <div className="bg-blue-100 bg-opacity-40 rounded-3xl p-6 w-full max-w-md mx-auto flex flex-col items-center shadow-lg">
-                        <div className="w-full rounded-full bg-[#007cb6] text-white text-xl font-bold py-2 mb-4 flex items-center justify-center" style={{ borderRadius: '2rem' }}>
+                        <div className="w-80 rounded-full bg-[#007cb6] text-white text-xl font-bold py-1 mb-2 flex items-center justify-center" style={{ borderRadius: '2rem' }}>
                             Something
                         </div>
-                        <div className="w-full rounded-full bg-[#007cb6] text-white text-xl font-bold py-2 mb-8 flex items-center justify-center" style={{ borderRadius: '2rem' }}>
+                        <div className="w-80 rounded-full bg-[#007cb6] text-white text-xl font-bold py-1 mb-2 flex items-center justify-center" style={{ borderRadius: '2rem' }}>
                             something
                         </div>
-                        <div className="flex flex-col items-center mb-6">
+                        <div className="flex flex-col items-center">
                             <div className="rounded-full bg-white mb-2" >
                                 <img src={logo} alt="Logo" className="w-36 h-36 object-contain" />
                             </div>
-                            <div className="w-full rounded-full bg-[#007cb6] text-white text-lg font-bold py-2 mb-2 flex items-center justify-center" style={{ borderRadius: '2rem' }}>
+                            <div className="w-52 rounded-full bg-[#007cb6] text-white text-lg font-bold py-2 mb-2 flex items-center justify-center" style={{ borderRadius: '2rem' }}>
                                 Hariom Jha
                             </div>
-                            <div className="w-full rounded-full bg-[#007cb6] text-white text-lg font-bold py-2 mb-4 flex items-center justify-center" style={{ borderRadius: '2rem' }}>
+                            <div className="w-52 rounded-full bg-[#007cb6] text-white text-lg font-bold py-2 mb-4 flex items-center justify-center" style={{ borderRadius: '2rem' }}>
                                 哈里奥姆·賈
                             </div>
                         </div>
-                        <div className="flex items-center justify-center gap-2 mb-6">
+                        <div className="flex items-center justify-center gap-2 mb-2">
                             <img src={leftArrow} alt="Left" className="w-4 h-8" />
                             <div className="w-12 h-12 rounded-full bg-blue-400 flex items-center justify-center p-2 overflow-hidden">
                                 <img src={company} alt="Company" className="w-8 h-8 object-contain" />

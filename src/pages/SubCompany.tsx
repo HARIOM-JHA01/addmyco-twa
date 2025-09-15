@@ -11,7 +11,10 @@ export default function SubCompanyPage() {
         <Layout>
             <div className="flex flex-col items-center justify-center flex-grow py-4 px-2 pb-32">
                 <section className="bg-blue-100 bg-opacity-40 rounded-3xl p-6 w-full max-w-md mx-auto flex flex-col items-center shadow-lg">
-                    <div className="flex items-center justify-center gap-4 mb-6">
+                    <div className="flex items-center justify-center gap-4 mb-2">
+                        <div className="w-12 h-12 rounded-full bg-blue-400 flex items-center justify-center overflow-hidden">
+                            <img src={groupIcon} alt="Group" className="w-8 h-8 object-contain" />
+                        </div>
                         <div className="w-12 h-12 rounded-full bg-blue-400 flex items-center justify-center overflow-hidden">
                             <FontAwesomeIcon icon={faWhatsapp} size="2x" color="white" />
                         </div>
@@ -21,25 +24,22 @@ export default function SubCompanyPage() {
                         <div className="w-12 h-12 rounded-full bg-blue-400 flex items-center justify-center overflow-hidden">
                             <FontAwesomeIcon icon={faPhone} size="2x" color="white" />
                         </div>
-                        <div className="w-12 h-12 rounded-full bg-blue-400 flex items-center justify-center overflow-hidden">
-                            <img src={groupIcon} alt="Group" className="w-8 h-8 object-contain" />
-                        </div>
                         <div className="w-12 h-12 rounded-full bg-blue-400 flex items-center justify-center p-2 overflow-hidden">
                             <img src={chamberIcon} alt="chamber icon" className="w-8 h-8 object-contain" />
                         </div>
                     </div>
-                    <div className="w-full rounded-full bg-[#007cb6] text-white text-xl font-bold py-2 mb-4 flex items-center justify-center" style={{ borderRadius: '2rem' }}>
+                    <div className="w-full rounded-full bg-[#007cb6] text-white text-xl font-bold py-1 mb-2 flex items-center justify-center" style={{ borderRadius: '2rem' }}>
                         Something
                     </div>
-                    <div className="w-full rounded-full bg-[#007cb6] text-white text-xl font-bold py-2 mb-4 flex items-center justify-center" style={{ borderRadius: '2rem' }}>
+                    <div className="w-full rounded-full bg-[#007cb6] text-white text-xl font-bold py-1 mb-2 flex items-center justify-center" style={{ borderRadius: '2rem' }}>
                         something
                     </div>
-                    <div className="w-full rounded-full bg-[#007cb6] text-white text-xl font-bold py-2 mb-4 flex items-center justify-center" style={{ borderRadius: '2rem' }}>
+                    <div className="w-full rounded-full bg-[#007cb6] text-white text-xl font-bold py-1 mb-4 flex items-center justify-center" style={{ borderRadius: '2rem' }}>
                         CEO
                     </div>
                     <div className="flex flex-col items-center mb-6">
                         <div className="rounded-full bg-white mb-4" >
-                            <img src={profileIcon} alt="Logo" className="w-36 h-36 object-contain" />
+                            <img src={profileIcon} alt="Logo" className="w-[180px] h-[180px] object-contain" />
                         </div>
                         <div className="w-80 h-48 bg-white rounded-md border-2 border-[#007cb6] p-2">
                             something

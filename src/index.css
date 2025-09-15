@@ -8,3 +8,23 @@
   font-weight: bold;
   font-display: swap;
 }
+
+/* Style the scrollbar for Webkit browsers */
+.scrollbar-custom::-webkit-scrollbar {
+    height: 8px;
+}
+
+.scrollbar-custom::-webkit-scrollbar-track {
+    background: #ffffff;
+}
+
+.scrollbar-custom::-webkit-scrollbar-thumb {
+    background-color: #007cb6;
+    border-radius: 4px;
+}
+
+/* Firefox scrollbar styling */
+.scrollbar-custom {
+    scrollbar-width: thin;
+    scrollbar-color: #007cb6 #ffffff;
+}

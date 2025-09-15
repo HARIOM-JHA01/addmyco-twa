@@ -7,6 +7,8 @@ import ProfilePage from './pages/ProfilePage';
 import UpdateProfilePage from './pages/UpdateProfilePage';
 import SubCompanyPage from './pages/SubCompany';
 import ChamberPage from './pages/ChamberPage';
+import SearchPage from './pages/SearchPage';
+import MyQRPage from './pages/MyQRPage';
 
 function App() {
   useEffect(() => {
@@ -27,6 +29,8 @@ function App() {
           <Route path="/notifications" element={<Notifications />} />
           <Route path="/sub-company" element={<SubCompanyPage />} />
           <Route path="/chamber" element={<ChamberPage />} />
+          <Route path="/search" element={<SearchPage />} />
+          <Route path="/my-qr" element={<MyQRPage />} />
         </Routes>
       </BrowserRouter>
     </>
