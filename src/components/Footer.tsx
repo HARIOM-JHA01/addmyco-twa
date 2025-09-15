@@ -16,8 +16,12 @@ export default function Footer() {
                     <img src={profileIcon} alt="Profile" className="w-10 h-10 rounded-full"
                         onClick={() => router('/profile')}
                     />
-                    <img src={subCompanyIcon} alt="SubCompany" className="w-10 h-10 rounded-full" />
-                    <img src={chamberIcon} alt="Chamber" className="w-10 h-10 rounded-full" />
+                    <img src={subCompanyIcon} alt="SubCompany" className="w-10 h-10 rounded-full"
+                        onClick={() => router('/sub-company')}
+                    />
+                    <img src={chamberIcon} alt="Chamber" className="w-10 h-10 rounded-full"
+                        onClick={() => router('/chamber')}
+                    />
                 </div>
                 <img src={TGDIcon} alt="TGD" className="w-16 h-16 rounded-full bg-white  border-[#007cb6] z-10" />
                 <div className='flex gap-2'>

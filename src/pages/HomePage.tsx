@@ -17,12 +17,12 @@ export default function HomePage() {
             <div className=''>
                 <div className="flex flex-col items-center justify-center flex-grow py-4 px-2 pb-32">
                     <div className="bg-blue-100 bg-opacity-40 rounded-3xl p-6 w-full max-w-md mx-auto flex flex-col items-center shadow-lg">
-                        <button className="w-full rounded-full bg-[#007cb6] text-white text-xl font-bold py-2 mb-4 flex items-center justify-center" style={{ borderRadius: '2rem' }}>
+                        <div className="w-full rounded-full bg-[#007cb6] text-white text-xl font-bold py-2 mb-4 flex items-center justify-center" style={{ borderRadius: '2rem' }}>
                             Something
-                        </button>
-                        <button className="w-full rounded-full bg-[#007cb6] text-white text-xl font-bold py-2 mb-8 flex items-center justify-center" style={{ borderRadius: '2rem' }}>
+                        </div>
+                        <div className="w-full rounded-full bg-[#007cb6] text-white text-xl font-bold py-2 mb-8 flex items-center justify-center" style={{ borderRadius: '2rem' }}>
                             something
-                        </button>
+                        </div>
                         <div className="flex flex-col items-center mb-6">
                             <div className="rounded-full bg-white mb-2" >
                                 <img src={logo} alt="Logo" className="w-36 h-36 object-contain" />
