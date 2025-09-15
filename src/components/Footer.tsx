@@ -19,7 +19,7 @@ export default function Footer() {
                     <img src={subCompanyIcon} alt="SubCompany" className="w-10 h-10 rounded-full" />
                     <img src={chamberIcon} alt="Chamber" className="w-10 h-10 rounded-full" />
                 </div>
-                <img src={TGDIcon} alt="TGD" className="w-16 h-16 rounded-full bg-white p-2 border-4 border-[#007cb6] z-10" />
+                <img src={TGDIcon} alt="TGD" className="w-16 h-16 rounded-full bg-white  border-[#007cb6] z-10" />
                 <div className='flex gap-2'>
                     <img src={heartIcon} alt="Heart" className="w-10 h-10 rounded-full" />
                     <img src={qrIcone} alt="QR" className="w-10 h-10 rounded-full" />

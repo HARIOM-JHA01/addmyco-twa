@@ -8,6 +8,7 @@ export default defineConfig({
   },
   base: '/addmyco/',
   server: {
+    port: 3000,
     proxy: {
       '/api': {
         target: 'https://telegramdirectory.org',
