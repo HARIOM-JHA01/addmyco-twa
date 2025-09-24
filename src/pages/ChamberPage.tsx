@@ -2,6 +2,8 @@ import Layout from "../components/Layout";
 import { useRef, useState, useEffect } from "react";
 import axios from "axios";
 import CompanyLogo from "../assets/company.svg";
+import LeftArrow from "../assets/left-arrow.png";
+import RightArrow from "../assets/right-arrow.png";
 import ProfileIcon from "../assets/profileIcon.png";
 import {
   faWhatsapp,
@@ -16,6 +18,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
 export default function ChamberPage() {
+  const [currentChamberIndex, setCurrentChamberIndex] = useState(0);
   // removed unused: form, setForm
   const [file, setFile] = useState<File | null>(null);
   // removed unused: fileError, uploading
@@ -195,6 +198,7 @@ export default function ChamberPage() {
           res.data.data.length > 0
         ) {
           setChamberData(res.data.data);
+          setCurrentChamberIndex(0); // Reset to first chamber on fetch
         } else {
           setChamberData(null);
         }
@@ -396,9 +400,56 @@ export default function ChamberPage() {
         ) : (
           <div className="bg-blue-100 bg-opacity-40 rounded-3xl p-4 w-full max-w-md mx-auto flex flex-col items-center shadow-lg">
             {(() => {
-              const c = chamberData[0];
+              const chambers = chamberData;
+              const c = chambers[currentChamberIndex];
               return (
                 <>
+                  {/* Arrow navigation if more than 1 chamber */}
+                  {Array.isArray(chambers) && chambers.length > 1 && (
+                    <div className="flex flex-row justify-between items-center w-full mb-2">
+                      <button
+                        className={`p-1 ${
+                          currentChamberIndex === 0
+                            ? "opacity-30 cursor-not-allowed"
+                            : ""
+                        }`}
+                        onClick={() =>
+                          setCurrentChamberIndex((i) => Math.max(0, i - 1))
+                        }
+                        disabled={currentChamberIndex === 0}
+                        aria-label="Previous Chamber"
+                      >
+                        <img
+                          src={LeftArrow}
+                          alt="Left Arrow"
+                          className="w-7 h-7"
+                        />
+                      </button>
+                      <span className="text-sm text-gray-500">
+                        {currentChamberIndex + 1} / {chambers.length}
+                      </span>
+                      <button
+                        className={`p-1 ${
+                          currentChamberIndex === chambers.length - 1
+                            ? "opacity-30 cursor-not-allowed"
+                            : ""
+                        }`}
+                        onClick={() =>
+                          setCurrentChamberIndex((i) =>
+                            Math.min(chambers.length - 1, i + 1)
+                          )
+                        }
+                        disabled={currentChamberIndex === chambers.length - 1}
+                        aria-label="Next Chamber"
+                      >
+                        <img
+                          src={RightArrow}
+                          alt="Right Arrow"
+                          className="w-7 h-7"
+                        />
+                      </button>
+                    </div>
+                  )}
                   <div className="flex flex-row gap-8 mb-4">
                     <img src={CompanyLogo} alt="Profile" className="w-8 h-8" />
                     <FontAwesomeIcon
