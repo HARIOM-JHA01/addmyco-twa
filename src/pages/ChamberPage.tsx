@@ -1,5 +1,5 @@
 import Layout from "../components/Layout";
-import { useRef, useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import axios from "axios";
 import CompanyLogo from "../assets/company.svg";
 import LeftArrow from "../assets/left-arrow.png";

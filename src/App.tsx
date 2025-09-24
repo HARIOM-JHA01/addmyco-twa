@@ -9,6 +9,7 @@ import ContactPage from "./pages/ContactPage";
 import MyQRPage from "./pages/MyQRPage";
 import CreateProfile from "./pages/createProfile";
 import LoginHandler from "./components/LoginHandler";
+import ThemePage from "./pages/ThemePage";
 
 function App() {
   return (
@@ -24,6 +25,7 @@ function App() {
         <Route path="/search" element={<ContactPage />} />
         <Route path="/my-qr" element={<MyQRPage />} />
         <Route path="/create-profile" element={<CreateProfile />} />
+        <Route path="/theme" element={<ThemePage />} />
       </Routes>
     </BrowserRouter>
   );
