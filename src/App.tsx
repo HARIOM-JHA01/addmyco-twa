@@ -1,18 +1,18 @@
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
-import HomePage from './pages/HomePage';
-import Notifications from './pages/Notifications';
-import ProfilePage from './pages/ProfilePage';
-import UpdateProfilePage from './pages/UpdateProfilePage';
-import SubCompanyPage from './pages/SubCompany';
-import ChamberPage from './pages/ChamberPage';
-import ContactPage from './pages/ContactPage';
-import MyQRPage from './pages/MyQRPage';
-import CreateProfile from './pages/createProfile';
-import LoginHandler from './components/LoginHandler';
+import { BrowserRouter, Routes, Route } from "react-router-dom";
+// import HomePage from './pages/HomePage';
+import Notifications from "./pages/Notifications";
+import ProfilePage from "./pages/ProfilePage";
+import UpdateProfilePage from "./pages/UpdateProfilePage";
+import SubCompanyPage from "./pages/SubCompany";
+import ChamberPage from "./pages/ChamberPage";
+import ContactPage from "./pages/ContactPage";
+import MyQRPage from "./pages/MyQRPage";
+import CreateProfile from "./pages/createProfile";
+import LoginHandler from "./components/LoginHandler";
 
 function App() {
   return (
-    <BrowserRouter basename='/addmyco'>
+    <BrowserRouter basename="/addmyco">
       <LoginHandler />
       <Routes>
         <Route path="/" element={<ProfilePage />} />

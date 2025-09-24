@@ -45,6 +45,93 @@ export default function ChamberPage() {
   const [loading, setLoading] = useState(true);
   const [fetchError, setFetchError] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [showUpdateModal, setShowUpdateModal] = useState(false);
+  const [updateForm, setUpdateForm] = useState<any>(null);
+  const [updateLoading, setUpdateLoading] = useState(false);
+  const [updateError, setUpdateError] = useState("");
+  // Helper to convert file to base64
+  const fileToBase64 = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result as string);
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
+  };
+  const openUpdateModal = (chamber: any) => {
+    setUpdateForm({ ...chamber, image: chamber.image });
+    setShowUpdateModal(true);
+    setUpdateError("");
+  };
+  const closeUpdateModal = () => {
+    setShowUpdateModal(false);
+    setUpdateForm(null);
+    setUpdateError("");
+  };
+  const handleUpdateInput = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+  ) => {
+    setUpdateForm({ ...updateForm, [e.target.name]: e.target.value });
+  };
+  const handleUpdateFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      const base64 = await fileToBase64(e.target.files[0]);
+      setUpdateForm((prev: any) => ({ ...prev, image: base64 }));
+    }
+  };
+  const handleUpdateChamber = async () => {
+    setUpdateLoading(true);
+    setUpdateError("");
+    try {
+      const token = localStorage.getItem("token");
+      const userId = updateForm.user_id;
+      if (!token || !userId) throw new Error("No token or user id");
+      const payload = {
+        user_id: userId,
+        data: [
+          {
+            _id: updateForm._id,
+            chamber_name_english: updateForm.chamber_name_english,
+            chamber_name_chinese: updateForm.chamber_name_chinese,
+            chamberdesignation: updateForm.chamberdesignation,
+            chamberwebsite: updateForm.chamberwebsite,
+            detail: updateForm.detail,
+            WhatsApp: updateForm.WhatsApp,
+            WeChat: updateForm.WeChat,
+            Instagram: updateForm.Instagram,
+            image: updateForm.image,
+          },
+        ],
+      };
+      await axios.post(`${API_BASE_URL}/updatechamber`, payload, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      });
+      setShowUpdateModal(false);
+      setUpdateForm(null);
+      // Refresh chamber data
+      const res = await axios.get(`${API_BASE_URL}/getchamber`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (
+        res.data &&
+        Array.isArray(res.data.data) &&
+        res.data.data.length > 0
+      ) {
+        setChamberData(res.data.data);
+      }
+    } catch (err: any) {
+      setUpdateError(
+        err?.response?.data?.message ||
+          err.message ||
+          "Failed to update chamber"
+      );
+    } finally {
+      setUpdateLoading(false);
+    }
+  };
   useEffect(() => {
     const fetchChamber = async () => {
       setLoading(true);
@@ -259,13 +346,135 @@ export default function ChamberPage() {
                   </div>
                   {/* two buttons update add more */}
                   <div className="flex justify-center w-full gap-4 text-center mt-6">
-                    <div className="p-2 w-full text-white bg-[#d50078] shadow-md">
+                    <button
+                      className="p-2 w-full text-white bg-[#d50078] shadow-md rounded"
+                      onClick={() => openUpdateModal(c)}
+                      type="button"
+                    >
                       Update
-                    </div>
-                    <div className="p-2 w-full text-white bg-[#009944] shadow-md">
+                    </button>
+                    <div className="p-2 w-full text-white bg-[#009944] shadow-md rounded">
                       Add More
                     </div>
                   </div>
+                  {/* Update Chamber Modal */}
+                  {showUpdateModal && updateForm && (
+                    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
+                      <div className="bg-white rounded-2xl p-6 w-full max-w-md flex flex-col items-center shadow-lg relative">
+                        <button
+                          className="absolute top-2 right-4 text-gray-400 hover:text-gray-700 text-2xl"
+                          onClick={closeUpdateModal}
+                        >
+                          &times;
+                        </button>
+                        <h3 className="text-lg font-bold mb-4">
+                          Update Chamber
+                        </h3>
+                        <input
+                          className="rounded-full border-2 border-blue-200 px-4 py-2 mb-2 w-full focus:outline-none focus:ring-2 focus:ring-blue-400 bg-white placeholder-gray-500"
+                          type="text"
+                          name="chamber_name_english"
+                          placeholder="English Name for Chamber"
+                          value={updateForm.chamber_name_english}
+                          onChange={handleUpdateInput}
+                          disabled={updateLoading}
+                        />
+                        <input
+                          className="rounded-full border-2 border-blue-200 px-4 py-2 mb-2 w-full focus:outline-none focus:ring-2 focus:ring-blue-400 bg-white placeholder-gray-500"
+                          type="text"
+                          name="chamber_name_chinese"
+                          placeholder="Chinese Name for Chamber"
+                          value={updateForm.chamber_name_chinese}
+                          onChange={handleUpdateInput}
+                          disabled={updateLoading}
+                        />
+                        <input
+                          className="rounded-full border-2 border-blue-200 px-4 py-2 mb-2 w-full focus:outline-none focus:ring-2 focus:ring-blue-400 bg-white placeholder-gray-500"
+                          type="text"
+                          name="chamberdesignation"
+                          placeholder="Designation"
+                          value={updateForm.chamberdesignation}
+                          onChange={handleUpdateInput}
+                          disabled={updateLoading}
+                        />
+                        <input
+                          className="rounded-full border-2 border-blue-200 px-4 py-2 mb-2 w-full focus:outline-none focus:ring-2 focus:ring-blue-400 bg-white placeholder-gray-500"
+                          type="text"
+                          name="chamberwebsite"
+                          placeholder="Website"
+                          value={updateForm.chamberwebsite}
+                          onChange={handleUpdateInput}
+                          disabled={updateLoading}
+                        />
+                        <textarea
+                          className="rounded-xl border-2 border-blue-200 px-4 py-2 mb-2 w-full focus:outline-none focus:ring-2 focus:ring-blue-400 bg-white placeholder-gray-500 min-h-[60px]"
+                          name="detail"
+                          placeholder="Chamber details"
+                          value={updateForm.detail}
+                          onChange={handleUpdateInput}
+                          disabled={updateLoading}
+                        />
+                        <input
+                          className="rounded-full border-2 border-blue-200 px-4 py-2 mb-2 w-full focus:outline-none focus:ring-2 focus:ring-blue-400 bg-white placeholder-gray-500"
+                          type="text"
+                          name="WhatsApp"
+                          placeholder="WhatsApp"
+                          value={updateForm.WhatsApp || ""}
+                          onChange={handleUpdateInput}
+                          disabled={updateLoading}
+                        />
+                        <input
+                          className="rounded-full border-2 border-blue-200 px-4 py-2 mb-2 w-full focus:outline-none focus:ring-2 focus:ring-blue-400 bg-white placeholder-gray-500"
+                          type="text"
+                          name="WeChat"
+                          placeholder="WeChat"
+                          value={updateForm.WeChat || ""}
+                          onChange={handleUpdateInput}
+                          disabled={updateLoading}
+                        />
+                        <input
+                          className="rounded-full border-2 border-blue-200 px-4 py-2 mb-2 w-full focus:outline-none focus:ring-2 focus:ring-blue-400 bg-white placeholder-gray-500"
+                          type="text"
+                          name="Instagram"
+                          placeholder="Instagram"
+                          value={updateForm.Instagram || ""}
+                          onChange={handleUpdateInput}
+                          disabled={updateLoading}
+                        />
+                        {/* Image upload */}
+                        <div className="w-full flex flex-col items-center mb-2">
+                          <label className="mb-1 font-semibold">Image</label>
+                          <input
+                            type="file"
+                            accept="image/*"
+                            onChange={handleUpdateFile}
+                            disabled={updateLoading}
+                          />
+                          {updateForm.image &&
+                            updateForm.image.startsWith("data:image") && (
+                              <img
+                                src={updateForm.image}
+                                alt="chamber"
+                                className="max-h-20 mt-2"
+                              />
+                            )}
+                        </div>
+                        {updateError && (
+                          <div className="text-red-500 mb-2 text-center">
+                            {updateError}
+                          </div>
+                        )}
+                        <button
+                          className="w-full bg-blue-500 text-white font-bold py-2 rounded-full text-lg mt-2 shadow-md hover:bg-blue-600 transition"
+                          onClick={handleUpdateChamber}
+                          disabled={updateLoading}
+                          type="button"
+                        >
+                          {updateLoading ? "Updating..." : "Update"}
+                        </button>
+                      </div>
+                    </div>
+                  )}
                 </>
               );
             })()}
