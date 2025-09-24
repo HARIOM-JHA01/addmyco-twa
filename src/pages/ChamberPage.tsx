@@ -5,6 +5,7 @@ import CompanyLogo from "../assets/company.svg";
 import LeftArrow from "../assets/left-arrow.png";
 import RightArrow from "../assets/right-arrow.png";
 import ProfileIcon from "../assets/profileIcon.png";
+import logo from "../assets/logo.png";
 import {
   faWhatsapp,
   faTelegram,
@@ -211,8 +212,6 @@ export default function ChamberPage() {
     };
     fetchChamber();
   }, []);
-
-  // removed unused: handleInput, handleFileChange, handleCancelFile, handleSubmit
 
   return (
     <Layout>
@@ -495,18 +494,23 @@ export default function ChamberPage() {
                   {/* Image or video */}
                   <div className="w-full flex justify-center mb-3">
                     <div
-                      className="bg-white rounded-xl p-2 flex items-center justify-center w-full"
+                      className="rounded-xl p-2 flex items-center justify-center w-full"
                       style={{ width: 350, height: 200 }}
                     >
                       {c.image ? (
                         <img
                           src={c.image}
                           alt="chamber"
-                          className="object-contain mx-auto"
+                          className="object-contain mx-auto rounded-md"
                           style={{ maxWidth: "100%", maxHeight: "100%" }}
                         />
                       ) : (
-                        <span className="text-gray-400">No image</span>
+                        <img
+                          src={logo}
+                          alt="No chamber"
+                          className="object-contain mx-auto rounded-md bg-white w-full"
+                          style={{ maxWidth: "100%", maxHeight: "100%" }}
+                        />
                       )}
                     </div>
                   </div>
