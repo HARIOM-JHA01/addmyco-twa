@@ -97,6 +97,7 @@ export default function SubCompanyPage() {
       formData.append("email", editProfile.email || "");
       formData.append("WhatsApp", editProfile.WhatsApp || "");
       formData.append("website", editProfile.website || "");
+      formData.append("facebook", editProfile.facebook || "");
       if (editProfile.image && editProfile.image.startsWith("data:image")) {
         // Convert base64 to blob and append
         const arr = editProfile.image.split(",");
@@ -305,6 +306,20 @@ export default function SubCompanyPage() {
           ) : companyProfile ? (
             <>
               <div className="flex items-center justify-center gap-4 mb-2">
+                {/* Display Facebook if present */}
+                {companyProfile.facebook && (
+                  <div className="w-full mb-2">
+                    <span className="font-bold">Facebook: </span>
+                    <a
+                      href={companyProfile.facebook}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-blue-600 underline break-all"
+                    >
+                      {companyProfile.facebook}
+                    </a>
+                  </div>
+                )}
                 <div className="w-12 h-12 rounded-full bg-blue-400 flex items-center justify-center overflow-hidden">
                   <img
                     src={groupIcon}
