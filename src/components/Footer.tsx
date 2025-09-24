@@ -145,24 +145,42 @@ export default function Footer() {
       <div className="fixed bottom-0 left-0 w-full flex justify-center z-50">
         <div className="flex items-center justify-between bg-[#007cb6] w-full max-w-3xl shadow-lg px-2 py-2">
           <div className="flex gap-2">
-            <img
-              src={profileIcon}
-              alt="Profile"
-              className="w-10 h-10 rounded-full"
+            <button
+              type="button"
               onClick={() => router("/profile")}
-            />
-            <img
-              src={subCompanyIcon}
-              alt="SubCompany"
-              className="w-10 h-10 rounded-full"
+              className="focus:outline-none"
+            >
+              <img
+                src={profileIcon}
+                alt="Profile"
+                className="w-10 h-10 rounded-full"
+                draggable={false}
+              />
+            </button>
+            <button
+              type="button"
               onClick={() => router("/sub-company")}
-            />
-            <img
-              src={chamberIcon}
-              alt="Chamber"
-              className="w-10 h-10 rounded-full"
+              className="focus:outline-none"
+            >
+              <img
+                src={subCompanyIcon}
+                alt="SubCompany"
+                className="w-10 h-10 rounded-full"
+                draggable={false}
+              />
+            </button>
+            <button
+              type="button"
               onClick={() => router("/chamber")}
-            />
+              className="focus:outline-none"
+            >
+              <img
+                src={chamberIcon}
+                alt="Chamber"
+                className="w-10 h-10 rounded-full"
+                draggable={false}
+              />
+            </button>
           </div>
           <div className="relative flex justify-center items-center w-24">
             <img
@@ -173,24 +191,42 @@ export default function Footer() {
             />
           </div>
           <div className="flex gap-2">
-            <img
-              src={heartIcon}
-              alt="Heart"
-              className="w-10 h-10 rounded-full"
+            <button
+              type="button"
               onClick={() => router("/search")}
-            />
-            <img
-              src={qrIcone}
-              alt="QR"
-              className="w-10 h-10 rounded-full"
+              className="focus:outline-none"
+            >
+              <img
+                src={heartIcon}
+                alt="Heart"
+                className="w-10 h-10 rounded-full"
+                draggable={false}
+              />
+            </button>
+            <button
+              type="button"
               onClick={() => router("/my-qr")}
-            />
-            <img
-              src={settingIcon}
-              alt="Setting"
-              className="w-10 h-10 rounded-full"
+              className="focus:outline-none"
+            >
+              <img
+                src={qrIcone}
+                alt="QR"
+                className="w-10 h-10 rounded-full"
+                draggable={false}
+              />
+            </button>
+            <button
+              type="button"
               onClick={() => setShowSettings((v) => !v)}
-            />
+              className="focus:outline-none"
+            >
+              <img
+                src={settingIcon}
+                alt="Setting"
+                className="w-10 h-10 rounded-full"
+                draggable={false}
+              />
+            </button>
           </div>
         </div>
       </div>
