@@ -164,11 +164,14 @@ export default function Footer() {
               onClick={() => router("/chamber")}
             />
           </div>
-          <img
-            src={TGDIcon}
-            alt="TGD"
-            className="w-16 h-16 rounded-full bg-white  border-[#007cb6] z-10"
-          />
+          <div className="relative flex justify-center items-center w-24">
+            <img
+              src={TGDIcon}
+              alt="TGD"
+              className="w-20 h-20 rounded-full bg-white border-4 border-[#007cb6] z-20 absolute -top-14 left-1/2 -translate-x-1/2 shadow-lg"
+              style={{ boxShadow: "0 4px 16px 0 rgba(0,0,0,0.10)" }}
+            />
+          </div>
           <div className="flex gap-2">
             <img
               src={heartIcon}
