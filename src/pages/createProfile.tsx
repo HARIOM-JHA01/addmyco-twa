@@ -5,14 +5,16 @@ import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import Header from '../components/Header';
 import addmycoIcon from '../assets/addmyco.png';
-
+import WebApp from '@twa-dev/sdk';
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 export default function CreateProfile() {
+    const user = WebApp.initDataUnsafe.user;
+
   const navigate = useNavigate();
   const [form, setForm] = useState({
     owner_name_english: '',
     owner_name_chinese: '',
-    telegramId: '',
+    telegramId: user?.username || '',
     email: '',
     contact: '',
     address1: '',
@@ -59,7 +61,6 @@ export default function CreateProfile() {
           headers: {
             'Authorization': `Bearer ${token}`,
           },
-          withCredentials: true,
         }
       );
       setSuccess('Profile created successfully!');
@@ -112,10 +113,24 @@ export default function CreateProfile() {
               </div>
               <span className="text-xs text-gray-600 text-center">Upload Profile Image<br />Size 180 x 180</span>
             </div>
-            <div className="flex w-full gap-2 mb-2 flex-col sm:flex-row">
-              <input name="WhatsApp" placeholder="https://WhatsApp" value={form.WhatsApp} onChange={handleChange} className="flex-1 rounded-full px-3 py-2 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-400" />
-              <input name="contact" placeholder="Contact No." value={form.contact} onChange={handleChange} className="flex-1 rounded-full px-3 py-2 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-400 mt-2 sm:mt-0" />
+            <div className="flex w-full gap-2 mb-2 flex-row justify-between">
+              <input
+                name="telegram_username"
+                placeholder="Telegram Username"
+                value={user?.username || ''}
+                onChange={handleChange}
+                className="w-44 rounded-full px-3 py-2 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-400"
+                readOnly
+              />
+              <input
+                name="contact"
+                placeholder="Contact No."
+                value={form.contact}
+                onChange={handleChange}
+                className="w-44 rounded-full px-3 py-2 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-400"
+              />
             </div>
+            <input name="WhatsApp" placeholder="https://WhatsApp" value={form.WhatsApp} onChange={handleChange} className="w-full rounded-full px-3 py-2 border border-gray-300 mb-2 focus:outline-none focus:ring-2 focus:ring-blue-400" />
             <input name="address1" placeholder="Enter Your Address line 1" value={form.address1} onChange={handleChange} className="w-full rounded-full px-3 py-2 border border-gray-300 mb-2 focus:outline-none focus:ring-2 focus:ring-blue-400" />
             <input name="address2" placeholder="Enter Your Address line 2" value={form.address2} onChange={handleChange} className="w-full rounded-full px-3 py-2 border border-gray-300 mb-2 focus:outline-none focus:ring-2 focus:ring-blue-400" />
             <input name="address3" placeholder="Enter Your Address line 3" value={form.address3} onChange={handleChange} className="w-full rounded-full px-3 py-2 border border-gray-300 mb-2 focus:outline-none focus:ring-2 focus:ring-blue-400" />

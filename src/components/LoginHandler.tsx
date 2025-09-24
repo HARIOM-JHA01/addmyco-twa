@@ -38,7 +38,7 @@ export default function LoginHandler() {
           return;
         }
         const response = await axios.post(`${API_BASE_URL}/telegram-login`, {
-          telegram_username: Date.now().toString(),
+          telegram_username: user.username,
           country: country || 'India'
         });
         const { data } = response;
