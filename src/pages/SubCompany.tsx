@@ -28,8 +28,28 @@ export default function SubCompanyPage() {
         const res = await axios.get(`${API_BASE_URL}/getcompanyprofile`, {
           headers: { Authorization: `Bearer ${token}` },
         });
+
+        // Try different possible response structures
+        let profileData = null;
         if (res.data && res.data.data) {
-          setCompanyProfile(res.data.data);
+          profileData = res.data.data;
+        } else if (res.data && typeof res.data === "object") {
+          profileData = res.data;
+        } else if (res.data && res.data.company) {
+          profileData = res.data.company;
+        }
+
+        // Handle array response - if profileData is an array, take the first item
+        if (Array.isArray(profileData) && profileData.length > 0) {
+          profileData = profileData[0];
+        }
+
+        if (
+          profileData &&
+          typeof profileData === "object" &&
+          !Array.isArray(profileData)
+        ) {
+          setCompanyProfile(profileData);
         } else {
           setCompanyProfile(null);
         }
@@ -118,7 +138,32 @@ export default function SubCompanyPage() {
       const res = await axios.get(`${API_BASE_URL}/getcompanyprofile`, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      setCompanyProfile(res.data.data);
+
+      // Try different possible response structures
+      let profileData = null;
+      if (res.data && res.data.data) {
+        profileData = res.data.data;
+      } else if (res.data && typeof res.data === "object") {
+        profileData = res.data;
+      } else if (res.data && res.data.company) {
+        profileData = res.data.company;
+      }
+
+      // Handle array response - if profileData is an array, take the first item
+      if (Array.isArray(profileData) && profileData.length > 0) {
+        profileData = profileData[0];
+      }
+
+      if (
+        profileData &&
+        typeof profileData === "object" &&
+        !Array.isArray(profileData)
+      ) {
+        setCompanyProfile(profileData);
+      } else {
+        setCompanyProfile(null);
+      }
+
       setEditMode(null);
       setEditProfile(null);
     } catch (err: any) {
@@ -305,21 +350,8 @@ export default function SubCompanyPage() {
             </form>
           ) : companyProfile ? (
             <>
-              <div className="flex items-center justify-center gap-4 mb-2">
-                {/* Display Facebook if present */}
-                {companyProfile.facebook && (
-                  <div className="w-full mb-2">
-                    <span className="font-bold">Facebook: </span>
-                    <a
-                      href={companyProfile.facebook}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-blue-600 underline break-all"
-                    >
-                      {companyProfile.facebook}
-                    </a>
-                  </div>
-                )}
+              {/* Company Icons Row */}
+              <div className="flex items-center justify-center gap-4 mb-4">
                 <div className="w-12 h-12 rounded-full bg-blue-400 flex items-center justify-center overflow-hidden">
                   <img
                     src={groupIcon}
@@ -344,37 +376,65 @@ export default function SubCompanyPage() {
                   />
                 </div>
               </div>
+
+              {/* Company Names */}
               <div
                 className="w-full rounded-full bg-[#007cb6] text-white text-xl font-bold py-1 mb-2 flex items-center justify-center"
                 style={{ borderRadius: "2rem" }}
               >
-                {companyProfile.company_name_english}
+                {companyProfile.company_name_english || "English Company Name"}
               </div>
               <div
                 className="w-full rounded-full bg-[#007cb6] text-white text-xl font-bold py-1 mb-2 flex items-center justify-center"
                 style={{ borderRadius: "2rem" }}
               >
-                {companyProfile.company_name_chinese}
+                {companyProfile.company_name_chinese || "中文公司名称"}
               </div>
               <div
                 className="w-full rounded-full bg-[#007cb6] text-white text-xl font-bold py-1 mb-4 flex items-center justify-center"
                 style={{ borderRadius: "2rem" }}
               >
-                {companyProfile.companydesignation}
+                {companyProfile.companydesignation || "Company Designation"}
               </div>
+
+              {/* Company Image and Description */}
               <div className="flex flex-col items-center mb-6">
-                <div className="rounded-full bg-white mb-4">
-                  <img
-                    src={companyProfile.image || profileIcon}
-                    alt="Logo"
-                    className="w-[180px] h-[180px] object-contain"
-                  />
+                {/* Image container - matching ChamberPage style */}
+                <div className="w-full flex justify-center mb-4">
+                  <div
+                    className="rounded-xl p-2 flex items-center justify-center w-full"
+                    style={{ width: 350, height: 200 }}
+                  >
+                    <img
+                      src={companyProfile.image || profileIcon}
+                      alt="Company Logo"
+                      className="object-contain mx-auto rounded-md"
+                      style={{ maxWidth: "100%", maxHeight: "100%" }}
+                    />
+                  </div>
                 </div>
                 <div className="w-80 h-48 bg-white rounded-md border-2 border-[#007cb6] p-2 overflow-auto">
-                  {companyProfile.description}
+                  {companyProfile.description || "No description available"}
                 </div>
               </div>
-              <div className="flex justify-between w-full gap-4">
+
+              {/* Contact Information */}
+              <div className="w-full space-y-3 mb-6">
+                {companyProfile.email && (
+                  <div className="bg-white rounded-lg p-3 border border-blue-200">
+                    <span className="font-bold text-gray-700">Email: </span>
+                    <a
+                      href={`mailto:${companyProfile.email}`}
+                      className="text-blue-600 underline"
+                    >
+                      {companyProfile.email}
+                    </a>
+                  </div>
+                )}
+              </div>
+
+              {/* Action Icons */}
+              <div className="flex justify-between w-full gap-4 mb-6">
                 <div className="w-12 h-12 rounded-full bg-blue-400 flex items-center justify-center overflow-hidden">
                   <FontAwesomeIcon icon={faTelegram} size="2x" color="white" />
                 </div>
