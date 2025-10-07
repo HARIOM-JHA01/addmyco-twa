@@ -7,6 +7,7 @@ import qrIcone from "../assets/scanner-sidebar.png";
 import settingIcon from "../assets/settingIcon.png";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import WebApp from "@twa-dev/sdk";
 
 export default function Footer() {
   const router = useNavigate();
@@ -19,7 +20,7 @@ export default function Footer() {
   // Logout handler
   const handleLogout = () => {
     localStorage.removeItem("token");
-    window.close();
+    WebApp.close();
   };
 
   return (
