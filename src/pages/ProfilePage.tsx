@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
+import { useProfileStore } from "../store/profileStore";
 import logo from "../assets/logo.png";
 import groupIcon from "../assets/profileIcon.png";
 import company from "../assets/company.svg";
@@ -15,6 +16,7 @@ const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 export default function ProfilePage() {
   const navigate = useNavigate();
   const [profile, setProfile] = useState<any>(null);
+  const setProfileStore = useProfileStore((state) => state.setProfile);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
@@ -31,6 +33,7 @@ export default function ProfilePage() {
           },
         });
         setProfile(res.data.data);
+        setProfileStore(res.data.data);
       } catch (err: any) {
         setError(
           err?.response?.data?.message ||
@@ -42,7 +45,7 @@ export default function ProfilePage() {
       }
     };
     fetchProfile();
-  }, []);
+  }, [setProfileStore]);
 
   return (
     <Layout>

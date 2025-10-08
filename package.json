@@ -24,7 +24,8 @@
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-icons": "^5.5.0",
-    "react-router-dom": "v6"
+    "react-router-dom": "v6",
+    "zustand": "^5.0.8"
   },
   "devDependencies": {
     "@types/node": "^24.3.1",

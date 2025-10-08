@@ -19,8 +19,22 @@ export default function Footer() {
 
   // Logout handler
   const handleLogout = () => {
-    localStorage.removeItem("token");
-    WebApp.close();
+    WebApp.showPopup(
+      {
+        title: "Confirm Logout",
+        message: "Are you sure you want to logout?",
+        buttons: [
+          { type: "cancel" },
+          { type: "destructive", text: "Logout", id: "logout" },
+        ],
+      },
+      (result) => {
+        if (result && result === "logout") {
+          localStorage.removeItem("token");
+          WebApp.close();
+        }
+      }
+    );
   };
 
   return (
@@ -32,9 +46,8 @@ export default function Footer() {
             <button
               className="text-white font-semibold px-4 py-2 text-left hover:bg-gray-800"
               onClick={() => {
-                setWorkModalText("Membership");
-                setShowWorkModal(true);
                 setShowSettings(false);
+                router("/membership");
               }}
             >
               Membership
