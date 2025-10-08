@@ -30,7 +30,6 @@ export default function CreateProfile() {
     Youtube: "",
     Linkedin: "",
     SnapChat: "",
-    Skype: "",
     TikTok: "",
   });
   const [profile_image, setProfileImage] = useState<File | null>(null);
@@ -104,8 +103,10 @@ export default function CreateProfile() {
           Authorization: `Bearer ${token}`,
         },
       });
-      setSuccess("Profile created successfully!");
-      setTimeout(() => navigate("/"), 1500);
+      setSuccess(
+        "Profile created successfully! Redirecting to company profile..."
+      );
+      setTimeout(() => navigate("/sub-company"), 1500);
     } catch (err: any) {
       setError(
         err?.response?.data?.message ||
@@ -269,13 +270,6 @@ export default function CreateProfile() {
               name="Youtube"
               placeholder="https://Youtube"
               value={form.Youtube}
-              onChange={handleChange}
-              className="w-full rounded-full px-3 py-2 border border-gray-300 mb-2 focus:outline-none focus:ring-2 focus:ring-blue-400"
-            />
-            <input
-              name="Skype"
-              placeholder="https://Skype"
-              value={form.Skype}
               onChange={handleChange}
               className="w-full rounded-full px-3 py-2 border border-gray-300 mb-2 focus:outline-none focus:ring-2 focus:ring-blue-400"
             />

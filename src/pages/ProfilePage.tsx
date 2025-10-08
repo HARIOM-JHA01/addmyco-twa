@@ -11,6 +11,7 @@ import { faWhatsapp, faTelegram } from "@fortawesome/free-brands-svg-icons";
 import { faPhone } from "@fortawesome/free-solid-svg-icons";
 import Layout from "../components/Layout";
 import { useNavigate } from "react-router-dom";
+import WebApp from "@twa-dev/sdk";
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 export default function ProfilePage() {
@@ -47,6 +48,14 @@ export default function ProfilePage() {
     fetchProfile();
   }, [setProfileStore]);
 
+  const handleTelegramClick = () => {
+    if (profile && profile.telegramId) {
+      WebApp.openTelegramLink(`https://t.me/${profile.tgid}`);
+    } else {
+      WebApp.showAlert("Telegram ID not available.");
+    }
+  };
+
   return (
     <Layout>
       <div className="flex flex-col items-center justify-center flex-grow py-4 px-2 pb-32">
@@ -58,12 +67,24 @@ export default function ProfilePage() {
           ) : profile ? (
             <>
               <div className="flex flex-col items-center">
-                <div className="rounded-full mb-2">
-                  <img
-                    src={profile.profile_image || logo}
-                    alt="Profile"
-                    className="w-[180px] h-[180px] object-contain"
-                  />
+                <div className="rounded-full mb-2 w-[180px] h-[180px] flex items-center justify-center overflow-hidden bg-white">
+                  {profile.profile_image &&
+                  profile.profile_image.endsWith(".mp4") ? (
+                    <video
+                      src={profile.profile_image}
+                      autoPlay
+                      loop
+                      muted
+                      playsInline
+                      className="w-full h-full object-cover rounded-full"
+                    />
+                  ) : (
+                    <img
+                      src={profile.profile_image || logo}
+                      alt="Profile"
+                      className="w-full h-full object-cover rounded-full"
+                    />
+                  )}
                 </div>
                 <div className="w-full rounded-full bg-[#007cb6] text-white text-lg font-bold py-2 mb-2 flex items-center justify-center">
                   {profile.owner_name_english || "No Name"}
@@ -84,7 +105,10 @@ export default function ProfilePage() {
                 <div className="w-12 h-12 rounded-full bg-blue-400 flex items-center justify-center overflow-hidden">
                   <FontAwesomeIcon icon={faWhatsapp} size="2x" color="white" />
                 </div>
-                <div className="w-12 h-12 rounded-full bg-blue-400 flex items-center justify-center overflow-hidden">
+                <div
+                  className="w-12 h-12 rounded-full bg-blue-400 flex items-center justify-center overflow-hidden"
+                  onClick={handleTelegramClick}
+                >
                   <FontAwesomeIcon icon={faTelegram} size="2x" color="white" />
                 </div>
                 <div className="w-12 h-12 rounded-full bg-blue-400 flex items-center justify-center overflow-hidden">
@@ -99,7 +123,7 @@ export default function ProfilePage() {
                 </div>
                 <img src={rightArrow} alt="Right" className="w-4 h-8" />
               </div>
-              <div className="w-full rounded-md border-2 border-[#007cb6] bg-white p-4 mb-4 shadow">
+              <div className="w-full rounded-md border-2 border-[#007cb6] bg-white p-4 mb-4 shadow text-center">
                 <div className="text-[#007cb6]">{profile.address1}</div>
                 <div className="text-[#007cb6]">{profile.address2}</div>
                 <div className="text-[#007cb6]">{profile.address3}</div>

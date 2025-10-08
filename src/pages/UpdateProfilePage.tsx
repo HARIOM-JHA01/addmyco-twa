@@ -1,5 +1,5 @@
 import Layout from "../components/Layout";
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 // import pencilImage from '../assets/pencil.png';
 import profileIcon from "../assets/profileIcon.png";
 import WebApp from "@twa-dev/sdk";
@@ -7,8 +7,8 @@ import axios from "axios";
 
 export default function UpdateProfilePage() {
   const [isPremiumMember] = useState(false);
-  const [ownerNameEnglish, setOwnerNameEnglish] = useState("Hariom Jha");
-  const [ownerNameChinese, setOwnerNameChinese] = useState("哈里奥姆·賈");
+  const [ownerNameEnglish, setOwnerNameEnglish] = useState("");
+  const [ownerNameChinese, setOwnerNameChinese] = useState("");
   const [telegramId, setTelegramId] = useState("");
   const [address1, setAddress1] = useState("");
   const [address2, setAddress2] = useState("");
@@ -29,11 +29,61 @@ export default function UpdateProfilePage() {
   const [video, setVideo] = useState<File | null>(null);
   const [mediaPreview, setMediaPreview] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [memberType, setMemberType] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Replace with your actual user id and API base url
   const userId = WebApp.initDataUnsafe.user?.id || "";
   const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+
+  useEffect(() => {
+    const fetchProfile = async () => {
+      try {
+        const token = localStorage.getItem("token");
+        if (!token) return;
+        const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+        const res = await axios.get(`${API_BASE_URL}/getprofile`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        const data = res.data.data;
+        if (!data) return;
+        setOwnerNameEnglish(data.owner_name_english || "");
+        setOwnerNameChinese(data.owner_name_chinese || "");
+        setTelegramId(data.telegramId || "");
+        setAddress1(data.address1 || "");
+        setAddress2(data.address2 || "");
+        setAddress3(data.address3 || "");
+        setUsername(data.username || "");
+        setEmail(data.email || "");
+        setContact(data.contact ? String(data.contact) : "");
+        setWhatsapp(data.WhatsApp || "");
+        setWechat(data.WeChat || "");
+        setLine(data.Line || "");
+        setInstagram(data.Instagram || "");
+        setFacebook(data.Facebook || "");
+        setTwitter(data.Twitter || "");
+        setYoutube(data.Youtube || "");
+        setLinkedin(data.Linkedin || "");
+        setSnapchat(data.SnapChat || "");
+        setMemberType(data.membertype || "");
+        // Prefill profile image/video preview if present
+        if (data.profile_image) {
+          if (data.profile_image.endsWith(".mp4")) {
+            setMediaPreview(data.profile_image);
+            setProfileImage(null);
+            setVideo(null);
+          } else {
+            setMediaPreview(data.profile_image);
+            setProfileImage(null);
+            setVideo(null);
+          }
+        }
+      } catch (err) {
+        // ignore
+      }
+    };
+    fetchProfile();
+  }, []);
 
   const handleProfileUpdate = async () => {
     setLoading(true);
@@ -121,7 +171,7 @@ export default function UpdateProfilePage() {
   return (
     <Layout>
       <div className="flex flex-col  justify-center flex-grow py-4 px-2 pb-32">
-        {!isPremiumMember && (
+        {memberType !== "premium" && (
           <div className="bg-black text-white text-center border-2 border-gray-400">
             <h2 className="text-lg font-bold mb-2">
               Upgrade to Premium Membership to avail exciting features{" "}
@@ -146,7 +196,7 @@ export default function UpdateProfilePage() {
               <input
                 type="text"
                 className="w-full bg-transparent text-black outline-none"
-                defaultValue="Hariom Jha"
+                value={ownerNameEnglish}
                 onChange={(e) => setOwnerNameEnglish(e.target.value)}
               />
             </div>
@@ -154,7 +204,7 @@ export default function UpdateProfilePage() {
               <input
                 type="text"
                 className="w-full bg-transparent text-black outline-none"
-                defaultValue="哈里奥姆·賈"
+                value={ownerNameChinese}
                 onChange={(e) => setOwnerNameChinese(e.target.value)}
               />
             </div>
@@ -214,11 +264,17 @@ export default function UpdateProfilePage() {
                         </div> */}
 
             {/* Upload instruction text */}
-            <p className="text-black text-center text-sm">
-              Please upload 180 X 180 Image or upgrade to <br />
-              premium for upload{" "}
-              <span className="text-[#00AEEF] font-medium">Video</span>
-            </p>
+            {memberType === "premium" ? (
+              <p className="text-black text-center text-sm">
+                You can upload a 180 x 180 image or a video upto 2 minutes.
+              </p>
+            ) : (
+              <p className="text-black text-center text-sm">
+                Please upload 180 X 180 Image or upgrade to <br />
+                premium for upload{" "}
+                <span className="text-[#00AEEF] font-medium">Video</span>
+              </p>
+            )}
           </div>
         </section>
 
