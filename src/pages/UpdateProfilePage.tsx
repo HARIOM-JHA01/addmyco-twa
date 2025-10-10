@@ -228,7 +228,9 @@ export default function UpdateProfilePage() {
                 ) : (
                   <video
                     src={mediaPreview}
-                    controls
+                    autoPlay
+                    loop
+                    muted
                     className="w-[180px] h-[180px] rounded-full object-cover"
                   />
                 )

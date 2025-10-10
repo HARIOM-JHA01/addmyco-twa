@@ -13,13 +13,15 @@ import WelcomePage from "./pages/WelcomePage";
 import MembershipPage from "./pages/MembershipPage";
 import axios from "axios";
 import WebApp from "@twa-dev/sdk";
+import CreateCompanyPage from "./pages/CreateCompanyPage";
+import HomePage from "./pages/HomePage";
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
 function AppRoutes() {
-  // Always show Welcome page on startup, but only show free membership message once
+  // Always show Welcome page on startup to display banners
   const navigate = useNavigate();
-  const [showWelcome, setShowWelcome] = useState(true); // Always true on startup
+  const [showWelcome, setShowWelcome] = useState(true);
   const [showFreeMembership, setShowFreeMembership] = useState(() => {
     return !localStorage.getItem("freeMembershipShown");
   });
@@ -98,15 +100,32 @@ function AppRoutes() {
           const res = await axios.get(`${API_BASE_URL}/getProfile`, {
             headers: { Authorization: `Bearer ${data.data.token}` },
           });
-          setProfile(res.data.data || null);
+          const profileData = res.data.data;
+          setProfile(profileData || null);
+
+          const hasProfile = profileData && profileData.owner_name_english;
+          const hasCompany =
+            profileData &&
+            (profileData.companydata ||
+              profileData.company ||
+              profileData.company_profile);
+
+          // Hide welcome page and navigate based on profile/company status
+          setShowWelcome(false);
+          setProfileLoading(false);
+
+          if (hasProfile && hasCompany) {
+            navigate("/");
+          } else if (hasProfile && !hasCompany) {
+            navigate("/create-company");
+          } else {
+            navigate("/create-profile");
+          }
         } catch {
           setProfile(null);
-        }
-        // If no profile/company data, go to create profile
-        if (!profile) {
+          setShowWelcome(false);
+          setProfileLoading(false);
           navigate("/create-profile");
-        } else {
-          navigate("/profile");
         }
       } else {
         WebApp.showAlert("Login failed. Please try again.");
@@ -131,7 +150,7 @@ function AppRoutes() {
 
   return (
     <Routes>
-      <Route path="/" element={<ProfilePage />} />
+      <Route path="/" element={<HomePage />} />
       <Route path="/profile" element={<ProfilePage />} />
       <Route path="/update-profile" element={<UpdateProfilePage />} />
       <Route path="/notifications" element={<Notifications />} />
@@ -140,6 +159,7 @@ function AppRoutes() {
       <Route path="/search" element={<ContactPage />} />
       <Route path="/my-qr" element={<MyQRPage />} />
       <Route path="/create-profile" element={<CreateProfile />} />
+      <Route path="/create-company" element={<CreateCompanyPage />} />
       <Route path="/theme" element={<ThemePage />} />
       <Route path="/membership" element={<MembershipPage />} />
     </Routes>

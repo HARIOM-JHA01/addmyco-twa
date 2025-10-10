@@ -48,6 +48,25 @@ export type Profile = {
   logoTelegramUrl: string;
   profile_image: string;
   video: string;
+  companydata?: {
+    _id: string;
+    user_id: string;
+    image: string;
+    company_name_english: string;
+    company_name_chinese: string;
+    companydesignation: string;
+    description: string;
+    email: string;
+    WhatsApp: string;
+    Instagram: string;
+    Youtube: string;
+    telegramId: string;
+    website: string;
+    companystatus: number;
+    company_order: number;
+    date: string;
+    __v: number;
+  };
 };
 
 interface ProfileState {
@@ -56,14 +75,21 @@ interface ProfileState {
   clearProfile: () => void;
 }
 
-export const useProfileStore = create<ProfileState>((set) => ({
-  profile: null,
-  setProfile: (profile) => set(() => {
-    localStorage.setItem('profile', JSON.stringify(profile));
-    return { profile };
-  }),
-  clearProfile: () => set(() => {
-    localStorage.removeItem('profile');
-    return { profile: null };
-  }),
-}));
+export const useProfileStore = create<ProfileState>((set) => {
+  let initialProfile: Profile | null = null;
+  try {
+    const stored = localStorage.getItem('profile');
+    if (stored) initialProfile = JSON.parse(stored);
+  } catch {}
+  return {
+    profile: initialProfile,
+    setProfile: (profile) => set(() => {
+      localStorage.setItem('profile', JSON.stringify(profile));
+      return { profile };
+    }),
+    clearProfile: () => set(() => {
+      localStorage.removeItem('profile');
+      return { profile: null };
+    }),
+  };
+});

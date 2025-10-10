@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useRef } from "react";
 import Header from "../components/Header";
 import axios from "axios";
-import { useNavigate } from "react-router-dom";
+// import { useNavigate } from "react-router-dom";
 
 interface WelcomePageProps {
   onLogin: () => void;
@@ -13,8 +13,9 @@ const WelcomePage: React.FC<WelcomePageProps> = ({ onLogin }) => {
   const [bannerLoading, setBannerLoading] = useState(false);
   const [bannerError, setBannerError] = useState<string | null>(null);
   const [currentBanner, setCurrentBanner] = useState(0);
+  const [loginLoading, setLoginLoading] = useState(false);
   const carouselInterval = useRef<NodeJS.Timeout | null>(null);
-  const navigate = useNavigate();
+  // const navigate = useNavigate();
 
   useEffect(() => {
     const fetchBanners = async () => {
@@ -54,6 +55,16 @@ const WelcomePage: React.FC<WelcomePageProps> = ({ onLogin }) => {
     localStorage.removeItem("token");
   }, []);
 
+  // Wrap onLogin to show loader
+  const handleLogin = async () => {
+    setLoginLoading(true);
+    try {
+      onLogin();
+    } finally {
+      setLoginLoading(false);
+    }
+  };
+
   return (
     <div className="relative flex flex-col min-h-screen bg-[url(/src/assets/background.jpg)] bg-cover bg-center">
       <div className="absolute inset-0 bg-black/30 z-0" />
@@ -65,10 +76,37 @@ const WelcomePage: React.FC<WelcomePageProps> = ({ onLogin }) => {
               Welcome to AddMy
             </h1>
             <button
-              className="px-6 py-3 bg-gray-500 text-white text-2xl rounded-lg shadow hover:bg-blue-700 transition"
-              onClick={onLogin}
+              className="px-6 py-3 bg-gray-500 text-white text-2xl rounded-lg shadow hover:bg-blue-700 transition flex items-center justify-center min-w-[180px]"
+              onClick={handleLogin}
+              disabled={loginLoading}
             >
-              Get in to the app
+              {loginLoading ? (
+                <span className="flex items-center gap-2">
+                  <svg
+                    className="animate-spin h-6 w-6 text-white"
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                  >
+                    <circle
+                      className="opacity-25"
+                      cx="12"
+                      cy="12"
+                      r="10"
+                      stroke="currentColor"
+                      strokeWidth="4"
+                    ></circle>
+                    <path
+                      className="opacity-75"
+                      fill="currentColor"
+                      d="M4 12a8 8 0 018-8v8z"
+                    ></path>
+                  </svg>
+                  Loading...
+                </span>
+              ) : (
+                "Get in to the app"
+              )}
             </button>
           </div>
         </main>

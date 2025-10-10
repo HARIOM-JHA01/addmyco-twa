@@ -38,12 +38,25 @@ export default function CreateProfile() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
+  const [memberType, setMemberType] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (profile) {
       navigate("/");
     }
+    // Fetch memberType if token exists
+    const fetchMemberType = async () => {
+      const token = localStorage.getItem("token");
+      if (!token) return;
+      try {
+        const res = await axios.get(`${API_BASE_URL}/getprofile`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        setMemberType(res.data.data?.membertype || "");
+      } catch {}
+    };
+    fetchMemberType();
   }, [profile, navigate]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -62,27 +75,17 @@ export default function CreateProfile() {
       setMediaType("image");
       setMediaPreview(URL.createObjectURL(file));
       setProfileImage(file);
-    } else if (file.type.startsWith("video/")) {
-      const url = URL.createObjectURL(file);
-      const video = document.createElement("video");
-      video.preload = "metadata";
-      video.onloadedmetadata = () => {
-        if (video.duration > 120) {
-          setError("Video must be 2 minutes or less.");
-          setMediaPreview(null);
-          setMediaType(null);
-          setProfileImage(null);
-          if (fileInputRef.current) fileInputRef.current.value = "";
-          URL.revokeObjectURL(url);
-        } else {
-          setMediaType("video");
-          setMediaPreview(url);
-          setProfileImage(file);
-          setError("");
-          // Do NOT revoke here, as the preview needs the URL
-        }
-      };
-      video.src = url;
+    } else if (file.type === "video/mp4") {
+      setMediaType("video");
+      setMediaPreview(URL.createObjectURL(file));
+      setProfileImage(file);
+      setError("");
+    } else {
+      setError("Only MP4 video files are allowed.");
+      setMediaPreview(null);
+      setMediaType(null);
+      setProfileImage(null);
+      if (fileInputRef.current) fileInputRef.current.value = "";
     }
   };
   const handleSubmit = async (e: React.FormEvent) => {
@@ -103,10 +106,24 @@ export default function CreateProfile() {
           Authorization: `Bearer ${token}`,
         },
       });
-      setSuccess(
-        "Profile created successfully! Redirecting to company profile..."
-      );
-      setTimeout(() => navigate("/sub-company"), 1500);
+      setSuccess("Profile created successfully! Checking company profile...");
+      // Call getprofile and check for company data
+      try {
+        const res = await axios.get(`${API_BASE_URL}/getprofile`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        const companyData =
+          res.data.data?.company ||
+          res.data.data?.companydata ||
+          res.data.data?.company_profile;
+        if (!companyData) {
+          setTimeout(() => navigate("/create-company"), 1200);
+        } else {
+          setTimeout(() => navigate("/"), 1200);
+        }
+      } catch {
+        setTimeout(() => navigate("/create-company"), 1200);
+      }
     } catch (err: any) {
       setError(
         err?.response?.data?.message ||
@@ -117,6 +134,12 @@ export default function CreateProfile() {
       setLoading(false);
     }
   };
+
+  // After successful profile creation or login, check for companydata
+  if (profile && profile.companydata) {
+    navigate("/");
+    return;
+  }
 
   return (
     <div className="min-h-screen bg-[url('/src/assets/background.jpg')] bg-cover bg-center flex flex-col items-center overflow-x-hidden w-full">
@@ -184,11 +207,18 @@ export default function CreateProfile() {
                 style={{ display: "none" }}
                 onChange={handleFileChange}
               />
-              <span className="text-xs text-gray-600 text-center">
-                Upload Profile Image
-                <br />
-                Size 180 x 180
-              </span>
+              {memberType === "premium" ? (
+                <span className="text-xs text-gray-600 text-center">
+                  You can upload a 180 x 180 image or a video as your profile
+                  media.
+                </span>
+              ) : (
+                <span className="text-xs text-gray-600 text-center">
+                  Upload Profile Image
+                  <br />
+                  Size 180 x 180
+                </span>
+              )}
             </div>
             <div className="flex w-full gap-2 mb-2 flex-row justify-between">
               <input
