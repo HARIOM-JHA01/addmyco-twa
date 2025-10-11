@@ -5,6 +5,8 @@ import { useState } from "react";
 import axios from "axios";
 import WebApp from "@twa-dev/sdk";
 
+import walletTransferImage from "../assets/wallet-transfer.jpg";
+
 const PREMIUM_FEATURES = [
   { label: "Custom Username/Url", value: "Yes" },
   { label: "Contact list", value: "Unlimited" },
@@ -38,12 +40,17 @@ export default function MembershipPage() {
     setUsdtModalError(null);
     try {
       const token = localStorage.getItem("token");
+      // Use membership_id and amount from the selected item, transactionId from user input
+      const membership_id =
+        usdtModalItem._id || usdtModalItem.membership_id || "";
+      const amount = usdtModalItem.usdt || usdtModalItem.amount;
+      const transactionId = usdtTransactionId;
       const res = await axios.post(
-        `${API_BASE_URL}/usdt/payment`,
+        `${API_BASE_URL}/user/usdt/payment`,
         {
-          membershiperiod: usdtModalItem.membershiperiod,
-          usdt: usdtModalItem.usdt,
-          transactionId: usdtTransactionId,
+          membership_id,
+          amount,
+          transactionId,
         },
         {
           headers: {
@@ -107,7 +114,9 @@ export default function MembershipPage() {
 
   const handleTelegramCoinPayment = async (
     membershipPeriod: number,
-    telegramCoin: number
+    telegramCoin: number,
+    membershipId?: string,
+    amount?: number
   ) => {
     setTelegramBtnLoading(`${membershipPeriod}-${telegramCoin}`);
     try {
@@ -125,14 +134,43 @@ export default function MembershipPage() {
           },
         }
       );
-      console.log(res.data);
       if (res.data?.invoice_link) {
-        WebApp.openInvoice(res.data.invoice_link, (status) => {
+        WebApp.openInvoice(res.data.invoice_link, (status: string) => {
           if (status === "paid") {
-            //TODO: show some success message
-            WebApp.showAlert(
-              "Payment successful! Thank you. Your membership will be updated shortly."
-            );
+            (async () => {
+              try {
+                // Use membershipId and amount from the selected item, transactionId from res.data if available
+                const membership_id =
+                  membershipId ||
+                  res.data?.membership_id ||
+                  res.data?._id ||
+                  "";
+                const amountValue = amount || res.data?.amount || telegramCoin;
+                const transactionId =
+                  res.data?.transaction_id || "TELEGRAM_TX_ID";
+                await axios.post(
+                  `${API_BASE_URL}/user/telegram/payment/complete`,
+                  {
+                    membership_id,
+                    amount: amountValue,
+                    transactionId,
+                  },
+                  {
+                    headers: {
+                      Authorization: `Bearer ${token}`,
+                      "Content-Type": "application/json",
+                    },
+                  }
+                );
+                WebApp.showAlert(
+                  "Payment successful! Thank you. Your membership will be updated shortly."
+                );
+              } catch (e) {
+                WebApp.showAlert(
+                  "Payment succeeded, but failed to notify server. Please contact support if your membership is not updated."
+                );
+              }
+            })();
           } else if (status === "cancelled") {
             WebApp.showAlert("Payment was cancelled.");
           } else if (status === "failed") {
@@ -285,6 +323,13 @@ export default function MembershipPage() {
                             <h3 className="text-lg font-bold text-[#2fa8e0] mb-4 text-center">
                               USDT Payment
                             </h3>
+                            <div className="flex justify-center mb-4">
+                              <img
+                                src={walletTransferImage}
+                                alt="Wallet Transfer"
+                                className="rounded-lg max-h-32 object-contain"
+                              />
+                            </div>
                             <div className="mb-2 text-sm text-gray-700">
                               <span className="font-semibold">Period:</span>{" "}
                               {usdtModalItem?.membershiperiod ?? "-"} month(s)
@@ -333,7 +378,9 @@ export default function MembershipPage() {
                           onClick={() =>
                             handleTelegramCoinPayment(
                               item.membershiperiod,
-                              item.telegramcoin
+                              item.telegramcoin,
+                              item._id,
+                              item.usdt // or item.amount if that's the correct field
                             )
                           }
                         >

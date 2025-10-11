@@ -1,7 +1,7 @@
 import Layout from "../components/Layout";
 import { useState, useEffect } from "react";
 import axios from "axios";
-import groupIcon from "../assets/profileIcon.png";
+// import groupIcon from "../assets/profileIcon.png";
 import chamberIcon from "../assets/chamber.svg";
 import profileIcon from "../assets/profileIcon.png";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -364,24 +364,83 @@ export default function SubCompanyPage() {
           ) : companyProfile ? (
             <>
               {/* Company Icons Row */}
-              <div className="flex items-center justify-center gap-4 mb-4">
-                <div className="w-12 h-12 rounded-full bg-blue-400 flex items-center justify-center overflow-hidden">
+              <div className="flex items-center justify-center gap-4 mb-4 px-6">
+                {/* First icon: Profile, always shown, navigates to profile page */}
+                <div
+                  className="w-12 h-12 rounded-full bg-blue-400 flex items-center justify-center overflow-hidden cursor-pointer"
+                  onClick={() => (window.location.href = "/profile")}
+                >
                   <img
-                    src={groupIcon}
-                    alt="Group"
+                    src={profileIcon}
+                    alt="Profile"
                     className="w-8 h-8 object-contain"
                   />
                 </div>
-                <div className="w-12 h-12 rounded-full bg-blue-400 flex items-center justify-center overflow-hidden">
-                  <FontAwesomeIcon icon={faWhatsapp} size="2x" color="white" />
-                </div>
-                <div className="w-12 h-12 rounded-full bg-blue-400 flex items-center justify-center overflow-hidden">
-                  <FontAwesomeIcon icon={faTelegram} size="2x" color="white" />
-                </div>
-                <div className="w-12 h-12 rounded-full bg-blue-400 flex items-center justify-center overflow-hidden">
-                  <FontAwesomeIcon icon={faPhone} size="2x" color="white" />
-                </div>
-                <div className="w-12 h-12 rounded-full bg-blue-400 flex items-center justify-center p-2 overflow-hidden">
+                {/* WhatsApp icon or placeholder */}
+                {companyProfile?.WhatsApp ? (
+                  <div
+                    className="w-12 h-12 rounded-full bg-blue-400 flex items-center justify-center overflow-hidden cursor-pointer"
+                    onClick={() =>
+                      window.open(companyProfile.WhatsApp, "_blank")
+                    }
+                  >
+                    <FontAwesomeIcon
+                      icon={faWhatsapp}
+                      size="2x"
+                      color="white"
+                    />
+                  </div>
+                ) : (
+                  <div className="w-12 h-12" />
+                )}
+                {/* Telegram icon or placeholder */}
+                {companyProfile?.Telegram ? (
+                  <div
+                    className="w-12 h-12 rounded-full bg-blue-400 flex items-center justify-center overflow-hidden cursor-pointer"
+                    onClick={() =>
+                      window.open(companyProfile.Telegram, "_blank")
+                    }
+                  >
+                    <FontAwesomeIcon
+                      icon={faTelegram}
+                      size="2x"
+                      color="white"
+                    />
+                  </div>
+                ) : (
+                  <div className="w-12 h-12" />
+                )}
+                {/* Phone icon or placeholder */}
+                {companyProfile?.Phone ? (
+                  <div
+                    className="w-12 h-12 rounded-full bg-blue-400 flex items-center justify-center overflow-hidden cursor-pointer"
+                    onClick={() =>
+                      window.open(`tel:${companyProfile.Phone}`, "_self")
+                    }
+                  >
+                    <FontAwesomeIcon icon={faPhone} size="2x" color="white" />
+                  </div>
+                ) : (
+                  <div className="w-12 h-12" />
+                )}
+                {/* Website icon or placeholder */}
+                {companyProfile?.Website ? (
+                  <div
+                    className="w-12 h-12 rounded-full bg-blue-400 flex items-center justify-center overflow-hidden cursor-pointer"
+                    onClick={() =>
+                      window.open(companyProfile.Website, "_blank")
+                    }
+                  >
+                    <FontAwesomeIcon icon={faGlobe} size="2x" color="white" />
+                  </div>
+                ) : (
+                  <div className="w-12 h-12" />
+                )}
+                {/* Last icon: Chamber, always shown, navigates to chamber page */}
+                <div
+                  className="w-12 h-12 rounded-full bg-blue-400 flex items-center justify-center p-2 overflow-hidden cursor-pointer"
+                  onClick={() => (window.location.href = "/chamber")}
+                >
                   <img
                     src={chamberIcon}
                     alt="chamber icon"

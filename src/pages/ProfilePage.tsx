@@ -2,16 +2,17 @@ import { useEffect, useState } from "react";
 import axios from "axios";
 import { useProfileStore } from "../store/profileStore";
 import logo from "../assets/logo.png";
-import groupIcon from "../assets/profileIcon.png";
+// import groupIcon from "../assets/profileIcon.png";
+import chamberIcon from "../assets/chamber.svg";
 import company from "../assets/company.svg";
-import leftArrow from "../assets/left-arrow.png";
+// import leftArrow from "../assets/left-arrow.png";
 import rightArrow from "../assets/right-arrow.png";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faWhatsapp, faTelegram } from "@fortawesome/free-brands-svg-icons";
 import { faPhone } from "@fortawesome/free-solid-svg-icons";
 import Layout from "../components/Layout";
 import { useNavigate } from "react-router-dom";
-import WebApp from "@twa-dev/sdk";
+// import WebApp from "@twa-dev/sdk";
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 export default function ProfilePage() {
@@ -48,13 +49,13 @@ export default function ProfilePage() {
     fetchProfile();
   }, [setProfileStore]);
 
-  const handleTelegramClick = () => {
-    if (profile && profile.telegramId) {
-      WebApp.openTelegramLink(`https://t.me/${profile.tgid}`);
-    } else {
-      WebApp.showAlert("Telegram ID not available.");
-    }
-  };
+  // const handleTelegramClick = () => {
+  //   if (profile && profile.telegramId) {
+  //     WebApp.openTelegramLink(`https://t.me/${profile.tgid}`);
+  //   } else {
+  //     WebApp.showAlert("Telegram ID not available.");
+  //   }
+  // };
 
   return (
     <Layout>
@@ -93,35 +94,70 @@ export default function ProfilePage() {
                   {profile.owner_name_chinese || ""}
                 </div>
               </div>
-              <div className="flex items-center justify-center gap-2 mb-2">
-                <img src={leftArrow} alt="Left" className="w-4 h-8" />
-                <div className="w-12 h-12 rounded-full bg-blue-400 flex items-center justify-center p-2 overflow-hidden">
+              <div className="flex items-center justify-center gap-6 mb-2">
+                {/* First icon: Company, always shown, navigates to company page */}
+                <div
+                  className="w-12 h-12 rounded-full bg-blue-400 flex items-center justify-center p-2 overflow-hidden cursor-pointer"
+                  onClick={() => navigate("/sub-company")}
+                >
                   <img
                     src={company}
                     alt="Company"
                     className="w-8 h-8 object-contain"
                   />
                 </div>
-                <div className="w-12 h-12 rounded-full bg-blue-400 flex items-center justify-center overflow-hidden">
-                  <FontAwesomeIcon icon={faWhatsapp} size="2x" color="white" />
-                </div>
+                {/* WhatsApp icon or placeholder */}
+                {profile?.Whatsapp ? (
+                  <div
+                    className="w-12 h-12 rounded-full bg-blue-400 flex items-center justify-center overflow-hidden cursor-pointer"
+                    onClick={() => window.open(profile.Whatsapp, "_blank")}
+                  >
+                    <FontAwesomeIcon
+                      icon={faWhatsapp}
+                      size="2x"
+                      color="white"
+                    />
+                  </div>
+                ) : (
+                  <div className="w-12 h-12" />
+                )}
+                {/* Telegram icon or placeholder */}
+                {profile?.Telegram ? (
+                  <div
+                    className="w-12 h-12 rounded-full bg-blue-400 flex items-center justify-center overflow-hidden cursor-pointer"
+                    onClick={() => window.open(profile.Telegram, "_blank")}
+                  >
+                    <FontAwesomeIcon
+                      icon={faTelegram}
+                      size="2x"
+                      color="white"
+                    />
+                  </div>
+                ) : (
+                  <div className="w-12 h-12" />
+                )}
+                {/* Phone icon or placeholder */}
+                {profile?.Phone ? (
+                  <div
+                    className="w-12 h-12 rounded-full bg-blue-400 flex items-center justify-center overflow-hidden cursor-pointer"
+                    onClick={() => window.open(`tel:${profile.Phone}`, "_self")}
+                  >
+                    <FontAwesomeIcon icon={faPhone} size="2x" color="white" />
+                  </div>
+                ) : (
+                  <div className="w-12 h-12" />
+                )}
+                {/* Last icon: Chamber, always shown, navigates to chamber page */}
                 <div
-                  className="w-12 h-12 rounded-full bg-blue-400 flex items-center justify-center overflow-hidden"
-                  onClick={handleTelegramClick}
+                  className="w-12 h-12 rounded-full bg-blue-400 flex items-center justify-center p-2 overflow-hidden cursor-pointer"
+                  onClick={() => navigate("/chamber")}
                 >
-                  <FontAwesomeIcon icon={faTelegram} size="2x" color="white" />
-                </div>
-                <div className="w-12 h-12 rounded-full bg-blue-400 flex items-center justify-center overflow-hidden">
-                  <FontAwesomeIcon icon={faPhone} size="2x" color="white" />
-                </div>
-                <div className="w-12 h-12 rounded-full bg-blue-400 flex items-center justify-center overflow-hidden">
                   <img
-                    src={groupIcon}
-                    alt="Group"
+                    src={chamberIcon}
+                    alt="Chamber"
                     className="w-8 h-8 object-contain"
                   />
                 </div>
-                <img src={rightArrow} alt="Right" className="w-4 h-8" />
               </div>
               <div className="w-full rounded-md border-2 border-[#007cb6] bg-white p-4 mb-4 shadow text-center">
                 <div className="text-[#007cb6]">{profile.address1}</div>

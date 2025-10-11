@@ -14,8 +14,9 @@ import {
   faInstagram,
   faFacebook,
 } from "@fortawesome/free-brands-svg-icons";
-import { faPhone, faGlobe } from "@fortawesome/free-solid-svg-icons";
+import { faGlobe } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import WebApp from "@twa-dev/sdk";
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
@@ -442,31 +443,70 @@ export default function ChamberPage() {
                       </div>
                     )}
                     <div className="flex flex-row gap-8 mb-4">
+                      {/* Company logo, always shown */}
                       <img
                         src={CompanyLogo}
-                        alt="Profile"
-                        className="w-8 h-8"
+                        alt="Company"
+                        className="w-8 h-8 cursor-pointer"
+                        onClick={() => navigate("/sub-company")}
+                        title="Company"
                       />
-                      <FontAwesomeIcon
-                        icon={faWhatsapp}
-                        className="w-8 h-8 text-green-500"
-                        title="WhatsApp"
-                      />
-                      <FontAwesomeIcon
-                        icon={faYoutube}
-                        className="w-8 h-8 text-red-500"
-                        title="YouTube"
-                      />
-                      <FontAwesomeIcon
-                        icon={faPhone}
-                        className="w-8 h-8 text-pink-500"
-                        title="Phone"
-                      />
+                      {/* Social icons only if link present */}
+                      {c.WhatsApp && (
+                        <FontAwesomeIcon
+                          icon={faWhatsapp}
+                          className="w-8 h-8 text-green-500 cursor-pointer"
+                          title="WhatsApp"
+                          onClick={() => WebApp.openLink(c.WhatsApp)}
+                        />
+                      )}
+                      {c.Youtube && (
+                        <FontAwesomeIcon
+                          icon={faYoutube}
+                          className="w-8 h-8 text-red-500 cursor-pointer"
+                          title="YouTube"
+                          onClick={() => WebApp.openLink(c.Youtube)}
+                        />
+                      )}
+                      {c.Facebook && (
+                        <FontAwesomeIcon
+                          icon={faFacebook}
+                          className="w-8 h-8 text-blue-600 cursor-pointer"
+                          title="Facebook"
+                          onClick={() => WebApp.openLink(c.Facebook)}
+                        />
+                      )}
+                      {c.Instagram && (
+                        <FontAwesomeIcon
+                          icon={faInstagram}
+                          className="w-8 h-8 text-pink-500 cursor-pointer"
+                          title="Instagram"
+                          onClick={() => WebApp.openLink(c.Instagram)}
+                        />
+                      )}
+                      {c.tgchannel && (
+                        <FontAwesomeIcon
+                          icon={faTelegram}
+                          className="w-8 h-8 text-blue-400 cursor-pointer"
+                          title="Telegram"
+                          onClick={() => WebApp.openLink(c.tgchannel)}
+                        />
+                      )}
+                      {c.chamberwebsite && (
+                        <FontAwesomeIcon
+                          icon={faGlobe}
+                          className="w-8 h-8 text-green-600 cursor-pointer"
+                          title="Website"
+                          onClick={() => WebApp.openLink(c.chamberwebsite)}
+                        />
+                      )}
+                      {/* Profile logo, always shown */}
                       <img
                         src={ProfileIcon}
-                        alt="profile"
-                        className="w-8 h-8 text-blue-500"
-                        title="profile"
+                        alt="Profile"
+                        className="w-8 h-8 cursor-pointer"
+                        onClick={() => navigate("/profile")}
+                        title="Profile"
                       />
                     </div>
                     {/* Chamber names and designation */}
