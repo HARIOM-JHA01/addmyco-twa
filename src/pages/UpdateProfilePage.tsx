@@ -1,7 +1,7 @@
 import Layout from "../components/Layout";
 import { useState, useRef, useEffect } from "react";
 // import pencilImage from '../assets/pencil.png';
-import profileIcon from "../assets/profileIcon.png";
+import addmycoIcon from "../assets/addmyco.png";
 import WebApp from "@twa-dev/sdk";
 import axios from "axios";
 
@@ -212,8 +212,7 @@ export default function UpdateProfilePage() {
         </section>
 
         <section className="w-full max-w-md mx-auto mt-2">
-          <div className="flex flex-col items-center">
-            {/* Large circular profile picture placeholder */}
+          <div className="flex flex-col items-center mb-2">
             <div
               className="rounded-full flex items-center justify-center mb-6 cursor-pointer"
               onClick={handleProfileIconClick}
@@ -231,51 +230,35 @@ export default function UpdateProfilePage() {
                     autoPlay
                     loop
                     muted
-                    className="w-[180px] h-[180px] rounded-full object-cover"
+                    className="w-[180px] h-[180px] object-cover rounded-full"
                   />
                 )
               ) : (
                 <img
-                  src={profileIcon}
-                  alt="Profile Icon"
-                  className="w-[180px] h-[180px]"
+                  src={addmycoIcon}
+                  alt="Default Icon"
+                  className="w-[180px] h-[180px] object-cover rounded-full"
                 />
               )}
             </div>
             <input
               ref={fileInputRef}
               type="file"
-              accept={isPremiumMember ? "image/*,video/*" : "image/*"}
+              accept="image/*,video/*"
               style={{ display: "none" }}
               onChange={handleFileChange}
             />
-            {/* Browse and Cancel buttons can be removed or kept as needed */}
-            {/* <div className="flex gap-4 mb-4">
-                            <button
-                                className="bg-gray-800 text-white px-6 py-2 rounded-lg font-medium hover:bg-gray-700 transition-colors"
-                                onClick={() => WebApp.showAlert("Browse functionality to be implemented")}
-                            >
-                                Browse
-                            </button>
-                            <button
-                                className="bg-gray-800 text-white px-6 py-2 rounded-lg font-medium hover:bg-gray-700 transition-colors"
-                                onClick={() => WebApp.showAlert("Cancel functionality to be implemented")}
-                            >
-                                Cancel
-                            </button>
-                        </div> */}
-
-            {/* Upload instruction text */}
             {memberType === "premium" ? (
-              <p className="text-black text-center text-sm">
-                You can upload a 180 x 180 image or a video upto 2 minutes.
-              </p>
+              <span className="text-xs text-gray-600 text-center">
+                You can upload a 180 x 180 image or a video as your profile
+                media.
+              </span>
             ) : (
-              <p className="text-black text-center text-sm">
-                Please upload 180 X 180 Image or upgrade to <br />
-                premium for upload{" "}
-                <span className="text-[#00AEEF] font-medium">Video</span>
-              </p>
+              <span className="text-xs text-gray-600 text-center">
+                Upload Profile Image
+                <br />
+                Size 180 x 180
+              </span>
             )}
           </div>
         </section>

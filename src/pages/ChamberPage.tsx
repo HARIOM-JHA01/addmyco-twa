@@ -1,6 +1,7 @@
 import Layout from "../components/Layout";
 import { useState, useEffect } from "react";
 import axios from "axios";
+import { useNavigate } from "react-router-dom";
 import CompanyLogo from "../assets/company.svg";
 import LeftArrow from "../assets/left-arrow.png";
 import RightArrow from "../assets/right-arrow.png";
@@ -19,14 +20,11 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
 export default function ChamberPage() {
+  const navigate = useNavigate();
   const [currentChamberIndex, setCurrentChamberIndex] = useState(0);
-  // removed unused: form, setForm
   const [file, setFile] = useState<File | null>(null);
-  // removed unused: fileError, uploading
   const [chamberData, setChamberData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
-  // removed unused: fetchError
-  // removed unused: fileInputRef
   const [editMode, setEditMode] = useState<null | "create" | "update">(null);
   const [editChamber, setEditChamber] = useState<any>(null);
   const [editLoading, setEditLoading] = useState(false);
@@ -68,13 +66,6 @@ export default function ChamberPage() {
       tgchannel: chamber.tgchannel,
       chamberfanpage: chamber.chamberfanpage,
     });
-    setFile(null);
-    setEditError("");
-  };
-  // Open edit form for create
-  const openCreateChamber = () => {
-    setEditMode("create");
-    setEditChamber(null);
     setFile(null);
     setEditError("");
   };
@@ -398,179 +389,196 @@ export default function ChamberPage() {
           </form>
         ) : (
           <div className="bg-blue-100 bg-opacity-40 rounded-3xl p-4 w-full max-w-md mx-auto flex flex-col items-center shadow-lg">
-            {(() => {
-              const chambers = chamberData;
-              const c = chambers[currentChamberIndex];
-              return (
-                <>
-                  {/* Arrow navigation if more than 1 chamber */}
-                  {Array.isArray(chambers) && chambers.length > 1 && (
-                    <div className="flex flex-row justify-between items-center w-full mb-2">
-                      <button
-                        className={`p-1 ${
-                          currentChamberIndex === 0
-                            ? "opacity-30 cursor-not-allowed"
-                            : ""
-                        }`}
-                        onClick={() =>
-                          setCurrentChamberIndex((i) => Math.max(0, i - 1))
-                        }
-                        disabled={currentChamberIndex === 0}
-                        aria-label="Previous Chamber"
+            {Array.isArray(chamberData) && chamberData.length > 0 ? (
+              (() => {
+                const chambers = chamberData;
+                const c = chambers[currentChamberIndex];
+                return (
+                  <>
+                    {/* Arrow navigation if more than 1 chamber */}
+                    {Array.isArray(chambers) && chambers.length > 1 && (
+                      <div className="flex flex-row justify-between items-center w-full mb-2">
+                        <button
+                          className={`p-1 ${
+                            currentChamberIndex === 0
+                              ? "opacity-30 cursor-not-allowed"
+                              : ""
+                          }`}
+                          onClick={() =>
+                            setCurrentChamberIndex((i) => Math.max(0, i - 1))
+                          }
+                          disabled={currentChamberIndex === 0}
+                          aria-label="Previous Chamber"
+                        >
+                          <img
+                            src={LeftArrow}
+                            alt="Left Arrow"
+                            className="w-7 h-7"
+                          />
+                        </button>
+                        <span className="text-sm text-gray-500">
+                          {currentChamberIndex + 1} / {chambers.length}
+                        </span>
+                        <button
+                          className={`p-1 ${
+                            currentChamberIndex === chambers.length - 1
+                              ? "opacity-30 cursor-not-allowed"
+                              : ""
+                          }`}
+                          onClick={() =>
+                            setCurrentChamberIndex((i) =>
+                              Math.min(chambers.length - 1, i + 1)
+                            )
+                          }
+                          disabled={currentChamberIndex === chambers.length - 1}
+                          aria-label="Next Chamber"
+                        >
+                          <img
+                            src={RightArrow}
+                            alt="Right Arrow"
+                            className="w-7 h-7"
+                          />
+                        </button>
+                      </div>
+                    )}
+                    <div className="flex flex-row gap-8 mb-4">
+                      <img
+                        src={CompanyLogo}
+                        alt="Profile"
+                        className="w-8 h-8"
+                      />
+                      <FontAwesomeIcon
+                        icon={faWhatsapp}
+                        className="w-8 h-8 text-green-500"
+                        title="WhatsApp"
+                      />
+                      <FontAwesomeIcon
+                        icon={faYoutube}
+                        className="w-8 h-8 text-red-500"
+                        title="YouTube"
+                      />
+                      <FontAwesomeIcon
+                        icon={faPhone}
+                        className="w-8 h-8 text-pink-500"
+                        title="Phone"
+                      />
+                      <img
+                        src={ProfileIcon}
+                        alt="profile"
+                        className="w-8 h-8 text-blue-500"
+                        title="profile"
+                      />
+                    </div>
+                    {/* Chamber names and designation */}
+                    <div className="flex flex-col w-full mb-3 gap-4">
+                      <div className="w-full">
+                        <div className="rounded-full w-full text-center font-bold bg-white border-2 border-blue-200 mb-1 py-2 text-lg">
+                          {c.chamber_name_english}
+                        </div>
+                      </div>
+                      <div className="w-full">
+                        <div className="rounded-full w-full text-center font-bold bg-white border-2 border-blue-200 mb-1 py-2 text-lg">
+                          {c.chamber_name_chinese}
+                        </div>
+                      </div>
+                      <div className="w-full">
+                        <div className="rounded-full w-full text-center font-bold bg-white border-2 border-blue-200 mb-1 py-2 text-lg">
+                          {c.chamberdesignation}
+                        </div>
+                      </div>
+                    </div>
+                    {/* Image or video */}
+                    <div className="w-full flex justify-center mb-3">
+                      <div
+                        className="rounded-xl p-2 flex items-center justify-center w-full"
+                        style={{ width: 350, height: 200 }}
                       >
-                        <img
-                          src={LeftArrow}
-                          alt="Left Arrow"
-                          className="w-7 h-7"
-                        />
-                      </button>
-                      <span className="text-sm text-gray-500">
-                        {currentChamberIndex + 1} / {chambers.length}
-                      </span>
-                      <button
-                        className={`p-1 ${
-                          currentChamberIndex === chambers.length - 1
-                            ? "opacity-30 cursor-not-allowed"
-                            : ""
-                        }`}
-                        onClick={() =>
-                          setCurrentChamberIndex((i) =>
-                            Math.min(chambers.length - 1, i + 1)
-                          )
-                        }
-                        disabled={currentChamberIndex === chambers.length - 1}
-                        aria-label="Next Chamber"
+                        {c.image ? (
+                          <img
+                            src={c.image}
+                            alt="chamber"
+                            className="object-contain mx-auto rounded-md"
+                            style={{ maxWidth: "100%", maxHeight: "100%" }}
+                          />
+                        ) : (
+                          <img
+                            src={logo}
+                            alt="No chamber"
+                            className="object-contain mx-auto rounded-md bg-white w-full"
+                            style={{ maxWidth: "100%", maxHeight: "100%" }}
+                          />
+                        )}
+                      </div>
+                    </div>
+                    {/* Details box */}
+                    <div className="w-full flex mb-3">
+                      <div
+                        className="bg-white rounded-xl p-3 flex  w-full text-base text-gray-800 text-left"
+                        style={{ width: 350, height: 200 }}
                       >
-                        <img
-                          src={RightArrow}
-                          alt="Right Arrow"
-                          className="w-7 h-7"
-                        />
+                        <span>{c.detail}</span>
+                      </div>
+                    </div>
+                    <div className="flex flex-row gap-8 mb-4 justify-center w-full">
+                      {/* <img src={CompanyLogo} alt="Profile" className="w-8 h-8" /> */}
+                      <FontAwesomeIcon
+                        icon={faTelegram}
+                        className="w-8 h-8 text-blue-400"
+                        title="Telegram"
+                      />
+                      <FontAwesomeIcon
+                        icon={faYoutube}
+                        className="w-8 h-8 text-red-500"
+                        title="YouTube"
+                      />
+                      <FontAwesomeIcon
+                        icon={faFacebook}
+                        className="w-8 h-8 text-blue-600"
+                        title="Facebook"
+                      />
+                      <FontAwesomeIcon
+                        icon={faInstagram}
+                        className="w-8 h-8 text-pink-500"
+                        title="Instagram"
+                      />
+                      <FontAwesomeIcon
+                        icon={faGlobe}
+                        className="w-8 h-8 text-green-600"
+                        title="Website"
+                      />
+                    </div>
+                    {/* two buttons update add more */}
+                    <div className="flex justify-center w-full gap-4 text-center mt-6">
+                      <button
+                        className="p-2 w-full text-white bg-[#d50078] shadow-md rounded"
+                        onClick={() => openEditChamber(c)}
+                        type="button"
+                      >
+                        Update
+                      </button>
+                      <button
+                        className="p-2 w-full text-white bg-[#009944] shadow-md rounded"
+                        onClick={() => navigate("/create-chamber")}
+                        type="button"
+                      >
+                        Add More
                       </button>
                     </div>
-                  )}
-                  <div className="flex flex-row gap-8 mb-4">
-                    <img src={CompanyLogo} alt="Profile" className="w-8 h-8" />
-                    <FontAwesomeIcon
-                      icon={faWhatsapp}
-                      className="w-8 h-8 text-green-500"
-                      title="WhatsApp"
-                    />
-                    <FontAwesomeIcon
-                      icon={faYoutube}
-                      className="w-8 h-8 text-red-500"
-                      title="YouTube"
-                    />
-                    <FontAwesomeIcon
-                      icon={faPhone}
-                      className="w-8 h-8 text-pink-500"
-                      title="Phone"
-                    />
-                    <img
-                      src={ProfileIcon}
-                      alt="profile"
-                      className="w-8 h-8 text-blue-500"
-                      title="profile"
-                    />
-                  </div>
-                  {/* Chamber names and designation */}
-                  <div className="flex flex-col w-full mb-3 gap-4">
-                    <div className="w-full">
-                      <div className="rounded-full w-full text-center font-bold bg-white border-2 border-blue-200 mb-1 py-2 text-lg">
-                        {c.chamber_name_english}
-                      </div>
-                    </div>
-                    <div className="w-full">
-                      <div className="rounded-full w-full text-center font-bold bg-white border-2 border-blue-200 mb-1 py-2 text-lg">
-                        {c.chamber_name_chinese}
-                      </div>
-                    </div>
-                    <div className="w-full">
-                      <div className="rounded-full w-full text-center font-bold bg-white border-2 border-blue-200 mb-1 py-2 text-lg">
-                        {c.chamberdesignation}
-                      </div>
-                    </div>
-                  </div>
-                  {/* Image or video */}
-                  <div className="w-full flex justify-center mb-3">
-                    <div
-                      className="rounded-xl p-2 flex items-center justify-center w-full"
-                      style={{ width: 350, height: 200 }}
-                    >
-                      {c.image ? (
-                        <img
-                          src={c.image}
-                          alt="chamber"
-                          className="object-contain mx-auto rounded-md"
-                          style={{ maxWidth: "100%", maxHeight: "100%" }}
-                        />
-                      ) : (
-                        <img
-                          src={logo}
-                          alt="No chamber"
-                          className="object-contain mx-auto rounded-md bg-white w-full"
-                          style={{ maxWidth: "100%", maxHeight: "100%" }}
-                        />
-                      )}
-                    </div>
-                  </div>
-                  {/* Details box */}
-                  <div className="w-full flex mb-3">
-                    <div
-                      className="bg-white rounded-xl p-3 flex  w-full text-base text-gray-800 text-left"
-                      style={{ width: 350, height: 200 }}
-                    >
-                      <span>{c.detail}</span>
-                    </div>
-                  </div>
-                  <div className="flex flex-row gap-8 mb-4 justify-center w-full">
-                    {/* <img src={CompanyLogo} alt="Profile" className="w-8 h-8" /> */}
-                    <FontAwesomeIcon
-                      icon={faTelegram}
-                      className="w-8 h-8 text-blue-400"
-                      title="Telegram"
-                    />
-                    <FontAwesomeIcon
-                      icon={faYoutube}
-                      className="w-8 h-8 text-red-500"
-                      title="YouTube"
-                    />
-                    <FontAwesomeIcon
-                      icon={faFacebook}
-                      className="w-8 h-8 text-blue-600"
-                      title="Facebook"
-                    />
-                    <FontAwesomeIcon
-                      icon={faInstagram}
-                      className="w-8 h-8 text-pink-500"
-                      title="Instagram"
-                    />
-                    <FontAwesomeIcon
-                      icon={faGlobe}
-                      className="w-8 h-8 text-green-600"
-                      title="Website"
-                    />
-                  </div>
-                  {/* two buttons update add more */}
-                  <div className="flex justify-center w-full gap-4 text-center mt-6">
-                    <button
-                      className="p-2 w-full text-white bg-[#d50078] shadow-md rounded"
-                      onClick={() => openEditChamber(c)}
-                      type="button"
-                    >
-                      Update
-                    </button>
-                    <button
-                      className="p-2 w-full text-white bg-[#009944] shadow-md rounded"
-                      onClick={openCreateChamber}
-                      type="button"
-                    >
-                      Add More
-                    </button>
-                  </div>
-                </>
-              );
-            })()}
+                  </>
+                );
+              })()
+            ) : (
+              <div className="text-center text-gray-600 py-8">
+                <p className="mb-4">No chamber data found.</p>
+                <button
+                  className="p-2 px-6 text-white bg-[#009944] shadow-md rounded-full"
+                  onClick={() => navigate("/create-chamber")}
+                  type="button"
+                >
+                  Add Chamber
+                </button>
+              </div>
+            )}
           </div>
         )}
       </div>

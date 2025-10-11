@@ -1,5 +1,5 @@
 import Layout from "../components/Layout";
-import { useState, useRef } from "react";
+import { useState, useRef, useMemo } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 
@@ -26,6 +26,15 @@ export default function CreateCompanyPage() {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Memoize preview URL so it doesn't reload on description change
+  const previewUrl = useMemo(() => {
+    if (form.image) {
+      return URL.createObjectURL(form.image);
+    }
+    return null;
+    // eslint-disable-next-line
+  }, [form.image]);
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
@@ -137,26 +146,26 @@ export default function CreateCompanyPage() {
             {/* Info box for image/video upload instructions or preview */}
             <div className="w-full flex justify-center">
               {form.image ? (
-                <div className="flex items-center justify-center w-[366px] h-[205px] overflow-hidden bg-[#01a2e9]">
+                <div className="flex items-center justify-center rounded-lg w-[366px] h-[200px] overflow-hidden bg-[#01a2e9]">
                   {form.image.type.startsWith("image/") ? (
                     <img
-                      src={URL.createObjectURL(form.image)}
+                      src={previewUrl || undefined}
                       alt="Preview"
-                      className="object-cover w-[366px] h-[205px]"
+                      className="object-cover w-[366px] h-[200px]"
                     />
                   ) : form.image.type.startsWith("video/") ? (
                     <video
-                      src={URL.createObjectURL(form.image)}
+                      src={previewUrl || undefined}
                       autoPlay
                       loop
                       muted
                       playsInline
-                      className="object-cover w-[366px] h-[205px]"
+                      className="object-cover w-[366px] h-[200px]"
                     />
                   ) : null}
                 </div>
               ) : (
-                <div className="bg-[#01a2e9] text-center text-white font-bold py-6 mb-4 relative flex flex-col items-center justify-center w-[366px] h-[205px] rounded-2xl">
+                <div className="bg-[#01a2e9] text-center text-white font-bold py-6 mb-4 relative flex flex-col items-center justify-center w-[366px] h-[200px] rounded-2xl">
                   <div className="text-lg">
                     Please upload
                     <br />
@@ -199,8 +208,8 @@ export default function CreateCompanyPage() {
               placeholder="Company description"
               value={form.description}
               onChange={handleChange}
-              className="w-[330px] h-[150px] rounded-2xl px-[12px] py-2 border border-blue-500 mb-2 focus:outline-none focus:ring-2 focus:ring-blue-400 resize-none"
-              rows={3}
+              className="w-[330px] h-[200px] rounded-2xl px-[12px] py-2 border border-blue-500 mb-2 focus:outline-none focus:ring-2 focus:ring-blue-400 resize-none"
+              rows={6}
             />
             <input
               name="website"

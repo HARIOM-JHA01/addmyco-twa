@@ -5,6 +5,7 @@ import ProfilePage from "./pages/ProfilePage";
 import UpdateProfilePage from "./pages/UpdateProfilePage";
 import SubCompanyPage from "./pages/SubCompany";
 import ChamberPage from "./pages/ChamberPage";
+import CreateChamberPage from "./pages/CreateChamberPage";
 import ContactPage from "./pages/ContactPage";
 import MyQRPage from "./pages/MyQRPage";
 import CreateProfile from "./pages/createProfile";
@@ -156,6 +157,7 @@ function AppRoutes() {
       <Route path="/notifications" element={<Notifications />} />
       <Route path="/sub-company" element={<SubCompanyPage />} />
       <Route path="/chamber" element={<ChamberPage />} />
+      <Route path="/create-chamber" element={<CreateChamberPage />} />
       <Route path="/search" element={<ContactPage />} />
       <Route path="/my-qr" element={<MyQRPage />} />
       <Route path="/create-profile" element={<CreateProfile />} />

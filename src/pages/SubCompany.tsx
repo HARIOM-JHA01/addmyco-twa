@@ -243,7 +243,7 @@ export default function SubCompanyPage() {
               </div>
               {/* File input and Cancel button below the upload box */}
               <div className="w-full flex flex-row items-center justify-center gap-4 mb-3">
-                <label className="flex-1 flex justify-end">
+                <label>
                   <input
                     type="file"
                     accept="image/*,video/*"
@@ -257,7 +257,7 @@ export default function SubCompanyPage() {
                 </label>
                 <button
                   type="button"
-                  className="flex-1 bg-black text-white rounded px-6 py-2 font-semibold text-sm text-center"
+                  className="bg-black text-white rounded px-6 py-2 font-semibold text-sm text-center"
                   onClick={() => {
                     setEditMode(null);
                     setEditProfile(null);
@@ -346,6 +346,19 @@ export default function SubCompanyPage() {
                   : editMode === "update"
                   ? "Update"
                   : "Save"}
+              </button>
+              {/* Cancel button below Update/Save in edit mode */}
+              <button
+                type="button"
+                className="w-full bg-black text-white rounded-full py-2 font-bold mt-2"
+                onClick={() => {
+                  setEditMode(null);
+                  setEditProfile(null);
+                  setEditError("");
+                }}
+                disabled={editLoading}
+              >
+                Cancel
               </button>
             </form>
           ) : companyProfile ? (
