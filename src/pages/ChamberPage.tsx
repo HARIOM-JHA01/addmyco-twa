@@ -493,7 +493,17 @@ export default function ChamberPage() {
                         className="rounded-xl p-2 flex items-center justify-center w-full"
                         style={{ width: 350, height: 200 }}
                       >
-                        {c.image ? (
+                        {c.video && c.video.endsWith(".mp4") ? (
+                          <video
+                            src={c.video}
+                            autoPlay
+                            loop
+                            muted
+                            playsInline
+                            className="object-contain mx-auto rounded-md w-full h-full"
+                            style={{ maxWidth: "100%", maxHeight: "100%" }}
+                          />
+                        ) : c.image ? (
                           <img
                             src={c.image}
                             alt="chamber"
