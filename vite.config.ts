@@ -7,14 +7,4 @@ export default defineConfig({
     outDir: './dist',
   },
   base: '/addmyco/',
-  server: {
-    port: 3000,
-    proxy: {
-      '/api': {
-        target: 'https://telegramdirectory.org',
-        changeOrigin: true,
-        secure: false,
-      },
-    },
-  },
 });

@@ -1,9 +1,10 @@
 import { useProfileStore } from "../store/profileStore";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import axios from "axios";
 import WebApp from "@twa-dev/sdk";
+import { QRCodeSVG } from "qrcode.react";
 
 import walletTransferImage from "../assets/wallet-transfer.jpg";
 
@@ -38,18 +39,25 @@ export default function MembershipPage() {
     if (!usdtModalItem) return;
     setUsdtModalLoading(true);
     setUsdtModalError(null);
+    // Always use _id from membershiptenure API as membership_id
+    const membership_id = usdtModalItem._id;
+    if (!membership_id) {
+      setUsdtModalError(
+        "Membership ID is required for payment. Please select a valid membership option or contact support."
+      );
+      setUsdtModalLoading(false);
+      return;
+    }
     try {
       const token = localStorage.getItem("token");
       // Use membership_id and amount from the selected item, transactionId from user input
-      const membership_id =
-        usdtModalItem._id || usdtModalItem.membership_id || "";
-      const amount = usdtModalItem.usdt || usdtModalItem.amount;
+      const usdt = usdtModalItem.usdt || usdtModalItem.amount;
       const transactionId = usdtTransactionId;
       const res = await axios.post(
-        `${API_BASE_URL}/user/usdt/payment`,
+        `${API_BASE_URL}/usdt/payment`,
         {
-          membership_id,
-          amount,
+          membershipId: membership_id, // always use _id
+          usdt,
           transactionId,
         },
         {
@@ -104,6 +112,8 @@ export default function MembershipPage() {
           },
         });
         setRenewHistory(res.data.data || []);
+        // fetch payment history as well when opening renew box
+        fetchHistory();
       } catch (err: any) {
         setRenewError("Failed to load renewal tenure");
       } finally {
@@ -115,7 +125,7 @@ export default function MembershipPage() {
   const handleTelegramCoinPayment = async (
     membershipPeriod: number,
     telegramCoin: number,
-    membershipId?: string,
+    membershipId: string,
     amount?: number
   ) => {
     setTelegramBtnLoading(`${membershipPeriod}-${telegramCoin}`);
@@ -124,6 +134,7 @@ export default function MembershipPage() {
       const res = await axios.post(
         `${API_BASE_URL}/telegram/payment`,
         {
+          membership_id: membershipId, // always use _id
           membershiperiod: membershipPeriod,
           telegramcoin: telegramCoin,
         },
@@ -149,7 +160,7 @@ export default function MembershipPage() {
                 const transactionId =
                   res.data?.transaction_id || "TELEGRAM_TX_ID";
                 await axios.post(
-                  `${API_BASE_URL}/user/telegram/payment/complete`,
+                  `${API_BASE_URL}/telegram/payment/complete`,
                   {
                     membership_id,
                     amount: amountValue,
@@ -224,6 +235,32 @@ export default function MembershipPage() {
   const isPremium = profile?.membertype === "premium";
   const features = isPremium ? PREMIUM_FEATURES : BASIC_FEATURES;
 
+  // Membership payment history
+  const [history, setHistory] = useState<any[] | null>(null);
+  const [historyLoading, setHistoryLoading] = useState(false);
+  const [historyError, setHistoryError] = useState<string | null>(null);
+
+  const fetchHistory = async () => {
+    setHistoryLoading(true);
+    setHistoryError(null);
+    try {
+      const token = localStorage.getItem("token");
+      const res = await axios.get(`${API_BASE_URL}/membership/history`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setHistory(res.data.data || []);
+    } catch (err: any) {
+      setHistoryError("Failed to load membership history");
+    } finally {
+      setHistoryLoading(false);
+    }
+  };
+
+  // load history on mount
+  useEffect(() => {
+    fetchHistory();
+  }, []);
+
   return (
     <div className="bg-[url(/src/assets/background.jpg)] bg-cover bg-center min-h-screen w-full overflow-x-hidden flex flex-col">
       <Header />
@@ -268,11 +305,49 @@ export default function MembershipPage() {
             )}
           </div>
         </div>
+        {/* Membership History (below upgrade box) */}
+        <div className="w-full max-w-md mt-4 p-4 rounded-xl shadow-xl bg-white/90">
+          <div className="text-lg font-bold text-[#2fa8e0] mb-2 text-center">
+            Payment History
+          </div>
+          {historyLoading ? (
+            <div className="text-center text-gray-500">Loading history...</div>
+          ) : historyError ? (
+            <div className="text-center text-red-500">{historyError}</div>
+          ) : history && history.length > 0 ? (
+            <ul className="space-y-2">
+              {history.map((h: any) => (
+                <li key={h._id} className="border rounded-lg p-3 bg-white">
+                  <div className="text-sm text-gray-600">
+                    Date:{" "}
+                    {new Date(
+                      h.date || h.createdAt || Date.now()
+                    ).toLocaleString()}
+                  </div>
+                  <div className="font-semibold">
+                    Amount: {h.amount ?? h.usdt ?? "NA"}
+                  </div>
+                  <div className="text-sm text-gray-700">
+                    Status: {h.status ?? h.payment_status ?? "Unknown"}
+                  </div>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <div className="text-center text-gray-500">
+              No payment history found.
+            </div>
+          )}
+        </div>
         {/* Renew Membership History Box */}
         {showRenewBox && (
           <div className="bg-white rounded-xl shadow p-4 mt-4">
             <div className="text-lg font-bold text-[#2fa8e0] mb-2 text-center">
-              Membership Renewal History
+              Membership Renewal
+            </div>
+            <div className="text-center font-semibold text-black mb-4">
+              Unlock premium features and exclusive benefits. Choose your
+              payment method below:
             </div>
             {renewLoading ? (
               <div className="text-center text-gray-500">Loading...</div>
@@ -282,7 +357,7 @@ export default function MembershipPage() {
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b">
-                    <th className="py-2 px-2 text-left">Period (months)</th>
+                    <th className="py-2 px-2 text-center">Membership Tenure</th>
                     <th className="py-2 px-2 text-center">USDT</th>
                     <th className="py-2 px-2 text-center">Telegram Coin</th>
                   </tr>
@@ -291,17 +366,40 @@ export default function MembershipPage() {
                   {renewHistory.map((item) => (
                     <tr key={item._id} className="border-b last:border-b-0">
                       <td className="py-2 px-2 text-left font-bold">
-                        {item.membershiperiod ?? "NA"}
+                        {item.membershiperiod != null
+                          ? item.membershiperiod + " years"
+                          : "NA"}
                       </td>
                       <td className="py-2 px-2 text-center">
                         <button
-                          className="bg-[#2fa8e0] text-white px-4 py-2 rounded-lg font-semibold shadow hover:bg-[#1b7bb8] transition"
+                          className="group relative flex flex-col items-center justify-center px-5 py-3 rounded-xl font-bold shadow-lg bg-gradient-to-r from-[#2fa8e0] to-[#38bdf8] hover:from-[#38bdf8] hover:to-[#2fa8e0] transition text-white text-base focus:outline-none focus:ring-2 focus:ring-[#2fa8e0] focus:ring-offset-2"
+                          style={{ minWidth: 120 }}
                           onClick={() => {
                             setUsdtModalItem(item);
                             setUsdtModalOpen(true);
                           }}
                         >
-                          {item.usdt ?? "NA"} USDT
+                          <span className="flex items-center gap-2">
+                            <svg
+                              xmlns="http://www.w3.org/2000/svg"
+                              fill="none"
+                              viewBox="0 0 24 24"
+                              strokeWidth={1.5}
+                              stroke="currentColor"
+                              className="w-6 h-6 text-white drop-shadow"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                d="M12 3v18m9-9H3"
+                              />
+                            </svg>
+                            <span>{item.usdt ?? "NA"} USDT</span>
+                          </span>
+                          <span className="text-xs font-normal mt-1 opacity-80">
+                            Pay with USDT
+                          </span>
+                          <span className="absolute -bottom-2 left-1/2 -translate-x-1/2 w-0 h-1 bg-white rounded-full group-hover:w-3/4 transition-all duration-300"></span>
                         </button>
                       </td>
                       {/* USDT Payment Modal */}
@@ -323,16 +421,48 @@ export default function MembershipPage() {
                             <h3 className="text-lg font-bold text-[#2fa8e0] mb-4 text-center">
                               USDT Payment
                             </h3>
-                            <div className="flex justify-center mb-4">
+                            <div className="flex flex-col items-center gap-3 mb-4">
                               <img
                                 src={walletTransferImage}
                                 alt="Wallet Transfer"
                                 className="rounded-lg max-h-32 object-contain"
                               />
+                              {/* QR Code for wallet address */}
+                              <div className="p-2 bg-white rounded-md">
+                                <QRCodeSVG
+                                  value={"TK2TMn99SBCrdbZpSef7rFE3vTccvR6dCz"}
+                                  size={128}
+                                  bgColor="#ffffff"
+                                  fgColor="#000000"
+                                />
+                              </div>
+                              <p className="text-sm font-medium break-all bg-gray-100 p-4 rounded-lg text-center">
+                                Copy Wallet Address
+                                <br />
+                                <span
+                                  className="text-blue-600 cursor-pointer"
+                                  onClick={async () => {
+                                    try {
+                                      await navigator.clipboard.writeText(
+                                        "TK2TMn99SBCrdbZpSef7rFE3vTccvR6dCz"
+                                      );
+                                      WebApp.showAlert(
+                                        "Wallet address copied to clipboard"
+                                      );
+                                    } catch (e) {
+                                      WebApp.showAlert(
+                                        "Failed to copy address. Please copy manually."
+                                      );
+                                    }
+                                  }}
+                                >
+                                  TK2TMn99SBCrdbZpSef7rFE3vTccvR6dCz
+                                </span>
+                              </p>
                             </div>
                             <div className="mb-2 text-sm text-gray-700">
                               <span className="font-semibold">Period:</span>{" "}
-                              {usdtModalItem?.membershiperiod ?? "-"} month(s)
+                              {usdtModalItem?.membershiperiod ?? "-"} Year(s)
                             </div>
                             <div className="mb-2 text-sm text-gray-700">
                               <span className="font-semibold">USDT:</span>{" "}
@@ -357,7 +487,7 @@ export default function MembershipPage() {
                               </div>
                             )}
                             <button
-                              className="w-full bg-[#2fa8e0] text-white font-semibold py-2 rounded-lg mt-2 hover:bg-[#1b7bb8] transition disabled:opacity-60 disabled:cursor-not-allowed"
+                              className="w-full bg-gradient-to-r from-[#2fa8e0] to-[#38bdf8] text-white font-semibold py-2 rounded-lg mt-2 hover:from-[#38bdf8] hover:to-[#2fa8e0] transition disabled:opacity-60 disabled:cursor-not-allowed shadow-lg"
                               onClick={handleUsdtPayment}
                               disabled={usdtModalLoading || !usdtTransactionId}
                             >
@@ -370,7 +500,8 @@ export default function MembershipPage() {
                       )}
                       <td className="py-2 px-2 text-center">
                         <button
-                          className="bg-[#fbbf24] text-white px-4 py-2 rounded-lg font-semibold shadow hover:bg-[#f59e1b] transition disabled:opacity-60 disabled:cursor-not-allowed"
+                          className="group relative flex flex-col items-center justify-center px-5 py-3 rounded-xl font-bold shadow-lg bg-gradient-to-r from-[#fbbf24] to-[#f59e1b] hover:from-[#f59e1b] hover:to-[#fbbf24] transition text-white text-base focus:outline-none focus:ring-2 focus:ring-[#fbbf24] focus:ring-offset-2 disabled:opacity-60 disabled:cursor-not-allowed"
+                          style={{ minWidth: 120 }}
                           disabled={
                             telegramBtnLoading ===
                             `${item.membershiperiod}-${item.telegramcoin}`
@@ -384,10 +515,33 @@ export default function MembershipPage() {
                             )
                           }
                         >
+                          <span className="flex items-center gap-2">
+                            <svg
+                              xmlns="http://www.w3.org/2000/svg"
+                              fill="none"
+                              viewBox="0 0 24 24"
+                              strokeWidth={1.5}
+                              stroke="currentColor"
+                              className="w-6 h-6 text-white drop-shadow"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                d="M12 3v18m9-9H3"
+                              />
+                            </svg>
+                            <span>{item.telegramcoin ?? "NA"} TG Coin</span>
+                          </span>
+                          <span className="text-xs font-normal mt-1 opacity-80">
+                            Pay withTG Coin
+                          </span>
+                          <span className="absolute -bottom-2 left-1/2 -translate-x-1/2 w-0 h-1 bg-white rounded-full group-hover:w-3/4 transition-all duration-300"></span>
                           {telegramBtnLoading ===
-                          `${item.membershiperiod}-${item.telegramcoin}`
-                            ? "Processing..."
-                            : `${item.telegramcoin ?? "NA"} TG Coin`}
+                          `${item.membershiperiod}-${item.telegramcoin}` ? (
+                            <span className="ml-2 animate-pulse">
+                              Processing...
+                            </span>
+                          ) : null}
                         </button>
                       </td>
                     </tr>

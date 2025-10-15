@@ -1,17 +1,22 @@
 import Layout from "../components/Layout";
 import { useState, useEffect } from "react";
 import axios from "axios";
-// import groupIcon from "../assets/profileIcon.png";
 import chamberIcon from "../assets/chamber.svg";
 import profileIcon from "../assets/profileIcon.png";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faWhatsapp, faTelegram } from "@fortawesome/free-brands-svg-icons";
-import { faPhone, faGlobe } from "@fortawesome/free-solid-svg-icons";
+import {
+  faPhone,
+  faGlobe,
+  faArrowRight,
+} from "@fortawesome/free-solid-svg-icons";
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
 export default function SubCompanyPage() {
-  const [companyProfile, setCompanyProfile] = useState<any>(null);
+  const [companies, setCompanies] = useState<any[]>([]);
+  const [currentCompanyIndex, setCurrentCompanyIndex] = useState(0);
+  const companyProfile = companies[currentCompanyIndex] || null;
   const [loading, setLoading] = useState(true);
   const [editMode, setEditMode] = useState<null | "create" | "update">(null);
   const [editProfile, setEditProfile] = useState<any>(null);
@@ -39,22 +44,20 @@ export default function SubCompanyPage() {
           profileData = res.data.company;
         }
 
-        // Handle array response - if profileData is an array, take the first item
+        // If array, set all companies; else, wrap single object in array
         if (Array.isArray(profileData) && profileData.length > 0) {
-          profileData = profileData[0];
-        }
-
-        if (
-          profileData &&
-          typeof profileData === "object" &&
-          !Array.isArray(profileData)
-        ) {
-          setCompanyProfile(profileData);
+          setCompanies(profileData);
+          setCurrentCompanyIndex(0);
+        } else if (profileData && typeof profileData === "object") {
+          setCompanies([profileData]);
+          setCurrentCompanyIndex(0);
         } else {
-          setCompanyProfile(null);
+          setCompanies([]);
+          setCurrentCompanyIndex(0);
         }
       } catch (err: any) {
-        setCompanyProfile(null);
+        setCompanies([]);
+        setCurrentCompanyIndex(0);
       } finally {
         setLoading(false);
       }
@@ -159,9 +162,11 @@ export default function SubCompanyPage() {
         typeof profileData === "object" &&
         !Array.isArray(profileData)
       ) {
-        setCompanyProfile(profileData);
+        setCompanies([profileData]);
+        setCurrentCompanyIndex(0);
       } else {
-        setCompanyProfile(null);
+        setCompanies([]);
+        setCurrentCompanyIndex(0);
       }
 
       setEditMode(null);
@@ -364,7 +369,26 @@ export default function SubCompanyPage() {
           ) : companyProfile ? (
             <>
               {/* Company Icons Row */}
-              <div className="flex items-center justify-center gap-4 mb-4 px-6">
+              <div className="flex items-center justify-center gap-4 mb-4 px-6 relative">
+                {/* Right arrow for multiple companies */}
+                {companies.length > 1 &&
+                  currentCompanyIndex < companies.length - 1 && (
+                    <div
+                      className="absolute right-0 top-1/2 -translate-y-1/2 w-10 h-10 flex items-center justify-center bg-[#007cb6] rounded-full cursor-pointer shadow-lg z-10"
+                      onClick={() =>
+                        setCurrentCompanyIndex((i) =>
+                          Math.min(i + 1, companies.length - 1)
+                        )
+                      }
+                      title="Next Company"
+                    >
+                      <FontAwesomeIcon
+                        icon={faArrowRight}
+                        size="lg"
+                        color="white"
+                      />
+                    </div>
+                  )}
                 {/* First icon: Profile, always shown, navigates to profile page */}
                 <div
                   className="w-12 h-12 rounded-full bg-blue-400 flex items-center justify-center overflow-hidden cursor-pointer"

@@ -55,9 +55,8 @@ export default function Footer() {
             <button
               className="text-white font-semibold px-4 py-2 text-left hover:bg-gray-800"
               onClick={() => {
-                setWorkModalText("Background");
-                setShowWorkModal(true);
                 setShowSettings(false);
+                router("/background");
               }}
             >
               Background

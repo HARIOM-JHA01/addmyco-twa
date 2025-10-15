@@ -6,7 +6,7 @@ import logo from "../assets/logo.png";
 import chamberIcon from "../assets/chamber.svg";
 import company from "../assets/company.svg";
 // import leftArrow from "../assets/left-arrow.png";
-import rightArrow from "../assets/right-arrow.png";
+// import rightArrow from "../assets/right-arrow.png";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faWhatsapp, faTelegram } from "@fortawesome/free-brands-svg-icons";
 import { faPhone } from "@fortawesome/free-solid-svg-icons";

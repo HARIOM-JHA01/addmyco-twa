@@ -15,6 +15,7 @@ import MembershipPage from "./pages/MembershipPage";
 import axios from "axios";
 import WebApp from "@twa-dev/sdk";
 import CreateCompanyPage from "./pages/CreateCompanyPage";
+import BackgroundPage from "./pages/BackgroundPage";
 import HomePage from "./pages/HomePage";
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
@@ -164,6 +165,8 @@ function AppRoutes() {
       <Route path="/create-company" element={<CreateCompanyPage />} />
       <Route path="/theme" element={<ThemePage />} />
       <Route path="/membership" element={<MembershipPage />} />
+      <Route path="/background" element={<BackgroundPage />} />
+      <Route path="*" element={<div>404 Not Found</div>} />
     </Routes>
   );
 }

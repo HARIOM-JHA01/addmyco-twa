@@ -2,22 +2,23 @@ import { useEffect, useState } from "react";
 import logo from "../assets/logo.png";
 import addmycoLogo from "../assets/addmyco.png";
 import chamberIcon from "../assets/chamber.svg";
-import whatsappIcon from "../assets/message.png";
-import telegramIcon from "../assets/dynamic-name-card-logo.png";
-import phoneIcon from "../assets/company.svg";
-import groupIcon from "../assets/profileIcon.png";
+import companyIcon from "../assets/company.svg";
 import { ArrowLeft, ArrowRight, Share2, Camera } from "lucide-react";
 import { QRCodeSVG } from "qrcode.react";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
 import axios from "axios";
+import { useNavigate } from "react-router-dom";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faTelegram, faWhatsapp } from "@fortawesome/free-brands-svg-icons";
+import { faPhone } from "@fortawesome/free-solid-svg-icons";
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
 export default function HomePage() {
   const [profile, setProfile] = useState<any>(null);
   const [loading, setLoading] = useState(true);
-
+  const navigate = useNavigate();
   useEffect(() => {
     const fetchProfile = async () => {
       try {
@@ -143,28 +144,25 @@ export default function HomePage() {
               aria-label="Left"
             />
             <img
+              onClick={() => {
+                navigate("/sub-company");
+              }}
+              src={companyIcon}
+              alt="Company"
+              className="w-12 h-12 rounded-full bg-blue-400 p-2 cursor-pointer"
+            />
+            {/* whatsappIcon */}
+            <FontAwesomeIcon icon={faWhatsapp} size="2x" color="white" />
+            {/* telegramIcon */}
+            <FontAwesomeIcon icon={faTelegram} size="2x" color="white" />
+            {/* phoneIcon */}
+            <FontAwesomeIcon icon={faPhone} size="2x" color="white" />
+            <img
+              onClick={() => {
+                navigate("/chamber");
+              }}
               src={chamberIcon}
               alt="Chamber"
-              className="w-12 h-12 rounded-full bg-blue-400 p-2 cursor-pointer"
-            />
-            <img
-              src={whatsappIcon}
-              alt="WhatsApp"
-              className="w-12 h-12 rounded-full bg-blue-400 p-2 cursor-pointer"
-            />
-            <img
-              src={telegramIcon}
-              alt="Telegram"
-              className="w-12 h-12 rounded-full bg-blue-400 p-2 cursor-pointer"
-            />
-            <img
-              src={phoneIcon}
-              alt="Phone"
-              className="w-12 h-12 rounded-full bg-blue-400 p-2 cursor-pointer"
-            />
-            <img
-              src={groupIcon}
-              alt="Group"
               className="w-12 h-12 rounded-full bg-blue-400 p-2 cursor-pointer"
             />
             <ArrowRight
