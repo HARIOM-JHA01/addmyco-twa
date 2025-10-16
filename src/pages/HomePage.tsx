@@ -41,18 +41,18 @@ export default function HomePage() {
     window.addEventListener("resize", onResize);
     return () => window.removeEventListener("resize", onResize);
   }, [profile]);
+
   useEffect(() => {
     const fetchProfile = async () => {
       try {
         const token = localStorage.getItem("token");
         if (!token) return;
-
         const res = await axios.get(`${API_BASE_URL}/getProfile`, {
           headers: { Authorization: `Bearer ${token}` },
         });
         setProfile(res.data.data);
       } catch (error) {
-        console.error("Failed to fetch profile:", error);
+        console.error(error);
       } finally {
         setLoading(false);
       }
@@ -69,7 +69,7 @@ export default function HomePage() {
           text: "Check out my profile!",
           url: qrLink,
         })
-        .catch((err) => console.log("Share failed:", err));
+        .catch(() => {});
     } else {
       navigator.clipboard.writeText(qrLink);
       alert("Link copied to clipboard!");
@@ -77,7 +77,6 @@ export default function HomePage() {
   };
 
   const handleScan = () => {
-    // Navigate to scanner page or open camera
     window.location.href = "/addmyco/search";
   };
 
@@ -97,14 +96,12 @@ export default function HomePage() {
       <Header />
       <div className="flex flex-col items-center justify-center flex-grow py-4 px-2 pb-32">
         <div className="bg-blue-100 bg-opacity-40 rounded-3xl p-6 w-full max-w-md mx-auto flex flex-col items-center shadow-lg">
-          {/* Company Name in English */}
           <button
             className="w-full rounded-full bg-app text-app text-xl font-bold py-2 mb-2 flex items-center justify-center"
             style={{ borderRadius: "2rem" }}
           >
             {companyData?.company_name_english || "Company Name"}
           </button>
-          {/* Company Name in Chinese */}
           <button
             className="w-full rounded-full bg-app text-app text-xl font-bold mb-2 py-2 flex items-center justify-center"
             style={{ borderRadius: "2rem" }}
@@ -112,7 +109,6 @@ export default function HomePage() {
             {companyData?.company_name_chinese || "公司名称"}
           </button>
 
-          {/* Company Image/Video */}
           <div className="flex flex-col items-center mb-6">
             <div className="rounded-full mb-2 w-[180px] h-[180px] flex items-center justify-center overflow-hidden bg-white">
               {profile?.profile_image &&
@@ -142,28 +138,18 @@ export default function HomePage() {
                 />
               )}
             </div>
-
-            {/* User Name in English */}
-            <div
-              className="w-full rounded-full bg-app text-app text-lg font-bold py-2 mb-2 flex items-center justify-center"
-              style={{ borderRadius: "2rem" }}
-            >
+            <div className="rounded-full bg-app text-app text-lg font-bold py-2 mb-2 flex items-center justify-center px-6 mx-auto">
               {profile?.owner_name_english || "User Name"}
             </div>
-            {/* User Name in Chinese */}
-            <div
-              className="w-full rounded-full bg-app text-app text-lg font-bold py-2 mb-4 flex items-center justify-center"
-              style={{ borderRadius: "2rem" }}
-            >
+            <div className="rounded-full bg-app text-app text-lg font-bold py-2 mb-4 flex items-center justify-center px-6 mx-auto">
               {profile?.owner_name_chinese || "用户名"}
             </div>
           </div>
 
-          {/* Social Icons Carousel */}
           <div className="relative w-full mb-6">
             <button
               aria-label="Scroll left"
-              className={`absolute left-0 top-1/2 -translate-y-1/2 -translate-x-1/2 z-20 p-2 bg-white/10 rounded-full ${
+              className={`absolute left-0 top-1/2 -translate-y-1/2 -translate-x-1/2 z-20 p-1 bg-white/70 rounded-full ${
                 canLeft ? "opacity-100" : "opacity-30 pointer-events-none"
               }`}
               onClick={() => {
@@ -179,10 +165,11 @@ export default function HomePage() {
             >
               <img src={leftArrow} alt="left" className="w-6 h-6" />
             </button>
+
             <div
               ref={iconsRef}
               onScroll={updateScroll}
-              className="flex gap-4 px-6 overflow-x-auto no-scrollbar items-center"
+              className="flex gap-4 px-4 overflow-x-auto no-scrollbar items-center"
               style={{
                 scrollBehavior: "smooth",
                 scrollSnapType: "x mandatory" as any,
@@ -253,9 +240,10 @@ export default function HomePage() {
                 />
               </div>
             </div>
+
             <button
               aria-label="Scroll right"
-              className={`absolute right-0 top-1/2 -translate-y-1/2 translate-x-1/2 z-20 p-2 bg-white/10 rounded-full ${
+              className={`absolute right-0 top-1/2 -translate-y-1/2 translate-x-1/2 z-20 p-1 bg-white/70 rounded-full ${
                 canRight ? "opacity-100" : "opacity-30 pointer-events-none"
               }`}
               onClick={() => {
@@ -270,7 +258,6 @@ export default function HomePage() {
             </button>
           </div>
 
-          {/* Address before QR Code (address1, address2, address3) */}
           {(profile?.address1 || profile?.address2 || profile?.address3) && (
             <div
               className="w-full rounded-md bg-white p-4 mb-4 shadow text-center"
@@ -291,7 +278,7 @@ export default function HomePage() {
               )}
             </div>
           )}
-          {/* Dynamic QR Code */}
+
           <div className="flex justify-center mb-4">
             <div className="p-2 bg-white">
               <QRCodeSVG
@@ -305,7 +292,7 @@ export default function HomePage() {
                         .getPropertyValue("--app-background-color")
                         .trim() || "#007cb6"
                     );
-                  } catch (e) {
+                  } catch {
                     return "#007cb6";
                   }
                 })()}
@@ -320,7 +307,6 @@ export default function HomePage() {
             </div>
           </div>
 
-          {/* Share and Scan Buttons (icon only, circular) */}
           <div className="flex gap-6 w-full justify-center mt-2">
             <button
               onClick={handleShare}

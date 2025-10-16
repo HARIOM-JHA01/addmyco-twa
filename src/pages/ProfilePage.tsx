@@ -2,7 +2,6 @@ import { useEffect, useState, useRef } from "react";
 import axios from "axios";
 import { useProfileStore } from "../store/profileStore";
 import logo from "../assets/logo.png";
-// import groupIcon from "../assets/profileIcon.png";
 import chamberIcon from "../assets/chamber.svg";
 import company from "../assets/company.svg";
 import leftArrow from "../assets/left-arrow.png";
@@ -18,7 +17,6 @@ import {
 import { faPhone, faGlobe } from "@fortawesome/free-solid-svg-icons";
 import Layout from "../components/Layout";
 import { useNavigate } from "react-router-dom";
-// import WebApp from "@twa-dev/sdk";
 import i18n from "../i18n";
 import WebApp from "@twa-dev/sdk";
 
@@ -29,6 +27,10 @@ export default function ProfilePage() {
   const setProfileStore = useProfileStore((state) => state.setProfile);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const iconsRef = useRef<HTMLDivElement | null>(null);
+  const [showArrows, setShowArrows] = useState(false);
+  const [canScrollLeft, setCanScrollLeft] = useState(false);
+  const [canScrollRight, setCanScrollRight] = useState(false);
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -57,12 +59,6 @@ export default function ProfilePage() {
     fetchProfile();
   }, [setProfileStore]);
 
-  // Icon carousel refs & handlers
-  const iconsRef = useRef<HTMLDivElement | null>(null);
-  const [showArrows, setShowArrows] = useState(false);
-  const [canScrollLeft, setCanScrollLeft] = useState(false);
-  const [canScrollRight, setCanScrollRight] = useState(false);
-
   const updateIconScroll = () => {
     const el = iconsRef.current;
     if (!el) return;
@@ -77,16 +73,7 @@ export default function ProfilePage() {
     const onResize = () => updateIconScroll();
     window.addEventListener("resize", onResize);
     return () => window.removeEventListener("resize", onResize);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [profile]);
-
-  // const handleTelegramClick = () => {
-  //   if (profile && profile.telegramId) {
-  //     WebApp.openTelegramLink(`https://t.me/${profile.tgid}`);
-  //   } else {
-  //     WebApp.showAlert("Telegram ID not available.");
-  //   }
-  // };
 
   return (
     <Layout>
@@ -98,22 +85,20 @@ export default function ProfilePage() {
             <div className="text-red-500 text-center">{error}</div>
           ) : profile ? (
             <>
-              <div className="flex flex-col items-center">
-                {/* Company Name in English (full width, same look as HomePage) */}
+              <div className="flex flex-col w-full">
                 <button
                   className="w-full rounded-full bg-app text-app text-xl font-bold py-2 mb-2 flex items-center justify-center"
-                  style={{ borderRadius: "2rem" }}
+                  style={{ borderRadius: "2rem", width: "100%" }}
                 >
                   {profile?.companydata?.company_name_english || "Company Name"}
                 </button>
-                {/* Company Name in Chinese */}
                 <button
                   className="w-full rounded-full bg-app text-app text-xl font-bold mb-2 py-2 flex items-center justify-center"
-                  style={{ borderRadius: "2rem" }}
+                  style={{ borderRadius: "2rem", width: "100%" }}
                 >
                   {profile?.companydata?.company_name_chinese || "公司名称"}
                 </button>
-                <div className="rounded-full mb-2 w-[180px] h-[180px] flex items-center justify-center overflow-hidden bg-white">
+                <div className="rounded-full mb-2 w-[180px] h-[180px] flex items-center justify-center overflow-hidden bg-white self-center">
                   {profile.profile_image &&
                   profile.profile_image.endsWith(".mp4") ? (
                     <video
@@ -132,18 +117,16 @@ export default function ProfilePage() {
                     />
                   )}
                 </div>
-                <div className="w-full rounded-full bg-app text-app text-lg font-bold py-2 mb-2 flex items-center justify-center">
-                  {profile.owner_name_english || "No Name"}
-                </div>
-                <div className="w-full rounded-full bg-app text-app text-lg font-bold py-2 mb-4 flex items-center justify-center">
-                  {profile.owner_name_chinese || ""}
+                <div className="flex flex-col items-center w-full">
+                  <div className="rounded-full bg-app text-app text-lg font-bold py-2 mb-2 flex items-center justify-center px-6 mx-auto w-48">
+                    {profile.owner_name_english || "No Name"}
+                  </div>
+                  <div className="rounded-full bg-app text-app text-lg font-bold py-2 mb-4 flex items-center justify-center px-6 mx-auto w-48">
+                    {profile.owner_name_chinese || ""}
+                  </div>
                 </div>
               </div>
-              {/* Icon carousel: company, whatsapp, telegram, phone, chamber, then other links */}
               <div className="relative w-full mb-2">
-                <div className="flex items-center justify-center mb-2">
-                  {/* Left arrow - shown when overflow and can scroll left */}
-                </div>
                 <div className="relative">
                   <button
                     aria-label="Scroll left"
@@ -168,13 +151,12 @@ export default function ProfilePage() {
                   <div
                     ref={iconsRef}
                     onScroll={updateIconScroll}
-                    className="flex gap-4 px-4 overflow-x-auto no-scrollbar items-center"
+                    className="flex gap-4 px-4 overflow-x-hidden items-center"
                     style={{
                       scrollBehavior: "smooth",
                       scrollSnapType: "x mandatory" as any,
                     }}
                   >
-                    {/* Company - always show */}
                     <div
                       className="w-12 h-12 rounded-full flex items-center justify-center p-2 overflow-hidden cursor-pointer flex-shrink-0"
                       onClick={() => navigate("/sub-company")}
@@ -189,8 +171,6 @@ export default function ProfilePage() {
                         className="w-9 h-9 object-contain"
                       />
                     </div>
-
-                    {/* WhatsApp */}
                     {profile?.WhatsApp ? (
                       <div
                         className="w-12 h-12 rounded-full flex items-center justify-center overflow-hidden cursor-pointer flex-shrink-0"
@@ -207,8 +187,6 @@ export default function ProfilePage() {
                         />
                       </div>
                     ) : null}
-
-                    {/* Telegram */}
                     {profile?.telegramId ? (
                       <div
                         className="w-12 h-12 rounded-full flex items-center justify-center overflow-hidden cursor-pointer flex-shrink-0"
@@ -229,8 +207,6 @@ export default function ProfilePage() {
                         />
                       </div>
                     ) : null}
-
-                    {/* Phone */}
                     {profile?.contact ? (
                       <div
                         className="w-12 h-12 rounded-full flex items-center justify-center overflow-hidden cursor-pointer flex-shrink-0"
@@ -249,8 +225,6 @@ export default function ProfilePage() {
                         />
                       </div>
                     ) : null}
-
-                    {/* Chamber - always show */}
                     <div
                       className="w-12 h-12 rounded-full flex items-center justify-center p-2 overflow-hidden cursor-pointer flex-shrink-0"
                       onClick={() => navigate("/chamber")}
@@ -265,8 +239,6 @@ export default function ProfilePage() {
                         className="w-9 h-9 object-contain"
                       />
                     </div>
-
-                    {/* Additional links: website, facebook, instagram, youtube, linkedin, twitter */}
                     {profile?.website && (
                       <div
                         className="w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0"
