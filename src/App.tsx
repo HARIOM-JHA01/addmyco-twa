@@ -95,12 +95,60 @@ function AppRoutes() {
   }, []);
 
   const handleLogin = async () => {
-    WebApp.ready();
     try {
-      const user = WebApp.initDataUnsafe.user;
-      if (!user || !user.username) {
-        WebApp.showAlert("No Telegram username available.");
-        return;
+      // Ensure WebApp is ready before accessing init data
+      try {
+        await WebApp.ready();
+      } catch (e) {
+        console.debug("WebApp.ready() failed or not available", e);
+      }
+
+      // initData may be available on different properties depending on SDK initialization
+      let user: any = null;
+      try {
+        if (
+          WebApp.initData &&
+          typeof WebApp.initData === "object" &&
+          (WebApp.initData as any).user
+        ) {
+          user = (WebApp.initData as any).user;
+        } else if (
+          WebApp.initDataUnsafe &&
+          (WebApp.initDataUnsafe as any).user
+        ) {
+          user = (WebApp.initDataUnsafe as any).user;
+        }
+      } catch (e) {
+        console.debug("Error reading Telegram init data", e);
+      }
+      console.debug(
+        "Telegram init user:",
+        user,
+        "initData:",
+        WebApp.initData,
+        "initDataUnsafe:",
+        WebApp.initDataUnsafe
+      );
+      let username = user?.username;
+      if (!username) {
+        // If running outside Telegram or no username available, allow a manual prompt (dev/test)
+        try {
+          const promptName = window.prompt(
+            "Telegram username not available. Enter a test username to continue (cancel to abort):"
+          );
+          if (!promptName) {
+            try {
+              WebApp.showAlert("No Telegram username available.");
+            } catch {}
+            return;
+          }
+          username = promptName;
+        } catch {
+          try {
+            WebApp.showAlert("No Telegram username available.");
+          } catch {}
+          return;
+        }
       }
       let country = "";
       let countryCode = "";
@@ -116,7 +164,7 @@ function AppRoutes() {
         return;
       }
       const response = await axios.post(`${API_BASE_URL}/telegram-login`, {
-        telegram_username: user.username,
+        telegram_username: username,
         country: country || "India",
         countryCode: countryCode || "IN",
       });
@@ -212,10 +260,8 @@ function AppRoutes() {
 }
 
 function App() {
-  const basename = import.meta.env.BASE_URL || "/";
-
   return (
-    <BrowserRouter basename={basename}>
+    <BrowserRouter basename="/addmyco/">
       <AppRoutes />
     </BrowserRouter>
   );

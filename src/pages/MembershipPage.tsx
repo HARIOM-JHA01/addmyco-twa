@@ -5,6 +5,7 @@ import { useState, useEffect } from "react";
 import axios from "axios";
 import WebApp from "@twa-dev/sdk";
 import { QRCodeSVG } from "qrcode.react";
+import i18n from "../i18n";
 
 import walletTransferImage from "../assets/wallet-transfer.jpg";
 
@@ -267,13 +268,17 @@ export default function MembershipPage() {
       <div className="flex flex-col items-center justify-start flex-1 pb-32">
         <div className="w-full max-w-md mt-8 p-4 rounded-xl shadow-xl bg-white/90">
           <h2 className="text-2xl font-bold text-center text-[#2fa8e0] mb-4">
-            {isPremium ? "Upgrade your membership" : "Your Membership"}
+            {isPremium
+              ? i18n.t("upgrade_membership")
+              : i18n.t("your_membership")}
           </h2>
           <div className="bg-white rounded-xl shadow p-4 mb-4">
             <div
               className={`bg-[#2fa8e0] text-white text-lg font-bold rounded-t-lg py-2 text-center mb-2`}
             >
-              {isPremium ? "Premium Membership" : "Basic Membership"}
+              {isPremium
+                ? i18n.t("premium_membership")
+                : i18n.t("basic_membership")}
             </div>
             <table className="w-full text-sm mb-2">
               <tbody>
@@ -291,27 +296,29 @@ export default function MembershipPage() {
               className="w-full bg-[#2fa8e0] text-white font-semibold py-2 rounded-b-lg mt-2 hover:bg-[#1b7bb8] transition"
               onClick={handleRenewClick}
             >
-              Renew your membership
+              {i18n.t("renew_membership")}
             </button>
           </div>
           <div className="text-center mt-4 text-lg font-semibold text-pink-700">
             {isPremium ? (
               <>
-                Your Premium Membership is expiring on :{" "}
+                {i18n.t("premium_expiring")}{" "}
                 <span className="font-bold">{formattedExpiry}</span>
               </>
             ) : (
-              <>Upgrade to Premium for more features!</>
+              <>{i18n.t("upgrade_to_premium")}</>
             )}
           </div>
         </div>
         {/* Membership History (below upgrade box) */}
         <div className="w-full max-w-md mt-4 p-4 rounded-xl shadow-xl bg-white/90">
           <div className="text-lg font-bold text-[#2fa8e0] mb-2 text-center">
-            Payment History
+            {i18n.t("payment_history")}
           </div>
           {historyLoading ? (
-            <div className="text-center text-gray-500">Loading history...</div>
+            <div className="text-center text-gray-500">
+              {i18n.t("loading_history")}
+            </div>
           ) : historyError ? (
             <div className="text-center text-red-500">{historyError}</div>
           ) : history && history.length > 0 ? (
@@ -319,23 +326,24 @@ export default function MembershipPage() {
               {history.map((h: any) => (
                 <li key={h._id} className="border rounded-lg p-3 bg-white">
                   <div className="text-sm text-gray-600">
-                    Date:{" "}
+                    {i18n.t("date_label")}{" "}
                     {new Date(
                       h.date || h.createdAt || Date.now()
                     ).toLocaleString()}
                   </div>
                   <div className="font-semibold">
-                    Amount: {h.amount ?? h.usdt ?? "NA"}
+                    {i18n.t("amount_label")} {h.amount ?? h.usdt ?? "NA"}
                   </div>
                   <div className="text-sm text-gray-700">
-                    Status: {h.status ?? h.payment_status ?? "Unknown"}
+                    {i18n.t("status_label")}{" "}
+                    {h.status ?? h.payment_status ?? "Unknown"}
                   </div>
                 </li>
               ))}
             </ul>
           ) : (
             <div className="text-center text-gray-500">
-              No payment history found.
+              {i18n.t("no_payment_history")}
             </div>
           )}
         </div>
@@ -343,23 +351,30 @@ export default function MembershipPage() {
         {showRenewBox && (
           <div className="bg-white rounded-xl shadow p-4 mt-4">
             <div className="text-lg font-bold text-[#2fa8e0] mb-2 text-center">
-              Membership Renewal
+              {i18n.t("membership_renewal")}
             </div>
             <div className="text-center font-semibold text-black mb-4">
-              Unlock premium features and exclusive benefits. Choose your
-              payment method below:
+              {i18n.t("upgrade_membership")}
             </div>
             {renewLoading ? (
-              <div className="text-center text-gray-500">Loading...</div>
+              <div className="text-center text-gray-500">
+                {i18n.t("loading")}
+              </div>
             ) : renewError ? (
               <div className="text-center text-red-500">{renewError}</div>
             ) : renewHistory && renewHistory.length > 0 ? (
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b">
-                    <th className="py-2 px-2 text-center">Membership Tenure</th>
-                    <th className="py-2 px-2 text-center">USDT</th>
-                    <th className="py-2 px-2 text-center">Telegram Coin</th>
+                    <th className="py-2 px-2 text-center">
+                      {i18n.t("membership_tenure")}
+                    </th>
+                    <th className="py-2 px-2 text-center">
+                      {i18n.t("usdt_label")}
+                    </th>
+                    <th className="py-2 px-2 text-center">
+                      {i18n.t("telegram_coin")}
+                    </th>
                   </tr>
                 </thead>
                 <tbody>
@@ -367,7 +382,7 @@ export default function MembershipPage() {
                     <tr key={item._id} className="border-b last:border-b-0">
                       <td className="py-2 px-2 text-left font-bold">
                         {item.membershiperiod != null
-                          ? item.membershiperiod + " years"
+                          ? item.membershiperiod + " " + i18n.t("years_label")
                           : "NA"}
                       </td>
                       <td className="py-2 px-2 text-center">
@@ -397,7 +412,7 @@ export default function MembershipPage() {
                             <span>{item.usdt ?? "NA"} USDT</span>
                           </span>
                           <span className="text-xs font-normal mt-1 opacity-80">
-                            Pay with USDT
+                            {i18n.t("pay_with_usdt")}
                           </span>
                           <span className="absolute -bottom-2 left-1/2 -translate-x-1/2 w-0 h-1 bg-white rounded-full group-hover:w-3/4 transition-all duration-300"></span>
                         </button>
@@ -419,7 +434,7 @@ export default function MembershipPage() {
                               &times;
                             </button>
                             <h3 className="text-lg font-bold text-[#2fa8e0] mb-4 text-center">
-                              USDT Payment
+                              {i18n.t("usdt_payment")}
                             </h3>
                             <div className="flex flex-col items-center gap-3 mb-4">
                               <img
@@ -427,17 +442,8 @@ export default function MembershipPage() {
                                 alt="Wallet Transfer"
                                 className="rounded-lg max-h-32 object-contain"
                               />
-                              {/* QR Code for wallet address */}
-                              <div className="p-2 bg-white rounded-md">
-                                <QRCodeSVG
-                                  value={"TK2TMn99SBCrdbZpSef7rFE3vTccvR6dCz"}
-                                  size={128}
-                                  bgColor="#ffffff"
-                                  fgColor="#000000"
-                                />
-                              </div>
                               <p className="text-sm font-medium break-all bg-gray-100 p-4 rounded-lg text-center">
-                                Copy Wallet Address
+                                {i18n.t("copy_wallet_address")}
                                 <br />
                                 <span
                                   className="text-blue-600 cursor-pointer"
@@ -447,11 +453,11 @@ export default function MembershipPage() {
                                         "TK2TMn99SBCrdbZpSef7rFE3vTccvR6dCz"
                                       );
                                       WebApp.showAlert(
-                                        "Wallet address copied to clipboard"
+                                        i18n.t("wallet_address_copied")
                                       );
                                     } catch (e) {
                                       WebApp.showAlert(
-                                        "Failed to copy address. Please copy manually."
+                                        i18n.t("wallet_copy_failed")
                                       );
                                     }
                                   }}
@@ -461,15 +467,20 @@ export default function MembershipPage() {
                               </p>
                             </div>
                             <div className="mb-2 text-sm text-gray-700">
-                              <span className="font-semibold">Period:</span>{" "}
-                              {usdtModalItem?.membershiperiod ?? "-"} Year(s)
+                              <span className="font-semibold">
+                                {i18n.t("period_label")}
+                              </span>{" "}
+                              {usdtModalItem?.membershiperiod ?? "-"}{" "}
+                              {i18n.t("years_label")}
                             </div>
                             <div className="mb-2 text-sm text-gray-700">
-                              <span className="font-semibold">USDT:</span>{" "}
+                              <span className="font-semibold">
+                                {i18n.t("usdt_label")}
+                              </span>{" "}
                               {usdtModalItem?.usdt ?? "-"}
                             </div>
                             <label className="block mb-2 text-sm font-medium text-gray-700">
-                              Transaction ID
+                              {i18n.t("transaction_id_label")}
                             </label>
                             <input
                               type="text"
@@ -478,7 +489,7 @@ export default function MembershipPage() {
                               onChange={(e) =>
                                 setUsdtTransactionId(e.target.value)
                               }
-                              placeholder="Enter your transaction ID"
+                              placeholder={i18n.t("transaction_id_placeholder")}
                               disabled={usdtModalLoading}
                             />
                             {usdtModalError && (
@@ -492,8 +503,8 @@ export default function MembershipPage() {
                               disabled={usdtModalLoading || !usdtTransactionId}
                             >
                               {usdtModalLoading
-                                ? "Submitting..."
-                                : "Submit Payment"}
+                                ? i18n.t("submitting")
+                                : i18n.t("submit_payment")}
                             </button>
                           </div>
                         </div>
@@ -533,13 +544,13 @@ export default function MembershipPage() {
                             <span>{item.telegramcoin ?? "NA"} TG Coin</span>
                           </span>
                           <span className="text-xs font-normal mt-1 opacity-80">
-                            Pay withTG Coin
+                            {i18n.t("pay_with_telegram_coin")}
                           </span>
                           <span className="absolute -bottom-2 left-1/2 -translate-x-1/2 w-0 h-1 bg-white rounded-full group-hover:w-3/4 transition-all duration-300"></span>
                           {telegramBtnLoading ===
                           `${item.membershiperiod}-${item.telegramcoin}` ? (
                             <span className="ml-2 animate-pulse">
-                              Processing...
+                              {i18n.t("processing")}
                             </span>
                           ) : null}
                         </button>

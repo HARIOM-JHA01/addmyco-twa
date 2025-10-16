@@ -1,27 +1,77 @@
 import Layout from "../components/Layout";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import axios from "axios";
 import chamberIcon from "../assets/chamber.svg";
 import profileIcon from "../assets/profileIcon.png";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faWhatsapp, faTelegram } from "@fortawesome/free-brands-svg-icons";
+import {
+  faWhatsapp,
+  faTelegram,
+  faFacebook,
+  faInstagram,
+  faYoutube,
+} from "@fortawesome/free-brands-svg-icons";
 import {
   faPhone,
   faGlobe,
   faArrowRight,
+  faArrowLeft,
 } from "@fortawesome/free-solid-svg-icons";
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
+import i18n from "../i18n";
+import { profile } from "console";
+
 export default function SubCompanyPage() {
   const [companies, setCompanies] = useState<any[]>([]);
   const [currentCompanyIndex, setCurrentCompanyIndex] = useState(0);
+  const [profile, setProfile] = useState<any>(null);
   const companyProfile = companies[currentCompanyIndex] || null;
   const [loading, setLoading] = useState(true);
   const [editMode, setEditMode] = useState<null | "create" | "update">(null);
   const [editProfile, setEditProfile] = useState<any>(null);
   const [editLoading, setEditLoading] = useState(false);
   const [editError, setEditError] = useState("");
+
+  // Top and bottom icon carousel refs & state
+  const topIconsRef = useRef<HTMLDivElement | null>(null);
+  const bottomIconsRef = useRef<HTMLDivElement | null>(null);
+  const [showTopArrows, setShowTopArrows] = useState(false);
+  const [canTopLeft, setCanTopLeft] = useState(false);
+  const [canTopRight, setCanTopRight] = useState(false);
+  const [showBottomArrows, setShowBottomArrows] = useState(false);
+  const [canBottomLeft, setCanBottomLeft] = useState(false);
+  const [canBottomRight, setCanBottomRight] = useState(false);
+
+  const updateTopScroll = () => {
+    const el = topIconsRef.current;
+    if (!el) return;
+    const overflow = el.scrollWidth > el.clientWidth + 4;
+    setShowTopArrows(overflow);
+    setCanTopLeft(el.scrollLeft > 8);
+    setCanTopRight(el.scrollLeft + el.clientWidth < el.scrollWidth - 8);
+  };
+
+  const updateBottomScroll = () => {
+    const el = bottomIconsRef.current;
+    if (!el) return;
+    const overflow = el.scrollWidth > el.clientWidth + 4;
+    setShowBottomArrows(overflow);
+    setCanBottomLeft(el.scrollLeft > 8);
+    setCanBottomRight(el.scrollLeft + el.clientWidth < el.scrollWidth - 8);
+  };
+
+  useEffect(() => {
+    updateTopScroll();
+    updateBottomScroll();
+    const onResize = () => {
+      updateTopScroll();
+      updateBottomScroll();
+    };
+    window.addEventListener("resize", onResize);
+    return () => window.removeEventListener("resize", onResize);
+  }, [companyProfile]);
 
   // Fetch company profile on mount
   useEffect(() => {
@@ -33,7 +83,10 @@ export default function SubCompanyPage() {
         const res = await axios.get(`${API_BASE_URL}/getcompanyprofile`, {
           headers: { Authorization: `Bearer ${token}` },
         });
-
+        const profileRes = await axios.get(`${API_BASE_URL}/getProfile`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        setProfile(profileRes.data.data || null);
         // Try different possible response structures
         let profileData = null;
         if (res.data && res.data.data) {
@@ -195,14 +248,14 @@ export default function SubCompanyPage() {
             >
               <h2 className="text-xl font-bold mb-4 text-center">
                 {editMode === "update"
-                  ? "Update Company Profile"
-                  : "Create Company Profile"}
+                  ? i18n.t("company_update_title")
+                  : i18n.t("company_create_title")}
               </h2>
               <input
                 className="rounded-full border-2 border-blue-200 px-4 py-2 mb-3 w-full focus:outline-none focus:ring-2 focus:ring-blue-400 bg-white placeholder-gray-500"
                 type="text"
                 name="company_name_english"
-                placeholder="English Name for Company"
+                placeholder={i18n.t("placeholder_company_english")}
                 value={editProfile?.company_name_english || ""}
                 onChange={handleEditInput}
                 disabled={editLoading}
@@ -211,7 +264,7 @@ export default function SubCompanyPage() {
                 className="rounded-full border-2 border-blue-200 px-4 py-2 mb-3 w-full focus:outline-none focus:ring-2 focus:ring-blue-400 bg-white placeholder-gray-500"
                 type="text"
                 name="company_name_chinese"
-                placeholder="Chinese Name for Company"
+                placeholder={i18n.t("placeholder_company_chinese")}
                 value={editProfile?.company_name_chinese || ""}
                 onChange={handleEditInput}
                 disabled={editLoading}
@@ -220,22 +273,15 @@ export default function SubCompanyPage() {
                 className="rounded-full border-2 border-blue-200 px-4 py-2 mb-3 w-full focus:outline-none focus:ring-2 focus:ring-blue-400 bg-white placeholder-gray-500"
                 type="text"
                 name="companydesignation"
-                placeholder="Designation"
+                placeholder={i18n.t("placeholder_designation")}
                 value={editProfile?.companydesignation || ""}
                 onChange={handleEditInput}
                 disabled={editLoading}
               />
               {/* Upload area */}
               <div className="w-full bg-blue-400 rounded-xl flex flex-col items-center justify-center py-8 mb-3">
-                <div className="text-white text-center text-base font-semibold">
-                  Please upload
-                  <br />
-                  640 width by 360 high Image
-                  <br />
-                  or
-                </div>
-                <div className="text-yellow-300 text-center text-base font-semibold mb-2">
-                  Premium Member Upload 1 Minute Video
+                <div className="text-white text-center text-base font-semibold whitespace-pre-line">
+                  {i18n.t("please_upload")}
                 </div>
                 {editProfile?.image &&
                   editProfile.image.startsWith("data:image") && (
@@ -257,7 +303,7 @@ export default function SubCompanyPage() {
                     className="hidden"
                   />
                   <span className="bg-black text-white rounded px-6 py-2 font-semibold cursor-pointer select-none text-sm text-center">
-                    Browse
+                    {i18n.t("browse")}
                   </span>
                 </label>
                 <button
@@ -270,7 +316,7 @@ export default function SubCompanyPage() {
                   }}
                   disabled={editLoading}
                 >
-                  Cancel
+                  {i18n.t("cancel")}
                 </button>
               </div>
               <textarea
@@ -331,7 +377,9 @@ export default function SubCompanyPage() {
                 className="rounded-full border-2 border-blue-200 px-4 py-2 mb-4 w-full focus:outline-none focus:ring-2 focus:ring-blue-400 bg-white placeholder-gray-500"
                 type="text"
                 name="order"
-                placeholder="Set display order"
+                placeholder={
+                  i18n.t("placeholder_display_order") || "Set display order"
+                }
                 value={editProfile?.order || ""}
                 onChange={handleEditInput}
                 disabled={editLoading}
@@ -346,11 +394,11 @@ export default function SubCompanyPage() {
               >
                 {editLoading
                   ? editMode === "update"
-                    ? "Updating..."
-                    : "Saving..."
+                    ? i18n.t("updating")
+                    : i18n.t("saving")
                   : editMode === "update"
-                  ? "Update"
-                  : "Save"}
+                  ? i18n.t("update")
+                  : i18n.t("save")}
               </button>
               {/* Cancel button below Update/Save in edit mode */}
               <button
@@ -368,133 +416,173 @@ export default function SubCompanyPage() {
             </form>
           ) : companyProfile ? (
             <>
-              {/* Company Icons Row */}
-              <div className="flex items-center justify-center gap-4 mb-4 px-6 relative">
-                {/* Right arrow for multiple companies */}
-                {companies.length > 1 &&
-                  currentCompanyIndex < companies.length - 1 && (
+              {/* Top Icon Carousel: personal profile, whatsapp, telegram, phone, chamber */}
+              <div className="relative w-full mb-4">
+                <button
+                  aria-label="Top scroll left"
+                  className={`absolute left-6 top-1/2 -translate-y-1/2 z-20 p-2 bg-white/10 rounded-full ${
+                    canTopLeft
+                      ? "opacity-100"
+                      : "opacity-30 pointer-events-none"
+                  }`}
+                  onClick={() => {
+                    const el = topIconsRef.current;
+                    if (!el) return;
+                    el.scrollBy({
+                      left: -el.clientWidth * 0.6,
+                      behavior: "smooth",
+                    });
+                    setTimeout(updateTopScroll, 300);
+                  }}
+                  style={{ display: showTopArrows ? "block" : "none" }}
+                >
+                  {/* <FontAwesomeIcon icon={faArrowLeft} color="white" /> */}
+                </button>
+                <div
+                  ref={topIconsRef}
+                  onScroll={updateTopScroll}
+                  className="flex gap-4 px-6 overflow-x-auto no-scrollbar items-center"
+                  style={{
+                    scrollBehavior: "smooth",
+                    scrollSnapType: "x mandatory" as any,
+                  }}
+                >
+                  <div
+                    className="w-12 h-12 rounded-full flex items-center justify-center p-2 overflow-hidden cursor-pointer flex-shrink-0"
+                    onClick={() => (window.location.href = "/profile")}
+                    style={{
+                      backgroundColor: "var(--app-background-color)",
+                      scrollSnapAlign: "center" as any,
+                    }}
+                  >
+                    <img
+                      src={profileIcon}
+                      alt="Profile"
+                      className="w-9 h-9 object-contain"
+                    />
+                  </div>
+                  {profile?.WhatsApp ? (
                     <div
-                      className="absolute right-0 top-1/2 -translate-y-1/2 w-10 h-10 flex items-center justify-center bg-app rounded-full cursor-pointer shadow-lg z-10"
-                      onClick={() =>
-                        setCurrentCompanyIndex((i) =>
-                          Math.min(i + 1, companies.length - 1)
-                        )
-                      }
-                      title="Next Company"
+                      className="w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0"
+                      onClick={() => window.open(profile.WhatsApp, "_blank")}
+                      style={{
+                        backgroundColor: "var(--app-background-color)",
+                        scrollSnapAlign: "center" as any,
+                      }}
                     >
                       <FontAwesomeIcon
-                        icon={faArrowRight}
-                        size="lg"
+                        icon={faWhatsapp}
+                        size="2x"
                         color="white"
                       />
                     </div>
-                  )}
-                {/* First icon: Profile, always shown, navigates to profile page */}
-                <div
-                  className="w-12 h-12 rounded-full bg-app flex items-center justify-center overflow-hidden cursor-pointer"
-                  onClick={() => (window.location.href = "/profile")}
-                >
-                  <img
-                    src={profileIcon}
-                    alt="Profile"
-                    className="w-8 h-8 object-contain"
-                  />
+                  ) : null}
+                  {profile?.tgid ? (
+                    <div
+                      className="w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0"
+                      onClick={() => window.open(profile.tgid, "_blank")}
+                      style={{
+                        backgroundColor: "var(--app-background-color)",
+                        scrollSnapAlign: "center" as any,
+                      }}
+                    >
+                      <FontAwesomeIcon
+                        icon={faTelegram}
+                        size="2x"
+                        color="white"
+                      />
+                    </div>
+                  ) : null}
+                  {profile?.contact ? (
+                    <div
+                      className="w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0"
+                      onClick={() =>
+                        window.open(`tel:${profile.contact}`, "_self")
+                      }
+                      style={{
+                        backgroundColor: "var(--app-background-color)",
+                        scrollSnapAlign: "center" as any,
+                      }}
+                    >
+                      <FontAwesomeIcon icon={faPhone} size="2x" color="white" />
+                    </div>
+                  ) : null}
+                  <div
+                    className="w-12 h-12 rounded-full flex items-center justify-center p-2 overflow-hidden cursor-pointer flex-shrink-0"
+                    onClick={() => (window.location.href = "/chamber")}
+                    style={{
+                      backgroundColor: "var(--app-background-color)",
+                      scrollSnapAlign: "center" as any,
+                    }}
+                  >
+                    <img
+                      src={chamberIcon}
+                      alt="chamber icon"
+                      className="w-9 h-9 object-contain"
+                    />
+                  </div>
                 </div>
-                {/* WhatsApp icon or placeholder */}
-                {companyProfile?.WhatsApp ? (
-                  <div
-                    className="w-12 h-12 rounded-full bg-app flex items-center justify-center overflow-hidden cursor-pointer"
-                    onClick={() =>
-                      window.open(companyProfile.WhatsApp, "_blank")
-                    }
-                  >
-                    <FontAwesomeIcon
-                      icon={faWhatsapp}
-                      size="2x"
-                      color={
-                        getComputedStyle(
-                          document.documentElement
-                        ).getPropertyValue("--app-font-color") || "white"
-                      }
-                    />
-                  </div>
-                ) : (
-                  <div className="w-12 h-12" />
-                )}
-                {/* Telegram icon or placeholder */}
-                {companyProfile?.Telegram ? (
-                  <div
-                    className="w-12 h-12 rounded-full bg-app flex items-center justify-center overflow-hidden cursor-pointer"
-                    onClick={() =>
-                      window.open(companyProfile.Telegram, "_blank")
-                    }
-                  >
-                    <FontAwesomeIcon
-                      icon={faTelegram}
-                      size="2x"
-                      color={
-                        getComputedStyle(
-                          document.documentElement
-                        ).getPropertyValue("--app-font-color") || "white"
-                      }
-                    />
-                  </div>
-                ) : (
-                  <div className="w-12 h-12" />
-                )}
-                {/* Phone icon or placeholder */}
-                {companyProfile?.Phone ? (
-                  <div
-                    className="w-12 h-12 rounded-full bg-app flex items-center justify-center overflow-hidden cursor-pointer"
-                    onClick={() =>
-                      window.open(`tel:${companyProfile.Phone}`, "_self")
-                    }
-                  >
-                    <FontAwesomeIcon
-                      icon={faPhone}
-                      size="2x"
-                      color={
-                        getComputedStyle(
-                          document.documentElement
-                        ).getPropertyValue("--app-font-color") || "white"
-                      }
-                    />
-                  </div>
-                ) : (
-                  <div className="w-12 h-12" />
-                )}
-                {/* Website icon or placeholder */}
-                {companyProfile?.Website ? (
-                  <div
-                    className="w-12 h-12 rounded-full bg-blue-400 flex items-center justify-center overflow-hidden cursor-pointer"
-                    onClick={() =>
-                      window.open(companyProfile.Website, "_blank")
-                    }
-                  >
-                    <FontAwesomeIcon icon={faGlobe} size="2x" color="white" />
-                  </div>
-                ) : (
-                  <div className="w-12 h-12" />
-                )}
-                {/* Last icon: Chamber, always shown, navigates to chamber page */}
-                <div
-                  className="w-12 h-12 rounded-full bg-blue-400 flex items-center justify-center p-2 overflow-hidden cursor-pointer"
-                  onClick={() => (window.location.href = "/chamber")}
+                <button
+                  aria-label="Top scroll right"
+                  className={`absolute right-6 top-1/2 -translate-y-1/2 z-20 p-2 bg-white/10 rounded-full ${
+                    canTopRight
+                      ? "opacity-100"
+                      : "opacity-30 pointer-events-none"
+                  }`}
+                  onClick={() => {
+                    const el = topIconsRef.current;
+                    if (!el) return;
+                    el.scrollBy({
+                      left: el.clientWidth * 0.6,
+                      behavior: "smooth",
+                    });
+                    setTimeout(updateTopScroll, 300);
+                  }}
+                  style={{ display: showTopArrows ? "block" : "none" }}
                 >
-                  <img
-                    src={chamberIcon}
-                    alt="chamber icon"
-                    className="w-8 h-8 object-contain"
-                  />
-                </div>
+                  {/* <FontAwesomeIcon icon={faArrowRight} color="white" /> */}
+                </button>
               </div>
 
-              {/* Company Names */}
-              <div
-                className="w-full rounded-full bg-app text-app text-xl font-bold py-1 mb-2 flex items-center justify-center"
-                style={{ borderRadius: "2rem" }}
-              >
-                {companyProfile.company_name_english || "English Company Name"}
+              {/* Company Names with navigation arrows */}
+              <div className="w-full mb-2 flex items-center justify-center gap-4">
+                <button
+                  aria-label="Prev company"
+                  className={`p-2 rounded-full ${
+                    currentCompanyIndex > 0
+                      ? "bg-app text-white"
+                      : "bg-gray-200 text-gray-400"
+                  }`}
+                  onClick={() =>
+                    setCurrentCompanyIndex((i) => Math.max(i - 1, 0))
+                  }
+                  disabled={currentCompanyIndex === 0}
+                >
+                  <FontAwesomeIcon icon={faArrowLeft} />
+                </button>
+                <div
+                  className="rounded-full bg-app text-app text-xl font-bold py-1 px-4 flex items-center justify-center"
+                  style={{ borderRadius: "2rem" }}
+                >
+                  {companyProfile.company_name_english ||
+                    "English Company Name"}
+                </div>
+                <button
+                  aria-label="Next company"
+                  className={`p-2 rounded-full ${
+                    currentCompanyIndex < companies.length - 1
+                      ? "bg-app text-white"
+                      : "bg-gray-200 text-gray-400"
+                  }`}
+                  onClick={() =>
+                    setCurrentCompanyIndex((i) =>
+                      Math.min(i + 1, companies.length - 1)
+                    )
+                  }
+                  disabled={currentCompanyIndex >= companies.length - 1}
+                >
+                  <FontAwesomeIcon icon={faArrowRight} />
+                </button>
               </div>
               <div
                 className="w-full rounded-full bg-app text-app text-xl font-bold py-1 mb-2 flex items-center justify-center"
@@ -552,43 +640,142 @@ export default function SubCompanyPage() {
                 )}
               </div>
 
-              {/* Action Icons */}
-              <div className="flex justify-between w-full gap-4 mb-6">
-                <div className="w-12 h-12 rounded-full bg-app flex items-center justify-center overflow-hidden">
-                  <FontAwesomeIcon
-                    icon={faTelegram}
-                    size="2x"
-                    color={
-                      getComputedStyle(
-                        document.documentElement
-                      ).getPropertyValue("--app-font-color") || "white"
-                    }
-                  />
+              {/* Bottom Icon Carousel: company telegram, website and other links */}
+              <div className="relative w-full mb-6">
+                <button
+                  aria-label="Bottom scroll left"
+                  className={`absolute left-6 top-1/2 -translate-y-1/2 z-20 p-2 bg-white/10 rounded-full ${
+                    canBottomLeft
+                      ? "opacity-100"
+                      : "opacity-30 pointer-events-none"
+                  }`}
+                  onClick={() => {
+                    const el = bottomIconsRef.current;
+                    if (!el) return;
+                    el.scrollBy({
+                      left: -el.clientWidth * 0.6,
+                      behavior: "smooth",
+                    });
+                    setTimeout(updateBottomScroll, 300);
+                  }}
+                  style={{ display: showBottomArrows ? "block" : "none" }}
+                >
+                  {/* <FontAwesomeIcon icon={faArrowLeft} color="white" /> */}
+                </button>
+                <div
+                  ref={bottomIconsRef}
+                  onScroll={updateBottomScroll}
+                  className="flex gap-4 px-6 overflow-x-auto no-scrollbar items-center"
+                  style={{
+                    scrollBehavior: "smooth",
+                    scrollSnapType: "x mandatory" as any,
+                  }}
+                >
+                  {companyProfile?.telegramId && (
+                    <div
+                      className="w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0"
+                      style={{
+                        backgroundColor: "var(--app-background-color)",
+                        scrollSnapAlign: "center" as any,
+                      }}
+                    >
+                      <FontAwesomeIcon
+                        icon={faTelegram}
+                        size="2x"
+                        color="white"
+                      />
+                    </div>
+                  )}
+                  {companyProfile?.facebook && (
+                    <div
+                      className="w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0"
+                      style={{
+                        backgroundColor: "var(--app-background-color)",
+                        scrollSnapAlign: "center" as any,
+                      }}
+                    >
+                      <FontAwesomeIcon
+                        icon={faFacebook}
+                        size="2x"
+                        color="white"
+                      />
+                    </div>
+                  )}
+                  {companyProfile?.instagram && (
+                    <div
+                      className="w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0"
+                      style={{
+                        backgroundColor: "var(--app-background-color)",
+                        scrollSnapAlign: "center" as any,
+                      }}
+                    >
+                      <FontAwesomeIcon
+                        icon={faInstagram}
+                        size="2x"
+                        color="white"
+                      />
+                    </div>
+                  )}
+                  {companyProfile?.youtube && (
+                    <div
+                      className="w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0"
+                      style={{
+                        backgroundColor: "var(--app-background-color)",
+                        scrollSnapAlign: "center" as any,
+                      }}
+                    >
+                      <FontAwesomeIcon
+                        icon={faYoutube}
+                        size="2x"
+                        color="white"
+                      />
+                    </div>
+                  )}
+                  {companyProfile?.website && (
+                    <div
+                      className="w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0"
+                      style={{
+                        backgroundColor: "var(--app-background-color)",
+                        scrollSnapAlign: "center" as any,
+                      }}
+                    >
+                      <FontAwesomeIcon icon={faGlobe} size="2x" color="white" />
+                    </div>
+                  )}
                 </div>
-                <div className="w-12 h-12 rounded-full bg-app flex items-center justify-center overflow-hidden">
-                  <FontAwesomeIcon
-                    icon={faGlobe}
-                    size="2x"
-                    color={
-                      getComputedStyle(
-                        document.documentElement
-                      ).getPropertyValue("--app-font-color") || "white"
-                    }
-                  />
-                </div>
+                <button
+                  aria-label="Bottom scroll right"
+                  className={`absolute right-6 top-1/2 -translate-y-1/2 z-20 p-2 bg-white/10 rounded-full ${
+                    canBottomRight
+                      ? "opacity-100"
+                      : "opacity-30 pointer-events-none"
+                  }`}
+                  onClick={() => {
+                    const el = bottomIconsRef.current;
+                    if (!el) return;
+                    el.scrollBy({
+                      left: el.clientWidth * 0.6,
+                      behavior: "smooth",
+                    });
+                    setTimeout(updateBottomScroll, 300);
+                  }}
+                  style={{ display: showBottomArrows ? "block" : "none" }}
+                >
+                  {/* <FontAwesomeIcon icon={faArrowRight} color="white" /> */}
+                </button>
               </div>
               <div className="flex justify-center w-full gap-4 text-center mt-6">
                 <button
                   className="p-2 w-full text-white bg-[#d50078] shadow-md rounded-full"
                   onClick={openEditProfile}
                 >
-                  Update
+                  {i18n.t("update")}
                 </button>
                 <button
                   className="p-2 w-full text-white bg-[#009944] shadow-md rounded-full"
                   onClick={openCreateProfile}
                 >
-                  Add More
+                  {i18n.t("add_more")}
                 </button>
               </div>
             </>

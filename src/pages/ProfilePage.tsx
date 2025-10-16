@@ -1,18 +1,26 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import axios from "axios";
 import { useProfileStore } from "../store/profileStore";
 import logo from "../assets/logo.png";
 // import groupIcon from "../assets/profileIcon.png";
 import chamberIcon from "../assets/chamber.svg";
 import company from "../assets/company.svg";
-// import leftArrow from "../assets/left-arrow.png";
-// import rightArrow from "../assets/right-arrow.png";
+import leftArrow from "../assets/left-arrow.png";
+import rightArrow from "../assets/right-arrow.png";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faWhatsapp, faTelegram } from "@fortawesome/free-brands-svg-icons";
-import { faPhone } from "@fortawesome/free-solid-svg-icons";
+import {
+  faWhatsapp,
+  faTelegram,
+  faFacebook,
+  faInstagram,
+  faYoutube,
+} from "@fortawesome/free-brands-svg-icons";
+import { faPhone, faGlobe } from "@fortawesome/free-solid-svg-icons";
 import Layout from "../components/Layout";
 import { useNavigate } from "react-router-dom";
 // import WebApp from "@twa-dev/sdk";
+import i18n from "../i18n";
+import WebApp from "@twa-dev/sdk";
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 export default function ProfilePage() {
@@ -49,6 +57,29 @@ export default function ProfilePage() {
     fetchProfile();
   }, [setProfileStore]);
 
+  // Icon carousel refs & handlers
+  const iconsRef = useRef<HTMLDivElement | null>(null);
+  const [showArrows, setShowArrows] = useState(false);
+  const [canScrollLeft, setCanScrollLeft] = useState(false);
+  const [canScrollRight, setCanScrollRight] = useState(false);
+
+  const updateIconScroll = () => {
+    const el = iconsRef.current;
+    if (!el) return;
+    const overflow = el.scrollWidth > el.clientWidth + 4;
+    setShowArrows(overflow);
+    setCanScrollLeft(el.scrollLeft > 8);
+    setCanScrollRight(el.scrollLeft + el.clientWidth < el.scrollWidth - 8);
+  };
+
+  useEffect(() => {
+    updateIconScroll();
+    const onResize = () => updateIconScroll();
+    window.addEventListener("resize", onResize);
+    return () => window.removeEventListener("resize", onResize);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [profile]);
+
   // const handleTelegramClick = () => {
   //   if (profile && profile.telegramId) {
   //     WebApp.openTelegramLink(`https://t.me/${profile.tgid}`);
@@ -68,6 +99,20 @@ export default function ProfilePage() {
           ) : profile ? (
             <>
               <div className="flex flex-col items-center">
+                {/* Company Name in English (full width, same look as HomePage) */}
+                <button
+                  className="w-full rounded-full bg-app text-app text-xl font-bold py-2 mb-2 flex items-center justify-center"
+                  style={{ borderRadius: "2rem" }}
+                >
+                  {profile?.companydata?.company_name_english || "Company Name"}
+                </button>
+                {/* Company Name in Chinese */}
+                <button
+                  className="w-full rounded-full bg-app text-app text-xl font-bold mb-2 py-2 flex items-center justify-center"
+                  style={{ borderRadius: "2rem" }}
+                >
+                  {profile?.companydata?.company_name_chinese || "公司名称"}
+                </button>
                 <div className="rounded-full mb-2 w-[180px] h-[180px] flex items-center justify-center overflow-hidden bg-white">
                   {profile.profile_image &&
                   profile.profile_image.endsWith(".mp4") ? (
@@ -94,85 +139,230 @@ export default function ProfilePage() {
                   {profile.owner_name_chinese || ""}
                 </div>
               </div>
-              <div className="flex items-center justify-center gap-6 mb-2">
-                {/* First icon: Company, always shown, navigates to company page */}
-                <div
-                  className="w-12 h-12 rounded-full bg-app flex items-center justify-center p-2 overflow-hidden cursor-pointer"
-                  onClick={() => navigate("/sub-company")}
-                >
-                  <img
-                    src={company}
-                    alt="Company"
-                    className="w-8 h-8 object-contain"
-                  />
+              {/* Icon carousel: company, whatsapp, telegram, phone, chamber, then other links */}
+              <div className="relative w-full mb-2">
+                <div className="flex items-center justify-center mb-2">
+                  {/* Left arrow - shown when overflow and can scroll left */}
                 </div>
-                {/* WhatsApp icon or placeholder */}
-                {profile?.Whatsapp ? (
-                  <div
-                    className="w-12 h-12 rounded-full bg-app flex items-center justify-center overflow-hidden cursor-pointer"
-                    onClick={() => window.open(profile.Whatsapp, "_blank")}
+                <div className="relative">
+                  <button
+                    aria-label="Scroll left"
+                    className={`absolute left-0 top-1/2 -translate-y-1/2 -translate-x-1/2 z-20 p-1 bg-white/10 rounded-full ${
+                      canScrollLeft
+                        ? "opacity-100"
+                        : "opacity-30 pointer-events-none"
+                    }`}
+                    onClick={() => {
+                      const el = iconsRef.current;
+                      if (!el) return;
+                      el.scrollBy({
+                        left: -el.clientWidth * 0.6,
+                        behavior: "smooth",
+                      });
+                      setTimeout(updateIconScroll, 300);
+                    }}
+                    style={{ display: showArrows ? "block" : "none" }}
                   >
-                    <FontAwesomeIcon
-                      icon={faWhatsapp}
-                      size="2x"
-                      color={
-                        getComputedStyle(
-                          document.documentElement
-                        ).getPropertyValue("--app-font-color") || "white"
-                      }
-                    />
-                  </div>
-                ) : (
-                  <div className="w-12 h-12" />
-                )}
-                {/* Telegram icon or placeholder */}
-                {profile?.Telegram ? (
+                    <img src={leftArrow} alt="left" className="w-6 h-6" />
+                  </button>
                   <div
-                    className="w-12 h-12 rounded-full bg-app flex items-center justify-center overflow-hidden cursor-pointer"
-                    onClick={() => window.open(profile.Telegram, "_blank")}
+                    ref={iconsRef}
+                    onScroll={updateIconScroll}
+                    className="flex gap-4 px-4 overflow-x-auto no-scrollbar items-center"
+                    style={{
+                      scrollBehavior: "smooth",
+                      scrollSnapType: "x mandatory" as any,
+                    }}
                   >
-                    <FontAwesomeIcon
-                      icon={faTelegram}
-                      size="2x"
-                      color={
-                        getComputedStyle(
-                          document.documentElement
-                        ).getPropertyValue("--app-font-color") || "white"
-                      }
-                    />
+                    {/* Company - always show */}
+                    <div
+                      className="w-12 h-12 rounded-full flex items-center justify-center p-2 overflow-hidden cursor-pointer flex-shrink-0"
+                      onClick={() => navigate("/sub-company")}
+                      style={{
+                        backgroundColor: "var(--app-background-color)",
+                        scrollSnapAlign: "center" as any,
+                      }}
+                    >
+                      <img
+                        src={company}
+                        alt="Company"
+                        className="w-9 h-9 object-contain"
+                      />
+                    </div>
+
+                    {/* WhatsApp */}
+                    {profile?.WhatsApp ? (
+                      <div
+                        className="w-12 h-12 rounded-full flex items-center justify-center overflow-hidden cursor-pointer flex-shrink-0"
+                        onClick={() => window.open(profile.WhatsApp, "_blank")}
+                        style={{
+                          backgroundColor: "var(--app-background-color)",
+                          scrollSnapAlign: "center" as any,
+                        }}
+                      >
+                        <FontAwesomeIcon
+                          icon={faWhatsapp}
+                          size="2x"
+                          color="white"
+                        />
+                      </div>
+                    ) : null}
+
+                    {/* Telegram */}
+                    {profile?.telegramId ? (
+                      <div
+                        className="w-12 h-12 rounded-full flex items-center justify-center overflow-hidden cursor-pointer flex-shrink-0"
+                        onClick={() =>
+                          WebApp.openTelegramLink(
+                            `https://t.me/${profile.telegramId}`
+                          )
+                        }
+                        style={{
+                          backgroundColor: "var(--app-background-color)",
+                          scrollSnapAlign: "center" as any,
+                        }}
+                      >
+                        <FontAwesomeIcon
+                          icon={faTelegram}
+                          size="2x"
+                          color="white"
+                        />
+                      </div>
+                    ) : null}
+
+                    {/* Phone */}
+                    {profile?.contact ? (
+                      <div
+                        className="w-12 h-12 rounded-full flex items-center justify-center overflow-hidden cursor-pointer flex-shrink-0"
+                        onClick={() =>
+                          window.open(`tel:${profile.contact}`, "_self")
+                        }
+                        style={{
+                          backgroundColor: "var(--app-background-color)",
+                          scrollSnapAlign: "center" as any,
+                        }}
+                      >
+                        <FontAwesomeIcon
+                          icon={faPhone}
+                          size="2x"
+                          color="white"
+                        />
+                      </div>
+                    ) : null}
+
+                    {/* Chamber - always show */}
+                    <div
+                      className="w-12 h-12 rounded-full flex items-center justify-center p-2 overflow-hidden cursor-pointer flex-shrink-0"
+                      onClick={() => navigate("/chamber")}
+                      style={{
+                        backgroundColor: "var(--app-background-color)",
+                        scrollSnapAlign: "center" as any,
+                      }}
+                    >
+                      <img
+                        src={chamberIcon}
+                        alt="Chamber"
+                        className="w-9 h-9 object-contain"
+                      />
+                    </div>
+
+                    {/* Additional links: website, facebook, instagram, youtube, linkedin, twitter */}
+                    {profile?.website && (
+                      <div
+                        className="w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0"
+                        style={{
+                          backgroundColor: "var(--app-background-color)",
+                          scrollSnapAlign: "center" as any,
+                        }}
+                      >
+                        <FontAwesomeIcon
+                          icon={faGlobe}
+                          size="2x"
+                          color="white"
+                        />
+                      </div>
+                    )}
+                    {profile?.Facebook && (
+                      <div
+                        className="w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0"
+                        style={{
+                          backgroundColor: "var(--app-background-color)",
+                          scrollSnapAlign: "center" as any,
+                        }}
+                      >
+                        <FontAwesomeIcon
+                          icon={faFacebook}
+                          size="2x"
+                          color="white"
+                        />
+                      </div>
+                    )}
+                    {profile?.Instagram && (
+                      <div
+                        className="w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0"
+                        style={{
+                          backgroundColor: "var(--app-background-color)",
+                          scrollSnapAlign: "center" as any,
+                        }}
+                      >
+                        <FontAwesomeIcon
+                          icon={faInstagram}
+                          size="2x"
+                          color="white"
+                        />
+                      </div>
+                    )}
+                    {profile?.Youtube && (
+                      <div
+                        className="w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0"
+                        style={{
+                          backgroundColor: "var(--app-background-color)",
+                          scrollSnapAlign: "center" as any,
+                        }}
+                      >
+                        <FontAwesomeIcon
+                          icon={faYoutube}
+                          size="2x"
+                          color="white"
+                        />
+                      </div>
+                    )}
+                    {profile?.Linkedin && (
+                      <div
+                        className="w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0"
+                        style={{
+                          backgroundColor: "var(--app-background-color)",
+                          scrollSnapAlign: "center" as any,
+                        }}
+                      >
+                        <FontAwesomeIcon
+                          icon={faGlobe}
+                          size="2x"
+                          color="white"
+                        />
+                      </div>
+                    )}
                   </div>
-                ) : (
-                  <div className="w-12 h-12" />
-                )}
-                {/* Phone icon or placeholder */}
-                {profile?.Phone ? (
-                  <div
-                    className="w-12 h-12 rounded-full bg-app flex items-center justify-center overflow-hidden cursor-pointer"
-                    onClick={() => window.open(`tel:${profile.Phone}`, "_self")}
+                  <button
+                    aria-label="Scroll right"
+                    className={`absolute right-0 top-1/2 -translate-y-1/2 translate-x-1/2 z-20 p-1 bg-white/10 rounded-full ${
+                      canScrollRight
+                        ? "opacity-100"
+                        : "opacity-30 pointer-events-none"
+                    }`}
+                    onClick={() => {
+                      const el = iconsRef.current;
+                      if (!el) return;
+                      el.scrollBy({
+                        left: el.clientWidth * 0.6,
+                        behavior: "smooth",
+                      });
+                      setTimeout(updateIconScroll, 300);
+                    }}
+                    style={{ display: showArrows ? "block" : "none" }}
                   >
-                    <FontAwesomeIcon
-                      icon={faPhone}
-                      size="2x"
-                      color={
-                        getComputedStyle(
-                          document.documentElement
-                        ).getPropertyValue("--app-font-color") || "white"
-                      }
-                    />
-                  </div>
-                ) : (
-                  <div className="w-12 h-12" />
-                )}
-                {/* Last icon: Chamber, always shown, navigates to chamber page */}
-                <div
-                  className="w-12 h-12 rounded-full bg-blue-400 flex items-center justify-center p-2 overflow-hidden cursor-pointer"
-                  onClick={() => navigate("/chamber")}
-                >
-                  <img
-                    src={chamberIcon}
-                    alt="Chamber"
-                    className="w-8 h-8 object-contain"
-                  />
+                    <img src={rightArrow} alt="right" className="w-6 h-6" />
+                  </button>
                 </div>
               </div>
               <div
@@ -191,7 +381,7 @@ export default function ProfilePage() {
                 className="mb-2 p-2 w-full bg-[#d50078] text-center text-white"
                 onClick={() => navigate("/update-profile")}
               >
-                Update your Profile
+                {i18n.t("update_profile")}
               </div>
             </>
           ) : null}

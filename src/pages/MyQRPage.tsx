@@ -3,6 +3,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faCopy } from "@fortawesome/free-solid-svg-icons";
 import { QRCodeSVG } from "qrcode.react";
 import logo from "../assets/logo.png";
+import i18n from "../i18n";
 export default function MyQRPage() {
   const qrLink = "https://addmy.co/6500b34d"; // Replace with dynamic profile link if available
 
@@ -20,7 +21,7 @@ export default function MyQRPage() {
             className="flex items-center gap-2 mb-4 cursor-pointer"
             onClick={() => copyToClipboard(qrLink)}
           >
-            <p className="font-semibold text-app">Copy QR code</p>
+            <p className="font-semibold text-app">{i18n.t("copy_qr")}</p>
             <FontAwesomeIcon icon={faCopy} className="text-app" />
           </div>
 
@@ -52,7 +53,7 @@ export default function MyQRPage() {
           </div>
 
           {/* Scan my QR Code */}
-          <p className="text-app mb-2">Scan my QR code</p>
+          <p className="text-app mb-2">{i18n.t("scan_qr")}</p>
           <div
             className="flex items-center bg-white rounded-full px-4 py-2 mb-4 w-full max-w-xs cursor-pointer"
             onClick={() => copyToClipboard(qrLink)}
@@ -86,7 +87,7 @@ export default function MyQRPage() {
               (e.currentTarget as HTMLElement).style.color = "#374151";
             }}
           >
-            <span>Copy my Details</span>
+            <span>{i18n.t("copy_details")}</span>
             <FontAwesomeIcon icon={faCopy} />
           </button>
         </div>

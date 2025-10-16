@@ -59,7 +59,7 @@ const WelcomePage: React.FC<WelcomePageProps> = ({ onLogin }) => {
   const handleLogin = async () => {
     setLoginLoading(true);
     try {
-      onLogin();
+      await onLogin();
     } finally {
       setLoginLoading(false);
     }

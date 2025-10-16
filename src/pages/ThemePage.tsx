@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import Layout from "../components/Layout";
+import i18n from "../i18n";
 
 export default function ThemePage() {
   const router = useNavigate();
@@ -73,10 +74,12 @@ export default function ThemePage() {
       <div className="flex flex-col items-center justify-center flex-grow py-4 px-2 pb-32">
         <div className="bg-white rounded-2xl p-6 w-full max-w-md mx-auto flex flex-col gap-6 shadow-lg mt-8">
           <h2 className="text-2xl font-bold text-[#2fa8e0] mb-2 text-center">
-            Theme Settings
+            {i18n.t("theme_settings")}
           </h2>
           <div className="flex flex-row justify-between gap-4">
-            <label className="font-semibold min-w-[90px]">Font Color</label>
+            <label className="font-semibold min-w-[90px]">
+              {i18n.t("font_color")}
+            </label>
             <input
               type="color"
               value={fontColor}
@@ -85,7 +88,9 @@ export default function ThemePage() {
             />
           </div>
           <div className="flex flex-row justify-between gap-4">
-            <label className="font-semibold min-w-[90px]">Theme Color</label>
+            <label className="font-semibold min-w-[90px]">
+              {i18n.t("theme_color")}
+            </label>
             <input
               type="color"
               value={themeColor}
@@ -94,10 +99,14 @@ export default function ThemePage() {
             />
           </div>
           {error && (
-            <div className="text-red-500 text-center text-sm">{error}</div>
+            <div className="text-red-500 text-center text-sm">
+              {i18n.t("failed_to_update_theme")}
+            </div>
           )}
           {success && (
-            <div className="text-green-600 text-center text-sm">{success}</div>
+            <div className="text-green-600 text-center text-sm">
+              {i18n.t("theme_updated_success")}
+            </div>
           )}
           <button
             className="mt-4 rounded-full py-2 font-bold disabled:opacity-60"
@@ -108,7 +117,7 @@ export default function ThemePage() {
               color: "var(--app-font-color)",
             }}
           >
-            {loading ? "Saving..." : "Save"}
+            {loading ? i18n.t("saving") : i18n.t("save")}
           </button>
         </div>
       </div>

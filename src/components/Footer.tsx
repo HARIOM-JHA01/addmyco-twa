@@ -8,7 +8,7 @@ import settingIcon from "../assets/settingIcon.png";
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import WebApp from "@twa-dev/sdk";
-import i18n, { getLanguage, setLanguage } from '../i18n';
+import i18n, { getLanguage, setLanguage } from "../i18n";
 
 export default function Footer() {
   const router = useNavigate();
@@ -16,27 +16,30 @@ export default function Footer() {
   // const [showWorkModal, setShowWorkModal] = useState(false);
   // const [workModalText, setWorkModalText] = useState("");
   const [showLanguageModal, setShowLanguageModal] = useState(false);
-  const [selectedLanguage, setSelectedLanguage] = useState(getLanguage() === 'zh' ? 'Chinese' : 'English');
+  const [selectedLanguage, setSelectedLanguage] = useState(
+    getLanguage() === "zh" ? "Chinese" : "English"
+  );
 
   useEffect(() => {
     const onChange = (e: Event) => {
       // re-render when language changes elsewhere
       const lang = (e as CustomEvent).detail?.lang;
-      setSelectedLanguage(lang === 'zh' ? 'Chinese' : 'English');
+      setSelectedLanguage(lang === "zh" ? "Chinese" : "English");
     };
-    window.addEventListener('language-changed', onChange as EventListener);
-    return () => window.removeEventListener('language-changed', onChange as EventListener);
+    window.addEventListener("language-changed", onChange as EventListener);
+    return () =>
+      window.removeEventListener("language-changed", onChange as EventListener);
   }, []);
 
   // Logout handler
   const handleLogout = () => {
     WebApp.showPopup(
       {
-        title: "Confirm Logout",
-        message: "Are you sure you want to logout?",
+        title: i18n.t("logout"),
+        message: i18n.t("logout"),
         buttons: [
           { type: "cancel" },
-          { type: "destructive", text: "Logout", id: "logout" },
+          { type: "destructive", text: i18n.t("logout"), id: "logout" },
         ],
       },
       (result) => {
@@ -61,7 +64,7 @@ export default function Footer() {
                 router("/membership");
               }}
             >
-              Membership
+              {i18n.t("membership")}
             </button>
             <button
               className="text-white font-semibold px-4 py-2 text-left hover:bg-gray-800"
@@ -70,7 +73,7 @@ export default function Footer() {
                 router("/background");
               }}
             >
-              Background
+              {i18n.t("background")}
             </button>
             <button
               className="text-white font-semibold px-4 py-2 text-left hover:bg-gray-800"
@@ -79,7 +82,7 @@ export default function Footer() {
                 router("/theme");
               }}
             >
-              Theme
+              {i18n.t("theme")}
             </button>
             <button
               className="text-white font-semibold px-4 py-2 text-left hover:bg-gray-800"
@@ -88,13 +91,13 @@ export default function Footer() {
                 setShowSettings(false);
               }}
             >
-              Language
+              {i18n.t("language")}
             </button>
             <button
               className="text-white font-semibold px-4 py-2 text-left hover:bg-gray-800"
               onClick={handleLogout}
             >
-              Logout
+              {i18n.t("logout")}
             </button>
           </div>
         </div>
@@ -133,9 +136,9 @@ export default function Footer() {
                     ? "bg-[#007cb6] text-white border-[#007cb6] scale-105 shadow-md"
                     : "bg-gray-100 text-gray-700 border-gray-300 hover:bg-gray-200"
                 }`}
-                  onClick={() => setSelectedLanguage("English")}
+                onClick={() => setSelectedLanguage("English")}
               >
-                  {i18n.t('english')}
+                {i18n.t("english")}
               </button>
               <button
                 className={`flex-1 px-4 py-3 rounded-xl font-bold border-2 transition-all duration-150 ${
@@ -143,9 +146,9 @@ export default function Footer() {
                     ? "bg-[#007cb6] text-white border-[#007cb6] scale-105 shadow-md"
                     : "bg-gray-100 text-gray-700 border-gray-300 hover:bg-gray-200"
                 }`}
-                  onClick={() => setSelectedLanguage("Chinese")}
+                onClick={() => setSelectedLanguage("Chinese")}
               >
-                  {i18n.t('chinese')}
+                {i18n.t("chinese")}
               </button>
             </div>
             <div className="flex gap-2 w-full mt-2">
@@ -153,13 +156,16 @@ export default function Footer() {
                 className="flex-1 bg-gray-200 text-gray-700 rounded-md py-1 px-1 font-bold border border-gray-300 hover:bg-gray-300 transition-all"
                 onClick={() => setShowLanguageModal(false)}
               >
-                {i18n.t('cancel')}
+                {i18n.t("cancel")}
               </button>
               <button
                 className="flex-1 bg-[#007cb6] text-white rounded-md py-1 px-1 font-bold hover:bg-[#005f8e] transition-all"
-                onClick={() => { setShowLanguageModal(false); setLanguage(selectedLanguage === 'Chinese' ? 'zh' : 'en'); }}
+                onClick={() => {
+                  setShowLanguageModal(false);
+                  setLanguage(selectedLanguage === "Chinese" ? "zh" : "en");
+                }}
               >
-                {i18n.t('save_language')}
+                {i18n.t("save_language")}
               </button>
             </div>
           </div>
@@ -207,12 +213,12 @@ export default function Footer() {
             </button>
           </div>
           <div className="relative flex justify-center items-center w-24">
-              <img
-                src={TGDIcon}
-                alt="TGD"
-                className="w-20 h-20 rounded-full bg-white border-4 border-[#007cb6] z-20 absolute -top-14 left-1/2 -translate-x-1/2 shadow-lg"
-                style={{ boxShadow: "0 4px 16px 0 rgba(0,0,0,0.10)" }}
-              />
+            <img
+              src={TGDIcon}
+              alt="TGD"
+              className="w-20 h-20 rounded-full bg-white border-4 border-[#007cb6] z-20 absolute -top-14 left-1/2 -translate-x-1/2 shadow-lg"
+              style={{ boxShadow: "0 4px 16px 0 rgba(0,0,0,0.10)" }}
+            />
           </div>
           <div className="flex gap-2">
             <button

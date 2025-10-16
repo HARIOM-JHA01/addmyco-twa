@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { FaEllipsisV } from "react-icons/fa";
 import axios from "axios";
 import Layout from "../components/Layout";
-import i18n from '../i18n';
+import i18n from "../i18n";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faSearch } from "@fortawesome/free-solid-svg-icons";
 
@@ -139,7 +139,7 @@ export default function SearchPage() {
               <input
                 type="text"
                 className="border border-gray-300 rounded-full px-3 py-2 w-full mb-3 focus:outline-none focus:ring-2 focus:ring-blue-400"
-                placeholder={i18n.t('folder_name')}
+                placeholder={i18n.t("folder_name")}
                 value={folderName}
                 onChange={(e) => setFolderName(e.target.value)}
                 disabled={modalLoading}
@@ -180,7 +180,7 @@ export default function SearchPage() {
             <input
               type="text"
               className="border border-gray-300 rounded-lg p-2 pr-10 w-full bg-white placeholder-gray-500"
-              placeholder="Search by Name and Company name"
+              placeholder={i18n.t("search_placeholder")}
             />
             <FontAwesomeIcon
               icon={faSearch}
@@ -339,7 +339,7 @@ export default function SearchPage() {
 
           {/* No contacts message */}
           <div className="mt-8 font-extrabold text-lg text-center text-black">
-            {i18n.t('no_contacts')}
+            {i18n.t("no_contacts")}
           </div>
         </div>
       </div>

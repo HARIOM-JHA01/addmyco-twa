@@ -1,10 +1,9 @@
 import Layout from "../components/Layout";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import CompanyLogo from "../assets/company.svg";
-import LeftArrow from "../assets/left-arrow.png";
-import RightArrow from "../assets/right-arrow.png";
+// left/right asset removed; using FontAwesome arrows instead
 import ProfileIcon from "../assets/profileIcon.png";
 import logo from "../assets/logo.png";
 import {
@@ -14,9 +13,15 @@ import {
   faInstagram,
   faFacebook,
 } from "@fortawesome/free-brands-svg-icons";
-import { faGlobe } from "@fortawesome/free-solid-svg-icons";
+import {
+  faGlobe,
+  faArrowLeft,
+  faArrowRight,
+  faPhone,
+} from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import WebApp from "@twa-dev/sdk";
+import i18n from "../i18n";
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
@@ -25,11 +30,56 @@ export default function ChamberPage() {
   const [currentChamberIndex, setCurrentChamberIndex] = useState(0);
   const [file, setFile] = useState<File | null>(null);
   const [chamberData, setChamberData] = useState<any>(null);
+  const [profile, setProfile] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [editMode, setEditMode] = useState<null | "create" | "update">(null);
   const [editChamber, setEditChamber] = useState<any>(null);
   const [editLoading, setEditLoading] = useState(false);
   const [editError, setEditError] = useState("");
+  // Icon carousel refs & state for chamber page
+  const topIconsRef = useRef<HTMLDivElement | null>(null);
+  const bottomIconsRef = useRef<HTMLDivElement | null>(null);
+  const [showTopArrows, setShowTopArrows] = useState(false);
+  const [canTopLeft, setCanTopLeft] = useState(false);
+  const [canTopRight, setCanTopRight] = useState(false);
+  const [showBottomArrows, setShowBottomArrows] = useState(false);
+  const [canBottomLeft, setCanBottomLeft] = useState(false);
+  const [canBottomRight, setCanBottomRight] = useState(false);
+
+  const updateTopScroll = () => {
+    const el = topIconsRef.current;
+    if (!el) return;
+    const overflow = el.scrollWidth > el.clientWidth + 4;
+    setShowTopArrows(overflow);
+    setCanTopLeft(el.scrollLeft > 8);
+    setCanTopRight(el.scrollLeft + el.clientWidth < el.scrollWidth - 8);
+  };
+
+  const updateBottomScroll = () => {
+    const el = bottomIconsRef.current;
+    if (!el) return;
+    const overflow = el.scrollWidth > el.clientWidth + 4;
+    setShowBottomArrows(overflow);
+    setCanBottomLeft(el.scrollLeft > 8);
+    setCanBottomRight(el.scrollLeft + el.clientWidth < el.scrollWidth - 8);
+  };
+
+  useEffect(() => {
+    updateTopScroll();
+    updateBottomScroll();
+    const onResize = () => {
+      updateTopScroll();
+      updateBottomScroll();
+    };
+    window.addEventListener("resize", onResize);
+    return () => window.removeEventListener("resize", onResize);
+  }, [chamberData]);
+
+  // normalize common profile contact fields to handle different naming conventions
+  const whatsappLink = profile?.WhatsApp || profile?.whatsapp || null;
+  const telegramLink = profile?.telegramId || profile?.tgid || null;
+  const contactNumber =
+    profile?.contact || profile?.Contact || profile?.phone || null;
   // Helper to convert file to base64
   const fileToBase64 = (file: File): Promise<string> => {
     return new Promise((resolve, reject) => {
@@ -156,6 +206,10 @@ export default function ChamberPage() {
       const res = await axios.get(`${API_BASE_URL}/getchamber`, {
         headers: { Authorization: `Bearer ${token}` },
       });
+      const profileRes = await axios.get(`${API_BASE_URL}/getProfile`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setProfile(profileRes.data.data || null);
       if (
         res.data &&
         Array.isArray(res.data.data) &&
@@ -195,6 +249,16 @@ export default function ChamberPage() {
         } else {
           setChamberData(null);
         }
+        // also fetch profile so icons can use profile links
+        try {
+          const profileRes = await axios.get(`${API_BASE_URL}/getProfile`, {
+            headers: { Authorization: `Bearer ${token}` },
+          });
+          setProfile(profileRes.data.data || null);
+        } catch (err) {
+          // ignore profile fetch error here; profile remains null
+          setProfile(null);
+        }
       } catch (err: any) {
         // removed unused: setFetchError
         setChamberData(null);
@@ -217,14 +281,14 @@ export default function ChamberPage() {
           >
             <h2 className="text-xl font-bold mb-4 text-center">
               {editMode === "update"
-                ? "Update Chamber"
-                : "Enter your chamber detail"}
+                ? i18n.t("update_chamber")
+                : i18n.t("enter_chamber_detail")}
             </h2>
             <input
               className="rounded-full border-2 border-blue-200 px-4 py-2 mb-3 w-full focus:outline-none focus:ring-2 focus:ring-blue-400 bg-white placeholder-gray-500"
               type="text"
               name="enName"
-              placeholder="English Name for Chamber"
+              placeholder={i18n.t("placeholder_chamber_english")}
               value={editChamber?.enName || ""}
               onChange={handleEditInput}
               disabled={editLoading}
@@ -233,7 +297,7 @@ export default function ChamberPage() {
               className="rounded-full border-2 border-blue-200 px-4 py-2 mb-3 w-full focus:outline-none focus:ring-2 focus:ring-blue-400 bg-white placeholder-gray-500"
               type="text"
               name="cnName"
-              placeholder="Chinese Name for Chamber"
+              placeholder={i18n.t("placeholder_chamber_chinese")}
               value={editChamber?.cnName || ""}
               onChange={handleEditInput}
               disabled={editLoading}
@@ -249,15 +313,8 @@ export default function ChamberPage() {
             />
             {/* Upload area */}
             <div className="w-full bg-blue-400 rounded-xl flex flex-col items-center justify-center py-8 mb-3">
-              <div className="text-white text-center text-base font-semibold">
-                Please upload
-                <br />
-                640 width by 360 high Image
-                <br />
-                or
-              </div>
-              <div className="text-yellow-300 text-center text-base font-semibold mb-2">
-                Premium Member Upload 1 Minute Video
+              <div className="text-white text-center text-base font-semibold whitespace-pre-line">
+                {i18n.t("please_upload")}
               </div>
               {editChamber?.image &&
                 editChamber.image.startsWith("data:image") && (
@@ -279,7 +336,7 @@ export default function ChamberPage() {
                   className="hidden"
                 />
                 <span className="bg-black text-white rounded px-6 py-2 font-semibold cursor-pointer select-none text-sm text-center">
-                  Browse
+                  {i18n.t("browse")}
                 </span>
               </label>
               <button
@@ -292,13 +349,13 @@ export default function ChamberPage() {
                 }}
                 disabled={editLoading}
               >
-                Cancel
+                {i18n.t("cancel")}
               </button>
             </div>
             <textarea
               className="rounded-xl border-2 border-blue-200 px-4 py-2 mb-3 w-full focus:outline-none focus:ring-2 focus:ring-blue-400 bg-white placeholder-gray-500 min-h-[80px]"
               name="details"
-              placeholder="Chamber details"
+              placeholder={i18n.t("chamber_details") || "Chamber details"}
               value={editChamber?.details || ""}
               onChange={handleEditInput}
               disabled={editLoading}
@@ -307,7 +364,9 @@ export default function ChamberPage() {
               className="rounded-full border-2 border-blue-200 px-4 py-2 mb-3 w-full focus:outline-none focus:ring-2 focus:ring-blue-400 bg-white placeholder-gray-500"
               type="text"
               name="website"
-              placeholder="Website for Chamber"
+              placeholder={
+                i18n.t("website_for_chamber") || "Website for Chamber"
+              }
               value={editChamber?.website || ""}
               onChange={handleEditInput}
               disabled={editLoading}
@@ -316,7 +375,9 @@ export default function ChamberPage() {
               className="rounded-full border-2 border-blue-200 px-4 py-2 mb-3 w-full focus:outline-none focus:ring-2 focus:ring-blue-400 bg-white placeholder-gray-500"
               type="text"
               name="telegram"
-              placeholder="https://t.me/Telegram Id"
+              placeholder={
+                i18n.t("telegram_placeholder") || "https://t.me/Telegram Id"
+              }
               value={editChamber?.telegram || ""}
               onChange={handleEditInput}
               disabled={editLoading}
@@ -352,7 +413,7 @@ export default function ChamberPage() {
               className="rounded-full border-2 border-blue-200 px-4 py-2 mb-4 w-full focus:outline-none focus:ring-2 focus:ring-blue-400 bg-white placeholder-gray-500"
               type="text"
               name="order"
-              placeholder="Set display order"
+              placeholder={i18n.t("placeholder_display_order")}
               value={editChamber?.order || ""}
               onChange={handleEditInput}
               disabled={editLoading}
@@ -371,7 +432,7 @@ export default function ChamberPage() {
                 }}
                 disabled={editLoading}
               >
-                Cancel
+                {i18n.t("cancel")}
               </button>
               <button
                 type="submit"
@@ -384,11 +445,11 @@ export default function ChamberPage() {
               >
                 {editLoading
                   ? editMode === "update"
-                    ? "Updating..."
-                    : "Saving..."
+                    ? i18n.t("updating")
+                    : i18n.t("saving")
                   : editMode === "update"
-                  ? "Update"
-                  : "Save"}
+                  ? i18n.t("update")
+                  : i18n.t("save")}
               </button>
             </div>
           </form>
@@ -400,206 +461,336 @@ export default function ChamberPage() {
                 const c = chambers[currentChamberIndex];
                 return (
                   <>
-                    {/* Arrow navigation if more than 1 chamber */}
-                    {Array.isArray(chambers) && chambers.length > 1 && (
-                      <div className="flex flex-row justify-between items-center w-full mb-2">
-                        <button
-                          className={`p-1 ${
-                            currentChamberIndex === 0
-                              ? "opacity-30 cursor-not-allowed"
-                              : ""
-                          }`}
-                          onClick={() =>
-                            setCurrentChamberIndex((i) => Math.max(0, i - 1))
-                          }
-                          disabled={currentChamberIndex === 0}
-                          aria-label="Previous Chamber"
-                        >
-                          <img
-                            src={LeftArrow}
-                            alt="Left Arrow"
-                            className="w-7 h-7"
-                          />
-                        </button>
-                        <span className="text-sm text-gray-500">
-                          {currentChamberIndex + 1} / {chambers.length}
-                        </span>
-                        <button
-                          className={`p-1 ${
-                            currentChamberIndex === chambers.length - 1
-                              ? "opacity-30 cursor-not-allowed"
-                              : ""
-                          }`}
-                          onClick={() =>
-                            setCurrentChamberIndex((i) =>
-                              Math.min(chambers.length - 1, i + 1)
-                            )
-                          }
-                          disabled={currentChamberIndex === chambers.length - 1}
-                          aria-label="Next Chamber"
-                        >
-                          <img
-                            src={RightArrow}
-                            alt="Right Arrow"
-                            className="w-7 h-7"
-                          />
-                        </button>
-                      </div>
-                    )}
-                    <div className="flex flex-row gap-8 mb-4">
-                      {/* Company logo, always shown */}
-                      <img
-                        src={CompanyLogo}
-                        alt="Company"
-                        className="w-8 h-8 cursor-pointer"
-                        onClick={() => navigate("/sub-company")}
-                        title="Company"
-                      />
-                      {/* Social icons only if link present */}
-                      {c.WhatsApp && (
-                        <FontAwesomeIcon
-                          icon={faWhatsapp}
-                          className="w-8 h-8 text-green-500 cursor-pointer"
-                          title="WhatsApp"
-                          onClick={() => WebApp.openLink(c.WhatsApp)}
-                        />
-                      )}
-                      {c.Youtube && (
-                        <FontAwesomeIcon
-                          icon={faYoutube}
-                          className="w-8 h-8 text-red-500 cursor-pointer"
-                          title="YouTube"
-                          onClick={() => WebApp.openLink(c.Youtube)}
-                        />
-                      )}
-                      {c.Facebook && (
-                        <FontAwesomeIcon
-                          icon={faFacebook}
-                          className="w-8 h-8 text-blue-600 cursor-pointer"
-                          title="Facebook"
-                          onClick={() => WebApp.openLink(c.Facebook)}
-                        />
-                      )}
-                      {c.Instagram && (
-                        <FontAwesomeIcon
-                          icon={faInstagram}
-                          className="w-8 h-8 text-pink-500 cursor-pointer"
-                          title="Instagram"
-                          onClick={() => WebApp.openLink(c.Instagram)}
-                        />
-                      )}
-                      {c.tgchannel && (
-                        <FontAwesomeIcon
-                          icon={faTelegram}
-                          className="w-8 h-8 text-blue-400 cursor-pointer"
-                          title="Telegram"
-                          onClick={() => WebApp.openLink(c.tgchannel)}
-                        />
-                      )}
-                      {c.chamberwebsite && (
-                        <FontAwesomeIcon
-                          icon={faGlobe}
-                          className="w-8 h-8 text-green-600 cursor-pointer"
-                          title="Website"
-                          onClick={() => WebApp.openLink(c.chamberwebsite)}
-                        />
-                      )}
-                      {/* Profile logo, always shown */}
-                      <img
-                        src={ProfileIcon}
-                        alt="Profile"
-                        className="w-8 h-8 cursor-pointer"
-                        onClick={() => navigate("/profile")}
-                        title="Profile"
-                      />
-                    </div>
-                    {/* Chamber names and designation */}
-                    <div className="flex flex-col w-full mb-3 gap-4">
-                      <div className="w-full">
-                        <div className="rounded-full w-full text-center font-bold bg-white border-2 border-blue-200 mb-1 py-2 text-lg">
-                          {c.chamber_name_english}
-                        </div>
-                      </div>
-                      <div className="w-full">
-                        <div className="rounded-full w-full text-center font-bold bg-white border-2 border-blue-200 mb-1 py-2 text-lg">
-                          {c.chamber_name_chinese}
-                        </div>
-                      </div>
-                      <div className="w-full">
-                        <div className="rounded-full w-full text-center font-bold bg-white border-2 border-blue-200 mb-1 py-2 text-lg">
-                          {c.chamberdesignation}
-                        </div>
-                      </div>
-                    </div>
-                    {/* Image or video */}
-                    <div className="w-full flex justify-center mb-3">
-                      <div
-                        className="rounded-xl p-2 flex items-center justify-center w-full"
-                        style={{ width: 350, height: 200 }}
+                    {/* Chamber Top Icon Carousel: company, whatsapp, telegram, phone, personal */}
+                    <div className="relative w-full mb-4">
+                      <button
+                        aria-label="Top scroll left"
+                        className={`absolute left-6 top-1/2 -translate-y-1/2 z-20 p-2 bg-white/10 rounded-full ${
+                          canTopLeft
+                            ? "opacity-100"
+                            : "opacity-30 pointer-events-none"
+                        }`}
+                        onClick={() => {
+                          const el = topIconsRef.current;
+                          if (!el) return;
+                          el.scrollBy({
+                            left: -el.clientWidth * 0.6,
+                            behavior: "smooth",
+                          });
+                          setTimeout(updateTopScroll, 300);
+                        }}
+                        style={{ display: showTopArrows ? "block" : "none" }}
                       >
-                        {c.video && c.video.endsWith(".mp4") ? (
-                          <video
-                            src={c.video}
-                            autoPlay
-                            loop
-                            muted
-                            playsInline
-                            className="object-contain mx-auto rounded-md w-full h-full"
-                            style={{ maxWidth: "100%", maxHeight: "100%" }}
-                          />
-                        ) : c.image ? (
+                        {/* <FontAwesomeIcon icon={faArrowLeft} color="white" /> */}
+                      </button>
+                      <div
+                        ref={topIconsRef}
+                        onScroll={updateTopScroll}
+                        className="flex gap-4 px-6 overflow-x-auto no-scrollbar items-center"
+                        style={{
+                          scrollBehavior: "smooth",
+                          scrollSnapType: "x mandatory" as any,
+                        }}
+                      >
+                        <div
+                          className="w-12 h-12 rounded-full flex items-center justify-center p-2 overflow-hidden cursor-pointer flex-shrink-0"
+                          onClick={() => navigate("/sub-company")}
+                          style={{
+                            backgroundColor: "var(--app-background-color)",
+                            scrollSnapAlign: "center" as any,
+                          }}
+                        >
                           <img
-                            src={c.image}
-                            alt="chamber"
-                            className="object-contain mx-auto rounded-md"
-                            style={{ maxWidth: "100%", maxHeight: "100%" }}
+                            src={CompanyLogo}
+                            alt="Company"
+                            className="w-9 h-9 object-contain"
                           />
-                        ) : (
+                        </div>
+                        {whatsappLink && (
+                          <div
+                            className="w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0"
+                            onClick={() => WebApp.openLink(whatsappLink)}
+                            style={{
+                              backgroundColor: "var(--app-background-color)",
+                              scrollSnapAlign: "center" as any,
+                            }}
+                          >
+                            <FontAwesomeIcon
+                              icon={faWhatsapp}
+                              size="2x"
+                              color="white"
+                            />
+                          </div>
+                        )}
+                        {telegramLink && (
+                          <div
+                            className="w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0"
+                            onClick={() => WebApp.openLink(telegramLink)}
+                            style={{
+                              backgroundColor: "var(--app-background-color)",
+                              scrollSnapAlign: "center" as any,
+                            }}
+                          >
+                            <FontAwesomeIcon
+                              icon={faTelegram}
+                              size="2x"
+                              color="white"
+                            />
+                          </div>
+                        )}
+                        {contactNumber && (
+                          <div
+                            className="w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0"
+                            onClick={() =>
+                              WebApp.openLink(`tel:${contactNumber}`)
+                            }
+                            style={{
+                              backgroundColor: "var(--app-background-color)",
+                              scrollSnapAlign: "center" as any,
+                            }}
+                          >
+                            <FontAwesomeIcon
+                              icon={faPhone}
+                              size="2x"
+                              color="white"
+                            />
+                          </div>
+                        )}
+                        <div
+                          className="w-12 h-12 rounded-full flex items-center justify-center p-2 overflow-hidden cursor-pointer flex-shrink-0"
+                          onClick={() => navigate("/profile")}
+                          style={{
+                            backgroundColor: "var(--app-background-color)",
+                            scrollSnapAlign: "center" as any,
+                          }}
+                        >
                           <img
-                            src={logo}
-                            alt="No chamber"
-                            className="object-contain mx-auto rounded-md bg-white w-full"
-                            style={{ maxWidth: "100%", maxHeight: "100%" }}
+                            src={ProfileIcon}
+                            alt="Profile"
+                            className="w-9 h-9 object-contain"
                           />
+                        </div>
+                      </div>
+                      <button
+                        aria-label="Top scroll right"
+                        className={`absolute right-6 top-1/2 -translate-y-1/2 z-20 p-2 bg-white/10 rounded-full ${
+                          canTopRight
+                            ? "opacity-100"
+                            : "opacity-30 pointer-events-none"
+                        }`}
+                        onClick={() => {
+                          const el = topIconsRef.current;
+                          if (!el) return;
+                          el.scrollBy({
+                            left: el.clientWidth * 0.6,
+                            behavior: "smooth",
+                          });
+                          setTimeout(updateTopScroll, 300);
+                        }}
+                        style={{ display: showTopArrows ? "block" : "none" }}
+                      >
+                        {/* <FontAwesomeIcon icon={faArrowRight} color="white" /> */}
+                      </button>
+                    </div>
+                    {/* Chamber names and designation (company-style) */}
+                    <div className="flex flex-col items-center w-full mb-3">
+                      <button
+                        className="w-full rounded-full bg-app text-app text-xl font-bold py-2 mb-2 flex items-center justify-center"
+                        style={{ borderRadius: "2rem" }}
+                      >
+                        {c.chamber_name_english}
+                      </button>
+                      <button
+                        className="w-full rounded-full bg-app text-app text-xl font-bold py-2 mb-2 flex items-center justify-center"
+                        style={{ borderRadius: "2rem" }}
+                      >
+                        {c.chamber_name_chinese}
+                      </button>
+                      <div
+                        className="w-full rounded-full bg-app text-app text-lg font-bold py-2 mb-4 flex items-center justify-center"
+                        style={{ borderRadius: "2rem" }}
+                      >
+                        {c.chamberdesignation}
+                      </div>
+                    </div>
+                    {/* Image or video - rectangular preview like SubCompany */}
+                    <div className="flex flex-col items-center mb-6">
+                      <div className="w-full flex justify-center mb-4">
+                        <div
+                          className="rounded-xl p-2 flex items-center justify-center w-full"
+                          style={{ width: 350, height: 200 }}
+                        >
+                          {c.video && c.video.endsWith(".mp4") ? (
+                            <video
+                              src={c.video}
+                              autoPlay
+                              loop
+                              muted
+                              playsInline
+                              className="object-contain mx-auto rounded-md w-full h-full"
+                              style={{ maxWidth: "100%", maxHeight: "100%" }}
+                            />
+                          ) : c.image ? (
+                            <img
+                              src={c.image}
+                              alt="chamber"
+                              className="object-contain mx-auto rounded-md"
+                              style={{ maxWidth: "100%", maxHeight: "100%" }}
+                            />
+                          ) : (
+                            <img
+                              src={logo}
+                              alt="No chamber"
+                              className="object-contain mx-auto rounded-md bg-white w-full"
+                              style={{ maxWidth: "100%", maxHeight: "100%" }}
+                            />
+                          )}
+                        </div>
+                      </div>
+                      <div
+                        className="w-80 h-48 bg-white rounded-md p-2 overflow-auto mb-4"
+                        style={{
+                          borderWidth: 2,
+                          borderStyle: "solid",
+                          borderColor: "var(--app-background-color)",
+                        }}
+                      >
+                        {c.detail}
+                      </div>
+                    </div>
+                    {/* (Details moved above with media block to match SubCompany layout) */}
+                    {/* Bottom Icon Carousel: chamber telegram, youtube, facebook, instagram, website */}
+                    <div className="relative w-full mb-4">
+                      <button
+                        aria-label="Bottom left"
+                        className={`absolute left-6 top-1/2 -translate-y-1/2 z-20 p-2 bg-white/10 rounded-full ${
+                          canBottomLeft
+                            ? "opacity-100"
+                            : "opacity-30 pointer-events-none"
+                        }`}
+                        onClick={() => {
+                          const el = bottomIconsRef.current;
+                          if (!el) return;
+                          el.scrollBy({
+                            left: -el.clientWidth * 0.6,
+                            behavior: "smooth",
+                          });
+                          setTimeout(updateBottomScroll, 300);
+                        }}
+                        style={{ display: showBottomArrows ? "block" : "none" }}
+                      >
+                        <FontAwesomeIcon icon={faArrowLeft} color="white" />
+                      </button>
+                      <div
+                        ref={bottomIconsRef}
+                        onScroll={updateBottomScroll}
+                        className="flex gap-4 px-6 overflow-x-auto no-scrollbar items-center"
+                        style={{
+                          scrollBehavior: "smooth",
+                          scrollSnapType: "x mandatory" as any,
+                        }}
+                      >
+                        {c.telegramId && (
+                          <div
+                            className="w-14 h-14 rounded-full flex items-center justify-center flex-shrink-0"
+                            onClick={() => WebApp.openLink(c.telegram)}
+                            style={{
+                              backgroundColor: "var(--app-background-color)",
+                              scrollSnapAlign: "center" as any,
+                            }}
+                          >
+                            <FontAwesomeIcon
+                              icon={faTelegram}
+                              size="2x"
+                              color="white"
+                            />
+                          </div>
+                        )}
+                        {c.Youtube && (
+                          <div
+                            className="w-14 h-14 rounded-full flex items-center justify-center flex-shrink-0"
+                            onClick={() => WebApp.openLink(c.Youtube)}
+                            style={{
+                              backgroundColor: "var(--app-background-color)",
+                              scrollSnapAlign: "center" as any,
+                            }}
+                          >
+                            <FontAwesomeIcon
+                              icon={faYoutube}
+                              size="2x"
+                              color="white"
+                            />
+                          </div>
+                        )}
+                        {c.Facebook && (
+                          <div
+                            className="w-14 h-14 rounded-full flex items-center justify-center flex-shrink-0"
+                            onClick={() => WebApp.openLink(c.Facebook)}
+                            style={{
+                              backgroundColor: "var(--app-background-color)",
+                              scrollSnapAlign: "center" as any,
+                            }}
+                          >
+                            <FontAwesomeIcon
+                              icon={faFacebook}
+                              size="2x"
+                              color="white"
+                            />
+                          </div>
+                        )}
+                        {c.Instagram && (
+                          <div
+                            className="w-14 h-14 rounded-full flex items-center justify-center flex-shrink-0"
+                            onClick={() => WebApp.openLink(c.Instagram)}
+                            style={{
+                              backgroundColor: "var(--app-background-color)",
+                              scrollSnapAlign: "center" as any,
+                            }}
+                          >
+                            <FontAwesomeIcon
+                              icon={faInstagram}
+                              size="2x"
+                              color="white"
+                            />
+                          </div>
+                        )}
+                        {c.chamberwebsite && (
+                          <div
+                            className="w-14 h-14 rounded-full flex items-center justify-center flex-shrink-0"
+                            onClick={() => WebApp.openLink(c.chamberwebsite)}
+                            style={{
+                              backgroundColor: "var(--app-background-color)",
+                              scrollSnapAlign: "center" as any,
+                            }}
+                          >
+                            <FontAwesomeIcon
+                              icon={faGlobe}
+                              size="2x"
+                              color="white"
+                            />
+                          </div>
                         )}
                       </div>
-                    </div>
-                    {/* Details box */}
-                    <div className="w-full flex mb-3">
-                      <div
-                        className="bg-white rounded-xl p-3 flex  w-full text-base text-gray-800 text-left"
-                        style={{ width: 350, height: 200 }}
+                      <button
+                        aria-label="Bottom right"
+                        className={`absolute right-6 top-1/2 -translate-y-1/2 z-20 p-2 bg-white/10 rounded-full ${
+                          canBottomRight
+                            ? "opacity-100"
+                            : "opacity-30 pointer-events-none"
+                        }`}
+                        onClick={() => {
+                          const el = bottomIconsRef.current;
+                          if (!el) return;
+                          el.scrollBy({
+                            left: el.clientWidth * 0.6,
+                            behavior: "smooth",
+                          });
+                          setTimeout(updateBottomScroll, 300);
+                        }}
+                        style={{ display: showBottomArrows ? "block" : "none" }}
                       >
-                        <span>{c.detail}</span>
-                      </div>
-                    </div>
-                    <div className="flex flex-row gap-8 mb-4 justify-center w-full">
-                      {/* <img src={CompanyLogo} alt="Profile" className="w-8 h-8" /> */}
-                      <FontAwesomeIcon
-                        icon={faTelegram}
-                        className="w-8 h-8 text-blue-400"
-                        title="Telegram"
-                      />
-                      <FontAwesomeIcon
-                        icon={faYoutube}
-                        className="w-8 h-8 text-red-500"
-                        title="YouTube"
-                      />
-                      <FontAwesomeIcon
-                        icon={faFacebook}
-                        className="w-8 h-8 text-blue-600"
-                        title="Facebook"
-                      />
-                      <FontAwesomeIcon
-                        icon={faInstagram}
-                        className="w-8 h-8 text-pink-500"
-                        title="Instagram"
-                      />
-                      <FontAwesomeIcon
-                        icon={faGlobe}
-                        className="w-8 h-8 text-green-600"
-                        title="Website"
-                      />
+                        <FontAwesomeIcon icon={faArrowRight} color="white" />
+                      </button>
                     </div>
                     {/* two buttons update add more */}
                     <div className="flex justify-center w-full gap-4 text-center mt-6">
@@ -608,14 +799,14 @@ export default function ChamberPage() {
                         onClick={() => openEditChamber(c)}
                         type="button"
                       >
-                        Update
+                        {i18n.t("update")}
                       </button>
                       <button
                         className="p-2 w-full text-white bg-[#009944] shadow-md rounded"
                         onClick={() => navigate("/create-chamber")}
                         type="button"
                       >
-                        Add More
+                        {i18n.t("add_more")}
                       </button>
                     </div>
                   </>
@@ -623,13 +814,13 @@ export default function ChamberPage() {
               })()
             ) : (
               <div className="text-center text-gray-600 py-8">
-                <p className="mb-4">No chamber data found.</p>
+                <p className="mb-4">{i18n.t("no_chamber_data")}</p>
                 <button
                   className="p-2 px-6 text-white bg-[#009944] shadow-md rounded-full"
                   onClick={() => navigate("/create-chamber")}
                   type="button"
                 >
-                  Add Chamber
+                  {i18n.t("add_chamber")}
                 </button>
               </div>
             )}

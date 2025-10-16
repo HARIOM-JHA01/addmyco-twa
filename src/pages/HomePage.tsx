@@ -1,9 +1,9 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import logo from "../assets/logo.png";
 import addmycoLogo from "../assets/addmyco.png";
 import chamberIcon from "../assets/chamber.svg";
 import companyIcon from "../assets/company.svg";
-import { ArrowLeft, ArrowRight, Share2, Camera } from "lucide-react";
+import { Share2, Camera } from "lucide-react";
 import { QRCodeSVG } from "qrcode.react";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
@@ -12,6 +12,8 @@ import { useNavigate } from "react-router-dom";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faTelegram, faWhatsapp } from "@fortawesome/free-brands-svg-icons";
 import { faPhone } from "@fortawesome/free-solid-svg-icons";
+import leftArrow from "../assets/left-arrow.png";
+import rightArrow from "../assets/right-arrow.png";
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
@@ -19,6 +21,26 @@ export default function HomePage() {
   const [profile, setProfile] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
+  const iconsRef = useRef<HTMLDivElement | null>(null);
+  const [showArrows, setShowArrows] = useState(false);
+  const [canLeft, setCanLeft] = useState(false);
+  const [canRight, setCanRight] = useState(false);
+
+  const updateScroll = () => {
+    const el = iconsRef.current;
+    if (!el) return;
+    const overflow = el.scrollWidth > el.clientWidth + 4;
+    setShowArrows(overflow);
+    setCanLeft(el.scrollLeft > 8);
+    setCanRight(el.scrollLeft + el.clientWidth < el.scrollWidth - 8);
+  };
+
+  useEffect(() => {
+    updateScroll();
+    const onResize = () => updateScroll();
+    window.addEventListener("resize", onResize);
+    return () => window.removeEventListener("resize", onResize);
+  }, [profile]);
   useEffect(() => {
     const fetchProfile = async () => {
       try {
@@ -137,44 +159,115 @@ export default function HomePage() {
             </div>
           </div>
 
-          {/* Social Icons */}
-          <div className="flex items-center justify-center gap-2 mb-6">
-            <ArrowLeft
-              className="w-8 h-8 text-app cursor-pointer"
-              aria-label="Left"
-            />
-            <img
+          {/* Social Icons Carousel */}
+          <div className="relative w-full mb-6">
+            <button
+              aria-label="Scroll left"
+              className={`absolute left-0 top-1/2 -translate-y-1/2 -translate-x-1/2 z-20 p-2 bg-white/10 rounded-full ${
+                canLeft ? "opacity-100" : "opacity-30 pointer-events-none"
+              }`}
               onClick={() => {
-                navigate("/sub-company");
+                const el = iconsRef.current;
+                if (!el) return;
+                el.scrollBy({
+                  left: -el.clientWidth * 0.6,
+                  behavior: "smooth",
+                });
+                setTimeout(updateScroll, 300);
               }}
-              src={companyIcon}
-              alt="Company"
-              className="w-12 h-12 rounded-full bg-app p-2 cursor-pointer"
-            />
-            {/* whatsappIcon */}
-            <div className="text-app">
-              <FontAwesomeIcon icon={faWhatsapp} size="2x" />
+              style={{ display: showArrows ? "block" : "none" }}
+            >
+              <img src={leftArrow} alt="left" className="w-6 h-6" />
+            </button>
+            <div
+              ref={iconsRef}
+              onScroll={updateScroll}
+              className="flex gap-4 px-6 overflow-x-auto no-scrollbar items-center"
+              style={{
+                scrollBehavior: "smooth",
+                scrollSnapType: "x mandatory" as any,
+              }}
+            >
+              <div
+                className="w-12 h-12 rounded-full flex items-center justify-center p-2 overflow-hidden cursor-pointer flex-shrink-0"
+                onClick={() => navigate("/sub-company")}
+                style={{
+                  backgroundColor: "var(--app-background-color)",
+                  scrollSnapAlign: "center" as any,
+                }}
+              >
+                <img
+                  src={companyIcon}
+                  alt="Company"
+                  className="w-9 h-9 object-contain"
+                />
+              </div>
+              {profile?.WhatsApp && (
+                <div
+                  className="w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0"
+                  onClick={() => window.open(profile.WhatsApp, "_blank")}
+                  style={{
+                    backgroundColor: "var(--app-background-color)",
+                    scrollSnapAlign: "center" as any,
+                  }}
+                >
+                  <FontAwesomeIcon icon={faWhatsapp} size="2x" color="white" />
+                </div>
+              )}
+              {profile?.tgid && (
+                <div
+                  className="w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0"
+                  onClick={() => window.open(profile.tgid, "_blank")}
+                  style={{
+                    backgroundColor: "var(--app-background-color)",
+                    scrollSnapAlign: "center" as any,
+                  }}
+                >
+                  <FontAwesomeIcon icon={faTelegram} size="2x" color="white" />
+                </div>
+              )}
+              {profile?.contact && (
+                <div
+                  className="w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0"
+                  onClick={() => window.open(`tel:${profile.contact}`, "_self")}
+                  style={{
+                    backgroundColor: "var(--app-background-color)",
+                    scrollSnapAlign: "center" as any,
+                  }}
+                >
+                  <FontAwesomeIcon icon={faPhone} size="2x" color="white" />
+                </div>
+              )}
+              <div
+                className="w-12 h-12 rounded-full flex items-center justify-center p-2 overflow-hidden cursor-pointer flex-shrink-0"
+                onClick={() => navigate("/chamber")}
+                style={{
+                  backgroundColor: "var(--app-background-color)",
+                  scrollSnapAlign: "center" as any,
+                }}
+              >
+                <img
+                  src={chamberIcon}
+                  alt="Chamber"
+                  className="w-9 h-9 object-contain"
+                />
+              </div>
             </div>
-            {/* telegramIcon */}
-            <div className="text-app">
-              <FontAwesomeIcon icon={faTelegram} size="2x" />
-            </div>
-            {/* phoneIcon */}
-            <div className="text-app">
-              <FontAwesomeIcon icon={faPhone} size="2x" />
-            </div>
-            <img
+            <button
+              aria-label="Scroll right"
+              className={`absolute right-0 top-1/2 -translate-y-1/2 translate-x-1/2 z-20 p-2 bg-white/10 rounded-full ${
+                canRight ? "opacity-100" : "opacity-30 pointer-events-none"
+              }`}
               onClick={() => {
-                navigate("/chamber");
+                const el = iconsRef.current;
+                if (!el) return;
+                el.scrollBy({ left: el.clientWidth * 0.6, behavior: "smooth" });
+                setTimeout(updateScroll, 300);
               }}
-              src={chamberIcon}
-              alt="Chamber"
-              className="w-12 h-12 rounded-full bg-app p-2 cursor-pointer"
-            />
-            <ArrowRight
-              className="w-8 h-8 text-app cursor-pointer"
-              aria-label="Right"
-            />
+              style={{ display: showArrows ? "block" : "none" }}
+            >
+              <img src={rightArrow} alt="right" className="w-6 h-6" />
+            </button>
           </div>
 
           {/* Address before QR Code (address1, address2, address3) */}
