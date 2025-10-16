@@ -32,6 +32,42 @@ function AppRoutes() {
 
   useEffect(() => {
     // Fetch profile/company data on mount
+    // Also fetch global background/theme settings and apply CSS variables.
+    const fetchBackground = async () => {
+      try {
+        const token = localStorage.getItem("token");
+        const headers: Record<string, string> = {};
+        if (token) headers["Authorization"] = `Bearer ${token}`;
+        const res = await axios.get(`${API_BASE_URL}/getbackground`, {
+          headers,
+        });
+        if (res?.data?.success && res.data.data) {
+          const bg = res.data.data;
+          if (bg.backgroundcolor) {
+            document.documentElement.style.setProperty(
+              "--app-background-color",
+              bg.backgroundcolor
+            );
+          }
+          if (bg.fontcolor) {
+            document.documentElement.style.setProperty(
+              "--app-font-color",
+              bg.fontcolor
+            );
+          }
+        }
+      } catch (e) {
+        // ignore failures, keep default theme
+        console.debug("fetchBackground failed", e);
+      }
+    };
+
+    // Call once at startup
+    fetchBackground();
+
+    // Re-fetch when other parts of the app signal an update (ThemePage dispatches this)
+    const onBackgroundUpdated = () => fetchBackground();
+    window.addEventListener("background-updated", onBackgroundUpdated);
     const fetchProfile = async () => {
       setProfileLoading(true);
       try {
@@ -52,6 +88,10 @@ function AppRoutes() {
       }
     };
     fetchProfile();
+    // cleanup listener when component unmounts
+    return () => {
+      window.removeEventListener("background-updated", onBackgroundUpdated);
+    };
   }, []);
 
   const handleLogin = async () => {
@@ -172,8 +212,10 @@ function AppRoutes() {
 }
 
 function App() {
+  const basename = import.meta.env.BASE_URL || "/";
+
   return (
-    <BrowserRouter basename="/addmyco">
+    <BrowserRouter basename={basename}>
       <AppRoutes />
     </BrowserRouter>
   );

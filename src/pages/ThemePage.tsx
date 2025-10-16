@@ -32,6 +32,12 @@ export default function ThemePage() {
         }
       );
       setSuccess("Theme updated successfully!");
+      // Notify the app to re-fetch the background/theme settings
+      try {
+        window.dispatchEvent(new Event("background-updated"));
+      } catch (e) {
+        // ignore if window not available
+      }
       setTimeout(() => router(-1), 1000);
     } catch (err: any) {
       setError(

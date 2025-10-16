@@ -28,3 +28,28 @@
     scrollbar-width: thin;
     scrollbar-color: #007cb6 #ffffff;
 }
+
+/* App-level theme variables (will be updated at startup from remote API) */
+:root {
+    --app-background-color: #007cb6; /* default */
+    --app-font-color: #000000; /* default */
+}
+
+/* Make all text use the fetched font color by default */
+body {
+    color: var(--app-font-color);
+}
+
+/* Helper classes components can use to pick up the background color */
+.bg-app {
+    background-color: var(--app-background-color) !important;
+}
+.icon-bg, .app-icon {
+    background-color: var(--app-background-color) !important;
+}
+
+/* Buttons and interactive elements should contrast with app background; keep this minimal so
+     components can opt-in where required. */
+.text-app {
+    color: var(--app-font-color) !important;
+}

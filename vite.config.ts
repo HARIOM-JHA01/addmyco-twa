@@ -7,4 +7,7 @@ export default defineConfig({
     outDir: './dist',
   },
   base: '/addmyco/',
+  server: {
+    port: 3000
+  }
 });

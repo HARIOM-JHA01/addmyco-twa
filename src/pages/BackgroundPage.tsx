@@ -107,11 +107,20 @@ export default function BackgroundPage() {
                   {categories.length === 0 ? (
                     <li className="text-gray-400">No categories</li>
                   ) : (
-                    categories.map((cat: any) => (
-                      <li key={cat._id || cat.name} className="text-gray-700">
-                        {cat.name || cat}
-                      </li>
-                    ))
+                    categories.map((cat: any, idx: number) => {
+                      // API sometimes returns objects like { _id, categoryname, __v }
+                      const label =
+                        cat?.categoryname ||
+                        cat?.name ||
+                        String(cat) ||
+                        `category-${idx}`;
+                      const key = cat?._id || label || `cat-${idx}`;
+                      return (
+                        <li key={key} className="text-gray-700">
+                          {label}
+                        </li>
+                      );
+                    })
                   )}
                 </ul>
               </div>
