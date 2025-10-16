@@ -13,12 +13,9 @@ import {
   faInstagram,
   faFacebook,
 } from "@fortawesome/free-brands-svg-icons";
-import {
-  faGlobe,
-  faArrowLeft,
-  faArrowRight,
-  faPhone,
-} from "@fortawesome/free-solid-svg-icons";
+import { faGlobe, faPhone } from "@fortawesome/free-solid-svg-icons";
+import leftArrow from "../assets/left-arrow.png";
+import rightArrow from "../assets/right-arrow.png";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import WebApp from "@twa-dev/sdk";
 import i18n from "../i18n";
@@ -42,9 +39,9 @@ export default function ChamberPage() {
   const [showTopArrows, setShowTopArrows] = useState(false);
   const [canTopLeft, setCanTopLeft] = useState(false);
   const [canTopRight, setCanTopRight] = useState(false);
-  const [showBottomArrows, setShowBottomArrows] = useState(false);
-  const [canBottomLeft, setCanBottomLeft] = useState(false);
-  const [canBottomRight, setCanBottomRight] = useState(false);
+  const [, setShowBottomArrows] = useState(false);
+  const [_, setCanBottomLeft] = useState(false);
+  const [__, setCanBottomRight] = useState(false);
 
   const updateTopScroll = () => {
     const el = topIconsRef.current;
@@ -593,32 +590,63 @@ export default function ChamberPage() {
                       </button>
                     </div>
                     {/* Chamber names and designation (company-style) */}
-                    <div className="flex flex-col items-center w-full mb-3">
-                      <button
-                        className="w-full rounded-full bg-app text-app text-xl font-bold py-2 mb-2 flex items-center justify-center"
+                    {/* Chamber Names with navigation arrows (overlay, name stays full-width) */}
+                    <div className="relative w-full mb-2">
+                      <div
+                        className="w-full rounded-full bg-app text-app text-xl font-bold py-2 flex items-center justify-center"
                         style={{ borderRadius: "2rem" }}
                       >
                         {c.chamber_name_english}
+                      </div>
+                      <button
+                        aria-label="Prev chamber"
+                        className={`absolute left-0 top-1/2 -translate-y-1/2 -translate-x-1/2 p-1 rounded-full ${
+                          currentChamberIndex > 0
+                            ? "opacity-100"
+                            : "opacity-30 pointer-events-none"
+                        }`}
+                        onClick={() =>
+                          setCurrentChamberIndex((i) => Math.max(i - 1, 0))
+                        }
+                        disabled={currentChamberIndex === 0}
+                      >
+                        <img src={leftArrow} alt="prev" className="w-6 h-6" />
                       </button>
                       <button
-                        className="w-full rounded-full bg-app text-app text-xl font-bold py-2 mb-2 flex items-center justify-center"
-                        style={{ borderRadius: "2rem" }}
+                        aria-label="Next chamber"
+                        className={`absolute right-0 top-1/2 -translate-y-1/2 translate-x-1/2 p-1 rounded-full ${
+                          currentChamberIndex < chambers.length - 1
+                            ? "opacity-100"
+                            : "opacity-30 pointer-events-none"
+                        }`}
+                        onClick={() =>
+                          setCurrentChamberIndex((i) =>
+                            Math.min(i + 1, chambers.length - 1)
+                          )
+                        }
+                        disabled={currentChamberIndex >= chambers.length - 1}
                       >
-                        {c.chamber_name_chinese}
+                        <img src={rightArrow} alt="next" className="w-6 h-6" />
                       </button>
-                      <div
-                        className="w-full rounded-full bg-app text-app text-lg font-bold py-2 mb-4 flex items-center justify-center"
-                        style={{ borderRadius: "2rem" }}
-                      >
-                        {c.chamberdesignation}
-                      </div>
+                    </div>
+                    <div
+                      className="w-full rounded-full bg-app text-app text-xl font-bold py-2 mb-2 flex items-center justify-center"
+                      style={{ borderRadius: "2rem" }}
+                    >
+                      {c.chamber_name_chinese}
+                    </div>
+                    <div
+                      className="w-full rounded-full bg-app text-app text-lg font-bold py-2 mb-4 flex items-center justify-center"
+                      style={{ borderRadius: "2rem" }}
+                    >
+                      {c.chamberdesignation}
                     </div>
                     {/* Image or video - rectangular preview like SubCompany */}
-                    <div className="flex flex-col items-center mb-6">
+                    <div className="flex flex-col items-center mb-6 w-full">
                       <div className="w-full flex justify-center mb-4">
                         <div
                           className="rounded-xl p-2 flex items-center justify-center w-full"
-                          style={{ width: 350, height: 200 }}
+                          style={{ height: 200 }}
                         >
                           {c.video && c.video.endsWith(".mp4") ? (
                             <video
@@ -648,7 +676,7 @@ export default function ChamberPage() {
                         </div>
                       </div>
                       <div
-                        className="w-80 h-48 bg-white rounded-md p-2 overflow-auto mb-4"
+                        className="w-full h-48 bg-white rounded-md p-2 overflow-auto mb-4"
                         style={{
                           borderWidth: 2,
                           borderStyle: "solid",
@@ -659,138 +687,123 @@ export default function ChamberPage() {
                       </div>
                     </div>
                     {/* (Details moved above with media block to match SubCompany layout) */}
-                    {/* Bottom Icon Carousel: chamber telegram, youtube, facebook, instagram, website */}
-                    <div className="relative w-full mb-4">
-                      <button
-                        aria-label="Bottom left"
-                        className={`absolute left-6 top-1/2 -translate-y-1/2 z-20 p-2 bg-white/10 rounded-full ${
-                          canBottomLeft
-                            ? "opacity-100"
-                            : "opacity-30 pointer-events-none"
-                        }`}
-                        onClick={() => {
-                          const el = bottomIconsRef.current;
-                          if (!el) return;
-                          el.scrollBy({
-                            left: -el.clientWidth * 0.6,
-                            behavior: "smooth",
-                          });
-                          setTimeout(updateBottomScroll, 300);
-                        }}
-                        style={{ display: showBottomArrows ? "block" : "none" }}
-                      >
-                        <FontAwesomeIcon icon={faArrowLeft} color="white" />
-                      </button>
-                      <div
-                        ref={bottomIconsRef}
-                        onScroll={updateBottomScroll}
-                        className="flex gap-4 px-6 overflow-x-auto no-scrollbar items-center"
-                        style={{
-                          scrollBehavior: "smooth",
-                          scrollSnapType: "x mandatory" as any,
-                        }}
-                      >
-                        {c.telegramId && (
-                          <div
-                            className="w-14 h-14 rounded-full flex items-center justify-center flex-shrink-0"
-                            onClick={() => WebApp.openLink(c.telegram)}
-                            style={{
-                              backgroundColor: "var(--app-background-color)",
-                              scrollSnapAlign: "center" as any,
-                            }}
-                          >
+                    {/* Bottom Icons: fixed octagonal row (Telegram, Facebook, Instagram, YouTube, Website) */}
+                    <div className="w-full mb-6 flex items-center justify-between gap-3">
+                      {[
+                        {
+                          key: "telegram",
+                          enabled: !!c.telegramId,
+                          render: () => (
                             <FontAwesomeIcon
                               icon={faTelegram}
-                              size="2x"
+                              size="lg"
                               color="white"
                             />
-                          </div>
-                        )}
-                        {c.Youtube && (
-                          <div
-                            className="w-14 h-14 rounded-full flex items-center justify-center flex-shrink-0"
-                            onClick={() => WebApp.openLink(c.Youtube)}
-                            style={{
-                              backgroundColor: "var(--app-background-color)",
-                              scrollSnapAlign: "center" as any,
-                            }}
-                          >
-                            <FontAwesomeIcon
-                              icon={faYoutube}
-                              size="2x"
-                              color="white"
-                            />
-                          </div>
-                        )}
-                        {c.Facebook && (
-                          <div
-                            className="w-14 h-14 rounded-full flex items-center justify-center flex-shrink-0"
-                            onClick={() => WebApp.openLink(c.Facebook)}
-                            style={{
-                              backgroundColor: "var(--app-background-color)",
-                              scrollSnapAlign: "center" as any,
-                            }}
-                          >
-                            <FontAwesomeIcon
-                              icon={faFacebook}
-                              size="2x"
-                              color="white"
-                            />
-                          </div>
-                        )}
-                        {c.Instagram && (
-                          <div
-                            className="w-14 h-14 rounded-full flex items-center justify-center flex-shrink-0"
-                            onClick={() => WebApp.openLink(c.Instagram)}
-                            style={{
-                              backgroundColor: "var(--app-background-color)",
-                              scrollSnapAlign: "center" as any,
-                            }}
-                          >
-                            <FontAwesomeIcon
-                              icon={faInstagram}
-                              size="2x"
-                              color="white"
-                            />
-                          </div>
-                        )}
-                        {c.chamberwebsite && (
-                          <div
-                            className="w-14 h-14 rounded-full flex items-center justify-center flex-shrink-0"
-                            onClick={() => WebApp.openLink(c.chamberwebsite)}
-                            style={{
-                              backgroundColor: "var(--app-background-color)",
-                              scrollSnapAlign: "center" as any,
-                            }}
-                          >
+                          ),
+                          onClick: () => {
+                            if (c.telegramId) WebApp.openLink(c.telegramId);
+                            else if (c.tgchannel) {
+                              // if no full link, try to open as t.me/username
+                              // remove leading @ if present
+                              const id = (c.tgchannel || "").replace(/^@/, "");
+                              WebApp.openLink(`https://t.me/${id}`);
+                            }
+                          },
+                        },
+                        ...(c.Facebook
+                          ? [
+                              {
+                                key: "facebook",
+                                enabled: true,
+                                render: () => (
+                                  <FontAwesomeIcon
+                                    icon={faFacebook}
+                                    size="lg"
+                                    color="white"
+                                  />
+                                ),
+                                onClick: () => WebApp.openLink(c.Facebook),
+                              },
+                            ]
+                          : []),
+                        ...(c.Instagram
+                          ? [
+                              {
+                                key: "instagram",
+                                enabled: true,
+                                render: () => (
+                                  <FontAwesomeIcon
+                                    icon={faInstagram}
+                                    size="lg"
+                                    color="white"
+                                  />
+                                ),
+                                onClick: () => WebApp.openLink(c.Instagram),
+                              },
+                            ]
+                          : []),
+                        ...(c.Youtube
+                          ? [
+                              {
+                                key: "youtube",
+                                enabled: true,
+                                render: () => (
+                                  <FontAwesomeIcon
+                                    icon={faYoutube}
+                                    size="lg"
+                                    color="white"
+                                  />
+                                ),
+                                onClick: () => WebApp.openLink(c.Youtube),
+                              },
+                            ]
+                          : []),
+                        {
+                          key: "website",
+                          enabled: !!c.chamberwebsite,
+                          render: () => (
                             <FontAwesomeIcon
                               icon={faGlobe}
-                              size="2x"
+                              size="lg"
                               color="white"
                             />
+                          ),
+                          onClick: () => {
+                            if (c.chamberwebsite)
+                              WebApp.openLink(c.chamberwebsite);
+                          },
+                        },
+                      ].map((item) => (
+                        <div
+                          key={item.key}
+                          className={`w-12 h-12 flex-shrink-0 ${
+                            item.enabled
+                              ? "cursor-pointer"
+                              : "opacity-40 pointer-events-none"
+                          }`}
+                          onClick={item.onClick}
+                          style={{
+                            clipPath:
+                              "polygon(30% 0%, 70% 0%, 100% 30%, 100% 70%, 70% 100%, 30% 100%, 0% 70%, 0% 30%)",
+                            backgroundColor: "var(--app-background-color)",
+                            padding: 3,
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                          }}
+                        >
+                          <div
+                            className="w-full h-full flex items-center justify-center"
+                            style={{
+                              clipPath:
+                                "polygon(30% 0%, 70% 0%, 100% 30%, 100% 70%, 70% 100%, 30% 100%, 0% 70%, 0% 30%)",
+                              background: "rgba(255,255,255,0.15)",
+                            }}
+                          >
+                            {item.render()}
                           </div>
-                        )}
-                      </div>
-                      <button
-                        aria-label="Bottom right"
-                        className={`absolute right-6 top-1/2 -translate-y-1/2 z-20 p-2 bg-white/10 rounded-full ${
-                          canBottomRight
-                            ? "opacity-100"
-                            : "opacity-30 pointer-events-none"
-                        }`}
-                        onClick={() => {
-                          const el = bottomIconsRef.current;
-                          if (!el) return;
-                          el.scrollBy({
-                            left: el.clientWidth * 0.6,
-                            behavior: "smooth",
-                          });
-                          setTimeout(updateBottomScroll, 300);
-                        }}
-                        style={{ display: showBottomArrows ? "block" : "none" }}
-                      >
-                        <FontAwesomeIcon icon={faArrowRight} color="white" />
-                      </button>
+                        </div>
+                      ))}
                     </div>
                     {/* two buttons update add more */}
                     <div className="flex justify-center w-full gap-4 text-center mt-6">
