@@ -5,17 +5,28 @@ import TGDIcon from "../assets/tgdlogo.png";
 import heartIcon from "../assets/heart.png";
 import qrIcone from "../assets/scanner-sidebar.png";
 import settingIcon from "../assets/settingIcon.png";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import WebApp from "@twa-dev/sdk";
+import i18n, { getLanguage, setLanguage } from '../i18n';
 
 export default function Footer() {
   const router = useNavigate();
   const [showSettings, setShowSettings] = useState(false);
-  const [showWorkModal, setShowWorkModal] = useState(false);
-  const [workModalText, setWorkModalText] = useState("");
+  // const [showWorkModal, setShowWorkModal] = useState(false);
+  // const [workModalText, setWorkModalText] = useState("");
   const [showLanguageModal, setShowLanguageModal] = useState(false);
-  const [selectedLanguage, setSelectedLanguage] = useState("English");
+  const [selectedLanguage, setSelectedLanguage] = useState(getLanguage() === 'zh' ? 'Chinese' : 'English');
+
+  useEffect(() => {
+    const onChange = (e: Event) => {
+      // re-render when language changes elsewhere
+      const lang = (e as CustomEvent).detail?.lang;
+      setSelectedLanguage(lang === 'zh' ? 'Chinese' : 'English');
+    };
+    window.addEventListener('language-changed', onChange as EventListener);
+    return () => window.removeEventListener('language-changed', onChange as EventListener);
+  }, []);
 
   // Logout handler
   const handleLogout = () => {
@@ -90,7 +101,7 @@ export default function Footer() {
       )}
 
       {/* Work in Progress Modal */}
-      {showWorkModal && (
+      {/* {showWorkModal && (
         <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
           <div className="bg-white rounded-2xl p-6 w-72 flex flex-col items-center">
             <div className="text-lg font-bold mb-4">{workModalText}</div>
@@ -103,7 +114,7 @@ export default function Footer() {
             </button>
           </div>
         </div>
-      )}
+      )} */}
 
       {/* Language Modal */}
       {showLanguageModal && (
@@ -122,9 +133,9 @@ export default function Footer() {
                     ? "bg-[#007cb6] text-white border-[#007cb6] scale-105 shadow-md"
                     : "bg-gray-100 text-gray-700 border-gray-300 hover:bg-gray-200"
                 }`}
-                onClick={() => setSelectedLanguage("English")}
+                  onClick={() => setSelectedLanguage("English")}
               >
-                English
+                  {i18n.t('english')}
               </button>
               <button
                 className={`flex-1 px-4 py-3 rounded-xl font-bold border-2 transition-all duration-150 ${
@@ -132,9 +143,9 @@ export default function Footer() {
                     ? "bg-[#007cb6] text-white border-[#007cb6] scale-105 shadow-md"
                     : "bg-gray-100 text-gray-700 border-gray-300 hover:bg-gray-200"
                 }`}
-                onClick={() => setSelectedLanguage("Chinese")}
+                  onClick={() => setSelectedLanguage("Chinese")}
               >
-                Chinese (Traditional)
+                  {i18n.t('chinese')}
               </button>
             </div>
             <div className="flex gap-2 w-full mt-2">
@@ -142,13 +153,13 @@ export default function Footer() {
                 className="flex-1 bg-gray-200 text-gray-700 rounded-md py-1 px-1 font-bold border border-gray-300 hover:bg-gray-300 transition-all"
                 onClick={() => setShowLanguageModal(false)}
               >
-                Cancel
+                {i18n.t('cancel')}
               </button>
               <button
                 className="flex-1 bg-[#007cb6] text-white rounded-md py-1 px-1 font-bold hover:bg-[#005f8e] transition-all"
-                onClick={() => setShowLanguageModal(false)}
+                onClick={() => { setShowLanguageModal(false); setLanguage(selectedLanguage === 'Chinese' ? 'zh' : 'en'); }}
               >
-                Save Language
+                {i18n.t('save_language')}
               </button>
             </div>
           </div>
@@ -196,12 +207,12 @@ export default function Footer() {
             </button>
           </div>
           <div className="relative flex justify-center items-center w-24">
-            <img
-              src={TGDIcon}
-              alt="TGD"
-              className="w-20 h-20 rounded-full bg-white border-4 border-[#007cb6] z-20 absolute -top-14 left-1/2 -translate-x-1/2 shadow-lg"
-              style={{ boxShadow: "0 4px 16px 0 rgba(0,0,0,0.10)" }}
-            />
+              <img
+                src={TGDIcon}
+                alt="TGD"
+                className="w-20 h-20 rounded-full bg-white border-4 border-[#007cb6] z-20 absolute -top-14 left-1/2 -translate-x-1/2 shadow-lg"
+                style={{ boxShadow: "0 4px 16px 0 rgba(0,0,0,0.10)" }}
+              />
           </div>
           <div className="flex gap-2">
             <button

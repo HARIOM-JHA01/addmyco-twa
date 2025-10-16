@@ -374,7 +374,7 @@ export default function SubCompanyPage() {
                 {companies.length > 1 &&
                   currentCompanyIndex < companies.length - 1 && (
                     <div
-                      className="absolute right-0 top-1/2 -translate-y-1/2 w-10 h-10 flex items-center justify-center bg-[#007cb6] rounded-full cursor-pointer shadow-lg z-10"
+                      className="absolute right-0 top-1/2 -translate-y-1/2 w-10 h-10 flex items-center justify-center bg-app rounded-full cursor-pointer shadow-lg z-10"
                       onClick={() =>
                         setCurrentCompanyIndex((i) =>
                           Math.min(i + 1, companies.length - 1)
@@ -391,7 +391,7 @@ export default function SubCompanyPage() {
                   )}
                 {/* First icon: Profile, always shown, navigates to profile page */}
                 <div
-                  className="w-12 h-12 rounded-full bg-blue-400 flex items-center justify-center overflow-hidden cursor-pointer"
+                  className="w-12 h-12 rounded-full bg-app flex items-center justify-center overflow-hidden cursor-pointer"
                   onClick={() => (window.location.href = "/profile")}
                 >
                   <img
@@ -403,7 +403,7 @@ export default function SubCompanyPage() {
                 {/* WhatsApp icon or placeholder */}
                 {companyProfile?.WhatsApp ? (
                   <div
-                    className="w-12 h-12 rounded-full bg-blue-400 flex items-center justify-center overflow-hidden cursor-pointer"
+                    className="w-12 h-12 rounded-full bg-app flex items-center justify-center overflow-hidden cursor-pointer"
                     onClick={() =>
                       window.open(companyProfile.WhatsApp, "_blank")
                     }
@@ -411,7 +411,11 @@ export default function SubCompanyPage() {
                     <FontAwesomeIcon
                       icon={faWhatsapp}
                       size="2x"
-                      color="white"
+                      color={
+                        getComputedStyle(
+                          document.documentElement
+                        ).getPropertyValue("--app-font-color") || "white"
+                      }
                     />
                   </div>
                 ) : (
@@ -420,7 +424,7 @@ export default function SubCompanyPage() {
                 {/* Telegram icon or placeholder */}
                 {companyProfile?.Telegram ? (
                   <div
-                    className="w-12 h-12 rounded-full bg-blue-400 flex items-center justify-center overflow-hidden cursor-pointer"
+                    className="w-12 h-12 rounded-full bg-app flex items-center justify-center overflow-hidden cursor-pointer"
                     onClick={() =>
                       window.open(companyProfile.Telegram, "_blank")
                     }
@@ -428,7 +432,11 @@ export default function SubCompanyPage() {
                     <FontAwesomeIcon
                       icon={faTelegram}
                       size="2x"
-                      color="white"
+                      color={
+                        getComputedStyle(
+                          document.documentElement
+                        ).getPropertyValue("--app-font-color") || "white"
+                      }
                     />
                   </div>
                 ) : (
@@ -437,12 +445,20 @@ export default function SubCompanyPage() {
                 {/* Phone icon or placeholder */}
                 {companyProfile?.Phone ? (
                   <div
-                    className="w-12 h-12 rounded-full bg-blue-400 flex items-center justify-center overflow-hidden cursor-pointer"
+                    className="w-12 h-12 rounded-full bg-app flex items-center justify-center overflow-hidden cursor-pointer"
                     onClick={() =>
                       window.open(`tel:${companyProfile.Phone}`, "_self")
                     }
                   >
-                    <FontAwesomeIcon icon={faPhone} size="2x" color="white" />
+                    <FontAwesomeIcon
+                      icon={faPhone}
+                      size="2x"
+                      color={
+                        getComputedStyle(
+                          document.documentElement
+                        ).getPropertyValue("--app-font-color") || "white"
+                      }
+                    />
                   </div>
                 ) : (
                   <div className="w-12 h-12" />
@@ -475,19 +491,19 @@ export default function SubCompanyPage() {
 
               {/* Company Names */}
               <div
-                className="w-full rounded-full bg-[#007cb6] text-white text-xl font-bold py-1 mb-2 flex items-center justify-center"
+                className="w-full rounded-full bg-app text-app text-xl font-bold py-1 mb-2 flex items-center justify-center"
                 style={{ borderRadius: "2rem" }}
               >
                 {companyProfile.company_name_english || "English Company Name"}
               </div>
               <div
-                className="w-full rounded-full bg-[#007cb6] text-white text-xl font-bold py-1 mb-2 flex items-center justify-center"
+                className="w-full rounded-full bg-app text-app text-xl font-bold py-1 mb-2 flex items-center justify-center"
                 style={{ borderRadius: "2rem" }}
               >
-                {companyProfile.company_name_chinese || "中文公司名称"}
+                {companyProfile.company_name_chinese || "中文公司名稱"}
               </div>
               <div
-                className="w-full rounded-full bg-[#007cb6] text-white text-xl font-bold py-1 mb-4 flex items-center justify-center"
+                className="w-full rounded-full bg-app text-app text-xl font-bold py-1 mb-4 flex items-center justify-center"
                 style={{ borderRadius: "2rem" }}
               >
                 {companyProfile.companydesignation || "Company Designation"}
@@ -509,7 +525,14 @@ export default function SubCompanyPage() {
                     />
                   </div>
                 </div>
-                <div className="w-80 h-48 bg-white rounded-md border-2 border-[#007cb6] p-2 overflow-auto">
+                <div
+                  className="w-80 h-48 bg-white rounded-md p-2 overflow-auto"
+                  style={{
+                    borderWidth: 2,
+                    borderStyle: "solid",
+                    borderColor: "var(--app-background-color)",
+                  }}
+                >
                   {companyProfile.description || "No description available"}
                 </div>
               </div>
@@ -531,11 +554,27 @@ export default function SubCompanyPage() {
 
               {/* Action Icons */}
               <div className="flex justify-between w-full gap-4 mb-6">
-                <div className="w-12 h-12 rounded-full bg-blue-400 flex items-center justify-center overflow-hidden">
-                  <FontAwesomeIcon icon={faTelegram} size="2x" color="white" />
+                <div className="w-12 h-12 rounded-full bg-app flex items-center justify-center overflow-hidden">
+                  <FontAwesomeIcon
+                    icon={faTelegram}
+                    size="2x"
+                    color={
+                      getComputedStyle(
+                        document.documentElement
+                      ).getPropertyValue("--app-font-color") || "white"
+                    }
+                  />
                 </div>
-                <div className="w-12 h-12 rounded-full bg-blue-400 flex items-center justify-center overflow-hidden">
-                  <FontAwesomeIcon icon={faGlobe} size="2x" color="white" />
+                <div className="w-12 h-12 rounded-full bg-app flex items-center justify-center overflow-hidden">
+                  <FontAwesomeIcon
+                    icon={faGlobe}
+                    size="2x"
+                    color={
+                      getComputedStyle(
+                        document.documentElement
+                      ).getPropertyValue("--app-font-color") || "white"
+                    }
+                  />
                 </div>
               </div>
               <div className="flex justify-center w-full gap-4 text-center mt-6">

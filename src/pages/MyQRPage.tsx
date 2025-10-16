@@ -20,8 +20,8 @@ export default function MyQRPage() {
             className="flex items-center gap-2 mb-4 cursor-pointer"
             onClick={() => copyToClipboard(qrLink)}
           >
-            <p className="font-semibold text-white">Copy QR code</p>
-            <FontAwesomeIcon icon={faCopy} className="text-white" />
+            <p className="font-semibold text-app">Copy QR code</p>
+            <FontAwesomeIcon icon={faCopy} className="text-app" />
           </div>
 
           {/* QR Code Generator */}
@@ -30,7 +30,17 @@ export default function MyQRPage() {
               value={qrLink}
               size={192}
               bgColor="#ffffff"
-              fgColor="#007cb6"
+              fgColor={(() => {
+                try {
+                  return (
+                    getComputedStyle(document.documentElement)
+                      .getPropertyValue("--app-background-color")
+                      .trim() || "#007cb6"
+                  );
+                } catch (e) {
+                  return "#007cb6";
+                }
+              })()}
               level="H"
               imageSettings={{
                 src: logo,
@@ -42,7 +52,7 @@ export default function MyQRPage() {
           </div>
 
           {/* Scan my QR Code */}
-          <p className="text-white mb-2">Scan my QR code</p>
+          <p className="text-app mb-2">Scan my QR code</p>
           <div
             className="flex items-center bg-white rounded-full px-4 py-2 mb-4 w-full max-w-xs cursor-pointer"
             onClick={() => copyToClipboard(qrLink)}
@@ -59,7 +69,22 @@ export default function MyQRPage() {
           {/* Copy my Details Button */}
           <button
             onClick={() => copyToClipboard("My details text here")}
-            className="flex items-center justify-between w-full gap-2 bg-white text-gray-700 rounded-full px-4 py-2 hover:bg-[#007cb6] hover:text-white transition"
+            className="flex items-center justify-between w-full gap-2 bg-white text-gray-700 rounded-full px-4 py-2 transition"
+            style={{ "--hover-bg": "var(--app-background-color)" } as any}
+            onMouseEnter={(e) => {
+              (e.currentTarget as HTMLElement).style.backgroundColor =
+                getComputedStyle(document.documentElement).getPropertyValue(
+                  "--app-background-color"
+                ) || "#007cb6";
+              (e.currentTarget as HTMLElement).style.color =
+                getComputedStyle(document.documentElement).getPropertyValue(
+                  "--app-font-color"
+                ) || "#ffffff";
+            }}
+            onMouseLeave={(e) => {
+              (e.currentTarget as HTMLElement).style.backgroundColor = "white";
+              (e.currentTarget as HTMLElement).style.color = "#374151";
+            }}
           >
             <span>Copy my Details</span>
             <FontAwesomeIcon icon={faCopy} />

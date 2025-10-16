@@ -186,7 +186,10 @@ export default function CreateChamberPage() {
             {/* Upload area */}
             <div className="w-full flex justify-center">
               {filePreview ? (
-                <div className="flex items-center justify-center rounded-lg w-[366px] h-[200px] overflow-hidden bg-[#01a2e9]">
+                <div
+                  className="flex items-center justify-center rounded-lg w-[366px] h-[200px] overflow-hidden"
+                  style={{ backgroundColor: "var(--app-background-color)" }}
+                >
                   {file?.type.startsWith("image/") ? (
                     <img
                       src={filePreview}
@@ -205,7 +208,10 @@ export default function CreateChamberPage() {
                   ) : null}
                 </div>
               ) : (
-                <div className="bg-[#01a2e9] text-center text-white font-bold py-6 mb-4 relative flex flex-col items-center justify-center w-[366px] h-[200px] rounded-2xl">
+                <div
+                  className="text-center text-white font-bold py-6 mb-4 relative flex flex-col items-center justify-center w-[366px] h-[200px] rounded-2xl"
+                  style={{ backgroundColor: "var(--app-background-color)" }}
+                >
                   <div className="text-lg">
                     Please upload
                     <br />
@@ -312,8 +318,12 @@ export default function CreateChamberPage() {
 
             <button
               type="submit"
-              className="mt-4 w-full bg-[#007cb6] text-white py-2 font-semibold text-lg disabled:opacity-50 rounded-full"
+              className="mt-4 w-full py-2 font-semibold text-lg disabled:opacity-50 rounded-full"
               disabled={loading}
+              style={{
+                backgroundColor: "var(--app-background-color)",
+                color: "var(--app-font-color)",
+              }}
             >
               {loading ? "Saving..." : "Save Chamber"}
             </button>

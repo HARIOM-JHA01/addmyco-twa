@@ -5,8 +5,28 @@ import Layout from "../components/Layout";
 
 export default function ThemePage() {
   const router = useNavigate();
-  const [fontColor, setFontColor] = useState("#000000");
-  const [themeColor, setThemeColor] = useState("#007cb6");
+  const [fontColor, setFontColor] = useState(() => {
+    try {
+      return (
+        getComputedStyle(document.documentElement)
+          .getPropertyValue("--app-font-color")
+          .trim() || "#000000"
+      );
+    } catch (e) {
+      return "#000000";
+    }
+  });
+  const [themeColor, setThemeColor] = useState(() => {
+    try {
+      return (
+        getComputedStyle(document.documentElement)
+          .getPropertyValue("--app-background-color")
+          .trim() || "#007cb6"
+      );
+    } catch (e) {
+      return "#007cb6";
+    }
+  });
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -80,9 +100,13 @@ export default function ThemePage() {
             <div className="text-green-600 text-center text-sm">{success}</div>
           )}
           <button
-            className="mt-4 bg-[#007cb6] text-white rounded-full py-2 font-bold disabled:opacity-60"
+            className="mt-4 rounded-full py-2 font-bold disabled:opacity-60"
             onClick={handleSave}
             disabled={loading}
+            style={{
+              backgroundColor: "var(--app-background-color)",
+              color: "var(--app-font-color)",
+            }}
           >
             {loading ? "Saving..." : "Save"}
           </button>

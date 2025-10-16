@@ -54,7 +54,7 @@ export default function BackgroundPage() {
             <>
               {/* System Images Row */}
               <div className="w-full mb-4">
-                <h3 className="font-bold text-lg mb-2 text-[#007cb6]">
+                <h3 className="font-bold text-lg mb-2 text-app">
                   System Images
                 </h3>
                 <div className="overflow-x-auto scrollbar-custom">
@@ -77,9 +77,7 @@ export default function BackgroundPage() {
               </div>
               {/* User Images Row */}
               <div className="w-full mb-4">
-                <h3 className="font-bold text-lg mb-2 text-[#007cb6]">
-                  Your Images
-                </h3>
+                <h3 className="font-bold text-lg mb-2 text-app">Your Images</h3>
                 <div className="overflow-x-auto scrollbar-custom">
                   <div className="flex gap-4 min-w-max px-2 mb-2">
                     {userImages.length === 0 ? (
@@ -100,9 +98,7 @@ export default function BackgroundPage() {
               </div>
               {/* Categories List */}
               <div className="w-full mb-2">
-                <h3 className="font-bold text-lg mb-2 text-[#007cb6]">
-                  Categories
-                </h3>
+                <h3 className="font-bold text-lg mb-2 text-app">Categories</h3>
                 <ul className="list-disc pl-5">
                   {categories.length === 0 ? (
                     <li className="text-gray-400">No categories</li>

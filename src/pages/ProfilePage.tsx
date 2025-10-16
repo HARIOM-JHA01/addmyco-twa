@@ -62,7 +62,7 @@ export default function ProfilePage() {
       <div className="flex flex-col items-center justify-center flex-grow py-4 px-2 pb-32">
         <div className="bg-blue-100 bg-opacity-40 rounded-3xl p-6 w-full max-w-md mx-auto flex flex-col items-center shadow-lg">
           {loading ? (
-            <div className="text-[#007cb6] text-lg">Loading...</div>
+            <div className="text-app text-lg">Loading...</div>
           ) : error ? (
             <div className="text-red-500 text-center">{error}</div>
           ) : profile ? (
@@ -87,17 +87,17 @@ export default function ProfilePage() {
                     />
                   )}
                 </div>
-                <div className="w-full rounded-full bg-[#007cb6] text-white text-lg font-bold py-2 mb-2 flex items-center justify-center">
+                <div className="w-full rounded-full bg-app text-app text-lg font-bold py-2 mb-2 flex items-center justify-center">
                   {profile.owner_name_english || "No Name"}
                 </div>
-                <div className="w-full rounded-full bg-[#007cb6] text-white text-lg font-bold py-2 mb-4 flex items-center justify-center">
+                <div className="w-full rounded-full bg-app text-app text-lg font-bold py-2 mb-4 flex items-center justify-center">
                   {profile.owner_name_chinese || ""}
                 </div>
               </div>
               <div className="flex items-center justify-center gap-6 mb-2">
                 {/* First icon: Company, always shown, navigates to company page */}
                 <div
-                  className="w-12 h-12 rounded-full bg-blue-400 flex items-center justify-center p-2 overflow-hidden cursor-pointer"
+                  className="w-12 h-12 rounded-full bg-app flex items-center justify-center p-2 overflow-hidden cursor-pointer"
                   onClick={() => navigate("/sub-company")}
                 >
                   <img
@@ -109,13 +109,17 @@ export default function ProfilePage() {
                 {/* WhatsApp icon or placeholder */}
                 {profile?.Whatsapp ? (
                   <div
-                    className="w-12 h-12 rounded-full bg-blue-400 flex items-center justify-center overflow-hidden cursor-pointer"
+                    className="w-12 h-12 rounded-full bg-app flex items-center justify-center overflow-hidden cursor-pointer"
                     onClick={() => window.open(profile.Whatsapp, "_blank")}
                   >
                     <FontAwesomeIcon
                       icon={faWhatsapp}
                       size="2x"
-                      color="white"
+                      color={
+                        getComputedStyle(
+                          document.documentElement
+                        ).getPropertyValue("--app-font-color") || "white"
+                      }
                     />
                   </div>
                 ) : (
@@ -124,13 +128,17 @@ export default function ProfilePage() {
                 {/* Telegram icon or placeholder */}
                 {profile?.Telegram ? (
                   <div
-                    className="w-12 h-12 rounded-full bg-blue-400 flex items-center justify-center overflow-hidden cursor-pointer"
+                    className="w-12 h-12 rounded-full bg-app flex items-center justify-center overflow-hidden cursor-pointer"
                     onClick={() => window.open(profile.Telegram, "_blank")}
                   >
                     <FontAwesomeIcon
                       icon={faTelegram}
                       size="2x"
-                      color="white"
+                      color={
+                        getComputedStyle(
+                          document.documentElement
+                        ).getPropertyValue("--app-font-color") || "white"
+                      }
                     />
                   </div>
                 ) : (
@@ -139,10 +147,18 @@ export default function ProfilePage() {
                 {/* Phone icon or placeholder */}
                 {profile?.Phone ? (
                   <div
-                    className="w-12 h-12 rounded-full bg-blue-400 flex items-center justify-center overflow-hidden cursor-pointer"
+                    className="w-12 h-12 rounded-full bg-app flex items-center justify-center overflow-hidden cursor-pointer"
                     onClick={() => window.open(`tel:${profile.Phone}`, "_self")}
                   >
-                    <FontAwesomeIcon icon={faPhone} size="2x" color="white" />
+                    <FontAwesomeIcon
+                      icon={faPhone}
+                      size="2x"
+                      color={
+                        getComputedStyle(
+                          document.documentElement
+                        ).getPropertyValue("--app-font-color") || "white"
+                      }
+                    />
                   </div>
                 ) : (
                   <div className="w-12 h-12" />
@@ -159,13 +175,20 @@ export default function ProfilePage() {
                   />
                 </div>
               </div>
-              <div className="w-full rounded-md border-2 border-[#007cb6] bg-white p-4 mb-4 shadow text-center">
-                <div className="text-[#007cb6]">{profile.address1}</div>
-                <div className="text-[#007cb6]">{profile.address2}</div>
-                <div className="text-[#007cb6]">{profile.address3}</div>
+              <div
+                className="w-full rounded-md bg-white p-4 mb-4 shadow text-center"
+                style={{
+                  borderWidth: 2,
+                  borderStyle: "solid",
+                  borderColor: "var(--app-background-color)",
+                }}
+              >
+                <div className="text-app">{profile.address1}</div>
+                <div className="text-app">{profile.address2}</div>
+                <div className="text-app">{profile.address3}</div>
               </div>
               <div
-                className="text-white mb-2 p-2 w-full bg-[#d50078] text-center"
+                className="mb-2 p-2 w-full bg-[#d50078] text-center text-white"
                 onClick={() => navigate("/update-profile")}
               >
                 Update your Profile

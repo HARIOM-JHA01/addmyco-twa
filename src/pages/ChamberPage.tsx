@@ -375,7 +375,11 @@ export default function ChamberPage() {
               </button>
               <button
                 type="submit"
-                className="flex-1 bg-[#007cb6] text-white rounded-full py-2 font-bold disabled:opacity-50"
+                className="flex-1 rounded-full py-2 font-bold disabled:opacity-50"
+                style={{
+                  backgroundColor: "var(--app-background-color)",
+                  color: "var(--app-font-color)",
+                }}
                 disabled={editLoading}
               >
                 {editLoading

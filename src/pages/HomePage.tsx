@@ -77,14 +77,14 @@ export default function HomePage() {
         <div className="bg-blue-100 bg-opacity-40 rounded-3xl p-6 w-full max-w-md mx-auto flex flex-col items-center shadow-lg">
           {/* Company Name in English */}
           <button
-            className="w-full rounded-full bg-[#007cb6] text-white text-xl font-bold py-2 mb-2 flex items-center justify-center"
+            className="w-full rounded-full bg-app text-app text-xl font-bold py-2 mb-2 flex items-center justify-center"
             style={{ borderRadius: "2rem" }}
           >
             {companyData?.company_name_english || "Company Name"}
           </button>
           {/* Company Name in Chinese */}
           <button
-            className="w-full rounded-full bg-[#007cb6] text-white text-xl font-bold mb-2 py-2 flex items-center justify-center"
+            className="w-full rounded-full bg-app text-app text-xl font-bold mb-2 py-2 flex items-center justify-center"
             style={{ borderRadius: "2rem" }}
           >
             {companyData?.company_name_chinese || "公司名称"}
@@ -123,14 +123,14 @@ export default function HomePage() {
 
             {/* User Name in English */}
             <div
-              className="w-full rounded-full bg-[#007cb6] text-white text-lg font-bold py-2 mb-2 flex items-center justify-center"
+              className="w-full rounded-full bg-app text-app text-lg font-bold py-2 mb-2 flex items-center justify-center"
               style={{ borderRadius: "2rem" }}
             >
               {profile?.owner_name_english || "User Name"}
             </div>
             {/* User Name in Chinese */}
             <div
-              className="w-full rounded-full bg-[#007cb6] text-white text-lg font-bold py-2 mb-4 flex items-center justify-center"
+              className="w-full rounded-full bg-app text-app text-lg font-bold py-2 mb-4 flex items-center justify-center"
               style={{ borderRadius: "2rem" }}
             >
               {profile?.owner_name_chinese || "用户名"}
@@ -140,7 +140,7 @@ export default function HomePage() {
           {/* Social Icons */}
           <div className="flex items-center justify-center gap-2 mb-6">
             <ArrowLeft
-              className="w-8 h-8 text-white cursor-pointer"
+              className="w-8 h-8 text-app cursor-pointer"
               aria-label="Left"
             />
             <img
@@ -149,39 +149,52 @@ export default function HomePage() {
               }}
               src={companyIcon}
               alt="Company"
-              className="w-12 h-12 rounded-full bg-blue-400 p-2 cursor-pointer"
+              className="w-12 h-12 rounded-full bg-app p-2 cursor-pointer"
             />
             {/* whatsappIcon */}
-            <FontAwesomeIcon icon={faWhatsapp} size="2x" color="white" />
+            <div className="text-app">
+              <FontAwesomeIcon icon={faWhatsapp} size="2x" />
+            </div>
             {/* telegramIcon */}
-            <FontAwesomeIcon icon={faTelegram} size="2x" color="white" />
+            <div className="text-app">
+              <FontAwesomeIcon icon={faTelegram} size="2x" />
+            </div>
             {/* phoneIcon */}
-            <FontAwesomeIcon icon={faPhone} size="2x" color="white" />
+            <div className="text-app">
+              <FontAwesomeIcon icon={faPhone} size="2x" />
+            </div>
             <img
               onClick={() => {
                 navigate("/chamber");
               }}
               src={chamberIcon}
               alt="Chamber"
-              className="w-12 h-12 rounded-full bg-blue-400 p-2 cursor-pointer"
+              className="w-12 h-12 rounded-full bg-app p-2 cursor-pointer"
             />
             <ArrowRight
-              className="w-8 h-8 text-white cursor-pointer"
+              className="w-8 h-8 text-app cursor-pointer"
               aria-label="Right"
             />
           </div>
 
           {/* Address before QR Code (address1, address2, address3) */}
           {(profile?.address1 || profile?.address2 || profile?.address3) && (
-            <div className="w-full rounded-md border-2 border-[#007cb6] bg-white p-4 mb-4 shadow text-center">
+            <div
+              className="w-full rounded-md bg-white p-4 mb-4 shadow text-center"
+              style={{
+                borderWidth: 2,
+                borderStyle: "solid",
+                borderColor: "var(--app-background-color)",
+              }}
+            >
               {profile.address1 && (
-                <div className="text-[#007cb6]">{profile.address1}</div>
+                <div className="text-app">{profile.address1}</div>
               )}
               {profile.address2 && (
-                <div className="text-[#007cb6]">{profile.address2}</div>
+                <div className="text-app">{profile.address2}</div>
               )}
               {profile.address3 && (
-                <div className="text-[#007cb6]">{profile.address3}</div>
+                <div className="text-app">{profile.address3}</div>
               )}
             </div>
           )}
@@ -192,7 +205,17 @@ export default function HomePage() {
                 value={qrLink}
                 size={160}
                 bgColor="#ffffff"
-                fgColor="#007cb6"
+                fgColor={(() => {
+                  try {
+                    return (
+                      getComputedStyle(document.documentElement)
+                        .getPropertyValue("--app-background-color")
+                        .trim() || "#007cb6"
+                    );
+                  } catch (e) {
+                    return "#007cb6";
+                  }
+                })()}
                 level="Q"
                 imageSettings={{
                   src: logo,
@@ -208,17 +231,17 @@ export default function HomePage() {
           <div className="flex gap-6 w-full justify-center mt-2">
             <button
               onClick={handleShare}
-              className="w-12 h-12 bg-[#007cb6] rounded-full flex items-center justify-center hover:bg-blue-700 transition"
+              className="w-12 h-12 bg-app rounded-full flex items-center justify-center hover:opacity-90 transition"
               aria-label="Share"
             >
-              <Share2 className="w-6 h-6 text-white" />
+              <Share2 className="w-6 h-6 text-app" />
             </button>
             <button
               onClick={handleScan}
-              className="w-12 h-12 bg-[#007cb6] rounded-full flex items-center justify-center hover:bg-blue-700 transition"
+              className="w-12 h-12 bg-app rounded-full flex items-center justify-center hover:opacity-90 transition"
               aria-label="Scan"
             >
-              <Camera className="w-6 h-6 text-white" />
+              <Camera className="w-6 h-6 text-app" />
             </button>
           </div>
         </div>
