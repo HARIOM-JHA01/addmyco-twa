@@ -13,7 +13,6 @@ export default function BackgroundPage() {
   const [categories, setCategories] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [search] = useState("");
 
   // UI state matching screenshot
   const [activeTab, setActiveTab] = useState<string>("system"); // system category slug or 'my'
@@ -53,10 +52,11 @@ export default function BackgroundPage() {
   }, []);
 
   // Build tabs similar to screenshot: dynamic categories + My images
+  // Tabs: show actual category names from API, plus 'Your Images'
   const tabs = useMemo(() => {
     const catTabs = (categories || []).map((c: any) => ({
-      key: c.slug || c.name || String(c.id || c._id || Math.random()),
-      label: c.name || c.label || "Category",
+      key: c.slug || c._id || c.id || c.name || String(Math.random()),
+      label: c.name || c.label || c.slug || "Category",
       type: "category" as const,
       payload: c,
     }));
@@ -64,31 +64,43 @@ export default function BackgroundPage() {
       ...catTabs,
       {
         key: "my",
-        label: i18n.t("your_images") || "My images",
+        label: i18n.t("your_images") || "Your Images",
         type: "my" as const,
       },
     ];
   }, [categories]);
 
   // Images for the active tab (mock: use systemImages for categories, userImages for my)
+  // Show images for the selected category, or user's images for 'my'
   const imagesForTab = useMemo(() => {
-    const needle = search.trim().toLowerCase();
-    const filterFn = (arr: any[]) =>
-      arr.filter((img) =>
-        needle
-          ? (img.title || img.name || img.source || "")
-              .toLowerCase()
-              .includes(needle)
-          : true
-      );
-    if (activeTab === "my") return filterFn(userImages);
-    // When a category is clicked, we keep activeTab as that category key
-    const isCat = tabs.find(
-      (t) => t.key === activeTab && t.type === "category"
+    if (activeTab === "my") return userImages;
+    // Find the selected category object
+    const cat = categories.find(
+      (c: any) =>
+        c.slug === activeTab ||
+        c._id === activeTab ||
+        c.id === activeTab ||
+        c.name === activeTab
     );
-    if (isCat) return filterFn(systemImages);
-    return filterFn(systemImages);
-  }, [activeTab, tabs, systemImages, userImages, search]);
+    // Filter systemImages by category if possible
+    if (cat && systemImages.length > 0) {
+      // Try to match images with a category field (category, categoryId, etc.)
+      const catKey = cat.slug || cat._id || cat.id || cat.name;
+      // Try common fields: category, categoryId, category_id, etc.
+      return systemImages.filter((img: any) => {
+        return (
+          img.category === catKey ||
+          img.categoryId === catKey ||
+          img.category_id === catKey ||
+          img.category === cat.name ||
+          img.categoryId === cat._id ||
+          img.categoryId === cat.id
+        );
+      });
+    }
+    // fallback: show all system images
+    return systemImages;
+  }, [activeTab, categories, systemImages, userImages]);
 
   // Scroll progress handler
   useEffect(() => {
@@ -207,28 +219,39 @@ export default function BackgroundPage() {
                   </div>
                 ) : (
                   imagesForTab.map((img: any, idx: number) => {
+                    // Use the correct image URL field from API
                     const url =
-                      img.url || img.image || img.src || img.thumbnail || img;
+                      img.url ||
+                      img.image ||
+                      img.imgUrl ||
+                      img.src ||
+                      img.thumbnail;
                     const isSelected = selectedImage === url;
                     return (
                       <button
                         key={img.id || img._id || idx}
                         className="relative w-full pt-[60%] rounded-lg overflow-hidden shadow-md bg-white/70"
-                        onClick={() => setSelectedImage(url)}
+                        onClick={() => url && setSelectedImage(url)}
                         style={{
                           outline: isSelected
                             ? "3px solid var(--app-background-color, #00a3d7)"
                             : "none",
                         }}
                         aria-label="Select background"
+                        disabled={!url}
                       >
-                        {/* image */}
-                        <img
-                          src={url}
-                          alt="bg"
-                          className="absolute inset-0 w-full h-full object-cover"
-                          loading="lazy"
-                        />
+                        {url ? (
+                          <img
+                            src={url}
+                            alt="bg"
+                            className="absolute inset-0 w-full h-full object-cover"
+                            loading="lazy"
+                          />
+                        ) : (
+                          <div className="absolute inset-0 w-full h-full flex items-center justify-center text-gray-400 bg-gray-100">
+                            No image
+                          </div>
+                        )}
                       </button>
                     );
                   })
