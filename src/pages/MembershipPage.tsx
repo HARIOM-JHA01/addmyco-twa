@@ -1,10 +1,9 @@
 import { useProfileStore } from "../store/profileStore";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import axios from "axios";
 import WebApp from "@twa-dev/sdk";
-import { QRCodeSVG } from "qrcode.react";
 import i18n from "../i18n";
 
 import walletTransferImage from "../assets/wallet-transfer.jpg";
@@ -113,8 +112,7 @@ export default function MembershipPage() {
           },
         });
         setRenewHistory(res.data.data || []);
-        // fetch payment history as well when opening renew box
-        fetchHistory();
+        // fetch payment history as well when opening renew box (moved to PaymentHistoryPage)
       } catch (err: any) {
         setRenewError("Failed to load renewal tenure");
       } finally {
@@ -236,32 +234,6 @@ export default function MembershipPage() {
   const isPremium = profile?.membertype === "premium";
   const features = isPremium ? PREMIUM_FEATURES : BASIC_FEATURES;
 
-  // Membership payment history
-  const [history, setHistory] = useState<any[] | null>(null);
-  const [historyLoading, setHistoryLoading] = useState(false);
-  const [historyError, setHistoryError] = useState<string | null>(null);
-
-  const fetchHistory = async () => {
-    setHistoryLoading(true);
-    setHistoryError(null);
-    try {
-      const token = localStorage.getItem("token");
-      const res = await axios.get(`${API_BASE_URL}/membership/history`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      setHistory(res.data.data || []);
-    } catch (err: any) {
-      setHistoryError("Failed to load membership history");
-    } finally {
-      setHistoryLoading(false);
-    }
-  };
-
-  // load history on mount
-  useEffect(() => {
-    fetchHistory();
-  }, []);
-
   return (
     <div className="bg-[url(/src/assets/background.jpg)] bg-cover bg-center min-h-screen w-full overflow-x-hidden flex flex-col">
       <Header />
@@ -310,43 +282,7 @@ export default function MembershipPage() {
             )}
           </div>
         </div>
-        {/* Membership History (below upgrade box) */}
-        <div className="w-full max-w-md mt-4 p-4 rounded-xl shadow-xl bg-white/90">
-          <div className="text-lg font-bold text-[#2fa8e0] mb-2 text-center">
-            {i18n.t("payment_history")}
-          </div>
-          {historyLoading ? (
-            <div className="text-center text-gray-500">
-              {i18n.t("loading_history")}
-            </div>
-          ) : historyError ? (
-            <div className="text-center text-red-500">{historyError}</div>
-          ) : history && history.length > 0 ? (
-            <ul className="space-y-2">
-              {history.map((h: any) => (
-                <li key={h._id} className="border rounded-lg p-3 bg-white">
-                  <div className="text-sm text-gray-600">
-                    {i18n.t("date_label")}{" "}
-                    {new Date(
-                      h.date || h.createdAt || Date.now()
-                    ).toLocaleString()}
-                  </div>
-                  <div className="font-semibold">
-                    {i18n.t("amount_label")} {h.amount ?? h.usdt ?? "NA"}
-                  </div>
-                  <div className="text-sm text-gray-700">
-                    {i18n.t("status_label")}{" "}
-                    {h.status ?? h.payment_status ?? "Unknown"}
-                  </div>
-                </li>
-              ))}
-            </ul>
-          ) : (
-            <div className="text-center text-gray-500">
-              {i18n.t("no_payment_history")}
-            </div>
-          )}
-        </div>
+        {/* Payment history moved to its own page (see PaymentHistoryPage.tsx) */}
         {/* Renew Membership History Box */}
         {showRenewBox && (
           <div className="bg-white rounded-xl shadow p-4 mt-4">

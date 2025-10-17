@@ -138,10 +138,10 @@ export default function HomePage() {
                 />
               )}
             </div>
-            <div className="rounded-full bg-app text-app text-lg font-bold py-2 mb-2 flex items-center justify-center px-6 mx-auto">
+            <div className="rounded-full bg-app text-app text-lg font-bold py-2 mb-2 flex items-center justify-center px-6 mx-auto w-48">
               {profile?.owner_name_english || "User Name"}
             </div>
-            <div className="rounded-full bg-app text-app text-lg font-bold py-2 mb-4 flex items-center justify-center px-6 mx-auto">
+            <div className="rounded-full bg-app text-app text-lg font-bold py-2 mb-4 flex items-center justify-center px-6 mx-auto w-48">
               {profile?.owner_name_chinese || "用户名"}
             </div>
           </div>

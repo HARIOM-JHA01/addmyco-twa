@@ -80,7 +80,13 @@ export default function SubCompanyPage() {
 
         // If array, set all companies; else, wrap single object in array
         if (Array.isArray(profileData) && profileData.length > 0) {
-          setCompanies(profileData);
+          // Sort by company_order / order ascending to honor display order
+          const sorted = [...profileData].sort((a: any, b: any) => {
+            const ao = Number(a.company_order ?? a.order ?? 0);
+            const bo = Number(b.company_order ?? b.order ?? 0);
+            return ao - bo;
+          });
+          setCompanies(sorted);
           setCurrentCompanyIndex(0);
         } else if (profileData && typeof profileData === "object") {
           setCompanies([profileData]);

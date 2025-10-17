@@ -12,6 +12,7 @@ import CreateProfile from "./pages/createProfile";
 import ThemePage from "./pages/ThemePage";
 import WelcomePage from "./pages/WelcomePage";
 import MembershipPage from "./pages/MembershipPage";
+import PaymentHistoryPage from "./pages/PaymentHistoryPage";
 import axios from "axios";
 import WebApp from "@twa-dev/sdk";
 import CreateCompanyPage from "./pages/CreateCompanyPage";
@@ -253,6 +254,7 @@ function AppRoutes() {
       <Route path="/create-company" element={<CreateCompanyPage />} />
       <Route path="/theme" element={<ThemePage />} />
       <Route path="/membership" element={<MembershipPage />} />
+  <Route path="/payment-history" element={<PaymentHistoryPage />} />
       <Route path="/background" element={<BackgroundPage />} />
       <Route path="*" element={<div>404 Not Found</div>} />
     </Routes>

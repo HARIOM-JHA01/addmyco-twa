@@ -241,7 +241,13 @@ export default function ChamberPage() {
           Array.isArray(res.data.data) &&
           res.data.data.length > 0
         ) {
-          setChamberData(res.data.data);
+          // Sort by chamber_order (numeric) ascending so display order is deterministic
+          const sorted = [...res.data.data].sort((a: any, b: any) => {
+            const ao = Number(a.chamber_order ?? a.order ?? 0);
+            const bo = Number(b.chamber_order ?? b.order ?? 0);
+            return ao - bo;
+          });
+          setChamberData(sorted);
           setCurrentChamberIndex(0); // Reset to first chamber on fetch
         } else {
           setChamberData(null);
