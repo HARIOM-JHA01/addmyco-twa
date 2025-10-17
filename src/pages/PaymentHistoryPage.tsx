@@ -31,7 +31,7 @@ export default function PaymentHistoryPage() {
   }, []);
 
   return (
-    <div className="bg-[url(/src/assets/background.jpg)] bg-cover bg-center min-h-screen w-full overflow-x-hidden flex flex-col">
+    <div className="bg-[url(/src/assets/background.jpg)] bg-cover px-2 bg-center min-h-screen w-full overflow-x-hidden flex flex-col">
       <Header />
       <div className="flex flex-col items-center justify-start flex-1 pb-32">
         <div className="w-full max-w-md mt-8 p-4 rounded-xl shadow-xl bg-white/90">
@@ -45,24 +45,50 @@ export default function PaymentHistoryPage() {
           ) : historyError ? (
             <div className="text-center text-red-500">{historyError}</div>
           ) : history && history.length > 0 ? (
-            <ul className="space-y-2">
-              {history.map((h: any) => (
-                <li key={h._id} className="border rounded-lg p-3 bg-white">
-                  <div className="text-sm text-gray-600">
-                    {i18n.t("date_label")}{" "}
-                    {new Date(
-                      h.date || h.createdAt || Date.now()
-                    ).toLocaleString()}
-                  </div>
-                  <div className="font-semibold">
-                    {i18n.t("amount_label")} {h.amount ?? h.usdt ?? "NA"}
-                  </div>
-                  <div className="text-sm text-gray-700">
-                    {i18n.t("status_label")}{" "}
-                    {h.status ?? h.payment_status ?? "Unknown"}
-                  </div>
-                </li>
-              ))}
+            <ul className="space-y-3">
+              {history.map((h: any) => {
+                // API: id, source, membership_id, amount, transactionId, status, date
+                // status: 0 = usdt, else telegram coin
+                const isUSDT = h.status === 0;
+                const statusLabel = isUSDT ? "USDT" : "Telegram Coin";
+                const statusColor = isUSDT
+                  ? "bg-green-100 text-green-700"
+                  : "bg-blue-100 text-blue-700";
+                return (
+                  <li
+                    key={h.id || h._id}
+                    className="border rounded-xl p-4 bg-white flex flex-col gap-2 shadow-sm"
+                  >
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs text-gray-500 font-medium">
+                        {new Date(
+                          h.date || h.createdAt || Date.now()
+                        ).toLocaleDateString()}
+                      </span>
+                      <span
+                        className={`px-2 py-1 rounded text-xs font-bold ${statusColor}`}
+                      >
+                        {statusLabel}
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-gray-700 font-semibold text-base">
+                        {h.amount} {statusLabel}
+                      </span>
+                    </div>
+                    {h.transactionId && (
+                      <div className="flex items-center mt-1">
+                        <span className="text-xs text-gray-600">
+                          Transaction ID:{" "}
+                          <span className="font-mono text-gray-800">
+                            {h.transactionId}
+                          </span>
+                        </span>
+                      </div>
+                    )}
+                  </li>
+                );
+              })}
             </ul>
           ) : (
             <div className="text-center text-gray-500">

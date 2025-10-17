@@ -104,6 +104,7 @@ const translations: Record<Lang, Record<string, string>> = {
     theme_color: "Theme Color",
     save: "Save",
     saving: "Saving...",
+    wallet_address_label: "Wallet Address",
   },
   zh: {
     membership: "會員",
@@ -199,6 +200,7 @@ const translations: Record<Lang, Record<string, string>> = {
     theme_color: "主題顏色",
     save: "儲存",
     saving: "儲存中...",
+    wallet_address_label: "錢包地址",
   },
 };
 

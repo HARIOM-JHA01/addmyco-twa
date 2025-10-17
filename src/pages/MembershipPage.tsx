@@ -32,6 +32,7 @@ export default function MembershipPage() {
   const [usdtModalLoading, setUsdtModalLoading] = useState(false);
   const [usdtModalError, setUsdtModalError] = useState<string | null>(null);
   const [usdtTransactionId, setUsdtTransactionId] = useState("");
+  const [usdtWalletAddress, setUsdtWalletAddress] = useState("");
   const [usdtModalItem, setUsdtModalItem] = useState<any>(null); // stores the selected item for payment
 
   // USDT payment function
@@ -59,6 +60,7 @@ export default function MembershipPage() {
           membershipId: membership_id, // always use _id
           usdt,
           transactionId,
+          walletAddress: usdtWalletAddress,
         },
         {
           headers: {
@@ -428,6 +430,19 @@ export default function MembershipPage() {
                               placeholder={i18n.t("transaction_id_placeholder")}
                               disabled={usdtModalLoading}
                             />
+                            <label className="block mb-2 text-sm font-medium text-gray-700">
+                              {i18n.t("wallet_address_label") || "Wallet Address"}
+                            </label>
+                            <input
+                              type="text"
+                              className="w-full border border-gray-300 rounded px-3 py-2 mb-2 focus:outline-none focus:ring-2 focus:ring-[#2fa8e0]"
+                              value={usdtWalletAddress}
+                              onChange={(e) =>
+                                setUsdtWalletAddress(e.target.value)
+                              }
+                              placeholder={i18n.t("wallet_address_placeholder") || "Recipient wallet address (e.g. 0x...)"}
+                              disabled={usdtModalLoading}
+                            />
                             {usdtModalError && (
                               <div className="text-red-500 text-sm mb-2">
                                 {usdtModalError}
@@ -436,7 +451,9 @@ export default function MembershipPage() {
                             <button
                               className="w-full bg-gradient-to-r from-[#2fa8e0] to-[#38bdf8] text-white font-semibold py-2 rounded-lg mt-2 hover:from-[#38bdf8] hover:to-[#2fa8e0] transition disabled:opacity-60 disabled:cursor-not-allowed shadow-lg"
                               onClick={handleUsdtPayment}
-                              disabled={usdtModalLoading || !usdtTransactionId}
+                              disabled={
+                                usdtModalLoading || !usdtTransactionId || !usdtWalletAddress
+                              }
                             >
                               {usdtModalLoading
                                 ? i18n.t("submitting")
