@@ -121,7 +121,20 @@ export default function ChamberPage() {
   const handleEditInput = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
   ) => {
-    setEditChamber({ ...editChamber, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+    // Validation for chamber_order (display order)
+    if (name === "order") {
+      const chambersCount = Array.isArray(chamberData) ? chamberData.length : 0;
+      const numValue = Number(value);
+      if (value === "") {
+        setEditError("");
+      } else if (isNaN(numValue) || numValue < 0 || numValue >= chambersCount) {
+        setEditError(`Display order must be between 0 and ${chambersCount - 1}`);
+      } else {
+        setEditError("");
+      }
+    }
+    setEditChamber({ ...editChamber, [name]: value });
   };
   // Handle edit form file
   const handleEditFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -350,7 +363,7 @@ export default function ChamberPage() {
                   setEditChamber(null);
                   setEditError("");
                 }}
-                disabled={editLoading}
+                disabled={editLoading || (editChamber?.order !== undefined && !!editError)}
               >
                 {i18n.t("cancel")}
               </button>

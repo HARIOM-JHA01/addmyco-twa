@@ -362,8 +362,10 @@ export default function SubCompanyPage() {
 
               <input
                 className="rounded-full border-2 border-blue-200 px-4 py-2 mb-4 w-full focus:outline-none focus:ring-2 focus:ring-blue-400 bg-white placeholder-gray-500"
-                type="text"
+                type="number"
                 name="order"
+                min={0}
+                max={companies.length}
                 placeholder={
                   i18n.t("placeholder_display_order") || "Set display order"
                 }
@@ -371,13 +373,24 @@ export default function SubCompanyPage() {
                 onChange={handleEditInput}
                 disabled={editLoading}
               />
+              {editProfile?.order !== undefined && (
+                (Number(editProfile.order) < 0 || Number(editProfile.order) > companies.length) ? (
+                  <div className="text-red-500 mb-2 text-center">
+                    Display order must be between 0 and {companies.length} (currently you have {companies.length} companies)
+                  </div>
+                ) : null
+              )}
               {editError && (
                 <div className="text-red-500 mb-2 text-center">{editError}</div>
               )}
               <button
                 type="submit"
                 className="w-full bg-[#007cb6] text-white rounded-full py-2 font-bold disabled:opacity-50 mt-2"
-                disabled={editLoading}
+                disabled={
+                  editLoading ||
+                  (editProfile?.order !== undefined &&
+                    (Number(editProfile.order) < 0 || Number(editProfile.order) > companies.length))
+                }
               >
                 {editLoading
                   ? editMode === "update"
