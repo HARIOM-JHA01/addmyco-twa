@@ -1,19 +1,27 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import axios from "axios";
 import Layout from "../components/Layout";
 import i18n from "../i18n";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faSearch } from "@fortawesome/free-solid-svg-icons";
+// Removed unused search icon after refactor
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
 export default function BackgroundPage() {
+  // Data sources
   const [systemImages, setSystemImages] = useState<any[]>([]);
   const [userImages, setUserImages] = useState<any[]>([]);
   const [categories, setCategories] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [search, setSearch] = useState("");
+  const [search] = useState("");
+
+  // UI state matching screenshot
+  const [activeTab, setActiveTab] = useState<string>("system"); // system category slug or 'my'
+  // Category key is tracked via activeTab; no separate state required
+  const [selectedImage, setSelectedImage] = useState<string | null>(null);
+  const gridRef = useRef<HTMLDivElement | null>(null);
+  const [scrollProgress, setScrollProgress] = useState(0);
+  const uploadInputRef = useRef<HTMLInputElement | null>(null);
 
   useEffect(() => {
     const fetchAll = async () => {
@@ -44,155 +52,190 @@ export default function BackgroundPage() {
     fetchAll();
   }, []);
 
-  // Filtered lists for search
-  const filteredSystem = systemImages.filter((img) => {
-    if (!search) return true;
-    return (
-      (img.source || "").toLowerCase().includes(search.toLowerCase()) ||
-      String(img.amount || "").includes(search) ||
-      String(img.transactionId || "").includes(search)
+  // Build tabs similar to screenshot: dynamic categories + My images
+  const tabs = useMemo(() => {
+    const catTabs = (categories || []).map((c: any) => ({
+      key: c.slug || c.name || String(c.id || c._id || Math.random()),
+      label: c.name || c.label || "Category",
+      type: "category" as const,
+      payload: c,
+    }));
+    return [
+      ...catTabs,
+      {
+        key: "my",
+        label: i18n.t("your_images") || "My images",
+        type: "my" as const,
+      },
+    ];
+  }, [categories]);
+
+  // Images for the active tab (mock: use systemImages for categories, userImages for my)
+  const imagesForTab = useMemo(() => {
+    const needle = search.trim().toLowerCase();
+    const filterFn = (arr: any[]) =>
+      arr.filter((img) =>
+        needle
+          ? (img.title || img.name || img.source || "")
+              .toLowerCase()
+              .includes(needle)
+          : true
+      );
+    if (activeTab === "my") return filterFn(userImages);
+    // When a category is clicked, we keep activeTab as that category key
+    const isCat = tabs.find(
+      (t) => t.key === activeTab && t.type === "category"
     );
-  });
-  const filteredUser = userImages.filter((img) => {
-    if (!search) return true;
-    return (
-      (img.source || "").toLowerCase().includes(search.toLowerCase()) ||
-      String(img.amount || "").includes(search) ||
-      String(img.transactionId || "").includes(search)
-    );
-  });
-  const filteredCategories = categories.filter((cat) => {
-    if (!search) return true;
-    return (
-      (cat.source || "").toLowerCase().includes(search.toLowerCase()) ||
-      String(cat.amount || "").includes(search) ||
-      String(cat.transactionId || "").includes(search)
-    );
-  });
+    if (isCat) return filterFn(systemImages);
+    return filterFn(systemImages);
+  }, [activeTab, tabs, systemImages, userImages, search]);
+
+  // Scroll progress handler
+  useEffect(() => {
+    const el = gridRef.current;
+    if (!el) return;
+    const onScroll = () => {
+      const max = el.scrollHeight - el.clientHeight;
+      const prog = max > 0 ? Math.min(1, el.scrollTop / max) : 0;
+      setScrollProgress(prog);
+    };
+    el.addEventListener("scroll", onScroll);
+    onScroll();
+    return () => el.removeEventListener("scroll", onScroll);
+  }, [gridRef, imagesForTab]);
+
+  // Apply selected background as preview
+  useEffect(() => {
+    if (!selectedImage) return;
+    document.body.style.backgroundImage = `url(${selectedImage})`;
+    document.body.style.backgroundSize = "cover";
+    document.body.style.backgroundPosition = "center";
+    // notify app to refetch/apply if needed
+    window.dispatchEvent(new Event("background-updated"));
+  }, [selectedImage]);
+
+  const handleUploadClick = () => uploadInputRef.current?.click();
+  const handleUploadChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      // Preview locally and select it immediately
+      const url = reader.result as string;
+      setSelectedImage(url);
+      // TODO: POST to upload endpoint if available
+      // axios.post(`${API_BASE_URL}/uploadBackground`, formData, { headers })
+    };
+    reader.readAsDataURL(file);
+  };
 
   return (
     <Layout>
-      <div className="flex flex-col items-center justify-start min-h-screen py-4 px-2 bg-blue-200 bg-opacity-20">
-        <div className="bg-blue-100 bg-opacity-40 rounded-3xl p-6 w-full max-w-md mx-auto shadow-lg">
-          <h2 className="text-2xl font-bold mb-4">
-            {i18n.t("background_images")}
-          </h2>
-          {/* Search box */}
-          <div className="relative mb-4">
-            <input
-              type="text"
-              className="border border-gray-300 rounded-lg p-2 pr-10 w-full bg-white placeholder-gray-500"
-              placeholder={i18n.t("search_placeholder")}
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-            />
-            <FontAwesomeIcon
-              icon={faSearch}
-              className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400"
-            />
-          </div>
-          {loading ? (
-            <div className="text-gray-500">{i18n.t("loading")}</div>
-          ) : error ? (
-            <div className="text-red-500">
-              {i18n.t("failed_load_background")}
+      <div className="bg-[url(/src/assets/background.jpg)] bg-cover bg-center min-h-screen w-full overflow-x-hidden flex flex-col">
+        <div className="px-2 pt-3 pb-28 flex-1 flex justify-center">
+          <div className="w-full max-w-[880px] bg-white/20 backdrop-blur-sm rounded-2xl p-4 shadow-md">
+            {/* Top row: tabs + upload button */}
+            <div className="flex items-center justify-between mb-3 flex-wrap gap-3">
+              <div className="flex flex-wrap gap-2">
+                {tabs.map((t) => {
+                  const isActive = activeTab === t.key;
+                  return (
+                    <button
+                      key={t.key}
+                      onClick={() => setActiveTab(t.key)}
+                      className={`px-5 py-2 rounded-full font-semibold shadow-sm ${
+                        isActive ? "text-white" : "text-gray-700"
+                      }`}
+                      style={{
+                        backgroundColor: isActive
+                          ? "var(--app-background-color, #0099cc)"
+                          : "white",
+                      }}
+                    >
+                      {t.label}
+                    </button>
+                  );
+                })}
+              </div>
+              <div>
+                <button
+                  className="px-4 py-2 rounded-lg font-bold text-white"
+                  style={{ background: "#ff007a" }}
+                  onClick={handleUploadClick}
+                >
+                  Upload your Image
+                </button>
+                <input
+                  type="file"
+                  ref={uploadInputRef}
+                  accept="image/*"
+                  className="hidden"
+                  onChange={handleUploadChange}
+                />
+              </div>
             </div>
-          ) : (
-            <>
-              {/* System Images Row */}
-              <div className="w-full mb-4">
-                <h3 className="font-bold text-lg mb-2 text-app">
-                  {i18n.t("system_images")}
-                </h3>
-                <div className="overflow-x-auto scrollbar-custom">
-                  <div className="flex gap-4 min-w-max px-2 mb-2">
-                    {filteredSystem.length === 0 ? (
-                      <div className="text-gray-400">
-                        {i18n.t("no_system_images")}
-                      </div>
-                    ) : (
-                      filteredSystem.map((img: any) => (
-                        <div
-                          key={img.id}
-                          className="flex flex-col items-center bg-white rounded-lg border p-2 min-w-[110px]"
-                        >
-                          <span className="font-bold text-xs text-gray-700 mb-1">
-                            {img.source === "usdt" ? "USDT" : "Telegram Coin"}
-                          </span>
-                          <span className="text-base font-semibold text-blue-700">
-                            {img.amount}
-                          </span>
-                          <span className="text-xs text-gray-500">
-                            {img.date}
-                          </span>
-                        </div>
-                      ))
-                    )}
-                  </div>
-                </div>
+
+            {/* Progress bar */}
+            <div className="w-full h-2 bg-white/70 rounded-full mb-3 overflow-hidden">
+              <div
+                className="h-full rounded-full"
+                style={{
+                  width: `${Math.round(scrollProgress * 100)}%`,
+                  background: "var(--app-background-color, #007cb6)",
+                  transition: "width 150ms linear",
+                }}
+              />
+            </div>
+
+            {/* Image grid */}
+            {loading ? (
+              <div className="text-white/90">{i18n.t("loading")}</div>
+            ) : error ? (
+              <div className="text-red-600 bg-white/70 rounded p-2 inline-block">
+                {i18n.t("failed_load_background")}
               </div>
-              {/* User Images Row */}
-              <div className="w-full mb-4">
-                <h3 className="font-bold text-lg mb-2 text-app">
-                  {i18n.t("your_images")}
-                </h3>
-                <div className="overflow-x-auto scrollbar-custom">
-                  <div className="flex gap-4 min-w-max px-2 mb-2">
-                    {filteredUser.length === 0 ? (
-                      <div className="text-gray-400">
-                        {i18n.t("no_user_images")}
-                      </div>
-                    ) : (
-                      filteredUser.map((img: any) => (
-                        <div
-                          key={img.id}
-                          className="flex flex-col items-center bg-white rounded-lg border p-2 min-w-[110px]"
-                        >
-                          <span className="font-bold text-xs text-gray-700 mb-1">
-                            {img.source === "usdt" ? "USDT" : "Telegram Coin"}
-                          </span>
-                          <span className="text-base font-semibold text-blue-700">
-                            {img.amount}
-                          </span>
-                          <span className="text-xs text-gray-500">
-                            {img.date}
-                          </span>
-                        </div>
-                      ))
-                    )}
+            ) : (
+              <div
+                ref={gridRef}
+                className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-4 max-h-[60vh] overflow-y-auto pr-1"
+              >
+                {imagesForTab.length === 0 ? (
+                  <div className="col-span-full text-white/90">
+                    {activeTab === "my"
+                      ? i18n.t("no_user_images")
+                      : i18n.t("no_system_images")}
                   </div>
-                </div>
-              </div>
-              {/* Categories List */}
-              <div className="w-full mb-2">
-                <h3 className="font-bold text-lg mb-2 text-app">
-                  {i18n.t("categories")}
-                </h3>
-                <ul className="list-disc pl-5">
-                  {filteredCategories.length === 0 ? (
-                    <li className="text-gray-400">{i18n.t("no_categories")}</li>
-                  ) : (
-                    filteredCategories.map((cat: any, idx: number) => (
-                      <li
-                        key={cat.id || idx}
-                        className="text-gray-700 flex flex-col gap-1 mb-2"
+                ) : (
+                  imagesForTab.map((img: any, idx: number) => {
+                    const url =
+                      img.url || img.image || img.src || img.thumbnail || img;
+                    const isSelected = selectedImage === url;
+                    return (
+                      <button
+                        key={img.id || img._id || idx}
+                        className="relative w-full pt-[60%] rounded-lg overflow-hidden shadow-md bg-white/70"
+                        onClick={() => setSelectedImage(url)}
+                        style={{
+                          outline: isSelected
+                            ? "3px solid var(--app-background-color, #00a3d7)"
+                            : "none",
+                        }}
+                        aria-label="Select background"
                       >
-                        <span className="font-bold text-xs text-gray-700">
-                          {cat.source === "usdt" ? "USDT" : "Telegram Coin"}
-                        </span>
-                        <span className="text-base font-semibold text-blue-700">
-                          {cat.amount}
-                        </span>
-                        <span className="text-xs text-gray-500">
-                          {cat.date}
-                        </span>
-                      </li>
-                    ))
-                  )}
-                </ul>
+                        {/* image */}
+                        <img
+                          src={url}
+                          alt="bg"
+                          className="absolute inset-0 w-full h-full object-cover"
+                          loading="lazy"
+                        />
+                      </button>
+                    );
+                  })
+                )}
               </div>
-            </>
-          )}
+            )}
+          </div>
         </div>
       </div>
     </Layout>
