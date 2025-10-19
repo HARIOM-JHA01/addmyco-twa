@@ -15,7 +15,7 @@ import {
 import { faPhone, faGlobe } from "@fortawesome/free-solid-svg-icons";
 import leftArrow from "../assets/left-arrow.png";
 import rightArrow from "../assets/right-arrow.png";
-import { formatUrl } from "../utils/validation";
+import { formatUrl, getUrlError, getEmailError } from "../utils/validation";
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
@@ -32,6 +32,11 @@ export default function SubCompanyPage() {
   const [editProfile, setEditProfile] = useState<any>(null);
   const [editLoading, setEditLoading] = useState(false);
   const [editError, setEditError] = useState("");
+  const [file, setFile] = useState<File | null>(null);
+  const [filePreview, setFilePreview] = useState<string | null>(null);
+  const [validationErrors, setValidationErrors] = useState<{
+    [key: string]: string;
+  }>({});
 
   // Top and bottom icon carousel refs & state
   const topIconsRef = useRef<HTMLDivElement | null>(null);
@@ -127,17 +132,65 @@ export default function SubCompanyPage() {
   const handleEditInput = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
   ) => {
-    setEditProfile({ ...editProfile, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+
+    // Clear validation error for this field
+    if (validationErrors[name]) {
+      setValidationErrors({ ...validationErrors, [name]: "" });
+    }
+
+    // Real-time validation for email
+    if (name === "email") {
+      const emailError = getEmailError(value);
+      if (emailError) {
+        setValidationErrors({ ...validationErrors, [name]: emailError });
+      }
+    }
+
+    // Real-time validation for URL fields
+    const urlFields = [
+      "website",
+      "telegramId",
+      "WhatsApp",
+      "facebook",
+      "instagram",
+      "youtube",
+    ];
+
+    if (urlFields.includes(name)) {
+      const urlError = getUrlError(value, name);
+      if (urlError) {
+        setValidationErrors({ ...validationErrors, [name]: urlError });
+      }
+    }
+
+    setEditProfile({ ...editProfile, [name]: value });
   };
   // Handle edit form file
   const handleEditFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
-      const file = e.target.files[0];
+      const selectedFile = e.target.files[0];
+
+      // Validate file type
+      if (
+        selectedFile.type.startsWith("video/") &&
+        selectedFile.type !== "video/mp4"
+      ) {
+        setEditError("Only MP4 video files are allowed.");
+        setFile(null);
+        setFilePreview(null);
+        return;
+      }
+
+      setEditError("");
+      setFile(selectedFile);
+      setFilePreview(URL.createObjectURL(selectedFile));
+
       const reader = new FileReader();
       reader.onload = () => {
         setEditProfile((prev: any) => ({ ...prev, image: reader.result }));
       };
-      reader.readAsDataURL(file);
+      reader.readAsDataURL(selectedFile);
     }
   };
   // Save handler for both create and update
@@ -145,6 +198,41 @@ export default function SubCompanyPage() {
     e.preventDefault();
     setEditLoading(true);
     setEditError("");
+
+    // Validate all fields before submission
+    const errors: { [key: string]: string } = {};
+
+    // Validate email
+    if (editProfile.email) {
+      const emailError = getEmailError(editProfile.email);
+      if (emailError) errors.email = emailError;
+    }
+
+    // Validate all URL fields
+    const urlFields = {
+      website: editProfile.website,
+      telegramId: editProfile.telegramId,
+      WhatsApp: editProfile.WhatsApp,
+      facebook: editProfile.facebook,
+      instagram: editProfile.instagram,
+      youtube: editProfile.youtube,
+    };
+
+    Object.entries(urlFields).forEach(([field, value]) => {
+      if (value) {
+        const urlError = getUrlError(value, field);
+        if (urlError) errors[field] = urlError;
+      }
+    });
+
+    // If there are validation errors, show them and stop
+    if (Object.keys(errors).length > 0) {
+      setValidationErrors(errors);
+      setEditError("Please fix the validation errors before submitting.");
+      setEditLoading(false);
+      return;
+    }
+
     try {
       const token = localStorage.getItem("token");
       if (!token) throw new Error("No token found. Please login again.");
@@ -183,7 +271,8 @@ export default function SubCompanyPage() {
           "Content-Type": "multipart/form-data",
         },
       });
-      // Refresh profile
+
+      // Refresh company data with fresh GET call
       const res = await axios.get(`${API_BASE_URL}/getcompanyprofile`, {
         headers: { Authorization: `Bearer ${token}` },
       });
@@ -217,9 +306,9 @@ export default function SubCompanyPage() {
 
       setEditMode(null);
       setEditProfile(null);
-
-      // Navigate to sub-company page to refresh with fresh data
-      navigate("/sub-company");
+      setFile(null);
+      setFilePreview(null);
+      setValidationErrors({});
     } catch (err: any) {
       setEditError(
         err?.response?.data?.message ||
@@ -274,122 +363,220 @@ export default function SubCompanyPage() {
                 onChange={handleEditInput}
                 disabled={editLoading}
               />
-              {/* Upload area */}
-              <div className="w-full bg-blue-400 rounded-xl flex flex-col items-center justify-center py-8 mb-3">
-                <div className="text-white text-center text-base font-semibold whitespace-pre-line">
-                  {i18n.t("please_upload")}
-                </div>
-                {editProfile?.image &&
-                  editProfile.image.startsWith("data:image") && (
+              {/* Image/Video Preview and Upload */}
+              <div className="flex flex-col items-center mb-4 w-full">
+                <div
+                  className="rounded-xl flex items-center justify-center mb-4 cursor-pointer"
+                  onClick={() =>
+                    document.getElementById("company-file-input")?.click()
+                  }
+                  style={{ width: 180, height: 180 }}
+                >
+                  {filePreview ? (
+                    file?.type.startsWith("video/") ? (
+                      <video
+                        src={filePreview}
+                        autoPlay
+                        loop
+                        muted
+                        playsInline
+                        className="w-[180px] h-[180px] object-cover rounded-xl"
+                      />
+                    ) : (
+                      <img
+                        src={filePreview}
+                        alt="Preview"
+                        className="w-[180px] h-[180px] object-cover rounded-xl"
+                      />
+                    )
+                  ) : editProfile?.image &&
+                    editProfile.image.startsWith("data:image") ? (
                     <img
                       src={editProfile.image}
                       alt="company"
-                      className="max-h-20 mt-2"
+                      className="w-[180px] h-[180px] object-cover rounded-xl"
                     />
+                  ) : editProfile?.image &&
+                    editProfile.image.endsWith(".mp4") ? (
+                    <video
+                      src={editProfile.image}
+                      autoPlay
+                      loop
+                      muted
+                      playsInline
+                      className="w-[180px] h-[180px] object-cover rounded-xl"
+                    />
+                  ) : editProfile?.image ? (
+                    <img
+                      src={editProfile.image}
+                      alt="company"
+                      className="w-[180px] h-[180px] object-cover rounded-xl"
+                    />
+                  ) : (
+                    <div className="w-[180px] h-[180px] bg-blue-400 rounded-xl flex items-center justify-center">
+                      <div className="text-white text-center text-sm font-semibold whitespace-pre-line px-4">
+                        {i18n.t("please_upload")}
+                      </div>
+                    </div>
                   )}
-              </div>
-              {/* File input and Cancel button below the upload box */}
-              <div className="w-full flex flex-row items-center justify-center gap-4 mb-3">
-                <label>
-                  <input
-                    type="file"
-                    accept="image/*,video/*"
-                    onChange={handleEditFile}
-                    disabled={editLoading}
-                    className="hidden"
-                  />
-                  <span className="bg-black text-white rounded px-6 py-2 font-semibold cursor-pointer select-none text-sm text-center">
-                    {i18n.t("browse")}
-                  </span>
-                </label>
-                <button
-                  type="button"
-                  className="bg-black text-white rounded px-6 py-2 font-semibold text-sm text-center"
-                  onClick={() => {
-                    setEditMode(null);
-                    setEditProfile(null);
-                    setEditError("");
-                  }}
+                </div>
+                <input
+                  id="company-file-input"
+                  type="file"
+                  accept="image/*,video/*"
+                  onChange={handleEditFile}
                   disabled={editLoading}
-                >
-                  {i18n.t("cancel")}
-                </button>
+                  className="hidden"
+                />
               </div>
               <textarea
-                className="rounded-xl border-2 border-blue-200 px-4 py-2 mb-3 w-full focus:outline-none focus:ring-2 focus:ring-blue-400 bg-white placeholder-gray-500 min-h-[80px]"
+                className="rounded-xl border-2 border-blue-200 px-4 py-2 mb-3 w-full h-48 focus:outline-none focus:ring-2 focus:ring-blue-400 bg-white placeholder-gray-500 resize-none"
                 name="description"
                 placeholder="Company Description"
                 value={editProfile?.description || ""}
                 onChange={handleEditInput}
                 disabled={editLoading}
               />
-              <input
-                className="rounded-full border-2 border-blue-200 px-4 py-2 mb-3 w-full focus:outline-none focus:ring-2 focus:ring-blue-400 bg-white placeholder-gray-500"
-                type="text"
-                name="website"
-                placeholder="Website"
-                value={editProfile?.website || ""}
-                onChange={handleEditInput}
-                disabled={editLoading}
-              />
-              <input
-                className="rounded-full border-2 border-blue-200 px-4 py-2 mb-3 w-full focus:outline-none focus:ring-2 focus:ring-blue-400 bg-white placeholder-gray-500"
-                type="text"
-                name="telegramId"
-                placeholder="Telegram ID"
-                value={editProfile?.telegramId || ""}
-                onChange={handleEditInput}
-                disabled={editLoading}
-              />
-              <input
-                className="rounded-full border-2 border-blue-200 px-4 py-2 mb-3 w-full focus:outline-none focus:ring-2 focus:ring-blue-400 bg-white placeholder-gray-500"
-                type="text"
-                name="facebook"
-                placeholder="https://Facebook"
-                value={editProfile?.facebook || ""}
-                onChange={handleEditInput}
-                disabled={editLoading}
-              />
-              <input
-                className="rounded-full border-2 border-blue-200 px-4 py-2 mb-3 w-full focus:outline-none focus:ring-2 focus:ring-blue-400 bg-white placeholder-gray-500"
-                type="text"
-                name="instagram"
-                placeholder="https://Instagram"
-                value={editProfile?.instagram || ""}
-                onChange={handleEditInput}
-                disabled={editLoading}
-              />
-              <input
-                className="rounded-full border-2 border-blue-200 px-4 py-2 mb-3 w-full focus:outline-none focus:ring-2 focus:ring-blue-400 bg-white placeholder-gray-500"
-                type="text"
-                name="youtube"
-                placeholder="https://Youtube"
-                value={editProfile?.youtube || ""}
-                onChange={handleEditInput}
-                disabled={editLoading}
-              />
-
-              <input
-                className="rounded-full border-2 border-blue-200 px-4 py-2 mb-4 w-full focus:outline-none focus:ring-2 focus:ring-blue-400 bg-white placeholder-gray-500"
-                type="number"
-                name="order"
-                min={0}
-                max={companies.length}
-                placeholder={
-                  i18n.t("placeholder_display_order") || "Set display order"
-                }
-                value={editProfile?.order || ""}
-                onChange={handleEditInput}
-                disabled={editLoading}
-              />
-              {editProfile?.order !== undefined &&
-                (Number(editProfile.order) < 0 ||
-                Number(editProfile.order) > companies.length ? (
-                  <div className="text-red-500 mb-2 text-center">
-                    Display order must be between 0 and {companies.length}{" "}
-                    (currently you have {companies.length} companies)
+              <div className="w-full">
+                <input
+                  className={`rounded-full border-2 px-4 py-2 mb-1 w-full focus:outline-none focus:ring-2 focus:ring-blue-400 bg-white placeholder-gray-500 ${
+                    validationErrors.email
+                      ? "border-red-500"
+                      : "border-blue-200"
+                  }`}
+                  type="text"
+                  name="email"
+                  placeholder="Email"
+                  value={editProfile?.email || ""}
+                  onChange={handleEditInput}
+                  disabled={editLoading}
+                />
+                {validationErrors.email && (
+                  <div className="text-red-500 text-xs mb-2 px-2">
+                    {validationErrors.email}
                   </div>
-                ) : null)}
+                )}
+              </div>
+              <div className="w-full">
+                <input
+                  className={`rounded-full border-2 px-4 py-2 mb-1 w-full focus:outline-none focus:ring-2 focus:ring-blue-400 bg-white placeholder-gray-500 ${
+                    validationErrors.website
+                      ? "border-red-500"
+                      : "border-blue-200"
+                  }`}
+                  type="text"
+                  name="website"
+                  placeholder="Website"
+                  value={editProfile?.website || ""}
+                  onChange={handleEditInput}
+                  disabled={editLoading}
+                />
+                {validationErrors.website && (
+                  <div className="text-red-500 text-xs mb-2 px-2">
+                    {validationErrors.website}
+                  </div>
+                )}
+              </div>
+              <div className="w-full">
+                <input
+                  className={`rounded-full border-2 px-4 py-2 mb-1 w-full focus:outline-none focus:ring-2 focus:ring-blue-400 bg-white placeholder-gray-500 ${
+                    validationErrors.WhatsApp
+                      ? "border-red-500"
+                      : "border-blue-200"
+                  }`}
+                  type="text"
+                  name="WhatsApp"
+                  placeholder="WhatsApp"
+                  value={editProfile?.WhatsApp || ""}
+                  onChange={handleEditInput}
+                  disabled={editLoading}
+                />
+                {validationErrors.WhatsApp && (
+                  <div className="text-red-500 text-xs mb-2 px-2">
+                    {validationErrors.WhatsApp}
+                  </div>
+                )}
+              </div>
+              <div className="w-full">
+                <input
+                  className={`rounded-full border-2 px-4 py-2 mb-1 w-full focus:outline-none focus:ring-2 focus:ring-blue-400 bg-white placeholder-gray-500 ${
+                    validationErrors.telegramId
+                      ? "border-red-500"
+                      : "border-blue-200"
+                  }`}
+                  type="text"
+                  name="telegramId"
+                  placeholder="Telegram ID"
+                  value={editProfile?.telegramId || ""}
+                  onChange={handleEditInput}
+                  disabled={editLoading}
+                />
+                {validationErrors.telegramId && (
+                  <div className="text-red-500 text-xs mb-2 px-2">
+                    {validationErrors.telegramId}
+                  </div>
+                )}
+              </div>
+              <div className="w-full">
+                <input
+                  className={`rounded-full border-2 px-4 py-2 mb-1 w-full focus:outline-none focus:ring-2 focus:ring-blue-400 bg-white placeholder-gray-500 ${
+                    validationErrors.facebook
+                      ? "border-red-500"
+                      : "border-blue-200"
+                  }`}
+                  type="text"
+                  name="facebook"
+                  placeholder="https://Facebook"
+                  value={editProfile?.facebook || ""}
+                  onChange={handleEditInput}
+                  disabled={editLoading}
+                />
+                {validationErrors.facebook && (
+                  <div className="text-red-500 text-xs mb-2 px-2">
+                    {validationErrors.facebook}
+                  </div>
+                )}
+              </div>
+              <div className="w-full">
+                <input
+                  className={`rounded-full border-2 px-4 py-2 mb-1 w-full focus:outline-none focus:ring-2 focus:ring-blue-400 bg-white placeholder-gray-500 ${
+                    validationErrors.instagram
+                      ? "border-red-500"
+                      : "border-blue-200"
+                  }`}
+                  type="text"
+                  name="instagram"
+                  placeholder="https://Instagram"
+                  value={editProfile?.instagram || ""}
+                  onChange={handleEditInput}
+                  disabled={editLoading}
+                />
+                {validationErrors.instagram && (
+                  <div className="text-red-500 text-xs mb-2 px-2">
+                    {validationErrors.instagram}
+                  </div>
+                )}
+              </div>
+              <div className="w-full">
+                <input
+                  className={`rounded-full border-2 px-4 py-2 mb-1 w-full focus:outline-none focus:ring-2 focus:ring-blue-400 bg-white placeholder-gray-500 ${
+                    validationErrors.youtube
+                      ? "border-red-500"
+                      : "border-blue-200"
+                  }`}
+                  type="text"
+                  name="youtube"
+                  placeholder="https://Youtube"
+                  value={editProfile?.youtube || ""}
+                  onChange={handleEditInput}
+                  disabled={editLoading}
+                />
+                {validationErrors.youtube && (
+                  <div className="text-red-500 text-xs mb-2 px-2">
+                    {validationErrors.youtube}
+                  </div>
+                )}
+              </div>
               {editError && (
                 <div className="text-red-500 mb-2 text-center">{editError}</div>
               )}
@@ -555,7 +742,7 @@ export default function SubCompanyPage() {
                   }}
                   style={{ display: showTopArrows ? "block" : "none" }}
                 >
-                  <img src={rightArrow} alt="right" className="w-6 h-6" />
+                  <img src={rightArrow} alt="right" className="w-4 h-auto" />
                 </button>
               </div>
 

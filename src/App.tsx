@@ -18,6 +18,9 @@ import WebApp from "@twa-dev/sdk";
 import CreateCompanyPage from "./pages/CreateCompanyPage";
 import BackgroundPage from "./pages/BackgroundPage";
 import HomePage from "./pages/HomePage";
+import PublicProfilePage from "./pages/PublicProfilePage";
+import PublicCompanyPage from "./pages/PublicCompanyPage";
+import PublicChamberPage from "./pages/PublicChamberPage";
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
@@ -268,6 +271,12 @@ function AppRoutes() {
 
   return (
     <Routes>
+      {/* Public routes - accessible without authentication */}
+      <Route path="/:username" element={<PublicProfilePage />} />
+      <Route path="/:username/company" element={<PublicCompanyPage />} />
+      <Route path="/:username/chamber" element={<PublicChamberPage />} />
+
+      {/* Authenticated routes */}
       <Route path="/" element={<HomePage />} />
       <Route path="/profile" element={<ProfilePage />} />
       <Route path="/update-profile" element={<UpdateProfilePage />} />

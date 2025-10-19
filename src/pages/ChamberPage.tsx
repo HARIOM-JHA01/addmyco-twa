@@ -19,7 +19,7 @@ import rightArrow from "../assets/right-arrow.png";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import WebApp from "@twa-dev/sdk";
 import i18n from "../i18n";
-import { formatUrl } from "../utils/validation";
+import { formatUrl, getUrlError } from "../utils/validation";
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
@@ -27,6 +27,7 @@ export default function ChamberPage() {
   const navigate = useNavigate();
   const [currentChamberIndex, setCurrentChamberIndex] = useState(0);
   const [file, setFile] = useState<File | null>(null);
+  const [filePreview, setFilePreview] = useState<string | null>(null);
   const [chamberData, setChamberData] = useState<any>(null);
   const [profile, setProfile] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -34,6 +35,9 @@ export default function ChamberPage() {
   const [editChamber, setEditChamber] = useState<any>(null);
   const [editLoading, setEditLoading] = useState(false);
   const [editError, setEditError] = useState("");
+  const [validationErrors, setValidationErrors] = useState<{
+    [key: string]: string;
+  }>({});
   // Icon carousel refs & state for chamber page
   const topIconsRef = useRef<HTMLDivElement | null>(null);
   const bottomIconsRef = useRef<HTMLDivElement | null>(null);
@@ -123,6 +127,12 @@ export default function ChamberPage() {
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
   ) => {
     const { name, value } = e.target;
+
+    // Clear validation error for this field
+    if (validationErrors[name]) {
+      setValidationErrors({ ...validationErrors, [name]: "" });
+    }
+
     // Validation for chamber_order (display order)
     if (name === "order") {
       const chambersCount = Array.isArray(chamberData) ? chamberData.length : 0;
@@ -137,12 +147,56 @@ export default function ChamberPage() {
         setEditError("");
       }
     }
+
+    // Real-time validation for URL fields
+    const urlFields = [
+      "website",
+      "telegram",
+      "instagram",
+      "youtube",
+      "facebook",
+      "whatsapp",
+      "wechat",
+      "line",
+      "twitter",
+      "linkedin",
+      "snapchat",
+      "skype",
+      "tiktok",
+      "tgchannel",
+      "chamberfanpage",
+    ];
+
+    if (urlFields.includes(name)) {
+      const urlError = getUrlError(value, name);
+      if (urlError) {
+        setValidationErrors({ ...validationErrors, [name]: urlError });
+      }
+    }
+
     setEditChamber({ ...editChamber, [name]: value });
   };
   // Handle edit form file
   const handleEditFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
-      const base64 = await fileToBase64(e.target.files[0]);
+      const selectedFile = e.target.files[0];
+
+      // Validate file type
+      if (
+        selectedFile.type.startsWith("video/") &&
+        selectedFile.type !== "video/mp4"
+      ) {
+        setEditError("Only MP4 video files are allowed.");
+        setFile(null);
+        setFilePreview(null);
+        return;
+      }
+
+      setEditError("");
+      setFile(selectedFile);
+      setFilePreview(URL.createObjectURL(selectedFile));
+
+      const base64 = await fileToBase64(selectedFile);
       setEditChamber((prev: any) => ({ ...prev, image: base64 }));
     }
   };
@@ -151,6 +205,42 @@ export default function ChamberPage() {
     e.preventDefault();
     setEditLoading(true);
     setEditError("");
+
+    // Validate all URL fields before submission
+    const errors: { [key: string]: string } = {};
+    const urlFields = {
+      website: editChamber?.website,
+      telegram: editChamber?.telegram,
+      instagram: editChamber?.instagram,
+      youtube: editChamber?.youtube,
+      facebook: editChamber?.facebook,
+      whatsapp: editChamber?.whatsapp,
+      wechat: editChamber?.wechat,
+      line: editChamber?.line,
+      twitter: editChamber?.twitter,
+      linkedin: editChamber?.linkedin,
+      snapchat: editChamber?.snapchat,
+      skype: editChamber?.skype,
+      tiktok: editChamber?.tiktok,
+      tgchannel: editChamber?.tgchannel,
+      chamberfanpage: editChamber?.chamberfanpage,
+    };
+
+    Object.entries(urlFields).forEach(([field, value]) => {
+      if (value) {
+        const urlError = getUrlError(value, field);
+        if (urlError) errors[field] = urlError;
+      }
+    });
+
+    // If there are validation errors, show them and stop
+    if (Object.keys(errors).length > 0) {
+      setValidationErrors(errors);
+      WebApp.showAlert("Please fix the validation errors before submitting.");
+      setEditLoading(false);
+      return;
+    }
+
     try {
       const token = localStorage.getItem("token");
       if (!token) throw new Error("No token found. Please login again.");
@@ -215,7 +305,8 @@ export default function ChamberPage() {
           },
         });
       }
-      // Refresh chamber data
+
+      // Refresh chamber data with fresh GET call
       const res = await axios.get(`${API_BASE_URL}/getchamber`, {
         headers: { Authorization: `Bearer ${token}` },
       });
@@ -234,9 +325,9 @@ export default function ChamberPage() {
       }
       setEditMode(null);
       setEditChamber(null);
-
-      // Navigate to chamber page to refresh with fresh data
-      navigate("/chamber");
+      setFile(null);
+      setFilePreview(null);
+      setValidationErrors({});
     } catch (err: any) {
       setEditError(
         err?.response?.data?.message || err.message || "Failed to save chamber"
@@ -333,107 +424,183 @@ export default function ChamberPage() {
               onChange={handleEditInput}
               disabled={editLoading}
             />
-            {/* Upload area */}
-            <div className="w-full bg-blue-400 rounded-xl flex flex-col items-center justify-center py-8 mb-3">
-              <div className="text-white text-center text-base font-semibold whitespace-pre-line">
-                {i18n.t("please_upload")}
-              </div>
-              {editChamber?.image &&
-                editChamber.image.startsWith("data:image") && (
+            {/* Image/Video Preview and Upload */}
+            <div className="flex flex-col items-center mb-4 w-full">
+              <div
+                className="rounded-xl flex items-center justify-center mb-4 cursor-pointer"
+                onClick={() =>
+                  document.getElementById("chamber-file-input")?.click()
+                }
+                style={{ width: 180, height: 180 }}
+              >
+                {filePreview ? (
+                  file?.type.startsWith("video/") ? (
+                    <video
+                      src={filePreview}
+                      autoPlay
+                      loop
+                      muted
+                      playsInline
+                      className="w-[180px] h-[180px] object-cover rounded-xl"
+                    />
+                  ) : (
+                    <img
+                      src={filePreview}
+                      alt="Preview"
+                      className="w-[180px] h-[180px] object-cover rounded-xl"
+                    />
+                  )
+                ) : editChamber?.image &&
+                  editChamber.image.startsWith("data:image") ? (
                   <img
                     src={editChamber.image}
                     alt="chamber"
-                    className="max-h-20 mt-2"
+                    className="w-[180px] h-[180px] object-cover rounded-xl"
                   />
+                ) : editChamber?.image && editChamber.image.endsWith(".mp4") ? (
+                  <video
+                    src={editChamber.image}
+                    autoPlay
+                    loop
+                    muted
+                    playsInline
+                    className="w-[180px] h-[180px] object-cover rounded-xl"
+                  />
+                ) : editChamber?.image ? (
+                  <img
+                    src={editChamber.image}
+                    alt="chamber"
+                    className="w-[180px] h-[180px] object-cover rounded-xl"
+                  />
+                ) : (
+                  <div className="w-[180px] h-[180px] bg-blue-400 rounded-xl flex items-center justify-center">
+                    <div className="text-white text-center text-sm font-semibold whitespace-pre-line px-4">
+                      {i18n.t("please_upload")}
+                    </div>
+                  </div>
                 )}
-            </div>
-            {/* File input and Cancel button below the upload box */}
-            <div className="w-full flex flex-row items-center justify-center gap-4 mb-3">
-              <label className="cursor-pointer">
-                <input
-                  type="file"
-                  accept="image/*,video/*"
-                  onChange={handleEditFile}
-                  disabled={editLoading}
-                  className="hidden"
-                />
-                <span className="bg-black text-white rounded px-6 py-2 font-semibold cursor-pointer select-none text-sm text-center">
-                  {i18n.t("browse")}
-                </span>
-              </label>
-              <button
-                type="button"
-                className="bg-black text-white rounded px-6 py-2 font-semibold text-sm text-center"
-                onClick={() => {
-                  setEditMode(null);
-                  setEditChamber(null);
-                  setEditError("");
-                }}
-                disabled={
-                  editLoading ||
-                  (editChamber?.order !== undefined && !!editError)
-                }
-              >
-                {i18n.t("cancel")}
-              </button>
+              </div>
+              <input
+                id="chamber-file-input"
+                type="file"
+                accept="image/*,video/*"
+                onChange={handleEditFile}
+                disabled={editLoading}
+                className="hidden"
+              />
             </div>
             <textarea
-              className="rounded-xl border-2 border-blue-200 px-4 py-2 mb-3 w-full focus:outline-none focus:ring-2 focus:ring-blue-400 bg-white placeholder-gray-500 min-h-[80px]"
+              className="rounded-xl border-2 border-blue-200 px-4 py-2 mb-3 w-full h-48 focus:outline-none focus:ring-2 focus:ring-blue-400 bg-white placeholder-gray-500 resize-none"
               name="details"
               placeholder={i18n.t("chamber_details") || "Chamber details"}
               value={editChamber?.details || ""}
               onChange={handleEditInput}
               disabled={editLoading}
             />
-            <input
-              className="rounded-full border-2 border-blue-200 px-4 py-2 mb-3 w-full focus:outline-none focus:ring-2 focus:ring-blue-400 bg-white placeholder-gray-500"
-              type="text"
-              name="website"
-              placeholder={
-                i18n.t("website_for_chamber") || "Website for Chamber"
-              }
-              value={editChamber?.website || ""}
-              onChange={handleEditInput}
-              disabled={editLoading}
-            />
-            <input
-              className="rounded-full border-2 border-blue-200 px-4 py-2 mb-3 w-full focus:outline-none focus:ring-2 focus:ring-blue-400 bg-white placeholder-gray-500"
-              type="text"
-              name="telegram"
-              placeholder={
-                i18n.t("telegram_placeholder") || "https://t.me/Telegram Id"
-              }
-              value={editChamber?.telegram || ""}
-              onChange={handleEditInput}
-              disabled={editLoading}
-            />
-            <input
-              className="rounded-full border-2 border-blue-200 px-4 py-2 mb-3 w-full focus:outline-none focus:ring-2 focus:ring-blue-400 bg-white placeholder-gray-500"
-              type="text"
-              name="instagram"
-              placeholder="https://Instagram"
-              value={editChamber?.instagram || ""}
-              onChange={handleEditInput}
-              disabled={editLoading}
-            />
-            <input
-              className="rounded-full border-2 border-blue-200 px-4 py-2 mb-3 w-full focus:outline-none focus:ring-2 focus:ring-blue-400 bg-white placeholder-gray-500"
-              type="text"
-              name="youtube"
-              placeholder="https://Youtube"
-              value={editChamber?.youtube || ""}
-              onChange={handleEditInput}
-              disabled={editLoading}
-            />
-            <input
-              className="rounded-full border-2 border-blue-200 px-4 py-2 mb-3 w-full focus:outline-none focus:ring-2 focus:ring-blue-400 bg-white placeholder-gray-500"
-              type="text"
-              name="facebook"
-              placeholder="https://Facebook"
-              value={editChamber?.facebook || ""}
-              onChange={handleEditInput}
-              disabled={editLoading}
-            />
+            <div className="w-full">
+              <input
+                className={`rounded-full border-2 px-4 py-2 mb-1 w-full focus:outline-none focus:ring-2 focus:ring-blue-400 bg-white placeholder-gray-500 ${
+                  validationErrors.website
+                    ? "border-red-500"
+                    : "border-blue-200"
+                }`}
+                type="text"
+                name="website"
+                placeholder={
+                  i18n.t("website_for_chamber") || "Website for Chamber"
+                }
+                value={editChamber?.website || ""}
+                onChange={handleEditInput}
+                disabled={editLoading}
+              />
+              {validationErrors.website && (
+                <div className="text-red-500 text-xs mb-2 px-2">
+                  {validationErrors.website}
+                </div>
+              )}
+            </div>
+            <div className="w-full">
+              <input
+                className={`rounded-full border-2 px-4 py-2 mb-1 w-full focus:outline-none focus:ring-2 focus:ring-blue-400 bg-white placeholder-gray-500 ${
+                  validationErrors.telegram
+                    ? "border-red-500"
+                    : "border-blue-200"
+                }`}
+                type="text"
+                name="telegram"
+                placeholder={
+                  i18n.t("telegram_placeholder") || "https://t.me/Telegram Id"
+                }
+                value={editChamber?.telegram || ""}
+                onChange={handleEditInput}
+                disabled={editLoading}
+              />
+              {validationErrors.telegram && (
+                <div className="text-red-500 text-xs mb-2 px-2">
+                  {validationErrors.telegram}
+                </div>
+              )}
+            </div>
+            <div className="w-full">
+              <input
+                className={`rounded-full border-2 px-4 py-2 mb-1 w-full focus:outline-none focus:ring-2 focus:ring-blue-400 bg-white placeholder-gray-500 ${
+                  validationErrors.instagram
+                    ? "border-red-500"
+                    : "border-blue-200"
+                }`}
+                type="text"
+                name="instagram"
+                placeholder="https://Instagram"
+                value={editChamber?.instagram || ""}
+                onChange={handleEditInput}
+                disabled={editLoading}
+              />
+              {validationErrors.instagram && (
+                <div className="text-red-500 text-xs mb-2 px-2">
+                  {validationErrors.instagram}
+                </div>
+              )}
+            </div>
+            <div className="w-full">
+              <input
+                className={`rounded-full border-2 px-4 py-2 mb-1 w-full focus:outline-none focus:ring-2 focus:ring-blue-400 bg-white placeholder-gray-500 ${
+                  validationErrors.youtube
+                    ? "border-red-500"
+                    : "border-blue-200"
+                }`}
+                type="text"
+                name="youtube"
+                placeholder="https://Youtube"
+                value={editChamber?.youtube || ""}
+                onChange={handleEditInput}
+                disabled={editLoading}
+              />
+              {validationErrors.youtube && (
+                <div className="text-red-500 text-xs mb-2 px-2">
+                  {validationErrors.youtube}
+                </div>
+              )}
+            </div>
+            <div className="w-full">
+              <input
+                className={`rounded-full border-2 px-4 py-2 mb-1 w-full focus:outline-none focus:ring-2 focus:ring-blue-400 bg-white placeholder-gray-500 ${
+                  validationErrors.facebook
+                    ? "border-red-500"
+                    : "border-blue-200"
+                }`}
+                type="text"
+                name="facebook"
+                placeholder="https://Facebook"
+                value={editChamber?.facebook || ""}
+                onChange={handleEditInput}
+                disabled={editLoading}
+              />
+              {validationErrors.facebook && (
+                <div className="text-red-500 text-xs mb-2 px-2">
+                  {validationErrors.facebook}
+                </div>
+              )}
+            </div>
             <input
               className="rounded-full border-2 border-blue-200 px-4 py-2 mb-4 w-full focus:outline-none focus:ring-2 focus:ring-blue-400 bg-white placeholder-gray-500"
               type="text"
