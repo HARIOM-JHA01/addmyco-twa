@@ -370,7 +370,7 @@ export default function SubCompanyPage() {
                   onClick={() =>
                     document.getElementById("company-file-input")?.click()
                   }
-                  style={{ width: 180, height: 180 }}
+                  style={{ width: 360, height: 180 }}
                 >
                   {filePreview ? (
                     file?.type.startsWith("video/") ? (
@@ -380,13 +380,13 @@ export default function SubCompanyPage() {
                         loop
                         muted
                         playsInline
-                        className="w-[180px] h-[180px] object-cover rounded-xl"
+                        className="w-[360px] h-[180px] object-cover rounded-xl"
                       />
                     ) : (
                       <img
                         src={filePreview}
                         alt="Preview"
-                        className="w-[180px] h-[180px] object-cover rounded-xl"
+                        className="w-[360px] h-[180px] object-cover rounded-xl"
                       />
                     )
                   ) : editProfile?.image &&
@@ -394,7 +394,7 @@ export default function SubCompanyPage() {
                     <img
                       src={editProfile.image}
                       alt="company"
-                      className="w-[180px] h-[180px] object-cover rounded-xl"
+                      className="w-[360px] h-[180px] object-cover rounded-xl"
                     />
                   ) : editProfile?.image &&
                     editProfile.image.endsWith(".mp4") ? (
@@ -404,16 +404,16 @@ export default function SubCompanyPage() {
                       loop
                       muted
                       playsInline
-                      className="w-[180px] h-[180px] object-cover rounded-xl"
+                      className="w-[360px] h-[180px] object-cover rounded-xl"
                     />
                   ) : editProfile?.image ? (
                     <img
                       src={editProfile.image}
                       alt="company"
-                      className="w-[180px] h-[180px] object-cover rounded-xl"
+                      className="w-[360px] h-[180px] object-cover rounded-xl"
                     />
                   ) : (
-                    <div className="w-[180px] h-[180px] bg-blue-400 rounded-xl flex items-center justify-center">
+                    <div className="w-[360px] h-[180px] bg-blue-400 rounded-xl flex items-center justify-center">
                       <div className="text-white text-center text-sm font-semibold whitespace-pre-line px-4">
                         {i18n.t("please_upload")}
                       </div>
@@ -577,6 +577,27 @@ export default function SubCompanyPage() {
                   </div>
                 )}
               </div>
+              <input
+                className="rounded-full border-2 border-blue-200 px-4 py-2 mb-4 w-full focus:outline-none focus:ring-2 focus:ring-blue-400 bg-white placeholder-gray-500"
+                type="number"
+                name="order"
+                min={0}
+                max={companies.length}
+                placeholder={
+                  i18n.t("placeholder_display_order") || "Set display order"
+                }
+                value={editProfile?.order || ""}
+                onChange={handleEditInput}
+                disabled={editLoading}
+              />
+              {editProfile?.order !== undefined &&
+                (Number(editProfile.order) < 0 ||
+                  Number(editProfile.order) > companies.length) && (
+                  <div className="text-red-500 mb-2 text-center">
+                    Display order must be between 0 and {companies.length}{" "}
+                    (currently you have {companies.length} companies)
+                  </div>
+                )}
               {editError && (
                 <div className="text-red-500 mb-2 text-center">{editError}</div>
               )}

@@ -194,11 +194,18 @@ function AppRoutes() {
             )
           ) {
             try {
-              WebApp.showPopup({
-                title: "Welcome!",
-                message: "Welcome! You have been registered as a free user.",
-                buttons: [{ type: "ok" }],
-              });
+              // Show alert with channel link for free users
+              WebApp.showAlert(
+                "You have been signed up successfully\n\nSubscribe and Contact @DynamicNameCard to get one year premium membership absolutely Free",
+                () => {
+                  // Open Telegram channel when user clicks OK
+                  try {
+                    WebApp.openTelegramLink("https://t.me/DynamicNameCard");
+                  } catch (err) {
+                    console.error("Failed to open Telegram link:", err);
+                  }
+                }
+              );
             } catch {}
           }
         }

@@ -431,7 +431,7 @@ export default function ChamberPage() {
                 onClick={() =>
                   document.getElementById("chamber-file-input")?.click()
                 }
-                style={{ width: 180, height: 180 }}
+                style={{ width: 360, height: 180 }}
               >
                 {filePreview ? (
                   file?.type.startsWith("video/") ? (
@@ -441,13 +441,13 @@ export default function ChamberPage() {
                       loop
                       muted
                       playsInline
-                      className="w-[180px] h-[180px] object-cover rounded-xl"
+                      className="w-[360px] h-[180px] object-cover rounded-xl"
                     />
                   ) : (
                     <img
                       src={filePreview}
                       alt="Preview"
-                      className="w-[180px] h-[180px] object-cover rounded-xl"
+                      className="w-[360px] h-[180px] object-cover rounded-xl"
                     />
                   )
                 ) : editChamber?.image &&
@@ -455,7 +455,7 @@ export default function ChamberPage() {
                   <img
                     src={editChamber.image}
                     alt="chamber"
-                    className="w-[180px] h-[180px] object-cover rounded-xl"
+                    className="w-[360px] h-[180px] object-cover rounded-xl"
                   />
                 ) : editChamber?.image && editChamber.image.endsWith(".mp4") ? (
                   <video
@@ -464,16 +464,16 @@ export default function ChamberPage() {
                     loop
                     muted
                     playsInline
-                    className="w-[180px] h-[180px] object-cover rounded-xl"
+                    className="w-[360px] h-[180px] object-cover rounded-xl"
                   />
                 ) : editChamber?.image ? (
                   <img
                     src={editChamber.image}
                     alt="chamber"
-                    className="w-[180px] h-[180px] object-cover rounded-xl"
+                    className="w-[360px] h-[180px] object-cover rounded-xl"
                   />
                 ) : (
-                  <div className="w-[180px] h-[180px] bg-blue-400 rounded-xl flex items-center justify-center">
+                  <div className="w-[360px] h-[180px] bg-blue-400 rounded-xl flex items-center justify-center">
                     <div className="text-white text-center text-sm font-semibold whitespace-pre-line px-4">
                       {i18n.t("please_upload")}
                     </div>
