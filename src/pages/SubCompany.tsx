@@ -1,6 +1,7 @@
 import Layout from "../components/Layout";
 import { useState, useEffect, useRef } from "react";
 import axios from "axios";
+import { useNavigate } from "react-router-dom";
 import chamberIcon from "../assets/chamber.svg";
 import profileIcon from "../assets/profileIcon.png";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -21,6 +22,7 @@ const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 import i18n from "../i18n";
 
 export default function SubCompanyPage() {
+  const navigate = useNavigate();
   const [companies, setCompanies] = useState<any[]>([]);
   const [currentCompanyIndex, setCurrentCompanyIndex] = useState(0);
   const [profile, setProfile] = useState<any>(null);
@@ -215,6 +217,9 @@ export default function SubCompanyPage() {
 
       setEditMode(null);
       setEditProfile(null);
+      
+      // Navigate to sub-company page to refresh with fresh data
+      navigate("/sub-company");
     } catch (err: any) {
       setEditError(
         err?.response?.data?.message ||
@@ -455,7 +460,7 @@ export default function SubCompanyPage() {
                 >
                   <div
                     className="w-12 h-12 rounded-full flex items-center justify-center p-2 overflow-hidden cursor-pointer flex-shrink-0"
-                    onClick={() => (window.location.href = "/profile")}
+                    onClick={() => navigate("/profile")}
                     style={{
                       backgroundColor: "var(--app-background-color)",
                       scrollSnapAlign: "center" as any,
@@ -519,7 +524,7 @@ export default function SubCompanyPage() {
                   ) : null}
                   <div
                     className="w-12 h-12 rounded-full flex items-center justify-center p-2 overflow-hidden cursor-pointer flex-shrink-0"
-                    onClick={() => (window.location.href = "/chamber")}
+                    onClick={() => navigate("/chamber")}
                     style={{
                       backgroundColor: "var(--app-background-color)",
                       scrollSnapAlign: "center" as any,

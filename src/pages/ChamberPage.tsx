@@ -234,6 +234,9 @@ export default function ChamberPage() {
       }
       setEditMode(null);
       setEditChamber(null);
+
+      // Navigate to chamber page to refresh with fresh data
+      navigate("/chamber");
     } catch (err: any) {
       setEditError(
         err?.response?.data?.message || err.message || "Failed to save chamber"
@@ -550,7 +553,7 @@ export default function ChamberPage() {
                           <div
                             className="w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0"
                             onClick={() =>
-                              WebApp.openLink(formatUrl(telegramLink))
+                              WebApp.openLink("https://t.me/" + telegramLink)
                             }
                             style={{
                               backgroundColor: "var(--app-background-color)",

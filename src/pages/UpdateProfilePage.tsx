@@ -4,6 +4,7 @@ import { useState, useRef, useEffect } from "react";
 import addmycoIcon from "../assets/addmyco.png";
 import WebApp from "@twa-dev/sdk";
 import axios from "axios";
+import { useNavigate } from "react-router-dom";
 import {
   formatUrl,
   getEmailError,
@@ -12,6 +13,7 @@ import {
 } from "../utils/validation";
 
 export default function UpdateProfilePage() {
+  const navigate = useNavigate();
   const [isPremiumMember] = useState(false);
   const [ownerNameEnglish, setOwnerNameEnglish] = useState("");
   const [ownerNameChinese, setOwnerNameChinese] = useState("");
@@ -177,6 +179,8 @@ export default function UpdateProfilePage() {
       );
       if (res.status === 200) {
         WebApp.showAlert("Profile updated successfully!");
+        // Navigate to profile page to fetch fresh data
+        navigate("/profile");
       }
     } catch (err: any) {
       WebApp.showAlert(
