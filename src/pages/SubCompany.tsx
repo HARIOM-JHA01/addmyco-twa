@@ -217,7 +217,7 @@ export default function SubCompanyPage() {
 
       setEditMode(null);
       setEditProfile(null);
-      
+
       // Navigate to sub-company page to refresh with fresh data
       navigate("/sub-company");
     } catch (err: any) {
@@ -570,33 +570,32 @@ export default function SubCompanyPage() {
                 </div>
                 <button
                   aria-label="Prev company"
-                  className={`absolute left-0 -translate-x-1/2 p-1 rounded-full ${
-                    currentCompanyIndex > 0
-                      ? "opacity-100"
-                      : "opacity-30 pointer-events-none"
-                  }`}
-                  style={{ top: "calc(50% + 2px)" }}
+                  className="absolute left-0 -translate-x-1/2 p-1 rounded-full"
+                  style={{
+                    top: "calc(50% + 2px)",
+                    display: currentCompanyIndex > 0 ? "block" : "none",
+                  }}
                   onClick={() =>
                     setCurrentCompanyIndex((i) => Math.max(i - 1, 0))
                   }
-                  disabled={currentCompanyIndex === 0}
                 >
                   <img src={leftArrow} alt="prev" className="w-6 h-6" />
                 </button>
                 <button
                   aria-label="Next company"
-                  className={`absolute right-0 translate-x-1/2 p-1 rounded-full ${
-                    currentCompanyIndex < companies.length - 1
-                      ? "opacity-100"
-                      : "opacity-30 pointer-events-none"
-                  }`}
-                  style={{ top: "calc(50% + 2px)" }}
+                  className="absolute right-0 translate-x-1/2 p-1 rounded-full"
+                  style={{
+                    top: "calc(50% + 2px)",
+                    display:
+                      currentCompanyIndex < companies.length - 1
+                        ? "block"
+                        : "none",
+                  }}
                   onClick={() =>
                     setCurrentCompanyIndex((i) =>
                       Math.min(i + 1, companies.length - 1)
                     )
                   }
-                  disabled={currentCompanyIndex >= companies.length - 1}
                 >
                   <img src={rightArrow} alt="next" className="w-6 h-6" />
                 </button>

@@ -632,31 +632,32 @@ export default function ChamberPage() {
                       </div>
                       <button
                         aria-label="Prev chamber"
-                        className={`absolute left-0 top-1/2 -translate-y-1/2 -translate-x-1/2 p-1 rounded-full ${
-                          currentChamberIndex > 0
-                            ? "opacity-100"
-                            : "opacity-30 pointer-events-none"
-                        }`}
+                        className="absolute left-0 -translate-x-1/2 p-1 rounded-full"
+                        style={{
+                          top: "calc(50% + 2px)",
+                          display: currentChamberIndex > 0 ? "block" : "none",
+                        }}
                         onClick={() =>
                           setCurrentChamberIndex((i) => Math.max(i - 1, 0))
                         }
-                        disabled={currentChamberIndex === 0}
                       >
                         <img src={leftArrow} alt="prev" className="w-6 h-6" />
                       </button>
                       <button
                         aria-label="Next chamber"
-                        className={`absolute right-0 top-1/2 -translate-y-1/2 translate-x-1/2 p-1 rounded-full ${
-                          currentChamberIndex < chambers.length - 1
-                            ? "opacity-100"
-                            : "opacity-30 pointer-events-none"
-                        }`}
+                        className="absolute right-0 translate-x-1/2 p-1 rounded-full"
+                        style={{
+                          top: "calc(50% + 2px)",
+                          display:
+                            currentChamberIndex < chambers.length - 1
+                              ? "block"
+                              : "none",
+                        }}
                         onClick={() =>
                           setCurrentChamberIndex((i) =>
                             Math.min(i + 1, chambers.length - 1)
                           )
                         }
-                        disabled={currentChamberIndex >= chambers.length - 1}
                       >
                         <img src={rightArrow} alt="next" className="w-6 h-6" />
                       </button>
