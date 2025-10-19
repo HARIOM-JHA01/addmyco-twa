@@ -19,6 +19,7 @@ import Layout from "../components/Layout";
 import { useNavigate } from "react-router-dom";
 import i18n from "../i18n";
 import WebApp from "@twa-dev/sdk";
+import { formatUrl } from "../utils/validation";
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 export default function ProfilePage() {
@@ -174,7 +175,9 @@ export default function ProfilePage() {
                     {profile?.WhatsApp ? (
                       <div
                         className="w-12 h-12 rounded-full flex items-center justify-center overflow-hidden cursor-pointer flex-shrink-0"
-                        onClick={() => window.open(profile.WhatsApp, "_blank")}
+                        onClick={() =>
+                          window.open(formatUrl(profile.WhatsApp), "_blank")
+                        }
                         style={{
                           backgroundColor: "var(--app-background-color)",
                           scrollSnapAlign: "center" as any,
@@ -241,7 +244,10 @@ export default function ProfilePage() {
                     </div>
                     {profile?.website && (
                       <div
-                        className="w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0"
+                        className="w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0 cursor-pointer"
+                        onClick={() =>
+                          window.open(formatUrl(profile.website), "_blank")
+                        }
                         style={{
                           backgroundColor: "var(--app-background-color)",
                           scrollSnapAlign: "center" as any,
@@ -256,7 +262,10 @@ export default function ProfilePage() {
                     )}
                     {profile?.Facebook && (
                       <div
-                        className="w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0"
+                        className="w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0 cursor-pointer"
+                        onClick={() =>
+                          window.open(formatUrl(profile.Facebook), "_blank")
+                        }
                         style={{
                           backgroundColor: "var(--app-background-color)",
                           scrollSnapAlign: "center" as any,
@@ -271,7 +280,10 @@ export default function ProfilePage() {
                     )}
                     {profile?.Instagram && (
                       <div
-                        className="w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0"
+                        className="w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0 cursor-pointer"
+                        onClick={() =>
+                          window.open(formatUrl(profile.Instagram), "_blank")
+                        }
                         style={{
                           backgroundColor: "var(--app-background-color)",
                           scrollSnapAlign: "center" as any,
@@ -286,7 +298,10 @@ export default function ProfilePage() {
                     )}
                     {profile?.Youtube && (
                       <div
-                        className="w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0"
+                        className="w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0 cursor-pointer"
+                        onClick={() =>
+                          window.open(formatUrl(profile.Youtube), "_blank")
+                        }
                         style={{
                           backgroundColor: "var(--app-background-color)",
                           scrollSnapAlign: "center" as any,
@@ -301,7 +316,10 @@ export default function ProfilePage() {
                     )}
                     {profile?.Linkedin && (
                       <div
-                        className="w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0"
+                        className="w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0 cursor-pointer"
+                        onClick={() =>
+                          window.open(formatUrl(profile.Linkedin), "_blank")
+                        }
                         style={{
                           backgroundColor: "var(--app-background-color)",
                           scrollSnapAlign: "center" as any,

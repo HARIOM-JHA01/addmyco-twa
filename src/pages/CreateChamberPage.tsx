@@ -2,6 +2,7 @@ import Layout from "../components/Layout";
 import { useState, useRef } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
+import { formatUrl, getUrlError } from "../utils/validation";
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
@@ -34,12 +35,47 @@ export default function CreateChamberPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
+  const [validationErrors, setValidationErrors] = useState<{
+    [key: string]: string;
+  }>({});
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
   ) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+    setForm({ ...form, [name]: value });
+
+    // Clear validation error for this field
+    if (validationErrors[name]) {
+      setValidationErrors({ ...validationErrors, [name]: "" });
+    }
+
+    // Real-time validation for URL fields
+    const urlFields = [
+      "website",
+      "telegram",
+      "instagram",
+      "youtube",
+      "facebook",
+      "whatsapp",
+      "wechat",
+      "line",
+      "twitter",
+      "linkedin",
+      "snapchat",
+      "skype",
+      "tiktok",
+      "tgchannel",
+      "chamberfanpage",
+    ];
+
+    if (urlFields.includes(name)) {
+      const urlError = getUrlError(value, name);
+      if (urlError) {
+        setValidationErrors({ ...validationErrors, [name]: urlError });
+      }
+    }
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -68,6 +104,43 @@ export default function CreateChamberPage() {
     setLoading(true);
     setError("");
     setSuccess("");
+
+    // Validate all URL fields before submission
+    const errors: { [key: string]: string } = {};
+    const urlFields = [
+      "website",
+      "telegram",
+      "instagram",
+      "youtube",
+      "facebook",
+      "whatsapp",
+      "wechat",
+      "line",
+      "twitter",
+      "linkedin",
+      "snapchat",
+      "skype",
+      "tiktok",
+      "tgchannel",
+      "chamberfanpage",
+    ];
+
+    urlFields.forEach((field) => {
+      const value = form[field as keyof typeof form];
+      if (value && typeof value === "string") {
+        const urlError = getUrlError(value, field);
+        if (urlError) errors[field] = urlError;
+      }
+    });
+
+    // If there are validation errors, show them and stop
+    if (Object.keys(errors).length > 0) {
+      setValidationErrors(errors);
+      setError("Please fix the validation errors before submitting.");
+      setLoading(false);
+      return;
+    }
+
     try {
       const token = localStorage.getItem("token");
       if (!token) throw new Error("No token found. Please login again.");
@@ -77,20 +150,45 @@ export default function CreateChamberPage() {
       formData.append("chamber_name_chinese", form.cnName);
       formData.append("chamberdesignation", form.designation);
       formData.append("detail", form.details);
-      formData.append("chamberwebsite", form.website);
-      formData.append("WhatsApp", form.whatsapp);
-      formData.append("WeChat", form.wechat);
-      formData.append("Line", form.line);
-      formData.append("Instagram", form.instagram);
-      formData.append("Facebook", form.facebook);
-      formData.append("Twitter", form.twitter);
-      formData.append("Youtube", form.youtube);
-      formData.append("Linkedin", form.linkedin);
-      formData.append("SnapChat", form.snapchat);
-      formData.append("Skype", form.skype);
-      formData.append("TikTok", form.tiktok);
-      formData.append("tgchannel", form.tgchannel);
-      formData.append("chamberfanpage", form.chamberfanpage);
+      // Format all URLs before submission
+      formData.append(
+        "chamberwebsite",
+        form.website ? formatUrl(form.website) : ""
+      );
+      formData.append(
+        "WhatsApp",
+        form.whatsapp ? formatUrl(form.whatsapp) : ""
+      );
+      formData.append("WeChat", form.wechat ? formatUrl(form.wechat) : "");
+      formData.append("Line", form.line ? formatUrl(form.line) : "");
+      formData.append(
+        "Instagram",
+        form.instagram ? formatUrl(form.instagram) : ""
+      );
+      formData.append(
+        "Facebook",
+        form.facebook ? formatUrl(form.facebook) : ""
+      );
+      formData.append("Twitter", form.twitter ? formatUrl(form.twitter) : "");
+      formData.append("Youtube", form.youtube ? formatUrl(form.youtube) : "");
+      formData.append(
+        "Linkedin",
+        form.linkedin ? formatUrl(form.linkedin) : ""
+      );
+      formData.append(
+        "SnapChat",
+        form.snapchat ? formatUrl(form.snapchat) : ""
+      );
+      formData.append("Skype", form.skype ? formatUrl(form.skype) : "");
+      formData.append("TikTok", form.tiktok ? formatUrl(form.tiktok) : "");
+      formData.append(
+        "tgchannel",
+        form.tgchannel ? formatUrl(form.tgchannel) : ""
+      );
+      formData.append(
+        "chamberfanpage",
+        form.chamberfanpage ? formatUrl(form.chamberfanpage) : ""
+      );
       formData.append("order", form.order);
 
       if (file) {
@@ -262,27 +360,60 @@ export default function CreateChamberPage() {
               className="w-[330px] h-[200px] rounded-2xl px-[12px] py-2 border-2 border-blue-200 mb-2 focus:outline-none focus:ring-2 focus:ring-blue-400 resize-none bg-white placeholder-gray-500"
               rows={5}
             />
-            <input
-              name="website"
-              placeholder="Website for Chamber"
-              value={form.website}
-              onChange={handleChange}
-              className="w-full rounded-full px-[12px] py-2 border-2 border-blue-200 mb-2 focus:outline-none focus:ring-2 focus:ring-blue-400 bg-white placeholder-gray-500"
-            />
-            <input
-              name="telegram"
-              placeholder="https://t.me/Telegram Id"
-              value={form.telegram}
-              onChange={handleChange}
-              className="w-full rounded-full px-[12px] py-2 border-2 border-blue-200 mb-2 focus:outline-none focus:ring-2 focus:ring-blue-400 bg-white placeholder-gray-500"
-            />
-            <input
-              name="instagram"
-              placeholder="https://Instagram"
-              value={form.instagram}
-              onChange={handleChange}
-              className="w-full rounded-full px-[12px] py-2 border-2 border-blue-200 mb-2 focus:outline-none focus:ring-2 focus:ring-blue-400 bg-white placeholder-gray-500"
-            />
+            <div className="w-full">
+              <input
+                name="website"
+                placeholder="Website for Chamber"
+                value={form.website}
+                onChange={handleChange}
+                className={`w-full rounded-full px-[12px] py-2 border-2 ${
+                  validationErrors.website
+                    ? "border-red-500"
+                    : "border-blue-200"
+                } mb-2 focus:outline-none focus:ring-2 focus:ring-blue-400 bg-white placeholder-gray-500`}
+              />
+              {validationErrors.website && (
+                <div className="text-red-500 text-xs px-2 mb-2">
+                  {validationErrors.website}
+                </div>
+              )}
+            </div>
+            <div className="w-full">
+              <input
+                name="telegram"
+                placeholder="https://t.me/Telegram Id"
+                value={form.telegram}
+                onChange={handleChange}
+                className={`w-full rounded-full px-[12px] py-2 border-2 ${
+                  validationErrors.telegram
+                    ? "border-red-500"
+                    : "border-blue-200"
+                } mb-2 focus:outline-none focus:ring-2 focus:ring-blue-400 bg-white placeholder-gray-500`}
+              />
+              {validationErrors.telegram && (
+                <div className="text-red-500 text-xs px-2 mb-2">
+                  {validationErrors.telegram}
+                </div>
+              )}
+            </div>
+            <div className="w-full">
+              <input
+                name="instagram"
+                placeholder="https://Instagram"
+                value={form.instagram}
+                onChange={handleChange}
+                className={`w-full rounded-full px-[12px] py-2 border-2 ${
+                  validationErrors.instagram
+                    ? "border-red-500"
+                    : "border-blue-200"
+                } mb-2 focus:outline-none focus:ring-2 focus:ring-blue-400 bg-white placeholder-gray-500`}
+              />
+              {validationErrors.instagram && (
+                <div className="text-red-500 text-xs px-2 mb-2">
+                  {validationErrors.instagram}
+                </div>
+              )}
+            </div>
             <input
               name="youtube"
               placeholder="https://Youtube"

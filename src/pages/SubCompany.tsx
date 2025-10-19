@@ -14,6 +14,7 @@ import {
 import { faPhone, faGlobe } from "@fortawesome/free-solid-svg-icons";
 import leftArrow from "../assets/left-arrow.png";
 import rightArrow from "../assets/right-arrow.png";
+import { formatUrl } from "../utils/validation";
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
@@ -469,7 +470,9 @@ export default function SubCompanyPage() {
                   {profile?.WhatsApp ? (
                     <div
                       className="w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0"
-                      onClick={() => window.open(profile.WhatsApp, "_blank")}
+                      onClick={() =>
+                        window.open(formatUrl(profile.WhatsApp), "_blank")
+                      }
                       style={{
                         backgroundColor: "var(--app-background-color)",
                         scrollSnapAlign: "center" as any,
@@ -485,7 +488,9 @@ export default function SubCompanyPage() {
                   {profile?.tgid ? (
                     <div
                       className="w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0"
-                      onClick={() => window.open(profile.tgid, "_blank")}
+                      onClick={() =>
+                        window.open(formatUrl(profile.tgid), "_blank")
+                      }
                       style={{
                         backgroundColor: "var(--app-background-color)",
                         scrollSnapAlign: "center" as any,
@@ -668,7 +673,10 @@ export default function SubCompanyPage() {
                             />
                           ),
                           onClick: () => {
-                            window.open(companyProfile.facebook, "_blank");
+                            window.open(
+                              formatUrl(companyProfile.facebook),
+                              "_blank"
+                            );
                           },
                         },
                       ]
@@ -686,7 +694,10 @@ export default function SubCompanyPage() {
                             />
                           ),
                           onClick: () => {
-                            window.open(companyProfile.instagram, "_blank");
+                            window.open(
+                              formatUrl(companyProfile.instagram),
+                              "_blank"
+                            );
                           },
                         },
                       ]
@@ -704,7 +715,10 @@ export default function SubCompanyPage() {
                             />
                           ),
                           onClick: () => {
-                            window.open(companyProfile.youtube, "_blank");
+                            window.open(
+                              formatUrl(companyProfile.youtube),
+                              "_blank"
+                            );
                           },
                         },
                       ]
@@ -717,7 +731,10 @@ export default function SubCompanyPage() {
                     ),
                     onClick: () => {
                       if (companyProfile?.website)
-                        window.open(companyProfile.website, "_blank");
+                        window.open(
+                          formatUrl(companyProfile.website),
+                          "_blank"
+                        );
                     },
                   },
                 ].map((item) => (

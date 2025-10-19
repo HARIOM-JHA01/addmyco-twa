@@ -4,6 +4,12 @@ import { useState, useRef, useEffect } from "react";
 import addmycoIcon from "../assets/addmyco.png";
 import WebApp from "@twa-dev/sdk";
 import axios from "axios";
+import {
+  formatUrl,
+  getEmailError,
+  getPhoneError,
+  getUrlError,
+} from "../utils/validation";
 
 export default function UpdateProfilePage() {
   const [isPremiumMember] = useState(false);
@@ -30,6 +36,9 @@ export default function UpdateProfilePage() {
   const [mediaPreview, setMediaPreview] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [memberType, setMemberType] = useState("");
+  const [validationErrors, setValidationErrors] = useState<{
+    [key: string]: string;
+  }>({});
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Replace with your actual user id and API base url
@@ -87,6 +96,50 @@ export default function UpdateProfilePage() {
 
   const handleProfileUpdate = async () => {
     setLoading(true);
+
+    // Validate all fields before submission
+    const errors: { [key: string]: string } = {};
+
+    // Validate email
+    if (email) {
+      const emailError = getEmailError(email);
+      if (emailError) errors.email = emailError;
+    }
+
+    // Validate contact
+    if (contact) {
+      const phoneError = getPhoneError(contact);
+      if (phoneError) errors.contact = phoneError;
+    }
+
+    // Validate all URL fields
+    const urlFields = {
+      whatsapp,
+      wechat,
+      line,
+      instagram,
+      facebook,
+      twitter,
+      youtube,
+      linkedin,
+      snapchat,
+    };
+
+    Object.entries(urlFields).forEach(([field, value]) => {
+      if (value) {
+        const urlError = getUrlError(value, field);
+        if (urlError) errors[field] = urlError;
+      }
+    });
+
+    // If there are validation errors, show them and stop
+    if (Object.keys(errors).length > 0) {
+      setValidationErrors(errors);
+      WebApp.showAlert("Please fix the validation errors before submitting.");
+      setLoading(false);
+      return;
+    }
+
     try {
       const token = localStorage.getItem("token");
       const formData = new FormData();
@@ -99,15 +152,16 @@ export default function UpdateProfilePage() {
       formData.append("username", username);
       formData.append("email", email);
       formData.append("contact", contact);
-      formData.append("WhatsApp", whatsapp);
-      formData.append("WeChat", wechat);
-      formData.append("Line", line);
-      formData.append("Instagram", instagram);
-      formData.append("Facebook", facebook);
-      formData.append("Twitter", twitter);
-      formData.append("Youtube", youtube);
-      formData.append("Linkedin", linkedin);
-      formData.append("SnapChat", snapchat);
+      // Format all URLs before submission
+      formData.append("WhatsApp", whatsapp ? formatUrl(whatsapp) : "");
+      formData.append("WeChat", wechat ? formatUrl(wechat) : "");
+      formData.append("Line", line ? formatUrl(line) : "");
+      formData.append("Instagram", instagram ? formatUrl(instagram) : "");
+      formData.append("Facebook", facebook ? formatUrl(facebook) : "");
+      formData.append("Twitter", twitter ? formatUrl(twitter) : "");
+      formData.append("Youtube", youtube ? formatUrl(youtube) : "");
+      formData.append("Linkedin", linkedin ? formatUrl(linkedin) : "");
+      formData.append("SnapChat", snapchat ? formatUrl(snapchat) : "");
       if (profileImage) formData.append("profile_image", profileImage);
       if (video) formData.append("video", video);
 
@@ -277,25 +331,63 @@ export default function UpdateProfilePage() {
           </div>
 
           {/* Phone Number */}
-          <div className="bg-white rounded-full px-4 py-1 border-2 border-[#00AEEF]">
-            <input
-              type="text"
-              className="w-full bg-transparent text-[#00AEEF] outline-none placeholder-[#00AEEF]"
-              placeholder="Phone Number"
-              value={contact}
-              onChange={(e) => setContact(e.target.value)}
-            />
+          <div className="w-full">
+            <div
+              className={`bg-white rounded-full px-4 py-1 border-2 ${
+                validationErrors.contact ? "border-red-500" : "border-[#00AEEF]"
+              }`}
+            >
+              <input
+                type="text"
+                className="w-full bg-transparent text-[#00AEEF] outline-none placeholder-[#00AEEF]"
+                placeholder="Phone Number"
+                value={contact}
+                onChange={(e) => {
+                  setContact(e.target.value);
+                  if (validationErrors.contact) {
+                    setValidationErrors({
+                      ...validationErrors,
+                      contact: "",
+                    });
+                  }
+                }}
+              />
+            </div>
+            {validationErrors.contact && (
+              <div className="text-red-500 text-xs mt-1 px-2">
+                {validationErrors.contact}
+              </div>
+            )}
           </div>
 
           {/* WhatsApp */}
-          <div className="bg-white rounded-full px-4 py-1 border-2 border-blue-300">
-            <input
-              type="text"
-              className="w-full bg-transparent text-[#00AEEF] outline-none placeholder-[#00AEEF]"
-              placeholder="WhatsApp"
-              value={whatsapp}
-              onChange={(e) => setWhatsapp(e.target.value)}
-            />
+          <div className="w-full">
+            <div
+              className={`bg-white rounded-full px-4 py-1 border-2 ${
+                validationErrors.whatsapp ? "border-red-500" : "border-blue-300"
+              }`}
+            >
+              <input
+                type="text"
+                className="w-full bg-transparent text-[#00AEEF] outline-none placeholder-[#00AEEF]"
+                placeholder="WhatsApp"
+                value={whatsapp}
+                onChange={(e) => {
+                  setWhatsapp(e.target.value);
+                  if (validationErrors.whatsapp) {
+                    setValidationErrors({
+                      ...validationErrors,
+                      whatsapp: "",
+                    });
+                  }
+                }}
+              />
+            </div>
+            {validationErrors.whatsapp && (
+              <div className="text-red-500 text-xs mt-1 px-2">
+                {validationErrors.whatsapp}
+              </div>
+            )}
           </div>
 
           {/* Address Fields */}
@@ -335,75 +427,201 @@ export default function UpdateProfilePage() {
           </div>
 
           {/* Email */}
-          <div className="bg-white rounded-full px-4 py-1 border-2 border-blue-300">
-            <input
-              type="email"
-              className="w-full bg-transparent text-[#00AEEF] outline-none placeholder-blue-300"
-              placeholder="Email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-            />
+          <div className="w-full">
+            <div
+              className={`bg-white rounded-full px-4 py-1 border-2 ${
+                validationErrors.email ? "border-red-500" : "border-blue-300"
+              }`}
+            >
+              <input
+                type="email"
+                className="w-full bg-transparent text-[#00AEEF] outline-none placeholder-blue-300"
+                placeholder="Email"
+                value={email}
+                onChange={(e) => {
+                  setEmail(e.target.value);
+                  if (validationErrors.email) {
+                    setValidationErrors({ ...validationErrors, email: "" });
+                  }
+                }}
+              />
+            </div>
+            {validationErrors.email && (
+              <div className="text-red-500 text-xs mt-1 px-2">
+                {validationErrors.email}
+              </div>
+            )}
           </div>
 
           {/* Social Media Links */}
-          <div className="bg-white rounded-full px-4 py-1 border-2 border-blue-300">
-            <input
-              type="text"
-              className="w-full bg-transparent text-gray-500 outline-none placeholder-gray-400"
-              placeholder="Wechat"
-              value={wechat}
-              onChange={(e) => setWechat(e.target.value)}
-            />
+          <div className="w-full">
+            <div
+              className={`bg-white rounded-full px-4 py-1 border-2 ${
+                validationErrors.wechat ? "border-red-500" : "border-blue-300"
+              }`}
+            >
+              <input
+                type="text"
+                className="w-full bg-transparent text-gray-500 outline-none placeholder-gray-400"
+                placeholder="Wechat"
+                value={wechat}
+                onChange={(e) => {
+                  setWechat(e.target.value);
+                  if (validationErrors.wechat) {
+                    setValidationErrors({ ...validationErrors, wechat: "" });
+                  }
+                }}
+              />
+            </div>
+            {validationErrors.wechat && (
+              <div className="text-red-500 text-xs mt-1 px-2">
+                {validationErrors.wechat}
+              </div>
+            )}
           </div>
 
-          <div className="bg-white rounded-full px-4 py-1 border-2 border-blue-300">
-            <input
-              type="text"
-              className="w-full bg-transparent text-gray-500 outline-none placeholder-gray-400"
-              placeholder="Facebook"
-              value={facebook}
-              onChange={(e) => setFacebook(e.target.value)}
-            />
+          <div className="w-full">
+            <div
+              className={`bg-white rounded-full px-4 py-1 border-2 ${
+                validationErrors.facebook ? "border-red-500" : "border-blue-300"
+              }`}
+            >
+              <input
+                type="text"
+                className="w-full bg-transparent text-gray-500 outline-none placeholder-gray-400"
+                placeholder="Facebook"
+                value={facebook}
+                onChange={(e) => {
+                  setFacebook(e.target.value);
+                  if (validationErrors.facebook) {
+                    setValidationErrors({
+                      ...validationErrors,
+                      facebook: "",
+                    });
+                  }
+                }}
+              />
+            </div>
+            {validationErrors.facebook && (
+              <div className="text-red-500 text-xs mt-1 px-2">
+                {validationErrors.facebook}
+              </div>
+            )}
           </div>
 
-          <div className="bg-white rounded-full px-4 py-1 border-2 border-blue-300">
-            <input
-              type="text"
-              className="w-full bg-transparent text-gray-500 outline-none placeholder-gray-400"
-              placeholder="Instagram"
-              value={instagram}
-              onChange={(e) => setInstagram(e.target.value)}
-            />
+          <div className="w-full">
+            <div
+              className={`bg-white rounded-full px-4 py-1 border-2 ${
+                validationErrors.instagram
+                  ? "border-red-500"
+                  : "border-blue-300"
+              }`}
+            >
+              <input
+                type="text"
+                className="w-full bg-transparent text-gray-500 outline-none placeholder-gray-400"
+                placeholder="Instagram"
+                value={instagram}
+                onChange={(e) => {
+                  setInstagram(e.target.value);
+                  if (validationErrors.instagram) {
+                    setValidationErrors({
+                      ...validationErrors,
+                      instagram: "",
+                    });
+                  }
+                }}
+              />
+            </div>
+            {validationErrors.instagram && (
+              <div className="text-red-500 text-xs mt-1 px-2">
+                {validationErrors.instagram}
+              </div>
+            )}
           </div>
 
-          <div className="bg-white rounded-full px-4 py-1 border-2 border-blue-300">
-            <input
-              type="text"
-              className="w-full bg-transparent text-gray-500 outline-none placeholder-gray-400"
-              placeholder="Line"
-              value={line}
-              onChange={(e) => setLine(e.target.value)}
-            />
+          <div className="w-full">
+            <div
+              className={`bg-white rounded-full px-4 py-1 border-2 ${
+                validationErrors.line ? "border-red-500" : "border-blue-300"
+              }`}
+            >
+              <input
+                type="text"
+                className="w-full bg-transparent text-gray-500 outline-none placeholder-gray-400"
+                placeholder="Line"
+                value={line}
+                onChange={(e) => {
+                  setLine(e.target.value);
+                  if (validationErrors.line) {
+                    setValidationErrors({ ...validationErrors, line: "" });
+                  }
+                }}
+              />
+            </div>
+            {validationErrors.line && (
+              <div className="text-red-500 text-xs mt-1 px-2">
+                {validationErrors.line}
+              </div>
+            )}
           </div>
 
-          <div className="bg-white rounded-full px-4 py-1 border-2 border-blue-300">
-            <input
-              type="text"
-              className="w-full bg-transparent text-gray-500 outline-none placeholder-gray-400"
-              placeholder="LinkedIn"
-              value={linkedin}
-              onChange={(e) => setLinkedin(e.target.value)}
-            />
+          <div className="w-full">
+            <div
+              className={`bg-white rounded-full px-4 py-1 border-2 ${
+                validationErrors.linkedin ? "border-red-500" : "border-blue-300"
+              }`}
+            >
+              <input
+                type="text"
+                className="w-full bg-transparent text-gray-500 outline-none placeholder-gray-400"
+                placeholder="LinkedIn"
+                value={linkedin}
+                onChange={(e) => {
+                  setLinkedin(e.target.value);
+                  if (validationErrors.linkedin) {
+                    setValidationErrors({
+                      ...validationErrors,
+                      linkedin: "",
+                    });
+                  }
+                }}
+              />
+            </div>
+            {validationErrors.linkedin && (
+              <div className="text-red-500 text-xs mt-1 px-2">
+                {validationErrors.linkedin}
+              </div>
+            )}
           </div>
 
-          <div className="bg-white rounded-full px-4 py-1 border-2 border-blue-300">
-            <input
-              type="text"
-              className="w-full bg-transparent text-gray-500 outline-none placeholder-gray-400"
-              placeholder="SnapChat"
-              value={snapchat}
-              onChange={(e) => setSnapchat(e.target.value)}
-            />
+          <div className="w-full">
+            <div
+              className={`bg-white rounded-full px-4 py-1 border-2 ${
+                validationErrors.snapchat ? "border-red-500" : "border-blue-300"
+              }`}
+            >
+              <input
+                type="text"
+                className="w-full bg-transparent text-gray-500 outline-none placeholder-gray-400"
+                placeholder="SnapChat"
+                value={snapchat}
+                onChange={(e) => {
+                  setSnapchat(e.target.value);
+                  if (validationErrors.snapchat) {
+                    setValidationErrors({
+                      ...validationErrors,
+                      snapchat: "",
+                    });
+                  }
+                }}
+              />
+            </div>
+            {validationErrors.snapchat && (
+              <div className="text-red-500 text-xs mt-1 px-2">
+                {validationErrors.snapchat}
+              </div>
+            )}
           </div>
 
           {/* <div className="bg-white rounded-full px-4 py-1 border-2 border-blue-300">
@@ -415,23 +633,61 @@ export default function UpdateProfilePage() {
               onChange={(e) => setTiktok(e.target.value)}
             />
           </div> */}
-          <div className="bg-white rounded-full px-4 py-1 border-2 border-blue-300">
-            <input
-              type="text"
-              className="w-full bg-transparent text-gray-500 outline-none placeholder-gray-400"
-              placeholder="Youtube"
-              value={youtube}
-              onChange={(e) => setYoutube(e.target.value)}
-            />
+          <div className="w-full">
+            <div
+              className={`bg-white rounded-full px-4 py-1 border-2 ${
+                validationErrors.youtube ? "border-red-500" : "border-blue-300"
+              }`}
+            >
+              <input
+                type="text"
+                className="w-full bg-transparent text-gray-500 outline-none placeholder-gray-400"
+                placeholder="Youtube"
+                value={youtube}
+                onChange={(e) => {
+                  setYoutube(e.target.value);
+                  if (validationErrors.youtube) {
+                    setValidationErrors({
+                      ...validationErrors,
+                      youtube: "",
+                    });
+                  }
+                }}
+              />
+            </div>
+            {validationErrors.youtube && (
+              <div className="text-red-500 text-xs mt-1 px-2">
+                {validationErrors.youtube}
+              </div>
+            )}
           </div>
-          <div className="bg-white rounded-full px-4 py-1 border-2 border-blue-300">
-            <input
-              type="text"
-              className="w-full bg-transparent text-gray-500 outline-none placeholder-gray-400"
-              placeholder="X"
-              value={twitter}
-              onChange={(e) => setTwitter(e.target.value)}
-            />
+          <div className="w-full">
+            <div
+              className={`bg-white rounded-full px-4 py-1 border-2 ${
+                validationErrors.twitter ? "border-red-500" : "border-blue-300"
+              }`}
+            >
+              <input
+                type="text"
+                className="w-full bg-transparent text-gray-500 outline-none placeholder-gray-400"
+                placeholder="X"
+                value={twitter}
+                onChange={(e) => {
+                  setTwitter(e.target.value);
+                  if (validationErrors.twitter) {
+                    setValidationErrors({
+                      ...validationErrors,
+                      twitter: "",
+                    });
+                  }
+                }}
+              />
+            </div>
+            {validationErrors.twitter && (
+              <div className="text-red-500 text-xs mt-1 px-2">
+                {validationErrors.twitter}
+              </div>
+            )}
           </div>
         </section>
 

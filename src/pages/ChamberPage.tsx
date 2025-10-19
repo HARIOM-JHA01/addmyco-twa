@@ -19,6 +19,7 @@ import rightArrow from "../assets/right-arrow.png";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import WebApp from "@twa-dev/sdk";
 import i18n from "../i18n";
+import { formatUrl } from "../utils/validation";
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
@@ -129,7 +130,9 @@ export default function ChamberPage() {
       if (value === "") {
         setEditError("");
       } else if (isNaN(numValue) || numValue < 0 || numValue >= chambersCount) {
-        setEditError(`Display order must be between 0 and ${chambersCount - 1}`);
+        setEditError(
+          `Display order must be between 0 and ${chambersCount - 1}`
+        );
       } else {
         setEditError("");
       }
@@ -363,7 +366,10 @@ export default function ChamberPage() {
                   setEditChamber(null);
                   setEditError("");
                 }}
-                disabled={editLoading || (editChamber?.order !== undefined && !!editError)}
+                disabled={
+                  editLoading ||
+                  (editChamber?.order !== undefined && !!editError)
+                }
               >
                 {i18n.t("cancel")}
               </button>
@@ -525,7 +531,9 @@ export default function ChamberPage() {
                         {whatsappLink && (
                           <div
                             className="w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0"
-                            onClick={() => WebApp.openLink(whatsappLink)}
+                            onClick={() =>
+                              WebApp.openLink(formatUrl(whatsappLink))
+                            }
                             style={{
                               backgroundColor: "var(--app-background-color)",
                               scrollSnapAlign: "center" as any,
@@ -541,7 +549,9 @@ export default function ChamberPage() {
                         {telegramLink && (
                           <div
                             className="w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0"
-                            onClick={() => WebApp.openLink(telegramLink)}
+                            onClick={() =>
+                              WebApp.openLink(formatUrl(telegramLink))
+                            }
                             style={{
                               backgroundColor: "var(--app-background-color)",
                               scrollSnapAlign: "center" as any,
@@ -720,7 +730,8 @@ export default function ChamberPage() {
                             />
                           ),
                           onClick: () => {
-                            if (c.telegramId) WebApp.openLink(c.telegramId);
+                            if (c.telegramId)
+                              WebApp.openLink(formatUrl(c.telegramId));
                             else if (c.tgchannel) {
                               // if no full link, try to open as t.me/username
                               // remove leading @ if present
@@ -741,7 +752,8 @@ export default function ChamberPage() {
                                     color="white"
                                   />
                                 ),
-                                onClick: () => WebApp.openLink(c.Facebook),
+                                onClick: () =>
+                                  WebApp.openLink(formatUrl(c.Facebook)),
                               },
                             ]
                           : []),
@@ -757,7 +769,8 @@ export default function ChamberPage() {
                                     color="white"
                                   />
                                 ),
-                                onClick: () => WebApp.openLink(c.Instagram),
+                                onClick: () =>
+                                  WebApp.openLink(formatUrl(c.Instagram)),
                               },
                             ]
                           : []),
@@ -773,7 +786,8 @@ export default function ChamberPage() {
                                     color="white"
                                   />
                                 ),
-                                onClick: () => WebApp.openLink(c.Youtube),
+                                onClick: () =>
+                                  WebApp.openLink(formatUrl(c.Youtube)),
                               },
                             ]
                           : []),
@@ -789,7 +803,7 @@ export default function ChamberPage() {
                           ),
                           onClick: () => {
                             if (c.chamberwebsite)
-                              WebApp.openLink(c.chamberwebsite);
+                              WebApp.openLink(formatUrl(c.chamberwebsite));
                           },
                         },
                       ].map((item) => (

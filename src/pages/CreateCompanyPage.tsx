@@ -2,6 +2,7 @@ import Layout from "../components/Layout";
 import { useState, useRef, useMemo } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
+import { formatUrl, getEmailError, getUrlError } from "../utils/validation";
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
@@ -25,6 +26,9 @@ export default function CreateCompanyPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
+  const [validationErrors, setValidationErrors] = useState<{
+    [key: string]: string;
+  }>({});
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Memoize preview URL so it doesn't reload on description change
@@ -39,7 +43,35 @@ export default function CreateCompanyPage() {
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
   ) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+    setForm({ ...form, [name]: value });
+
+    // Clear validation error for this field
+    if (validationErrors[name]) {
+      setValidationErrors({ ...validationErrors, [name]: "" });
+    }
+
+    // Real-time validation
+    if (name === "email") {
+      const emailError = getEmailError(value);
+      if (emailError) {
+        setValidationErrors({ ...validationErrors, email: emailError });
+      }
+    } else if (
+      [
+        "website",
+        "WhatsApp",
+        "telegramId",
+        "facebook",
+        "Instagram",
+        "Youtube",
+      ].includes(name)
+    ) {
+      const urlError = getUrlError(value, name);
+      if (urlError) {
+        setValidationErrors({ ...validationErrors, [name]: urlError });
+      }
+    }
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -62,11 +94,56 @@ export default function CreateCompanyPage() {
     setLoading(true);
     setError("");
     setSuccess("");
+
+    // Validate all fields before submission
+    const errors: { [key: string]: string } = {};
+
+    // Validate email
+    if (form.email) {
+      const emailError = getEmailError(form.email);
+      if (emailError) errors.email = emailError;
+    }
+
+    // Validate all URL fields
+    const urlFields = [
+      "website",
+      "WhatsApp",
+      "telegramId",
+      "facebook",
+      "Instagram",
+      "Youtube",
+    ];
+    urlFields.forEach((field) => {
+      const value = form[field as keyof typeof form];
+      if (value && typeof value === "string") {
+        const urlError = getUrlError(value, field);
+        if (urlError) errors[field] = urlError;
+      }
+    });
+
+    // If there are validation errors, show them and stop
+    if (Object.keys(errors).length > 0) {
+      setValidationErrors(errors);
+      setError("Please fix the validation errors before submitting.");
+      setLoading(false);
+      return;
+    }
+
     try {
       const token = localStorage.getItem("token");
       if (!token) throw new Error("No token found. Please login again.");
+
+      // Format all URLs before submission
+      const formattedForm = { ...form };
+      urlFields.forEach((field) => {
+        const value = formattedForm[field as keyof typeof formattedForm];
+        if (value && typeof value === "string") {
+          (formattedForm as any)[field] = formatUrl(value);
+        }
+      });
+
       const formData = new FormData();
-      Object.entries(form).forEach(([key, value]) => {
+      Object.entries(formattedForm).forEach(([key, value]) => {
         if (key === "image" && value) {
           formData.append("image", value as File);
         } else {
@@ -211,41 +288,96 @@ export default function CreateCompanyPage() {
               className="w-[330px] h-[200px] rounded-2xl px-[12px] py-2 border border-blue-500 mb-2 focus:outline-none focus:ring-2 focus:ring-blue-400 resize-none"
               rows={6}
             />
-            <input
-              name="website"
-              placeholder="Website"
-              value={form.website}
-              onChange={handleChange}
-              className="w-full rounded-full px-[12px] py-2 border border-blue-500 mb-2 focus:outline-none focus:ring-2 focus:ring-blue-400"
-            />
-            <input
-              name="telegramId"
-              placeholder="https://t.me/Telegram Id"
-              value={form.telegramId || ""}
-              onChange={handleChange}
-              className="w-full rounded-full px-[12px] py-2 border border-blue-500 mb-2 focus:outline-none focus:ring-2 focus:ring-blue-400"
-            />
-            <input
-              name="facebook"
-              placeholder="https://Facebook"
-              value={form.facebook}
-              onChange={handleChange}
-              className="w-full rounded-full px-[12px] py-2 border border-blue-500 mb-2 focus:outline-none focus:ring-2 focus:ring-blue-400"
-            />
-            <input
-              name="Instagram"
-              placeholder="https://Instagram"
-              value={form.Instagram || ""}
-              onChange={handleChange}
-              className="w-full rounded-full px-[12px] py-2 border border-blue-500 mb-2 focus:outline-none focus:ring-2 focus:ring-blue-400"
-            />
-            <input
-              name="Youtube"
-              placeholder="https://Youtube"
-              value={form.Youtube || ""}
-              onChange={handleChange}
-              className="w-full rounded-full px-[12px] py-2 border border-blue-500 mb-2 focus:outline-none focus:ring-2 focus:ring-blue-400"
-            />
+            <div className="w-full">
+              <input
+                name="website"
+                placeholder="Website"
+                value={form.website}
+                onChange={handleChange}
+                className={`w-full rounded-full px-[12px] py-2 border ${
+                  validationErrors.website
+                    ? "border-red-500"
+                    : "border-blue-500"
+                } mb-2 focus:outline-none focus:ring-2 focus:ring-blue-400`}
+              />
+              {validationErrors.website && (
+                <div className="text-red-500 text-xs mt-1 px-2 mb-2">
+                  {validationErrors.website}
+                </div>
+              )}
+            </div>
+            <div className="w-full">
+              <input
+                name="telegramId"
+                placeholder="https://t.me/Telegram Id"
+                value={form.telegramId || ""}
+                onChange={handleChange}
+                className={`w-full rounded-full px-[12px] py-2 border ${
+                  validationErrors.telegramId
+                    ? "border-red-500"
+                    : "border-blue-500"
+                } mb-2 focus:outline-none focus:ring-2 focus:ring-blue-400`}
+              />
+              {validationErrors.telegramId && (
+                <div className="text-red-500 text-xs mt-1 px-2 mb-2">
+                  {validationErrors.telegramId}
+                </div>
+              )}
+            </div>
+            <div className="w-full">
+              <input
+                name="facebook"
+                placeholder="https://Facebook"
+                value={form.facebook}
+                onChange={handleChange}
+                className={`w-full rounded-full px-[12px] py-2 border ${
+                  validationErrors.facebook
+                    ? "border-red-500"
+                    : "border-blue-500"
+                } mb-2 focus:outline-none focus:ring-2 focus:ring-blue-400`}
+              />
+              {validationErrors.facebook && (
+                <div className="text-red-500 text-xs mt-1 px-2 mb-2">
+                  {validationErrors.facebook}
+                </div>
+              )}
+            </div>
+            <div className="w-full">
+              <input
+                name="Instagram"
+                placeholder="https://Instagram"
+                value={form.Instagram || ""}
+                onChange={handleChange}
+                className={`w-full rounded-full px-[12px] py-2 border ${
+                  validationErrors.Instagram
+                    ? "border-red-500"
+                    : "border-blue-500"
+                } mb-2 focus:outline-none focus:ring-2 focus:ring-blue-400`}
+              />
+              {validationErrors.Instagram && (
+                <div className="text-red-500 text-xs mt-1 px-2 mb-2">
+                  {validationErrors.Instagram}
+                </div>
+              )}
+            </div>
+            <div className="w-full">
+              <input
+                name="Youtube"
+                placeholder="https://Youtube"
+                value={form.Youtube || ""}
+                onChange={handleChange}
+                className={`w-full rounded-full px-[12px] py-2 border ${
+                  validationErrors.Youtube
+                    ? "border-red-500"
+                    : "border-blue-500"
+                } mb-2 focus:outline-none focus:ring-2 focus:ring-blue-400`}
+              />
+              {validationErrors.Youtube && (
+                <div className="text-red-500 text-xs mt-1 px-2 mb-2">
+                  {validationErrors.Youtube}
+                </div>
+              )}
+            </div>
             {/* Display order is set to 1 by default and hidden from the user */}
             {error && (
               <div className="text-red-500 mt-2 text-center w-full">
