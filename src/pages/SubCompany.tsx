@@ -64,6 +64,9 @@ export default function SubCompanyPage() {
         const res = await axios.get(`${API_BASE_URL}/getcompanyprofile`, {
           headers: { Authorization: `Bearer ${token}` },
         });
+        {
+          /* Combined name pill: English above, Chinese below (same spot) */
+        }
         const profileRes = await axios.get(`${API_BASE_URL}/getProfile`, {
           headers: { Authorization: `Bearer ${token}` },
         });
@@ -373,13 +376,14 @@ export default function SubCompanyPage() {
                 onChange={handleEditInput}
                 disabled={editLoading}
               />
-              {editProfile?.order !== undefined && (
-                (Number(editProfile.order) < 0 || Number(editProfile.order) > companies.length) ? (
+              {editProfile?.order !== undefined &&
+                (Number(editProfile.order) < 0 ||
+                Number(editProfile.order) > companies.length ? (
                   <div className="text-red-500 mb-2 text-center">
-                    Display order must be between 0 and {companies.length} (currently you have {companies.length} companies)
+                    Display order must be between 0 and {companies.length}{" "}
+                    (currently you have {companies.length} companies)
                   </div>
-                ) : null
-              )}
+                ) : null)}
               {editError && (
                 <div className="text-red-500 mb-2 text-center">{editError}</div>
               )}
@@ -389,7 +393,8 @@ export default function SubCompanyPage() {
                 disabled={
                   editLoading ||
                   (editProfile?.order !== undefined &&
-                    (Number(editProfile.order) < 0 || Number(editProfile.order) > companies.length))
+                    (Number(editProfile.order) < 0 ||
+                      Number(editProfile.order) > companies.length))
                 }
               >
                 {editLoading
@@ -555,11 +560,12 @@ export default function SubCompanyPage() {
                 </div>
                 <button
                   aria-label="Prev company"
-                  className={`absolute left-0 top-1/2 -translate-y-1/2 -translate-x-1/2 p-1 rounded-full ${
+                  className={`absolute left-0 -translate-x-1/2 p-1 rounded-full ${
                     currentCompanyIndex > 0
                       ? "opacity-100"
                       : "opacity-30 pointer-events-none"
                   }`}
+                  style={{ top: "calc(50% + 2px)" }}
                   onClick={() =>
                     setCurrentCompanyIndex((i) => Math.max(i - 1, 0))
                   }
@@ -569,11 +575,12 @@ export default function SubCompanyPage() {
                 </button>
                 <button
                   aria-label="Next company"
-                  className={`absolute right-0 top-1/2 -translate-y-1/2 translate-x-1/2 p-1 rounded-full ${
+                  className={`absolute right-0 translate-x-1/2 p-1 rounded-full ${
                     currentCompanyIndex < companies.length - 1
                       ? "opacity-100"
                       : "opacity-30 pointer-events-none"
                   }`}
+                  style={{ top: "calc(50% + 2px)" }}
                   onClick={() =>
                     setCurrentCompanyIndex((i) =>
                       Math.min(i + 1, companies.length - 1)
@@ -608,8 +615,8 @@ export default function SubCompanyPage() {
                     <img
                       src={companyProfile.image || profileIcon}
                       alt="Company Logo"
-                      className="object-contain mx-auto rounded-md"
-                      style={{ maxWidth: "100%", maxHeight: "100%" }}
+                      className="mx-auto rounded-md w-[60%] h-full object-cover object-center block"
+                      style={{ maxWidth: "60%" }}
                     />
                   </div>
                 </div>

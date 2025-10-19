@@ -77,7 +77,7 @@ export default function HomePage() {
   };
 
   const handleScan = () => {
-    window.location.href = "/addmyco/search";
+    navigate("/search");
   };
 
   if (loading) {

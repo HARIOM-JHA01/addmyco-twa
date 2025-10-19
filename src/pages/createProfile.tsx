@@ -107,19 +107,21 @@ export default function CreateProfile() {
         },
       });
       setSuccess("Profile created successfully! Checking company profile...");
-      // Call getprofile and check for company data
+      // Call getProfile and check for company data
       try {
-        const res = await axios.get(`${API_BASE_URL}/getprofile`, {
+        const res = await axios.get(`${API_BASE_URL}/getProfile`, {
           headers: { Authorization: `Bearer ${token}` },
         });
-        const companyData =
-          res.data.data?.company ||
-          res.data.data?.companydata ||
-          res.data.data?.company_profile;
-        if (!companyData) {
-          setTimeout(() => navigate("/create-company"), 1200);
-        } else {
+        // Check if company exists by looking for company_name_english and company_name_chinese in companydata
+        const hasCompany =
+          res.data.data?.companydata &&
+          res.data.data.companydata.company_name_english &&
+          res.data.data.companydata.company_name_chinese;
+
+        if (hasCompany) {
           setTimeout(() => navigate("/"), 1200);
+        } else {
+          setTimeout(() => navigate("/create-company"), 1200);
         }
       } catch {
         setTimeout(() => navigate("/create-company"), 1200);
