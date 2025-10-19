@@ -5,6 +5,12 @@ import Header from "../components/Header";
 import addmycoIcon from "../assets/addmyco.png";
 import WebApp from "@twa-dev/sdk";
 import { useProfileStore } from "../store/profileStore";
+import {
+  formatUrl,
+  getEmailError,
+  getPhoneError,
+  getUrlError,
+} from "../utils/validation";
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 export default function CreateProfile() {
@@ -39,6 +45,9 @@ export default function CreateProfile() {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [memberType, setMemberType] = useState("");
+  const [validationErrors, setValidationErrors] = useState<{
+    [key: string]: string;
+  }>({});
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -60,7 +69,44 @@ export default function CreateProfile() {
   }, [profile, navigate]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+    setForm({ ...form, [name]: value });
+
+    // Clear validation error for this field
+    if (validationErrors[name]) {
+      setValidationErrors({ ...validationErrors, [name]: "" });
+    }
+
+    // Real-time validation
+    if (name === "email") {
+      const emailError = getEmailError(value);
+      if (emailError) {
+        setValidationErrors({ ...validationErrors, email: emailError });
+      }
+    } else if (name === "contact") {
+      const phoneError = getPhoneError(value);
+      if (phoneError) {
+        setValidationErrors({ ...validationErrors, contact: phoneError });
+      }
+    } else if (
+      [
+        "WhatsApp",
+        "Instagram",
+        "Facebook",
+        "Twitter",
+        "Youtube",
+        "Linkedin",
+        "SnapChat",
+        "TikTok",
+        "WeChat",
+        "Line",
+      ].includes(name)
+    ) {
+      const urlError = getUrlError(value, name);
+      if (urlError) {
+        setValidationErrors({ ...validationErrors, [name]: urlError });
+      }
+    }
   };
   const handleProfileIconClick = () => {
     if (fileInputRef.current) {
@@ -93,11 +139,66 @@ export default function CreateProfile() {
     setLoading(true);
     setError("");
     setSuccess("");
+
+    // Validate all fields before submission
+    const errors: { [key: string]: string } = {};
+
+    // Validate email
+    if (form.email) {
+      const emailError = getEmailError(form.email);
+      if (emailError) errors.email = emailError;
+    }
+
+    // Validate contact
+    if (form.contact) {
+      const phoneError = getPhoneError(form.contact);
+      if (phoneError) errors.contact = phoneError;
+    }
+
+    // Validate all URL fields
+    const urlFields = [
+      "WhatsApp",
+      "Instagram",
+      "Facebook",
+      "Twitter",
+      "Youtube",
+      "Linkedin",
+      "SnapChat",
+      "TikTok",
+      "WeChat",
+      "Line",
+    ];
+    urlFields.forEach((field) => {
+      const value = form[field as keyof typeof form];
+      if (value) {
+        const urlError = getUrlError(value, field);
+        if (urlError) errors[field] = urlError;
+      }
+    });
+
+    // If there are validation errors, show them and stop
+    if (Object.keys(errors).length > 0) {
+      setValidationErrors(errors);
+      setError("Please fix the validation errors before submitting.");
+      setLoading(false);
+      return;
+    }
+
     try {
       const token = localStorage.getItem("token");
       if (!token) throw new Error("No token found. Please login again.");
+
+      // Format all URLs before submission
+      const formattedForm = { ...form };
+      urlFields.forEach((field) => {
+        const value = formattedForm[field as keyof typeof formattedForm];
+        if (value) {
+          formattedForm[field as keyof typeof formattedForm] = formatUrl(value);
+        }
+      });
+
       const formData = new FormData();
-      Object.entries(form).forEach(([key, value]) =>
+      Object.entries(formattedForm).forEach(([key, value]) =>
         formData.append(key, value)
       );
       if (profile_image) formData.append("profile_image", profile_image);
@@ -231,21 +332,43 @@ export default function CreateProfile() {
                 className="w-44 rounded-full px-3 py-2 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-400"
                 readOnly
               />
-              <input
-                name="contact"
-                placeholder="Contact No."
-                value={form.contact}
-                onChange={handleChange}
-                className="w-44 rounded-full px-3 py-2 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-400"
-              />
+              <div className="w-44">
+                <input
+                  name="contact"
+                  placeholder="Contact No."
+                  value={form.contact}
+                  onChange={handleChange}
+                  className={`w-full rounded-full px-3 py-2 border ${
+                    validationErrors.contact
+                      ? "border-red-500"
+                      : "border-gray-300"
+                  } focus:outline-none focus:ring-2 focus:ring-blue-400`}
+                />
+                {validationErrors.contact && (
+                  <div className="text-red-500 text-xs mt-1 px-2">
+                    {validationErrors.contact}
+                  </div>
+                )}
+              </div>
             </div>
-            <input
-              name="WhatsApp"
-              placeholder="https://WhatsApp"
-              value={form.WhatsApp}
-              onChange={handleChange}
-              className="w-full rounded-full px-3 py-2 border border-gray-300 mb-2 focus:outline-none focus:ring-2 focus:ring-blue-400"
-            />
+            <div className="w-full mb-2">
+              <input
+                name="WhatsApp"
+                placeholder="https://WhatsApp"
+                value={form.WhatsApp}
+                onChange={handleChange}
+                className={`w-full rounded-full px-3 py-2 border ${
+                  validationErrors.WhatsApp
+                    ? "border-red-500"
+                    : "border-gray-300"
+                } focus:outline-none focus:ring-2 focus:ring-blue-400`}
+              />
+              {validationErrors.WhatsApp && (
+                <div className="text-red-500 text-xs mt-1 px-2">
+                  {validationErrors.WhatsApp}
+                </div>
+              )}
+            </div>
             <input
               name="address1"
               placeholder="Enter Your Address line 1"
@@ -270,76 +393,179 @@ export default function CreateProfile() {
             <div className="w-full bg-white text-center font-bold text-black py-2 my-2 border border-gray-200">
               Below are optional
             </div>
-            <input
-              name="email"
-              placeholder="Email"
-              value={form.email}
-              onChange={handleChange}
-              className="w-full rounded-full px-3 py-2 border border-gray-300 mb-2 focus:outline-none focus:ring-2 focus:ring-blue-400"
-            />
-            <input
-              name="SnapChat"
-              placeholder="https://SnapChat"
-              value={form.SnapChat}
-              onChange={handleChange}
-              className="w-full rounded-full px-3 py-2 border border-gray-300 mb-2 focus:outline-none focus:ring-2 focus:ring-blue-400"
-            />
-            <input
-              name="Instagram"
-              placeholder="https://Instagram"
-              value={form.Instagram}
-              onChange={handleChange}
-              className="w-full rounded-full px-3 py-2 border border-gray-300 mb-2 focus:outline-none focus:ring-2 focus:ring-blue-400"
-            />
-            <input
-              name="Linkedin"
-              placeholder="https://Linkedin"
-              value={form.Linkedin}
-              onChange={handleChange}
-              className="w-full rounded-full px-3 py-2 border border-gray-300 mb-2 focus:outline-none focus:ring-2 focus:ring-blue-400"
-            />
-            <input
-              name="Youtube"
-              placeholder="https://Youtube"
-              value={form.Youtube}
-              onChange={handleChange}
-              className="w-full rounded-full px-3 py-2 border border-gray-300 mb-2 focus:outline-none focus:ring-2 focus:ring-blue-400"
-            />
-            <input
-              name="Facebook"
-              placeholder="https://Facebook"
-              value={form.Facebook}
-              onChange={handleChange}
-              className="w-full rounded-full px-3 py-2 border border-gray-300 mb-2 focus:outline-none focus:ring-2 focus:ring-blue-400"
-            />
-            <input
-              name="WeChat"
-              placeholder="https://Wechat"
-              value={form.WeChat}
-              onChange={handleChange}
-              className="w-full rounded-full px-3 py-2 border border-gray-300 mb-2 focus:outline-none focus:ring-2 focus:ring-blue-400"
-            />
-            <input
-              name="Twitter"
-              placeholder="https://Twitter"
-              value={form.Twitter}
-              onChange={handleChange}
-              className="w-full rounded-full px-3 py-2 border border-gray-300 mb-2 focus:outline-none focus:ring-2 focus:ring-blue-400"
-            />
-            <input
-              name="Line"
-              placeholder="https://Line"
-              value={form.Line}
-              onChange={handleChange}
-              className="w-full rounded-full px-3 py-2 border border-gray-300 mb-2 focus:outline-none focus:ring-2 focus:ring-blue-400"
-            />
-            <input
-              name="TikTok"
-              placeholder="https://Tiktok"
-              value={form.TikTok}
-              onChange={handleChange}
-              className="w-full rounded-full px-3 py-2 border border-gray-300 mb-2 focus:outline-none focus:ring-2 focus:ring-blue-400"
-            />
+            <div className="w-full mb-2">
+              <input
+                name="email"
+                placeholder="Email"
+                value={form.email}
+                onChange={handleChange}
+                type="email"
+                className={`w-full rounded-full px-3 py-2 border ${
+                  validationErrors.email ? "border-red-500" : "border-gray-300"
+                } focus:outline-none focus:ring-2 focus:ring-blue-400`}
+              />
+              {validationErrors.email && (
+                <div className="text-red-500 text-xs mt-1 px-2">
+                  {validationErrors.email}
+                </div>
+              )}
+            </div>
+            <div className="w-full mb-2">
+              <input
+                name="SnapChat"
+                placeholder="https://SnapChat"
+                value={form.SnapChat}
+                onChange={handleChange}
+                className={`w-full rounded-full px-3 py-2 border ${
+                  validationErrors.SnapChat
+                    ? "border-red-500"
+                    : "border-gray-300"
+                } focus:outline-none focus:ring-2 focus:ring-blue-400`}
+              />
+              {validationErrors.SnapChat && (
+                <div className="text-red-500 text-xs mt-1 px-2">
+                  {validationErrors.SnapChat}
+                </div>
+              )}
+            </div>
+            <div className="w-full mb-2">
+              <input
+                name="Instagram"
+                placeholder="https://Instagram"
+                value={form.Instagram}
+                onChange={handleChange}
+                className={`w-full rounded-full px-3 py-2 border ${
+                  validationErrors.Instagram
+                    ? "border-red-500"
+                    : "border-gray-300"
+                } focus:outline-none focus:ring-2 focus:ring-blue-400`}
+              />
+              {validationErrors.Instagram && (
+                <div className="text-red-500 text-xs mt-1 px-2">
+                  {validationErrors.Instagram}
+                </div>
+              )}
+            </div>
+            <div className="w-full mb-2">
+              <input
+                name="Linkedin"
+                placeholder="https://Linkedin"
+                value={form.Linkedin}
+                onChange={handleChange}
+                className={`w-full rounded-full px-3 py-2 border ${
+                  validationErrors.Linkedin
+                    ? "border-red-500"
+                    : "border-gray-300"
+                } focus:outline-none focus:ring-2 focus:ring-blue-400`}
+              />
+              {validationErrors.Linkedin && (
+                <div className="text-red-500 text-xs mt-1 px-2">
+                  {validationErrors.Linkedin}
+                </div>
+              )}
+            </div>
+            <div className="w-full mb-2">
+              <input
+                name="Youtube"
+                placeholder="https://Youtube"
+                value={form.Youtube}
+                onChange={handleChange}
+                className={`w-full rounded-full px-3 py-2 border ${
+                  validationErrors.Youtube
+                    ? "border-red-500"
+                    : "border-gray-300"
+                } focus:outline-none focus:ring-2 focus:ring-blue-400`}
+              />
+              {validationErrors.Youtube && (
+                <div className="text-red-500 text-xs mt-1 px-2">
+                  {validationErrors.Youtube}
+                </div>
+              )}
+            </div>
+            <div className="w-full mb-2">
+              <input
+                name="Facebook"
+                placeholder="https://Facebook"
+                value={form.Facebook}
+                onChange={handleChange}
+                className={`w-full rounded-full px-3 py-2 border ${
+                  validationErrors.Facebook
+                    ? "border-red-500"
+                    : "border-gray-300"
+                } focus:outline-none focus:ring-2 focus:ring-blue-400`}
+              />
+              {validationErrors.Facebook && (
+                <div className="text-red-500 text-xs mt-1 px-2">
+                  {validationErrors.Facebook}
+                </div>
+              )}
+            </div>
+            <div className="w-full mb-2">
+              <input
+                name="WeChat"
+                placeholder="https://Wechat"
+                value={form.WeChat}
+                onChange={handleChange}
+                className={`w-full rounded-full px-3 py-2 border ${
+                  validationErrors.WeChat ? "border-red-500" : "border-gray-300"
+                } focus:outline-none focus:ring-2 focus:ring-blue-400`}
+              />
+              {validationErrors.WeChat && (
+                <div className="text-red-500 text-xs mt-1 px-2">
+                  {validationErrors.WeChat}
+                </div>
+              )}
+            </div>
+            <div className="w-full mb-2">
+              <input
+                name="Twitter"
+                placeholder="https://Twitter"
+                value={form.Twitter}
+                onChange={handleChange}
+                className={`w-full rounded-full px-3 py-2 border ${
+                  validationErrors.Twitter
+                    ? "border-red-500"
+                    : "border-gray-300"
+                } focus:outline-none focus:ring-2 focus:ring-blue-400`}
+              />
+              {validationErrors.Twitter && (
+                <div className="text-red-500 text-xs mt-1 px-2">
+                  {validationErrors.Twitter}
+                </div>
+              )}
+            </div>
+            <div className="w-full mb-2">
+              <input
+                name="Line"
+                placeholder="https://Line"
+                value={form.Line}
+                onChange={handleChange}
+                className={`w-full rounded-full px-3 py-2 border ${
+                  validationErrors.Line ? "border-red-500" : "border-gray-300"
+                } focus:outline-none focus:ring-2 focus:ring-blue-400`}
+              />
+              {validationErrors.Line && (
+                <div className="text-red-500 text-xs mt-1 px-2">
+                  {validationErrors.Line}
+                </div>
+              )}
+            </div>
+            <div className="w-full mb-2">
+              <input
+                name="TikTok"
+                placeholder="https://Tiktok"
+                value={form.TikTok}
+                onChange={handleChange}
+                className={`w-full rounded-full px-3 py-2 border ${
+                  validationErrors.TikTok ? "border-red-500" : "border-gray-300"
+                } focus:outline-none focus:ring-2 focus:ring-blue-400`}
+              />
+              {validationErrors.TikTok && (
+                <div className="text-red-500 text-xs mt-1 px-2">
+                  {validationErrors.TikTok}
+                </div>
+              )}
+            </div>
             {error && (
               <div className="text-red-500 mt-2 text-center w-full">
                 {error}
