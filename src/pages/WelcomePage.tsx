@@ -69,7 +69,7 @@ const WelcomePage: React.FC<WelcomePageProps> = ({ onLogin }) => {
     <div className="relative flex flex-col min-h-screen bg-[url(/src/assets/background.jpg)] bg-cover bg-center">
       <div className="absolute inset-0 bg-black/30 z-0" />
       <div className="relative z-10 flex flex-col min-h-screen">
-        <Header />
+  <Header hideNotification={true} />
         <main className="flex-1 flex flex-col items-center justify-center">
           <div
             className="bg-opacity-90 rounded-lg p-8 shadow-lg flex flex-col items-center w-[368px]"

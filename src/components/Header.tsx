@@ -4,7 +4,12 @@ import dynamicNameCardLogo from "../assets/dynamic-name-card-logo.png";
 import messageIcon from "../assets/message.png";
 import { useNavigate } from "react-router-dom";
 import WebApp from "@twa-dev/sdk";
-export default function Header() {
+
+interface HeaderProps {
+  hideNotification?: boolean;
+}
+
+export default function Header({ hideNotification }: HeaderProps) {
   const navigate = useNavigate();
   return (
     <div className="flex justify-center w-full">
@@ -28,12 +33,14 @@ export default function Header() {
             className="w-8 h-8 rounded-full border-2 border-white bg-white"
             onClick={() => WebApp.openLink("https://t.me/AddmyCompany")}
           />
-          <img
-            src={notification}
-            alt="Bell"
-            className="w-8 h-8 rounded-full border-2 border-white bg-white"
-            onClick={() => navigate("/notifications")}
-          />
+          {!hideNotification && (
+            <img
+              src={notification}
+              alt="Bell"
+              className="w-8 h-8 rounded-full border-2 border-white bg-white"
+              onClick={() => navigate("/notifications")}
+            />
+          )}
           <img
             src={dynamicNameCardLogo}
             alt="Profile"
