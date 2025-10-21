@@ -208,7 +208,7 @@ function AppRoutes() {
                   "You have been signed up successfully\n\nSubscribe and Contact @DynamicNameCard to get one year premium membership absolutely Free",
                 // include two buttons: OK and a channel button labelled with the handle
                 buttons: [
-                  { type: "ok", text: "OK" },
+                  { type: "ok", text: "Close" },
                   { type: "default", text: "Join DynamicNameCard" },
                 ],
               };
@@ -244,17 +244,10 @@ function AppRoutes() {
               }
 
               if (!handled) {
-                // Fallback: showAlert with OK callback that opens the channel
                 try {
-                  WebApp.showAlert(popupOptions.message, () => {
-                    try {
-                      WebApp.openTelegramLink("https://t.me/DynamicNameCard");
-                    } catch (err) {
-                      console.error("Failed to open Telegram link:", err);
-                    }
-                  });
+                  WebApp.showAlert(popupOptions.message);
                 } catch (err) {
-                  // give up silently
+                  console.error("Failed to show alert:", err);
                 }
               }
             } catch {}
