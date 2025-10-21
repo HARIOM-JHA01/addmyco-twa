@@ -3,8 +3,43 @@ import { FaEllipsisV } from "react-icons/fa";
 import axios from "axios";
 import Layout from "../components/Layout";
 import i18n from "../i18n";
+import { useProfileStore } from "../store/profileStore";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faSearch } from "@fortawesome/free-solid-svg-icons";
+
+// Inline component to handle Add Folder button with membership check
+function AddFolderButton({ openModal }: { openModal: () => void }) {
+  const profile = useProfileStore((s) => s.profile);
+  const memberType = profile?.membertype || profile?.membertype || "free";
+  const isFree =
+    memberType === "free" || memberType === "Free" || memberType === "FREE";
+
+  const handleClick = () => {
+    if (isFree) {
+      // show a simple browser alert suggesting upgrade (keeps no external deps)
+      alert(
+        "Folder creation is available for premium users only. Please upgrade to create more folders."
+      );
+      return;
+    }
+    openModal();
+  };
+
+  return (
+    <button
+      type="button"
+      className={`flex justify-between items-center w-full px-4 py-1 rounded-sm ${
+        isFree
+          ? "bg-gray-100 text-gray-400 cursor-not-allowed"
+          : "bg-white text-gray-700 hover:bg-[#007cb6] hover:text-[#ffffff]"
+      }`}
+      onClick={handleClick}
+      disabled={isFree}
+    >
+      <span className="text-left w-full truncate">+ add more folders</span>
+    </button>
+  );
+}
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 export default function SearchPage() {
@@ -270,14 +305,8 @@ export default function SearchPage() {
                   </div>
                 ))}
               <div className="flex items-center w-30">
-                <button
-                  className="flex justify-between items-center w-full px-4 py-1 rounded-sm bg-white text-gray-700 hover:bg-[#007cb6] hover:text-[#ffffff]"
-                  onClick={openModal}
-                >
-                  <span className="text-left w-full truncate">
-                    + add more folders
-                  </span>
-                </button>
+                {/** Disable add for free users; show upgrade prompt instead */}
+                <AddFolderButton openModal={openModal} />
               </div>
             </div>
             {/* Edit folder modal */}

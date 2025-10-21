@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo, useRef } from "react";
 import axios from "axios";
+import { useProfileStore } from "../store/profileStore";
 import Layout from "../components/Layout";
 import i18n from "../i18n";
 // Removed unused search icon after refactor
@@ -141,6 +142,12 @@ export default function BackgroundPage() {
     reader.readAsDataURL(file);
   };
 
+  // membership check - free users can't upload
+  const profile = useProfileStore((s) => s.profile);
+  const memberType = profile?.membertype || profile?.membertype || "free";
+  const isFree =
+    memberType === "free" || memberType === "Free" || memberType === "FREE";
+
   return (
     <Layout>
       <div className="bg-[url(/src/assets/background.jpg)] bg-cover bg-center min-h-screen w-full overflow-x-hidden flex flex-col">
@@ -171,9 +178,20 @@ export default function BackgroundPage() {
               </div>
               <div>
                 <button
-                  className="px-4 py-2 rounded-lg font-bold text-white"
-                  style={{ background: "#ff007a" }}
-                  onClick={handleUploadClick}
+                  className={`px-4 py-2 rounded-lg font-bold text-white ${
+                    isFree ? "bg-gray-400 cursor-not-allowed" : ""
+                  }`}
+                  style={{ background: isFree ? "#9ca3af" : "#ff007a" }}
+                  onClick={() => {
+                    if (isFree) {
+                      alert(
+                        "Upload is available for premium users only. Please upgrade to upload your background images."
+                      );
+                      return;
+                    }
+                    handleUploadClick();
+                  }}
+                  disabled={isFree}
                 >
                   Upload your Image
                 </button>
@@ -182,8 +200,17 @@ export default function BackgroundPage() {
                   ref={uploadInputRef}
                   accept="image/*"
                   className="hidden"
-                  onChange={handleUploadChange}
+                  onChange={(e) => {
+                    if (isFree) return;
+                    handleUploadChange(e);
+                  }}
                 />
+                {isFree && (
+                  <div className="text-sm text-yellow-700 mt-2">
+                    {i18n.t("upgrade_to_upload") ||
+                      "Upgrade to premium to upload background images."}
+                  </div>
+                )}
               </div>
             </div>
 
