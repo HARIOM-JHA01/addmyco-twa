@@ -209,7 +209,7 @@ function AppRoutes() {
                 // include two buttons: OK and a channel button labelled with the handle
                 buttons: [
                   { type: "ok", text: "OK" },
-                  { type: "default", text: "@DynamicNameCard" },
+                  { type: "default", text: "Join DynamicNameCard" },
                 ],
               };
 
