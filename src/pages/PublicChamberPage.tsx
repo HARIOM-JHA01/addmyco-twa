@@ -3,8 +3,10 @@ import { useParams, useNavigate } from "react-router-dom";
 import ProfileIcon from "../assets/profileIcon.png";
 import CompanyLogo from "../assets/company.svg";
 import logo from "../assets/logo.png";
-import leftArrow from "../assets/left-arrow.png";
-import rightArrow from "../assets/right-arrow.png";
+import {
+  faChevronLeft,
+  faChevronRight,
+} from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faWhatsapp,
@@ -160,7 +162,7 @@ export default function PublicChamberPage() {
                 setTimeout(updateTopScroll, 300);
               }}
             >
-              <img src={leftArrow} alt="left" className="w-6 h-6" />
+              <FontAwesomeIcon icon={faChevronLeft} color="red" />
             </button>
             <div
               ref={topIconsRef}
@@ -261,7 +263,7 @@ export default function PublicChamberPage() {
                 setTimeout(updateTopScroll, 300);
               }}
             >
-              <img src={rightArrow} alt="right" className="w-6 h-6" />
+              <FontAwesomeIcon icon={faChevronRight} color="red" />
             </button>
           </div>
 
@@ -282,7 +284,7 @@ export default function PublicChamberPage() {
               }}
               onClick={() => setCurrentChamberIndex((i) => Math.max(i - 1, 0))}
             >
-              <img src={leftArrow} alt="prev" className="w-6 h-6" />
+              <FontAwesomeIcon icon={faChevronLeft} color="red" />
             </button>
             <button
               aria-label="Next chamber"
@@ -298,7 +300,7 @@ export default function PublicChamberPage() {
                 )
               }
             >
-              <img src={rightArrow} alt="next" className="w-6 h-6" />
+              <FontAwesomeIcon icon={faChevronRight} color="red" />
             </button>
           </div>
           <div

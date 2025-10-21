@@ -13,9 +13,12 @@ import {
   faInstagram,
   faFacebook,
 } from "@fortawesome/free-brands-svg-icons";
-import { faGlobe, faPhone } from "@fortawesome/free-solid-svg-icons";
-import leftArrow from "../assets/left-arrow.png";
-import rightArrow from "../assets/right-arrow.png";
+import {
+  faGlobe,
+  faPhone,
+  faChevronLeft,
+  faChevronRight,
+} from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import WebApp from "@twa-dev/sdk";
 import i18n from "../i18n";
@@ -673,7 +676,7 @@ export default function ChamberPage() {
                         }}
                         style={{ display: showTopArrows ? "block" : "none" }}
                       >
-                        {/* <FontAwesomeIcon icon={faArrowLeft} color="white" /> */}
+                        <FontAwesomeIcon icon={faChevronLeft} color="red" />
                       </button>
                       <div
                         ref={topIconsRef}
@@ -785,7 +788,7 @@ export default function ChamberPage() {
                         }}
                         style={{ display: showTopArrows ? "block" : "none" }}
                       >
-                        {/* <FontAwesomeIcon icon={faArrowRight} color="white" /> */}
+                        <FontAwesomeIcon icon={faChevronRight} color="red" />
                       </button>
                     </div>
                     {/* Chamber names and designation (company-style) */}
@@ -808,7 +811,7 @@ export default function ChamberPage() {
                           setCurrentChamberIndex((i) => Math.max(i - 1, 0))
                         }
                       >
-                        <img src={leftArrow} alt="prev" className="w-6 h-6" />
+                        <FontAwesomeIcon icon={faChevronLeft} color="red" />
                       </button>
                       <button
                         aria-label="Next chamber"
@@ -826,7 +829,7 @@ export default function ChamberPage() {
                           )
                         }
                       >
-                        <img src={rightArrow} alt="next" className="w-6 h-6" />
+                        <FontAwesomeIcon icon={faChevronRight} color="red" />
                       </button>
                     </div>
                     <div

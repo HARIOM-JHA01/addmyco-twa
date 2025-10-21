@@ -3,8 +3,10 @@ import { useParams, useNavigate } from "react-router-dom";
 import profileIcon from "../assets/profileIcon.png";
 import chamberIcon from "../assets/chamber.svg";
 import logo from "../assets/logo.png";
-import leftArrow from "../assets/left-arrow.png";
-import rightArrow from "../assets/right-arrow.png";
+import {
+  faChevronLeft,
+  faChevronRight,
+} from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faWhatsapp,
@@ -155,7 +157,7 @@ export default function PublicCompanyPage() {
                 setTimeout(updateTopScroll, 300);
               }}
             >
-              <img src={leftArrow} alt="left" className="w-6 h-6" />
+              <FontAwesomeIcon icon={faChevronLeft} color="red" />
             </button>
             <div
               ref={topIconsRef}
@@ -260,7 +262,7 @@ export default function PublicCompanyPage() {
                 setTimeout(updateTopScroll, 300);
               }}
             >
-              <img src={rightArrow} alt="right" className="w-6 h-6" />
+              <FontAwesomeIcon icon={faChevronRight} color="red" />
             </button>
           </div>
 
@@ -281,7 +283,7 @@ export default function PublicCompanyPage() {
               }}
               onClick={() => setCurrentCompanyIndex((i) => Math.max(i - 1, 0))}
             >
-              <img src={leftArrow} alt="prev" className="w-6 h-6" />
+              <FontAwesomeIcon icon={faChevronLeft} color="red" />
             </button>
             <button
               aria-label="Next company"
@@ -297,7 +299,7 @@ export default function PublicCompanyPage() {
                 )
               }
             >
-              <img src={rightArrow} alt="next" className="w-6 h-6" />
+              <FontAwesomeIcon icon={faChevronRight} color="red" />
             </button>
           </div>
           <div

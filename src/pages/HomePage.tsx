@@ -11,9 +11,11 @@ import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faTelegram, faWhatsapp } from "@fortawesome/free-brands-svg-icons";
-import { faPhone } from "@fortawesome/free-solid-svg-icons";
-import leftArrow from "../assets/left-arrow.png";
-import rightArrow from "../assets/right-arrow.png";
+import {
+  faPhone,
+  faChevronLeft,
+  faChevronRight,
+} from "@fortawesome/free-solid-svg-icons";
 import { formatUrl } from "../utils/validation";
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
@@ -164,7 +166,7 @@ export default function HomePage() {
               }}
               style={{ display: showArrows ? "block" : "none" }}
             >
-              <img src={leftArrow} alt="left" className="w-6 h-6" />
+              <FontAwesomeIcon icon={faChevronLeft} color="red" />
             </button>
 
             <div
@@ -257,7 +259,7 @@ export default function HomePage() {
               }}
               style={{ display: showArrows ? "block" : "none" }}
             >
-              <img src={rightArrow} alt="right" className="w-6 h-6" />
+              <FontAwesomeIcon icon={faChevronRight} color="red" />
             </button>
           </div>
 

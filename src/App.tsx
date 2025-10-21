@@ -1,5 +1,11 @@
 import { useEffect, useState } from "react";
-import { BrowserRouter, Routes, Route, useNavigate } from "react-router-dom";
+import {
+  BrowserRouter,
+  Routes,
+  Route,
+  useNavigate,
+  useLocation,
+} from "react-router-dom";
 import Notifications from "./pages/Notifications";
 import ProfilePage from "./pages/ProfilePage";
 import UpdateProfilePage from "./pages/UpdateProfilePage";
@@ -27,6 +33,7 @@ const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 function AppRoutes() {
   // Always show Welcome page on startup to display banners
   const navigate = useNavigate();
+  const location = useLocation();
   const [showWelcome, setShowWelcome] = useState(true);
   const [profile, setProfile] = useState<any>(null);
   const [profileLoading, setProfileLoading] = useState(true);
@@ -194,18 +201,62 @@ function AppRoutes() {
             )
           ) {
             try {
-              // Show alert with channel link for free users
-              WebApp.showAlert(
-                "You have been signed up successfully\n\nSubscribe and Contact @DynamicNameCard to get one year premium membership absolutely Free",
-                () => {
-                  // Open Telegram channel when user clicks OK
-                  try {
-                    WebApp.openTelegramLink("https://t.me/DynamicNameCard");
-                  } catch (err) {
-                    console.error("Failed to open Telegram link:", err);
-                  }
+              // Prefer a popup with a dedicated button for the channel; fall back to alert
+              const popupOptions = {
+                title: "Signed up",
+                message:
+                  "You have been signed up successfully\n\nSubscribe and Contact @DynamicNameCard to get one year premium membership absolutely Free",
+                // include two buttons: OK and a channel button labelled with the handle
+                buttons: [
+                  { type: "ok", text: "OK" },
+                  { type: "default", text: "@DynamicNameCard" },
+                ],
+              };
+
+              let handled = false;
+              try {
+                const maybePromise = WebApp.showPopup?.(popupOptions as any);
+                // If showPopup returns a promise-like value, handle the result
+                const mp: any = maybePromise;
+                if (mp && typeof mp.then === "function") {
+                  mp.then((result: any) => {
+                    // Result shape depends on SDK version; try to detect selected button text
+                    const selectedText =
+                      (result && result.button && result.button.text) ||
+                      result?.text ||
+                      result;
+                    if (
+                      typeof selectedText === "string" &&
+                      selectedText.includes("@DynamicNameCard")
+                    ) {
+                      try {
+                        WebApp.openTelegramLink("https://t.me/DynamicNameCard");
+                      } catch (err) {
+                        console.error("Failed to open Telegram link:", err);
+                      }
+                    }
+                  }).catch(() => {});
+                  handled = true;
                 }
-              );
+              } catch (e) {
+                // ignore and fall back to alert
+                handled = false;
+              }
+
+              if (!handled) {
+                // Fallback: showAlert with OK callback that opens the channel
+                try {
+                  WebApp.showAlert(popupOptions.message, () => {
+                    try {
+                      WebApp.openTelegramLink("https://t.me/DynamicNameCard");
+                    } catch (err) {
+                      console.error("Failed to open Telegram link:", err);
+                    }
+                  });
+                } catch (err) {
+                  // give up silently
+                }
+              }
             } catch {}
           }
         }
@@ -265,6 +316,57 @@ function AppRoutes() {
 
   if (showWelcome) {
     return <WelcomePage onLogin={handleLogin} />;
+  }
+
+  // If this looks like a public deep-link (/:username or /:username/company or /:username/chamber)
+  // bypass the welcome/auth gating and render public routes directly so the app works when
+  // someone opens https://addmy.co/username from outside (Telegram, browser refresh, etc.).
+  const isPublicPath = (() => {
+    const path = location.pathname || "/";
+    const segments = path.split("/").filter(Boolean);
+    if (segments.length === 0) return false;
+    const first = segments[0];
+    // reserved app routes that should NOT be treated as username
+    const reserved = new Set([
+      "profile",
+      "update-profile",
+      "notifications",
+      "sub-company",
+      "chamber",
+      "create-chamber",
+      "search",
+      "my-qr",
+      "create-profile",
+      "create-company",
+      "theme",
+      "membership",
+      "payment-history",
+      "background",
+      "assets",
+      "favicon.ico",
+      "",
+    ]);
+    if (reserved.has(first)) return false;
+    // /:username
+    if (segments.length === 1) return true;
+    // /:username/company or /:username/chamber
+    if (
+      segments.length === 2 &&
+      (segments[1] === "company" || segments[1] === "chamber")
+    )
+      return true;
+    return false;
+  })();
+
+  if (isPublicPath) {
+    return (
+      <Routes>
+        <Route path="/:username" element={<PublicProfilePage />} />
+        <Route path="/:username/company" element={<PublicCompanyPage />} />
+        <Route path="/:username/chamber" element={<PublicChamberPage />} />
+        <Route path="*" element={<div>404 Not Found</div>} />
+      </Routes>
+    );
   }
 
   if (profileLoading) {

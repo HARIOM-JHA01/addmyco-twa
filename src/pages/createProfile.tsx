@@ -117,17 +117,32 @@ export default function CreateProfile() {
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0] || null;
     if (!file) return;
+
+    // If user is premium allow mp4 videos, otherwise only images
+    const isPremium = memberType === "premium";
+
     if (file.type.startsWith("image/")) {
       setMediaType("image");
       setMediaPreview(URL.createObjectURL(file));
       setProfileImage(file);
+      setError("");
     } else if (file.type === "video/mp4") {
+      if (!isPremium) {
+        setError("Video uploads are available for premium users only.");
+        setMediaPreview(null);
+        setMediaType(null);
+        setProfileImage(null);
+        if (fileInputRef.current) fileInputRef.current.value = "";
+        return;
+      }
       setMediaType("video");
       setMediaPreview(URL.createObjectURL(file));
       setProfileImage(file);
       setError("");
     } else {
-      setError("Only MP4 video files are allowed.");
+      setError(
+        "Only MP4 video files are allowed for videos, otherwise upload an image."
+      );
       setMediaPreview(null);
       setMediaType(null);
       setProfileImage(null);
@@ -306,14 +321,16 @@ export default function CreateProfile() {
               <input
                 ref={fileInputRef}
                 type="file"
-                accept="image/*,video/*"
+                accept={
+                  memberType === "premium" ? "image/*,video/mp4" : "image/*"
+                }
                 style={{ display: "none" }}
                 onChange={handleFileChange}
               />
               {memberType === "premium" ? (
                 <span className="text-xs text-gray-600 text-center">
-                  You can upload a 180 x 180 image or a video as your profile
-                  media.
+                  You can upload a 180 x 180 image or an MP4 video as your
+                  profile media.
                 </span>
               ) : (
                 <span className="text-xs text-gray-600 text-center">
@@ -519,7 +536,7 @@ export default function CreateProfile() {
             <div className="w-full mb-2">
               <input
                 name="Twitter"
-                placeholder="https://Twitter"
+                placeholder="https://X"
                 value={form.Twitter}
                 onChange={handleChange}
                 className={`w-full rounded-full px-3 py-2 border ${

@@ -6,6 +6,10 @@ import chamberIcon from "../assets/chamber.svg";
 import profileIcon from "../assets/profileIcon.png";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
+  faChevronLeft,
+  faChevronRight,
+} from "@fortawesome/free-solid-svg-icons";
+import {
   faWhatsapp,
   faTelegram,
   faFacebook,
@@ -13,8 +17,6 @@ import {
   faYoutube,
 } from "@fortawesome/free-brands-svg-icons";
 import { faPhone, faGlobe } from "@fortawesome/free-solid-svg-icons";
-import leftArrow from "../assets/left-arrow.png";
-import rightArrow from "../assets/right-arrow.png";
 import { formatUrl, getUrlError, getEmailError } from "../utils/validation";
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
@@ -655,7 +657,7 @@ export default function SubCompanyPage() {
                   }}
                   style={{ display: showTopArrows ? "block" : "none" }}
                 >
-                  <img src={leftArrow} alt="left" className="w-6 h-6" />
+                  <FontAwesomeIcon icon={faChevronLeft} className="w-6 h-6" />
                 </button>
                 <div
                   ref={topIconsRef}
@@ -763,7 +765,7 @@ export default function SubCompanyPage() {
                   }}
                   style={{ display: showTopArrows ? "block" : "none" }}
                 >
-                  <img src={rightArrow} alt="right" className="w-4 h-auto" />
+                  <FontAwesomeIcon icon={faChevronRight} color="red" />
                 </button>
               </div>
 
@@ -787,13 +789,13 @@ export default function SubCompanyPage() {
                     setCurrentCompanyIndex((i) => Math.max(i - 1, 0))
                   }
                 >
-                  <img src={leftArrow} alt="prev" className="w-6 h-6" />
+                  <FontAwesomeIcon icon={faChevronLeft} color="pink" />
                 </button>
                 <button
                   aria-label="Next company"
                   className="absolute right-0 translate-x-1/2 p-1 rounded-full"
                   style={{
-                    top: "calc(50% + 2px)",
+                    top: "calc(60% + 2px)",
                     display:
                       currentCompanyIndex < companies.length - 1
                         ? "block"
@@ -805,7 +807,7 @@ export default function SubCompanyPage() {
                     )
                   }
                 >
-                  <img src={rightArrow} alt="next" className="w-6 h-6" />
+                  <FontAwesomeIcon icon={faChevronRight} color="red" />
                 </button>
               </div>
               <div

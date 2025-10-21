@@ -4,8 +4,10 @@ import { useProfileStore } from "../store/profileStore";
 import logo from "../assets/logo.png";
 import chamberIcon from "../assets/chamber.svg";
 import company from "../assets/company.svg";
-import leftArrow from "../assets/left-arrow.png";
-import rightArrow from "../assets/right-arrow.png";
+import {
+  faChevronLeft,
+  faChevronRight,
+} from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faWhatsapp,
@@ -147,7 +149,7 @@ export default function ProfilePage() {
                     }}
                     style={{ display: showArrows ? "block" : "none" }}
                   >
-                    <img src={leftArrow} alt="left" className="w-6 h-6" />
+                    <FontAwesomeIcon icon={faChevronLeft} color="red" />
                   </button>
                   <div
                     ref={iconsRef}
@@ -351,7 +353,7 @@ export default function ProfilePage() {
                     }}
                     style={{ display: showArrows ? "block" : "none" }}
                   >
-                    <img src={rightArrow} alt="right" className="w-6 h-6" />
+                    <FontAwesomeIcon icon={faChevronRight} color="red" />
                   </button>
                 </div>
               </div>
