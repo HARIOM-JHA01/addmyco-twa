@@ -17,6 +17,7 @@ import {
   faChevronRight,
 } from "@fortawesome/free-solid-svg-icons";
 import { formatUrl } from "../utils/validation";
+import WebApp from "@twa-dev/sdk";
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
@@ -80,7 +81,42 @@ export default function HomePage() {
   };
 
   const handleScan = () => {
-    navigate("/search");
+    try {
+      WebApp.showScanQrPopup(
+        {
+          text: "Scan QR Code", // Optional text to display
+        },
+        (text) => {
+          // Callback when QR is scanned
+          if (text) {
+            // Close the popup
+            WebApp.closeScanQrPopup();
+
+            // Handle the scanned text
+            // If it's a profile URL, navigate to it
+            if (text.includes("addmy.co/")) {
+              const username = text.split("addmy.co/")[1];
+              if (username) {
+                navigate(`/${username}`);
+              }
+            } else if (
+              text.startsWith("http://") ||
+              text.startsWith("https://")
+            ) {
+              // If it's a URL, open it
+              window.open(text, "_blank");
+            } else {
+              // Show the scanned text
+              WebApp.showAlert(`Scanned: ${text}`);
+            }
+          }
+          return true; // Return true to close the popup
+        }
+      );
+    } catch (error) {
+      console.error("QR Scanner error:", error);
+      WebApp.showAlert("QR Scanner is not available in this environment");
+    }
   };
 
   if (loading) {
