@@ -19,6 +19,11 @@ export default function BackgroundPage() {
   const [activeTab, setActiveTab] = useState<string>("system"); // system category slug or 'my'
   // Category key is tracked via activeTab; no separate state required
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
+  const [modalOpen, setModalOpen] = useState(false);
+  const [modalImage, setModalImage] = useState<any | null>(null);
+  const [modalLoading, setModalLoading] = useState(false);
+  const [modalError, setModalError] = useState<string | null>(null);
+  const [modalSuccess, setModalSuccess] = useState<string | null>(null);
   const gridRef = useRef<HTMLDivElement | null>(null);
   const [scrollProgress, setScrollProgress] = useState(0);
   const uploadInputRef = useRef<HTMLInputElement | null>(null);
@@ -40,7 +45,42 @@ export default function BackgroundPage() {
             headers: { Authorization: `Bearer ${token}` },
           }),
         ]);
-        setSystemImages(sysRes.data.data || []);
+        // Normalize system images: API uses `Thumbnail` (array) and `categoryname` fields
+        const rawSystem = sysRes?.data?.data || [];
+        const normalizedSystem = rawSystem.map((it: any) => {
+          const thumbnails = it.Thumbnail || it.thumbnail || it.Thumbnail || [];
+          const primary = Array.isArray(thumbnails)
+            ? thumbnails[0]
+            : thumbnails;
+          return {
+            ...it,
+            _id: it._id,
+            // keep original Thumbnail array
+            thumbnails: Array.isArray(thumbnails)
+              ? thumbnails
+              : thumbnails
+              ? [thumbnails]
+              : [],
+            // primary url convenient field
+            url:
+              primary ||
+              it.url ||
+              it.image ||
+              it.imgUrl ||
+              it.src ||
+              it.thumbnail,
+            // category id/name from API (some items have categoryname string or category array)
+            categoryId:
+              it.categoryname ||
+              (it.category && it.category[0] && it.category[0]._id) ||
+              null,
+            categoryName:
+              (it.category && it.category[0] && it.category[0].categoryname) ||
+              it.categoryname ||
+              null,
+          };
+        });
+        setSystemImages(normalizedSystem || []);
         setUserImages(userRes.data.data || []);
         setCategories(catRes.data.data || []);
       } catch (err: any) {
@@ -56,8 +96,8 @@ export default function BackgroundPage() {
   // Tabs: show actual category names from API, plus 'Your Images'
   const tabs = useMemo(() => {
     const catTabs = (categories || []).map((c: any) => ({
-      key: c.slug || c._id || c.id || c.name || String(Math.random()),
-      label: c.name || c.label || c.slug || "Category",
+      key: c.slug || c._id || c.id || c.categoryname || String(Math.random()),
+      label: c.categoryname || c.name || c.label || c.slug || "Category",
       type: "category" as const,
       payload: c,
     }));
@@ -81,21 +121,21 @@ export default function BackgroundPage() {
         c.slug === activeTab ||
         c._id === activeTab ||
         c.id === activeTab ||
-        c.name === activeTab
+        c.name === activeTab ||
+        c.categoryname === activeTab
     );
     // Filter systemImages by category if possible
     if (cat && systemImages.length > 0) {
-      // Try to match images with a category field (category, categoryId, etc.)
+      // Filter normalized system images by category id or categoryName
       const catKey = cat.slug || cat._id || cat.id || cat.name;
-      // Try common fields: category, categoryId, category_id, etc.
       return systemImages.filter((img: any) => {
         return (
-          img.category === catKey ||
           img.categoryId === catKey ||
-          img.category_id === catKey ||
-          img.category === cat.name ||
           img.categoryId === cat._id ||
-          img.categoryId === cat.id
+          img.categoryId === cat.id ||
+          img.categoryName === cat.name ||
+          img.categoryName === cat.label ||
+          img.categoryName === cat.categoryname
         );
       });
     }
@@ -153,64 +193,81 @@ export default function BackgroundPage() {
       <div className="bg-[url(/src/assets/background.jpg)] bg-cover bg-center min-h-screen w-full overflow-x-hidden flex flex-col">
         <div className="px-2 pt-3 pb-28 flex-1 flex justify-center">
           <div className="w-full max-w-[880px] bg-white/20 backdrop-blur-sm rounded-2xl p-4 shadow-md">
-            {/* Top row: tabs + upload button */}
-            <div className="flex items-center justify-between mb-3 flex-wrap gap-3">
-              <div className="flex flex-wrap gap-2">
+            {/* Category buttons with upload button - styled scrollbar matching ContactPage */}
+            <div className="mt-4 overflow-x-auto scrollbar-custom">
+              <div className="flex gap-4 min-w-max px-2 mb-4">
                 {tabs.map((t) => {
                   const isActive = activeTab === t.key;
                   return (
-                    <button
-                      key={t.key}
-                      onClick={() => setActiveTab(t.key)}
-                      className={`px-5 py-2 rounded-full font-semibold shadow-sm ${
-                        isActive ? "text-white" : "text-gray-700"
-                      }`}
-                      style={{
-                        backgroundColor: isActive
-                          ? "var(--app-background-color, #0099cc)"
-                          : "white",
-                      }}
-                    >
-                      {t.label}
-                    </button>
+                    <div key={t.key} className="flex items-center w-30">
+                      <button
+                        type="button"
+                        onClick={() => setActiveTab(t.key)}
+                        className={`flex justify-between items-center w-full px-4 py-1 rounded-sm ${
+                          isActive
+                            ? "bg-[var(--app-background-color,#0099cc)] text-white"
+                            : "bg-white text-gray-700"
+                        }`}
+                        onMouseEnter={(e) => {
+                          if (isActive) return;
+                          const el = e.currentTarget as HTMLElement;
+                          el.style.backgroundColor = (
+                            getComputedStyle(
+                              document.documentElement
+                            ).getPropertyValue("--app-background-color") ||
+                            "#007cb6"
+                          ).trim();
+                          el.style.color = (
+                            getComputedStyle(
+                              document.documentElement
+                            ).getPropertyValue("--app-font-color") || "#ffffff"
+                          ).trim();
+                        }}
+                        onMouseLeave={(e) => {
+                          const el = e.currentTarget as HTMLElement;
+                          if (isActive) return;
+                          el.style.backgroundColor = "white";
+                          el.style.color = "#374151";
+                        }}
+                      >
+                        <span className="text-left w-full truncate">
+                          {t.label}
+                        </span>
+                      </button>
+                    </div>
                   );
                 })}
-              </div>
-              <div>
-                <button
-                  className={`px-4 py-2 rounded-lg font-bold text-white ${
-                    isFree ? "bg-gray-400 cursor-not-allowed" : ""
-                  }`}
-                  style={{ background: isFree ? "#9ca3af" : "#ff007a" }}
-                  onClick={() => {
-                    if (isFree) {
-                      alert(
-                        "Upload is available for premium users only. Please upgrade to upload your background images."
-                      );
-                      return;
-                    }
-                    handleUploadClick();
-                  }}
-                  disabled={isFree}
-                >
-                  Upload your Image
-                </button>
-                <input
-                  type="file"
-                  ref={uploadInputRef}
-                  accept="image/*"
-                  className="hidden"
-                  onChange={(e) => {
-                    if (isFree) return;
-                    handleUploadChange(e);
-                  }}
-                />
-                {isFree && (
-                  <div className="text-sm text-yellow-700 mt-2">
-                    {i18n.t("upgrade_to_upload") ||
-                      "Upgrade to premium to upload background images."}
-                  </div>
-                )}
+                {/* Upload button inline with categories */}
+                <div className="flex items-center">
+                  <button
+                    className={`px-4 py-1 rounded-sm font-bold text-white whitespace-nowrap ${
+                      isFree ? "bg-gray-400 cursor-not-allowed" : ""
+                    }`}
+                    style={{ background: isFree ? "#9ca3af" : "#ff007a" }}
+                    onClick={() => {
+                      if (isFree) {
+                        alert(
+                          "Upload is available for premium users only. Please upgrade to upload your background images."
+                        );
+                        return;
+                      }
+                      handleUploadClick();
+                    }}
+                    disabled={isFree}
+                  >
+                    Upload your Image
+                  </button>
+                  <input
+                    type="file"
+                    ref={uploadInputRef}
+                    accept="image/*"
+                    className="hidden"
+                    onChange={(e) => {
+                      if (isFree) return;
+                      handleUploadChange(e);
+                    }}
+                  />
+                </div>
               </div>
             </div>
 
@@ -246,19 +303,22 @@ export default function BackgroundPage() {
                   </div>
                 ) : (
                   imagesForTab.map((img: any, idx: number) => {
-                    // Use the correct image URL field from API
+                    // Use the normalized url or fallback to thumbnails
                     const url =
                       img.url ||
-                      img.image ||
-                      img.imgUrl ||
-                      img.src ||
-                      img.thumbnail;
+                      (Array.isArray(img.thumbnails) && img.thumbnails[0]) ||
+                      null;
                     const isSelected = selectedImage === url;
                     return (
                       <button
                         key={img.id || img._id || idx}
                         className="relative w-full pt-[60%] rounded-lg overflow-hidden shadow-md bg-white/70"
-                        onClick={() => url && setSelectedImage(url)}
+                        onClick={() => {
+                          setModalImage(img);
+                          setModalError(null);
+                          setModalSuccess(null);
+                          setModalOpen(true);
+                        }}
                         style={{
                           outline: isSelected
                             ? "3px solid var(--app-background-color, #00a3d7)"
@@ -283,6 +343,99 @@ export default function BackgroundPage() {
                     );
                   })
                 )}
+              </div>
+            )}
+            {/* Fullscreen modal for preview + set background */}
+            {modalOpen && modalImage && (
+              <div
+                className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4"
+                onClick={() => setModalOpen(false)}
+              >
+                <div
+                  className="bg-white rounded-lg overflow-hidden max-w-[95vw] max-h-[95vh] w-full"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <div className="relative w-full h-[70vh] bg-black">
+                    <img
+                      src={
+                        modalImage.url ||
+                        (Array.isArray(modalImage.thumbnails) &&
+                          modalImage.thumbnails[0])
+                      }
+                      alt="preview"
+                      className="w-full h-full object-contain"
+                    />
+                    <button
+                      className="absolute top-3 right-3 bg-white/90 rounded-full px-3 py-1"
+                      onClick={() => setModalOpen(false)}
+                    >
+                      Close
+                    </button>
+                  </div>
+                  <div className="p-4 flex flex-col gap-3">
+                    {modalError && (
+                      <div className="text-red-600">{modalError}</div>
+                    )}
+                    {modalSuccess && (
+                      <div className="text-green-600">{modalSuccess}</div>
+                    )}
+                    <div className="flex gap-3">
+                      <button
+                        className="flex-1 bg-blue-600 text-white py-2 rounded-lg font-bold"
+                        disabled={modalLoading}
+                        onClick={async () => {
+                          // call the POST API to set background
+                          setModalLoading(true);
+                          setModalError(null);
+                          try {
+                            const token = localStorage.getItem("token");
+                            if (!token)
+                              throw new Error("No token found. Please login.");
+                            const thumb =
+                              modalImage.url ||
+                              (Array.isArray(modalImage.thumbnails) &&
+                                modalImage.thumbnails[0]);
+                            await axios.post(
+                              `${API_BASE_URL}/backgroundimage`,
+                              { Thumbnail: thumb },
+                              { headers: { Authorization: `Bearer ${token}` } }
+                            );
+                            // apply locally and close
+                            setSelectedImage(thumb);
+                            setModalSuccess("Background set successfully");
+                            // notify app
+                            window.dispatchEvent(
+                              new Event("background-updated")
+                            );
+                            setTimeout(() => {
+                              setModalOpen(false);
+                              setModalSuccess(null);
+                            }, 900);
+                          } catch (err: any) {
+                            setModalError(
+                              err?.response?.data?.message ||
+                                err.message ||
+                                "Failed to set background"
+                            );
+                          } finally {
+                            setModalLoading(false);
+                          }
+                        }}
+                      >
+                        {modalLoading ? "Setting..." : "Set as background"}
+                      </button>
+                      <button
+                        className="flex-1 bg-gray-200 text-gray-800 py-2 rounded-lg font-bold"
+                        onClick={() => {
+                          setModalOpen(false);
+                        }}
+                        disabled={modalLoading}
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  </div>
+                </div>
               </div>
             )}
           </div>

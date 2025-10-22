@@ -102,6 +102,27 @@ function AppRoutes() {
     };
   }, []);
 
+  // Listen for profile updates from other pages so we can refresh the local state
+  useEffect(() => {
+    const onProfileUpdated = (e: any) => {
+      try {
+        const data = e?.detail;
+        if (data) setProfile(data);
+      } catch (err) {
+        console.warn("onProfileUpdated handler failed", err);
+      }
+    };
+    window.addEventListener(
+      "profile-updated",
+      onProfileUpdated as EventListener
+    );
+    return () =>
+      window.removeEventListener(
+        "profile-updated",
+        onProfileUpdated as EventListener
+      );
+  }, []);
+
   const handleLogin = async () => {
     try {
       // Ensure WebApp is ready before accessing init data

@@ -2,12 +2,14 @@ import Layout from "../components/Layout";
 import { useState, useRef, useMemo } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
+import { useProfileStore } from "../store/profileStore";
 import { formatUrl, getEmailError, getUrlError } from "../utils/validation";
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
 export default function CreateCompanyPage() {
   const navigate = useNavigate();
+  const setProfileStore = useProfileStore((state) => state.setProfile);
   const [form, setForm] = useState({
     company_name_english: "",
     company_name_chinese: "",
@@ -30,6 +32,8 @@ export default function CreateCompanyPage() {
     [key: string]: string;
   }>({});
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const profile = useProfileStore((state) => state.profile);
+  const isPremium = profile?.membertype === "premium";
 
   // Memoize preview URL so it doesn't reload on description change
   const previewUrl = useMemo(() => {
@@ -77,10 +81,20 @@ export default function CreateCompanyPage() {
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0] || null;
     if (file) {
-      if (file.type.startsWith("video/") && file.type !== "video/mp4") {
-        setError("Only MP4 video files are allowed.");
-        setForm({ ...form, image: null });
-        return;
+      // If file is a video, only allow mp4 and only for premium users
+      if (file.type.startsWith("video/")) {
+        if (!isPremium) {
+          setError("Video uploads are available for premium users only.");
+          setForm({ ...form, image: null });
+          if (fileInputRef.current) fileInputRef.current.value = "";
+          return;
+        }
+        if (file.type !== "video/mp4") {
+          setError("Only MP4 video files are allowed.");
+          setForm({ ...form, image: null });
+          if (fileInputRef.current) fileInputRef.current.value = "";
+          return;
+        }
       }
       setError("");
       setForm({ ...form, image: file });
@@ -172,9 +186,40 @@ export default function CreateCompanyPage() {
         Youtube: "",
         company_order: "1",
       });
+      // Re-fetch profile so the global store knows companydata exists
+      try {
+        const profileRes = await axios.get(`${API_BASE_URL}/getProfile`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        const profileData = profileRes?.data?.data;
+        if (profileData) {
+          try {
+            setProfileStore(profileData);
+            // notify other parts of the app (App.tsx) that profile was updated
+            try {
+              window.dispatchEvent(
+                new CustomEvent("profile-updated", { detail: profileData })
+              );
+            } catch (evErr) {
+              console.warn("Failed to dispatch profile-updated event", evErr);
+            }
+          } catch (storeErr) {
+            console.warn(
+              "Failed to update profile store after company creation",
+              storeErr
+            );
+          }
+        }
+      } catch (pfErr) {
+        console.warn(
+          "Failed to re-fetch profile after company creation",
+          pfErr
+        );
+      }
+
       setTimeout(() => {
         navigate("/");
-      }, 1200);
+      }, 800);
     } catch (err: any) {
       setError(
         err?.response?.data?.message ||
@@ -259,7 +304,11 @@ export default function CreateCompanyPage() {
             {/* Hidden file input and Browse/Cancel buttons */}
             <input
               type="file"
-              accept="image/png,image/jpeg,image/jpg,image/gif,image/webp,video/mp4"
+              accept={
+                isPremium
+                  ? "image/png,image/jpeg,image/jpg,image/gif,image/webp,video/mp4"
+                  : "image/png,image/jpeg,image/jpg,image/gif,image/webp"
+              }
               ref={fileInputRef}
               style={{ display: "none" }}
               onChange={handleFileChange}

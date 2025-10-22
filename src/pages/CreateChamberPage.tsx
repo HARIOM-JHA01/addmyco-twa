@@ -1,5 +1,6 @@
 import Layout from "../components/Layout";
 import { useState, useRef } from "react";
+import { useProfileStore } from "../store/profileStore";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import { formatUrl, getUrlError } from "../utils/validation";
@@ -39,6 +40,8 @@ export default function CreateChamberPage() {
     [key: string]: string;
   }>({});
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const profile = useProfileStore((state) => state.profile);
+  const isPremium = profile?.membertype === "premium";
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
@@ -81,14 +84,22 @@ export default function CreateChamberPage() {
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = e.target.files?.[0] || null;
     if (selectedFile) {
-      if (
-        selectedFile.type.startsWith("video/") &&
-        selectedFile.type !== "video/mp4"
-      ) {
-        setError("Only MP4 video files are allowed.");
-        setFile(null);
-        setFilePreview(null);
-        return;
+      // If file is a video, only allow mp4 and only for premium users
+      if (selectedFile.type.startsWith("video/")) {
+        if (!isPremium) {
+          setError("Video uploads are available for premium users only.");
+          setFile(null);
+          setFilePreview(null);
+          if (fileInputRef.current) fileInputRef.current.value = "";
+          return;
+        }
+        if (selectedFile.type !== "video/mp4") {
+          setError("Only MP4 video files are allowed.");
+          setFile(null);
+          setFilePreview(null);
+          if (fileInputRef.current) fileInputRef.current.value = "";
+          return;
+        }
       }
       setError("");
       setFile(selectedFile);
@@ -232,6 +243,37 @@ export default function CreateChamberPage() {
       setFile(null);
       setFilePreview(null);
 
+      // Re-fetch profile so global store is up-to-date
+      try {
+        const profileRes = await axios.get(`${API_BASE_URL}/getProfile`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        const profileData = profileRes?.data?.data;
+        if (profileData) {
+          try {
+            const setProfileStore = useProfileStore.getState().setProfile;
+            setProfileStore(profileData);
+            try {
+              window.dispatchEvent(
+                new CustomEvent("profile-updated", { detail: profileData })
+              );
+            } catch (evErr) {
+              console.warn("Failed to dispatch profile-updated event", evErr);
+            }
+          } catch (storeErr) {
+            console.warn(
+              "Failed to update profile store after chamber creation",
+              storeErr
+            );
+          }
+        }
+      } catch (pfErr) {
+        console.warn(
+          "Failed to re-fetch profile after chamber creation",
+          pfErr
+        );
+      }
+
       setTimeout(() => {
         navigate("/chamber");
       }, 1200);
@@ -327,7 +369,11 @@ export default function CreateChamberPage() {
             {/* Hidden file input and Browse/Cancel buttons */}
             <input
               type="file"
-              accept="image/png,image/jpeg,image/jpg,image/gif,image/webp,video/mp4"
+              accept={
+                isPremium
+                  ? "image/png,image/jpeg,image/jpg,image/gif,image/webp,video/mp4"
+                  : "image/png,image/jpeg,image/jpg,image/gif,image/webp"
+              }
               ref={fileInputRef}
               style={{ display: "none" }}
               onChange={handleFileChange}
