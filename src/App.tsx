@@ -79,6 +79,24 @@ function AppRoutes() {
   useEffect(() => {
     // Fetch profile/company data on mount
     // Also fetch global background/theme settings and apply CSS variables.
+
+    // Apply saved colors from localStorage immediately (before API call)
+    const savedBgColor = localStorage.getItem("app-background-color");
+    const savedFontColor = localStorage.getItem("app-font-color");
+
+    if (savedBgColor) {
+      document.documentElement.style.setProperty(
+        "--app-background-color",
+        savedBgColor
+      );
+    }
+    if (savedFontColor) {
+      document.documentElement.style.setProperty(
+        "--app-font-color",
+        savedFontColor
+      );
+    }
+
     const fetchBackground = async () => {
       try {
         const token = localStorage.getItem("token");
@@ -95,6 +113,17 @@ function AppRoutes() {
               "--app-background-color",
               bg.backgroundcolor
             );
+            // Save to localStorage for persistence
+            localStorage.setItem("app-background-color", bg.backgroundcolor);
+          } else {
+            // Try to restore from localStorage
+            const savedBgColor = localStorage.getItem("app-background-color");
+            if (savedBgColor) {
+              document.documentElement.style.setProperty(
+                "--app-background-color",
+                savedBgColor
+              );
+            }
           }
           // Apply font color
           if (bg.fontcolor) {
@@ -102,6 +131,17 @@ function AppRoutes() {
               "--app-font-color",
               bg.fontcolor
             );
+            // Save to localStorage for persistence
+            localStorage.setItem("app-font-color", bg.fontcolor);
+          } else {
+            // Try to restore from localStorage
+            const savedFontColor = localStorage.getItem("app-font-color");
+            if (savedFontColor) {
+              document.documentElement.style.setProperty(
+                "--app-font-color",
+                savedFontColor
+              );
+            }
           }
           // Apply background image if available
           if (bg.Thumbnail || bg.thumbnail || bg.backgroundImage) {
@@ -124,15 +164,49 @@ function AppRoutes() {
             );
           }
         } else {
-          // No data from API, use default
+          // No data from API, try to restore from localStorage
+          const savedBgColor = localStorage.getItem("app-background-color");
+          const savedFontColor = localStorage.getItem("app-font-color");
+
+          if (savedBgColor) {
+            document.documentElement.style.setProperty(
+              "--app-background-color",
+              savedBgColor
+            );
+          }
+          if (savedFontColor) {
+            document.documentElement.style.setProperty(
+              "--app-font-color",
+              savedFontColor
+            );
+          }
+
+          // Set default background image
           document.documentElement.style.setProperty(
             "--app-background-image",
             "url(/src/assets/background.jpg)"
           );
         }
       } catch (e) {
-        // ignore failures, keep default theme
+        // ignore failures, try to restore from localStorage
         console.debug("fetchBackground failed", e);
+
+        const savedBgColor = localStorage.getItem("app-background-color");
+        const savedFontColor = localStorage.getItem("app-font-color");
+
+        if (savedBgColor) {
+          document.documentElement.style.setProperty(
+            "--app-background-color",
+            savedBgColor
+          );
+        }
+        if (savedFontColor) {
+          document.documentElement.style.setProperty(
+            "--app-font-color",
+            savedFontColor
+          );
+        }
+
         // Set default background image
         document.documentElement.style.setProperty(
           "--app-background-image",

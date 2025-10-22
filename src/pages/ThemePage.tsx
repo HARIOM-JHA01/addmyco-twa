@@ -52,6 +52,18 @@ export default function ThemePage() {
           },
         }
       );
+
+      // Save to localStorage for persistence across sessions
+      localStorage.setItem("app-background-color", themeColor);
+      localStorage.setItem("app-font-color", fontColor);
+
+      // Apply the colors immediately to CSS variables
+      document.documentElement.style.setProperty(
+        "--app-background-color",
+        themeColor
+      );
+      document.documentElement.style.setProperty("--app-font-color", fontColor);
+
       setSuccess("Theme updated successfully!");
       // Notify the app to re-fetch the background/theme settings
       try {
