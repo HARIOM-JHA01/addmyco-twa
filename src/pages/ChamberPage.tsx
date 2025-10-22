@@ -44,29 +44,15 @@ export default function ChamberPage() {
   // Icon carousel refs & state for chamber page
   const topIconsRef = useRef<HTMLDivElement | null>(null);
   const bottomIconsRef = useRef<HTMLDivElement | null>(null);
-  const [showTopArrows, setShowTopArrows] = useState(false);
-  const [canTopLeft, setCanTopLeft] = useState(false);
-  const [canTopRight, setCanTopRight] = useState(false);
-  const [, setShowBottomArrows] = useState(false);
-  const [_, setCanBottomLeft] = useState(false);
-  const [__, setCanBottomRight] = useState(false);
 
   const updateTopScroll = () => {
     const el = topIconsRef.current;
     if (!el) return;
-    const overflow = el.scrollWidth > el.clientWidth + 4;
-    setShowTopArrows(overflow);
-    setCanTopLeft(el.scrollLeft > 8);
-    setCanTopRight(el.scrollLeft + el.clientWidth < el.scrollWidth - 8);
   };
 
   const updateBottomScroll = () => {
     const el = bottomIconsRef.current;
     if (!el) return;
-    const overflow = el.scrollWidth > el.clientWidth + 4;
-    setShowBottomArrows(overflow);
-    setCanBottomLeft(el.scrollLeft > 8);
-    setCanBottomRight(el.scrollLeft + el.clientWidth < el.scrollWidth - 8);
   };
 
   useEffect(() => {

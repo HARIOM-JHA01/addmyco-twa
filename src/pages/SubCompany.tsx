@@ -42,17 +42,10 @@ export default function SubCompanyPage() {
 
   // Top and bottom icon carousel refs & state
   const topIconsRef = useRef<HTMLDivElement | null>(null);
-  const [showTopArrows, setShowTopArrows] = useState(false);
-  const [canTopLeft, setCanTopLeft] = useState(false);
-  const [canTopRight, setCanTopRight] = useState(false);
 
   const updateTopScroll = () => {
     const el = topIconsRef.current;
     if (!el) return;
-    const overflow = el.scrollWidth > el.clientWidth + 4;
-    setShowTopArrows(overflow);
-    setCanTopLeft(el.scrollLeft > 8);
-    setCanTopRight(el.scrollLeft + el.clientWidth < el.scrollWidth - 8);
   };
 
   useEffect(() => {
