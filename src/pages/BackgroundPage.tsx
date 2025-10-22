@@ -345,43 +345,99 @@ export default function BackgroundPage() {
                 )}
               </div>
             )}
-            {/* Fullscreen modal for preview + set background */}
+            {/* Enhanced modal for preview + set background */}
             {modalOpen && modalImage && (
               <div
-                className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4"
+                className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-fadeIn"
                 onClick={() => setModalOpen(false)}
               >
                 <div
-                  className="bg-white rounded-lg overflow-hidden max-w-[95vw] max-h-[95vh] w-full"
+                  className="bg-white rounded-2xl overflow-hidden max-w-2xl w-full shadow-2xl transform transition-all"
                   onClick={(e) => e.stopPropagation()}
                 >
-                  <div className="relative w-full h-[70vh] bg-black">
-                    <img
-                      src={
-                        modalImage.url ||
-                        (Array.isArray(modalImage.thumbnails) &&
-                          modalImage.thumbnails[0])
-                      }
-                      alt="preview"
-                      className="w-full h-full object-contain"
-                    />
+                  {/* Header with close button */}
+                  <div className="relative bg-gradient-to-r from-blue-500 to-purple-600 px-6 py-4">
+                    <h3 className="text-white text-xl font-bold">
+                      Background Preview
+                    </h3>
                     <button
-                      className="absolute top-3 right-3 bg-white/90 rounded-full px-3 py-1"
+                      className="absolute top-4 right-4 w-8 h-8 flex items-center justify-center bg-white/20 hover:bg-white/30 rounded-full text-white transition-all"
                       onClick={() => setModalOpen(false)}
+                      aria-label="Close modal"
                     >
-                      Close
+                      <svg
+                        className="w-5 h-5"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M6 18L18 6M6 6l12 12"
+                        />
+                      </svg>
                     </button>
                   </div>
-                  <div className="p-4 flex flex-col gap-3">
+
+                  {/* Image preview */}
+                  <div className="relative w-full bg-gradient-to-br from-gray-100 to-gray-200 p-6">
+                    <div className="relative w-full aspect-video bg-white rounded-xl overflow-hidden shadow-inner">
+                      <img
+                        src={
+                          modalImage.url ||
+                          (Array.isArray(modalImage.thumbnails) &&
+                            modalImage.thumbnails[0])
+                        }
+                        alt="preview"
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Actions and messages */}
+                  <div className="p-6 bg-gray-50">
                     {modalError && (
-                      <div className="text-red-600">{modalError}</div>
+                      <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm flex items-start gap-2">
+                        <svg
+                          className="w-5 h-5 flex-shrink-0 mt-0.5"
+                          fill="currentColor"
+                          viewBox="0 0 20 20"
+                        >
+                          <path
+                            fillRule="evenodd"
+                            d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
+                            clipRule="evenodd"
+                          />
+                        </svg>
+                        <span>{modalError}</span>
+                      </div>
                     )}
                     {modalSuccess && (
-                      <div className="text-green-600">{modalSuccess}</div>
+                      <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded-lg text-green-700 text-sm flex items-start gap-2">
+                        <svg
+                          className="w-5 h-5 flex-shrink-0 mt-0.5"
+                          fill="currentColor"
+                          viewBox="0 0 20 20"
+                        >
+                          <path
+                            fillRule="evenodd"
+                            d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                            clipRule="evenodd"
+                          />
+                        </svg>
+                        <span>{modalSuccess}</span>
+                      </div>
                     )}
+
                     <div className="flex gap-3">
                       <button
-                        className="flex-1 bg-blue-600 text-white py-2 rounded-lg font-bold"
+                        className="flex-1 py-3 rounded-xl font-bold text-white transition-all transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 shadow-lg"
+                        style={{
+                          background:
+                            "linear-gradient(135deg, var(--app-background-color, #007cb6) 0%, #0056b3 100%)",
+                        }}
                         disabled={modalLoading}
                         onClick={async () => {
                           // call the POST API to set background
@@ -422,10 +478,35 @@ export default function BackgroundPage() {
                           }
                         }}
                       >
-                        {modalLoading ? "Setting..." : "Set as background"}
+                        {modalLoading ? (
+                          <span className="flex items-center justify-center gap-2">
+                            <svg
+                              className="animate-spin h-5 w-5"
+                              fill="none"
+                              viewBox="0 0 24 24"
+                            >
+                              <circle
+                                className="opacity-25"
+                                cx="12"
+                                cy="12"
+                                r="10"
+                                stroke="currentColor"
+                                strokeWidth="4"
+                              ></circle>
+                              <path
+                                className="opacity-75"
+                                fill="currentColor"
+                                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                              ></path>
+                            </svg>
+                            Setting...
+                          </span>
+                        ) : (
+                          "Set as Background"
+                        )}
                       </button>
                       <button
-                        className="flex-1 bg-gray-200 text-gray-800 py-2 rounded-lg font-bold"
+                        className="flex-1 bg-white border-2 border-gray-300 text-gray-700 py-3 rounded-xl font-bold transition-all hover:bg-gray-100 hover:border-gray-400 disabled:opacity-50"
                         onClick={() => {
                           setModalOpen(false);
                         }}
