@@ -430,11 +430,10 @@ export default function ChamberPage() {
             {/* Image/Video Preview and Upload */}
             <div className="flex flex-col items-center mb-4 w-full">
               <div
-                className="rounded-xl flex items-center justify-center mb-4 cursor-pointer"
+                className="w-full rounded-xl flex items-center justify-center mb-4 cursor-pointer h-48"
                 onClick={() =>
                   document.getElementById("chamber-file-input")?.click()
                 }
-                style={{ width: 360, height: 180 }}
               >
                 {filePreview ? (
                   file?.type.startsWith("video/") ? (
@@ -444,13 +443,13 @@ export default function ChamberPage() {
                       loop
                       muted
                       playsInline
-                      className="w-[360px] h-[180px] object-cover rounded-xl"
+                      className="w-full h-48 object-cover rounded-xl"
                     />
                   ) : (
                     <img
                       src={filePreview}
                       alt="Preview"
-                      className="w-[360px] h-[180px] object-cover rounded-xl"
+                      className="w-full h-48 object-cover rounded-xl"
                     />
                   )
                 ) : editChamber?.image &&
@@ -458,7 +457,7 @@ export default function ChamberPage() {
                   <img
                     src={editChamber.image}
                     alt="chamber"
-                    className="w-[360px] h-[180px] object-cover rounded-xl"
+                    className="w-full h-48 object-cover rounded-xl"
                   />
                 ) : editChamber?.image && editChamber.image.endsWith(".mp4") ? (
                   <video
@@ -467,16 +466,16 @@ export default function ChamberPage() {
                     loop
                     muted
                     playsInline
-                    className="w-[360px] h-[180px] object-cover rounded-xl"
+                    className="w-full h-48 object-cover rounded-xl"
                   />
                 ) : editChamber?.image ? (
                   <img
                     src={editChamber.image}
                     alt="chamber"
-                    className="w-[360px] h-[180px] object-cover rounded-xl"
+                    className="w-full h-48 object-cover rounded-xl"
                   />
                 ) : (
-                  <div className="w-[360px] h-[180px] bg-blue-400 rounded-xl flex items-center justify-center">
+                  <div className="w-full h-48 bg-blue-400 rounded-xl flex items-center justify-center">
                     <div className="text-white text-center text-sm font-semibold whitespace-pre-line px-4">
                       {i18n.t("please_upload")}
                     </div>
@@ -658,26 +657,6 @@ export default function ChamberPage() {
                   <>
                     {/* Chamber Top Icon Carousel: company, whatsapp, telegram, phone, personal */}
                     <div className="relative w-full mb-4">
-                      <button
-                        aria-label="Top scroll left"
-                        className={`absolute left-6 top-1/2 -translate-y-1/2 z-20 p-2 bg-white/10 rounded-full ${
-                          canTopLeft
-                            ? "opacity-100"
-                            : "opacity-30 pointer-events-none"
-                        }`}
-                        onClick={() => {
-                          const el = topIconsRef.current;
-                          if (!el) return;
-                          el.scrollBy({
-                            left: -el.clientWidth * 0.6,
-                            behavior: "smooth",
-                          });
-                          setTimeout(updateTopScroll, 300);
-                        }}
-                        style={{ display: showTopArrows ? "block" : "none" }}
-                      >
-                        <FontAwesomeIcon icon={faChevronLeft} color="red" />
-                      </button>
                       <div
                         ref={topIconsRef}
                         onScroll={updateTopScroll}
@@ -770,26 +749,6 @@ export default function ChamberPage() {
                           />
                         </div>
                       </div>
-                      <button
-                        aria-label="Top scroll right"
-                        className={`absolute right-6 top-1/2 -translate-y-1/2 z-20 p-2 bg-white/10 rounded-full ${
-                          canTopRight
-                            ? "opacity-100"
-                            : "opacity-30 pointer-events-none"
-                        }`}
-                        onClick={() => {
-                          const el = topIconsRef.current;
-                          if (!el) return;
-                          el.scrollBy({
-                            left: el.clientWidth * 0.6,
-                            behavior: "smooth",
-                          });
-                          setTimeout(updateTopScroll, 300);
-                        }}
-                        style={{ display: showTopArrows ? "block" : "none" }}
-                      >
-                        <FontAwesomeIcon icon={faChevronRight} color="red" />
-                      </button>
                     </div>
                     {/* Chamber names and designation (company-style) */}
                     {/* Chamber Names with navigation arrows (overlay, name stays full-width) */}
@@ -844,39 +803,31 @@ export default function ChamberPage() {
                     >
                       {c.chamberdesignation}
                     </div>
-                    {/* Image or video - rectangular preview like SubCompany */}
+                    {/* Image or video */}
                     <div className="flex flex-col items-center mb-6 w-full">
                       <div className="w-full flex justify-center mb-4">
-                        <div
-                          className="rounded-xl p-2 flex items-center justify-center w-full"
-                          style={{ height: 200 }}
-                        >
-                          {c.video && c.video.endsWith(".mp4") ? (
-                            <video
-                              src={c.video}
-                              autoPlay
-                              loop
-                              muted
-                              playsInline
-                              className="object-contain mx-auto rounded-md w-full h-full"
-                              style={{ maxWidth: "100%", maxHeight: "100%" }}
-                            />
-                          ) : c.image ? (
-                            <img
-                              src={c.image}
-                              alt="chamber"
-                              className="object-contain mx-auto rounded-md"
-                              style={{ maxWidth: "100%", maxHeight: "100%" }}
-                            />
-                          ) : (
-                            <img
-                              src={logo}
-                              alt="No chamber"
-                              className="object-contain mx-auto rounded-md bg-white w-full"
-                              style={{ maxWidth: "100%", maxHeight: "100%" }}
-                            />
-                          )}
-                        </div>
+                        {c.video && c.video.endsWith(".mp4") ? (
+                          <video
+                            src={c.video}
+                            autoPlay
+                            loop
+                            muted
+                            playsInline
+                            className="w-full h-48 object-cover rounded-xl"
+                          />
+                        ) : c.image ? (
+                          <img
+                            src={c.image}
+                            alt="chamber"
+                            className="w-full h-48 object-cover rounded-xl"
+                          />
+                        ) : (
+                          <img
+                            src={logo}
+                            alt="No chamber"
+                            className="w-full h-48 object-cover rounded-xl bg-white"
+                          />
+                        )}
                       </div>
                       <div
                         className="w-full h-48 bg-white rounded-md p-2 overflow-auto mb-4"

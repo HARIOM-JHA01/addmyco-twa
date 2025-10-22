@@ -368,11 +368,10 @@ export default function SubCompanyPage() {
               {/* Image/Video Preview and Upload */}
               <div className="flex flex-col items-center mb-4 w-full">
                 <div
-                  className="rounded-xl flex items-center justify-center mb-4 cursor-pointer"
+                  className="w-full rounded-xl flex items-center justify-center mb-4 cursor-pointer h-48"
                   onClick={() =>
                     document.getElementById("company-file-input")?.click()
                   }
-                  style={{ width: 360, height: 180 }}
                 >
                   {filePreview ? (
                     file?.type.startsWith("video/") ? (
@@ -382,13 +381,13 @@ export default function SubCompanyPage() {
                         loop
                         muted
                         playsInline
-                        className="w-[360px] h-[180px] object-cover rounded-xl"
+                        className="w-full h-48 object-cover rounded-xl"
                       />
                     ) : (
                       <img
                         src={filePreview}
                         alt="Preview"
-                        className="w-[360px] h-[180px] object-cover rounded-xl"
+                        className="w-full h-48 object-cover rounded-xl"
                       />
                     )
                   ) : editProfile?.image &&
@@ -396,7 +395,7 @@ export default function SubCompanyPage() {
                     <img
                       src={editProfile.image}
                       alt="company"
-                      className="w-[360px] h-[180px] object-cover rounded-xl"
+                      className="w-full h-48 object-cover rounded-xl"
                     />
                   ) : editProfile?.image &&
                     editProfile.image.endsWith(".mp4") ? (
@@ -406,16 +405,16 @@ export default function SubCompanyPage() {
                       loop
                       muted
                       playsInline
-                      className="w-[360px] h-[180px] object-cover rounded-xl"
+                      className="w-full h-48 object-cover rounded-xl"
                     />
                   ) : editProfile?.image ? (
                     <img
                       src={editProfile.image}
                       alt="company"
-                      className="w-[360px] h-[180px] object-cover rounded-xl"
+                      className="w-full h-48 object-cover rounded-xl"
                     />
                   ) : (
-                    <div className="w-[360px] h-[180px] bg-blue-400 rounded-xl flex items-center justify-center">
+                    <div className="w-full h-48 bg-blue-400 rounded-xl flex items-center justify-center">
                       <div className="text-white text-center text-sm font-semibold whitespace-pre-line px-4">
                         {i18n.t("please_upload")}
                       </div>
@@ -639,26 +638,6 @@ export default function SubCompanyPage() {
             <>
               {/* Top Icon Carousel: personal profile, whatsapp, telegram, phone, chamber */}
               <div className="relative w-full mb-4">
-                <button
-                  aria-label="Top scroll left"
-                  className={`absolute left-0 top-1/2 -translate-y-1/2 -translate-x-1/2 z-20 p-1 bg-white/10 rounded-full ${
-                    canTopLeft
-                      ? "opacity-100"
-                      : "opacity-30 pointer-events-none"
-                  }`}
-                  onClick={() => {
-                    const el = topIconsRef.current;
-                    if (!el) return;
-                    el.scrollBy({
-                      left: -el.clientWidth * 0.6,
-                      behavior: "smooth",
-                    });
-                    setTimeout(updateTopScroll, 300);
-                  }}
-                  style={{ display: showTopArrows ? "block" : "none" }}
-                >
-                  <FontAwesomeIcon icon={faChevronLeft} className="w-6 h-6" />
-                </button>
                 <div
                   ref={topIconsRef}
                   onScroll={updateTopScroll}
@@ -747,26 +726,6 @@ export default function SubCompanyPage() {
                     />
                   </div>
                 </div>
-                <button
-                  aria-label="Top scroll right"
-                  className={`absolute right-0 top-1/2 -translate-y-1/2 translate-x-1/2 z-20 p-1 bg-white/10 rounded-full ${
-                    canTopRight
-                      ? "opacity-100"
-                      : "opacity-30 pointer-events-none"
-                  }`}
-                  onClick={() => {
-                    const el = topIconsRef.current;
-                    if (!el) return;
-                    el.scrollBy({
-                      left: el.clientWidth * 0.6,
-                      behavior: "smooth",
-                    });
-                    setTimeout(updateTopScroll, 300);
-                  }}
-                  style={{ display: showTopArrows ? "block" : "none" }}
-                >
-                  <FontAwesomeIcon icon={faChevronRight} color="red" />
-                </button>
               </div>
 
               {/* Company Names with navigation arrows (overlay, name stays full-width) */}
@@ -825,19 +784,24 @@ export default function SubCompanyPage() {
 
               {/* Company Image and Description */}
               <div className="flex flex-col items-center mb-6 w-full">
-                {/* Image container - matching ChamberPage style */}
+                {/* Image container */}
                 <div className="w-full flex justify-center mb-4">
-                  <div
-                    className="rounded-xl p-2 flex items-center justify-center w-full"
-                    style={{ height: 200 }}
-                  >
+                  {companyProfile.image?.endsWith(".mp4") ? (
+                    <video
+                      src={companyProfile.image}
+                      autoPlay
+                      loop
+                      muted
+                      playsInline
+                      className="w-full h-48 object-cover rounded-xl"
+                    />
+                  ) : (
                     <img
                       src={companyProfile.image || profileIcon}
                       alt="Company Logo"
-                      className="mx-auto rounded-md w-[60%] h-full object-cover object-center block"
-                      style={{ maxWidth: "60%" }}
+                      className="w-full h-48 object-cover rounded-xl"
                     />
-                  </div>
+                  )}
                 </div>
                 <div
                   className="w-full h-48 bg-white rounded-md p-2 overflow-auto"
