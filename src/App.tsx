@@ -208,7 +208,7 @@ function AppRoutes() {
                   "You have been signed up successfully\n\nSubscribe and Contact @DynamicNameCard to get one year premium membership absolutely Free",
                 // include two buttons: OK and a channel button labelled with the handle
                 buttons: [
-                  { type: "ok", text: "Close" },
+                  { type: "close", text: "Close" },
                   { type: "default", text: "Join DynamicNameCard" },
                 ],
               };
@@ -255,8 +255,14 @@ function AppRoutes() {
         }
 
         // Check if profile exists by looking for owner_name_english and owner_name_chinese
+        // Ensure they are non-empty strings (trim to avoid whitespace-only values)
         const hasProfile =
-          data.data.owner_name_english && data.data.owner_name_chinese;
+          data.data.owner_name_english &&
+          data.data.owner_name_chinese &&
+          typeof data.data.owner_name_english === "string" &&
+          typeof data.data.owner_name_chinese === "string" &&
+          data.data.owner_name_english.trim().length > 0 &&
+          data.data.owner_name_chinese.trim().length > 0;
 
         if (!hasProfile) {
           // No profile exists, go to create profile page
@@ -290,6 +296,9 @@ function AppRoutes() {
             navigate("/");
           } else {
             // Profile exists but no company, go to create company page
+            console.log(
+              "App: navigating to /create-company after getProfile (profile exists but no company)"
+            );
             navigate("/create-company");
           }
         } catch {
@@ -297,6 +306,9 @@ function AppRoutes() {
           setProfile(null);
           setShowWelcome(false);
           setProfileLoading(false);
+          console.log(
+            "App: navigating to /create-company due to getProfile failure"
+          );
           navigate("/create-company");
         }
       } else {
@@ -366,8 +378,18 @@ function AppRoutes() {
     return <div>Loading...</div>;
   }
 
-  // If no profile/company data, show create profile page
+  // If no profile/company data, allow create-profile and create-company routes to render.
   if (!profile) {
+    const path = location.pathname || "/";
+    if (path === "/create-company" || path === "/create-profile") {
+      return (
+        <Routes>
+          <Route path="/create-company" element={<CreateCompanyPage />} />
+          <Route path="/create-profile" element={<CreateProfile />} />
+          <Route path="*" element={<CreateProfile />} />
+        </Routes>
+      );
+    }
     return <CreateProfile />;
   }
 

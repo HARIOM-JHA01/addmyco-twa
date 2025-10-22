@@ -69,13 +69,13 @@ const WelcomePage: React.FC<WelcomePageProps> = ({ onLogin }) => {
     <div className="relative flex flex-col min-h-screen bg-[url(/src/assets/background.jpg)] bg-cover bg-center">
       <div className="absolute inset-0 bg-black/30 z-0" />
       <div className="relative z-10 flex flex-col min-h-screen">
-  <Header hideNotification={true} />
+        <Header hideNotification={true} />
         <main className="flex-1 flex flex-col items-center justify-center">
           <div
             className="bg-opacity-90 rounded-lg p-8 shadow-lg flex flex-col items-center w-[368px]"
             style={{ backgroundColor: "var(--app-background-color)" }}
           >
-            <h1 className="text-3xl font-bold mb-6 text-white">
+            <h1 className="text-3xl font-space-bold mb-6 text-white">
               Welcome to AddMy
             </h1>
             <button
@@ -84,7 +84,7 @@ const WelcomePage: React.FC<WelcomePageProps> = ({ onLogin }) => {
               disabled={loginLoading}
             >
               {loginLoading ? (
-                <span className="flex items-center gap-2">
+                <span className="flex items-center gap-2 font-space-bold">
                   <svg
                     className="animate-spin h-6 w-6 text-white"
                     xmlns="http://www.w3.org/2000/svg"

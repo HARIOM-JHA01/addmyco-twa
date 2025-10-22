@@ -16,7 +16,7 @@ const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 export default function CreateProfile() {
   const user = WebApp.initDataUnsafe.user;
   const navigate = useNavigate();
-  const profile = useProfileStore((state) => state.profile);
+  const setProfileStore = useProfileStore((state) => state.setProfile);
 
   const [form, setForm] = useState({
     owner_name_english: "",
@@ -51,10 +51,8 @@ export default function CreateProfile() {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    if (profile) {
-      navigate("/");
-    }
-    // Fetch memberType if token exists
+    // Fetch member type once on mount. Do not redirect here —
+    // redirection after profile creation is handled explicitly in handleSubmit.
     const fetchMemberType = async () => {
       const token = localStorage.getItem("token");
       if (!token) return;
@@ -66,7 +64,7 @@ export default function CreateProfile() {
       } catch {}
     };
     fetchMemberType();
-  }, [profile, navigate]);
+  }, []);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -108,6 +106,7 @@ export default function CreateProfile() {
       }
     }
   };
+
   const handleProfileIconClick = () => {
     if (fileInputRef.current) {
       fileInputRef.current.value = "";
@@ -222,27 +221,39 @@ export default function CreateProfile() {
           Authorization: `Bearer ${token}`,
         },
       });
-      setSuccess("Profile created successfully! Checking company profile...");
-      // Call getProfile and check for company data
+      console.log("Profile created successfully");
+      setSuccess(
+        "Profile created successfully! Redirecting to create company..."
+      );
+
       try {
         const res = await axios.get(`${API_BASE_URL}/getProfile`, {
           headers: { Authorization: `Bearer ${token}` },
         });
-        // Check if company exists by looking for company_name_english and company_name_chinese in companydata
-        const hasCompany =
-          res.data.data?.companydata &&
-          res.data.data.companydata.company_name_english &&
-          res.data.data.companydata.company_name_chinese;
-
-        if (hasCompany) {
-          setTimeout(() => navigate("/"), 1200);
-        } else {
-          setTimeout(() => navigate("/create-company"), 1200);
+        const profileData = res.data.data;
+        console.log("Re-fetched profile data:", profileData);
+        if (profileData) {
+          try {
+            setProfileStore(profileData);
+          } catch (storeErr) {
+            console.warn(
+              "Failed to update profile store after creation",
+              storeErr
+            );
+          }
         }
-      } catch {
-        setTimeout(() => navigate("/create-company"), 1200);
+      } catch (profileErr) {
+        console.warn("Failed to re-fetch profile after creation", profileErr);
+      }
+      console.log("Navigating to create-company page...");
+      try {
+        navigate("/create-company");
+        console.log("navigate('/create-company') called successfully");
+      } catch (navErr) {
+        console.error("navigate('/create-company') failed:", navErr);
       }
     } catch (err: any) {
+      console.error("Error creating profile:", err);
       setError(
         err?.response?.data?.message ||
           err.message ||
@@ -254,10 +265,10 @@ export default function CreateProfile() {
   };
 
   // After successful profile creation or login, check for companydata
-  if (profile && profile.companydata) {
-    navigate("/");
-    return;
-  }
+  // if (profile && profile.companydata) {
+  //   navigate("/");
+  //   return;
+  // }
 
   return (
     <div className="min-h-screen bg-[url('/src/assets/background.jpg')] bg-cover bg-center flex flex-col items-center overflow-x-hidden w-full">
@@ -278,7 +289,7 @@ export default function CreateProfile() {
                 placeholder="Name in English"
                 value={form.owner_name_english}
                 onChange={handleChange}
-                className="w-44 rounded-full px-3 py-2 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-400"
+                className="w-full rounded-full px-3 py-2 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-400"
                 required
               />
               <input
@@ -286,7 +297,7 @@ export default function CreateProfile() {
                 placeholder="Name in Chinese"
                 value={form.owner_name_chinese}
                 onChange={handleChange}
-                className="w-44 rounded-full px-3 py-2 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-400"
+                className="w-full rounded-full px-3 py-2 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-400"
               />
             </div>
             <div className="flex flex-col items-center mb-2">
