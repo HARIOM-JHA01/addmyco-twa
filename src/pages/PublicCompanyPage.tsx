@@ -312,37 +312,36 @@ export default function PublicCompanyPage() {
           {/* Company Image and Description */}
           <div className="flex flex-col items-center mb-6 w-full">
             <div className="w-full flex justify-center mb-4">
-              <div
-                className="rounded-xl p-2 flex items-center justify-center w-full"
-                style={{ height: 200 }}
-              >
-                {companyProfile.image ? (
-                  companyProfile.image.endsWith(".mp4") ? (
-                    <video
-                      src={companyProfile.image}
-                      autoPlay
-                      loop
-                      muted
-                      playsInline
-                      className="object-contain mx-auto rounded-md w-full h-full"
-                    />
-                  ) : (
-                    <img
-                      src={companyProfile.image}
-                      alt="company"
-                      className="object-contain mx-auto rounded-md"
-                      style={{ maxWidth: "100%", maxHeight: "100%" }}
-                    />
-                  )
+              {companyProfile.image ? (
+                companyProfile.image.endsWith(".mp4") ? (
+                  <video
+                    src={companyProfile.image}
+                    autoPlay
+                    loop
+                    muted
+                    playsInline
+                    className="w-full h-48 object-cover rounded-xl"
+                  />
                 ) : (
                   <img
-                    src={logo}
-                    alt="No company"
-                    className="object-contain mx-auto rounded-md bg-white w-full"
-                    style={{ maxWidth: "100%", maxHeight: "100%" }}
+                    src={companyProfile.image}
+                    alt="company"
+                    className="w-full h-48 object-cover rounded-xl"
                   />
-                )}
-              </div>
+                )
+              ) : profile.theme?.Thumbnail ? (
+                <img
+                  src={profile.theme.Thumbnail}
+                  alt="Company thumbnail"
+                  className="w-full h-48 object-cover rounded-xl"
+                />
+              ) : (
+                <img
+                  src={logo}
+                  alt="No company"
+                  className="w-full h-48 object-cover rounded-xl bg-white"
+                />
+              )}
             </div>
             <div
               className="w-full h-48 bg-white rounded-md p-2 overflow-auto"

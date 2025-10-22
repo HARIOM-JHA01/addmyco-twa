@@ -88,6 +88,7 @@ export interface ChamberData {
 export interface ThemeData {
   _id: string;
   user_id: string;
+  Thumbnail?: string;
   backgroundcolor?: string;
   fontcolor?: string;
   iconcolor?: string;
