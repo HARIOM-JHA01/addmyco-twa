@@ -104,193 +104,180 @@ export default function PublicProfilePage() {
   const hasChambers = profile.chamberDoc && profile.chamberDoc.length > 0;
 
   return (
-    <PublicLayout
-      backgroundColor={profile.theme?.backgroundcolor}
-      fontColor={profile.theme?.fontcolor}
-    >
-      <div className="flex flex-col items-center justify-center flex-grow px-2 pb-8 min-h-screen mt-2">
-        <section className="bg-blue-100 bg-opacity-40 rounded-3xl p-6 w-full max-w-md mx-auto flex flex-col items-center shadow-lg">
-          {/* Profile Image/Video */}
-          <div className="mb-6 w-full flex justify-center">
-            <div
-              className="rounded-xl p-2 flex items-center justify-center"
-              style={{ width: 200, height: 200 }}
+    <PublicLayout>
+      <div className="flex flex-col items-center justify-center flex-grow py-4 px-2 pb-32">
+        <div className="bg-blue-100 bg-opacity-40 rounded-3xl p-6 w-full max-w-md mx-auto flex flex-col items-center shadow-lg">
+          <div className="flex flex-col w-full">
+            <button
+              className="w-full rounded-full bg-app text-app text-xl font-bold py-2 mb-2 flex items-center justify-center"
+              style={{ borderRadius: "2rem", width: "100%" }}
             >
-              {profile.video ? (
+              {profile.companydata?.company_name_english || "Company Name"}
+            </button>
+            <button
+              className="w-full rounded-full bg-app text-app text-xl font-bold mb-2 py-2 flex items-center justify-center"
+              style={{ borderRadius: "2rem", width: "100%" }}
+            >
+              {profile.companydata?.company_name_chinese || "公司名称"}
+            </button>
+            <div className="rounded-full mb-2 w-[180px] h-[180px] flex items-center justify-center overflow-hidden bg-white self-center">
+              {profile.profile_image &&
+              profile.profile_image.endsWith(".mp4") ? (
                 <video
-                  src={profile.video}
+                  src={profile.profile_image}
                   autoPlay
                   loop
                   muted
                   playsInline
-                  className="object-contain mx-auto rounded-md w-full h-full"
-                  style={{ maxWidth: "100%", maxHeight: "100%" }}
-                />
-              ) : profile.profile_image ? (
-                <img
-                  src={profile.profile_image}
-                  alt="Profile"
-                  className="object-contain mx-auto rounded-md"
-                  style={{ maxWidth: "100%", maxHeight: "100%" }}
+                  className="w-full h-full object-cover rounded-full"
                 />
               ) : (
                 <img
-                  src={logo}
-                  alt="Default"
-                  className="object-contain mx-auto rounded-md bg-white w-full"
-                  style={{ maxWidth: "100%", maxHeight: "100%" }}
+                  src={profile.profile_image || logo}
+                  alt="Profile"
+                  className="w-full h-full object-cover rounded-full"
                 />
               )}
             </div>
-          </div>
-
-          {/* Owner Names */}
-          <div
-            className="w-full rounded-full bg-app text-app text-xl font-bold py-2 mb-2 flex items-center justify-center"
-            style={{ borderRadius: "2rem" }}
-          >
-            {profile.owner_name_english || "Name"}
-          </div>
-          <div
-            className="w-full rounded-full bg-app text-app text-xl font-bold py-2 mb-4 flex items-center justify-center"
-            style={{ borderRadius: "2rem" }}
-          >
-            {profile.owner_name_chinese || "中文名字"}
-          </div>
-
-          {/* Icon Carousel */}
-          <div className="relative w-full mb-6">
-            <button
-              aria-label="Scroll left"
-              className={`absolute left-0 top-1/2 -translate-y-1/2 -translate-x-1/2 z-20 p-1 bg-white/10 rounded-full`}
-              style={{
-                display: showArrows && canScrollLeft ? "block" : "none",
-              }}
-              onClick={() => {
-                const el = iconsRef.current;
-                if (!el) return;
-                el.scrollBy({
-                  left: -el.clientWidth * 0.6,
-                  behavior: "smooth",
-                });
-                setTimeout(updateIconScroll, 300);
-              }}
-            >
-              <FontAwesomeIcon icon={faChevronLeft} color="red" />
-            </button>
-            <div
-              ref={iconsRef}
-              onScroll={updateIconScroll}
-              className="flex gap-4 px-4 overflow-x-auto no-scrollbar items-center"
-              style={{
-                scrollBehavior: "smooth",
-                scrollSnapType: "x mandatory" as any,
-              }}
-            >
-              {hasCompanies && (
-                <div
-                  className="w-12 h-12 rounded-full flex items-center justify-center p-2 overflow-hidden cursor-pointer flex-shrink-0"
-                  onClick={() => navigate(`/${username}/company`)}
-                  style={{
-                    backgroundColor:
-                      profile.theme?.backgroundcolor ||
-                      "var(--app-background-color)",
-                    scrollSnapAlign: "center" as any,
-                  }}
-                >
-                  <img
-                    src={company}
-                    alt="Company"
-                    className="w-9 h-9 object-contain"
-                  />
-                </div>
-              )}
-              {hasChambers && (
-                <div
-                  className="w-12 h-12 rounded-full flex items-center justify-center p-2 overflow-hidden cursor-pointer flex-shrink-0"
-                  onClick={() => navigate(`/${username}/chamber`)}
-                  style={{
-                    backgroundColor:
-                      profile.theme?.backgroundcolor ||
-                      "var(--app-background-color)",
-                    scrollSnapAlign: "center" as any,
-                  }}
-                >
-                  <img
-                    src={chamber}
-                    alt="Chamber"
-                    className="w-9 h-9 object-contain"
-                  />
-                </div>
-              )}
-              {profile.WhatsApp && (
-                <div
-                  className="w-12 h-12 rounded-full flex items-center justify-center overflow-hidden cursor-pointer flex-shrink-0"
-                  onClick={() =>
-                    window.open(formatUrl(profile.WhatsApp!), "_blank")
-                  }
-                  style={{
-                    backgroundColor:
-                      profile.theme?.backgroundcolor ||
-                      "var(--app-background-color)",
-                    scrollSnapAlign: "center" as any,
-                  }}
-                >
-                  <FontAwesomeIcon icon={faWhatsapp} size="2x" color="white" />
-                </div>
-              )}
-              {profile.telegramId && (
-                <div
-                  className="w-12 h-12 rounded-full flex items-center justify-center overflow-hidden cursor-pointer flex-shrink-0"
-                  onClick={() =>
-                    window.open(`https://t.me/${profile.telegramId}`, "_blank")
-                  }
-                  style={{
-                    backgroundColor:
-                      profile.theme?.backgroundcolor ||
-                      "var(--app-background-color)",
-                    scrollSnapAlign: "center" as any,
-                  }}
-                >
-                  <FontAwesomeIcon icon={faTelegram} size="2x" color="white" />
-                </div>
-              )}
-              {profile.contact && (
-                <div
-                  className="w-12 h-12 rounded-full flex items-center justify-center overflow-hidden cursor-pointer flex-shrink-0"
-                  onClick={() => window.open(`tel:${profile.contact}`, "_self")}
-                  style={{
-                    backgroundColor:
-                      profile.theme?.backgroundcolor ||
-                      "var(--app-background-color)",
-                    scrollSnapAlign: "center" as any,
-                  }}
-                >
-                  <FontAwesomeIcon icon={faPhone} size="2x" color="white" />
-                </div>
-              )}
+            <div className="flex flex-col items-center w-full">
+              <div className="rounded-full bg-app text-app text-lg font-bold py-2 mb-2 flex items-center justify-center px-6 mx-auto w-48">
+                {profile.owner_name_english || "No Name"}
+              </div>
+              <div className="rounded-full bg-app text-app text-lg font-bold py-2 mb-4 flex items-center justify-center px-6 mx-auto w-48">
+                {profile.owner_name_chinese || ""}
+              </div>
             </div>
-            <button
-              aria-label="Scroll right"
-              className={`absolute right-0 top-1/2 -translate-y-1/2 translate-x-1/2 z-20 p-1 bg-white/10 rounded-full`}
-              style={{
-                display: showArrows && canScrollRight ? "block" : "none",
-              }}
-              onClick={() => {
-                const el = iconsRef.current;
-                if (!el) return;
-                el.scrollBy({ left: el.clientWidth * 0.6, behavior: "smooth" });
-                setTimeout(updateIconScroll, 300);
-              }}
-            >
-              <FontAwesomeIcon icon={faChevronRight} color="red" />
-            </button>
           </div>
-
-          {/* Additional Social Media Icons */}
-          <div className="w-full mb-6">
-            <div className="relative w-full">
-              <div className="flex items-center justify-between gap-3">
+          <div className="relative w-full mb-2">
+            <div className="relative">
+              <button
+                aria-label="Scroll left"
+                className={`absolute left-0 top-1/2 -translate-y-1/2 -translate-x-1/2 z-20 p-1 bg-white/10 rounded-full ${
+                  canScrollLeft
+                    ? "opacity-100"
+                    : "opacity-30 pointer-events-none"
+                }`}
+                onClick={() => {
+                  const el = iconsRef.current;
+                  if (!el) return;
+                  el.scrollBy({
+                    left: -el.clientWidth * 0.6,
+                    behavior: "smooth",
+                  });
+                  setTimeout(updateIconScroll, 300);
+                }}
+                style={{ display: showArrows ? "block" : "none" }}
+              >
+                <FontAwesomeIcon icon={faChevronLeft} color="red" />
+              </button>
+              <div
+                ref={iconsRef}
+                onScroll={updateIconScroll}
+                className="flex gap-4 px-4 overflow-x-hidden items-center"
+                style={{
+                  scrollBehavior: "smooth",
+                  scrollSnapType: "x mandatory" as any,
+                }}
+              >
+                {hasCompanies && (
+                  <div
+                    className="w-12 h-12 rounded-full flex items-center justify-center p-2 overflow-hidden cursor-pointer flex-shrink-0"
+                    onClick={() => navigate(`/${username}/company`)}
+                    style={{
+                      backgroundColor: "var(--app-background-color)",
+                      scrollSnapAlign: "center" as any,
+                    }}
+                  >
+                    <img
+                      src={company}
+                      alt="Company"
+                      className="w-9 h-9 object-contain"
+                    />
+                  </div>
+                )}
+                {profile.WhatsApp && (
+                  <div
+                    className="w-12 h-12 rounded-full flex items-center justify-center overflow-hidden cursor-pointer flex-shrink-0"
+                    onClick={() =>
+                      window.open(formatUrl(profile.WhatsApp!), "_blank")
+                    }
+                    style={{
+                      backgroundColor: "var(--app-background-color)",
+                      scrollSnapAlign: "center" as any,
+                    }}
+                  >
+                    <FontAwesomeIcon
+                      icon={faWhatsapp}
+                      size="2x"
+                      color="white"
+                    />
+                  </div>
+                )}
+                {profile.telegramId && (
+                  <div
+                    className="w-12 h-12 rounded-full flex items-center justify-center overflow-hidden cursor-pointer flex-shrink-0"
+                    onClick={() =>
+                      window.open(
+                        `https://t.me/${profile.telegramId}`,
+                        "_blank"
+                      )
+                    }
+                    style={{
+                      backgroundColor: "var(--app-background-color)",
+                      scrollSnapAlign: "center" as any,
+                    }}
+                  >
+                    <FontAwesomeIcon
+                      icon={faTelegram}
+                      size="2x"
+                      color="white"
+                    />
+                  </div>
+                )}
+                {profile.contact && (
+                  <div
+                    className="w-12 h-12 rounded-full flex items-center justify-center overflow-hidden cursor-pointer flex-shrink-0"
+                    onClick={() =>
+                      window.open(`tel:${profile.contact}`, "_self")
+                    }
+                    style={{
+                      backgroundColor: "var(--app-background-color)",
+                      scrollSnapAlign: "center" as any,
+                    }}
+                  >
+                    <FontAwesomeIcon icon={faPhone} size="2x" color="white" />
+                  </div>
+                )}
+                {hasChambers && (
+                  <div
+                    className="w-12 h-12 rounded-full flex items-center justify-center p-2 overflow-hidden cursor-pointer flex-shrink-0"
+                    onClick={() => navigate(`/${username}/chamber`)}
+                    style={{
+                      backgroundColor: "var(--app-background-color)",
+                      scrollSnapAlign: "center" as any,
+                    }}
+                  >
+                    <img
+                      src={chamber}
+                      alt="Chamber"
+                      className="w-9 h-9 object-contain"
+                    />
+                  </div>
+                )}
+                {profile.website && (
+                  <div
+                    className="w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0 cursor-pointer"
+                    onClick={() =>
+                      window.open(formatUrl(profile.website!), "_blank")
+                    }
+                    style={{
+                      backgroundColor: "var(--app-background-color)",
+                      scrollSnapAlign: "center" as any,
+                    }}
+                  >
+                    <FontAwesomeIcon icon={faGlobe} size="2x" color="white" />
+                  </div>
+                )}
                 {profile.Facebook && (
                   <div
                     className="w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0 cursor-pointer"
@@ -298,9 +285,8 @@ export default function PublicProfilePage() {
                       window.open(formatUrl(profile.Facebook!), "_blank")
                     }
                     style={{
-                      backgroundColor:
-                        profile.theme?.backgroundcolor ||
-                        "var(--app-background-color)",
+                      backgroundColor: "var(--app-background-color)",
+                      scrollSnapAlign: "center" as any,
                     }}
                   >
                     <FontAwesomeIcon
@@ -317,9 +303,8 @@ export default function PublicProfilePage() {
                       window.open(formatUrl(profile.Instagram!), "_blank")
                     }
                     style={{
-                      backgroundColor:
-                        profile.theme?.backgroundcolor ||
-                        "var(--app-background-color)",
+                      backgroundColor: "var(--app-background-color)",
+                      scrollSnapAlign: "center" as any,
                     }}
                   >
                     <FontAwesomeIcon
@@ -336,9 +321,8 @@ export default function PublicProfilePage() {
                       window.open(formatUrl(profile.Youtube!), "_blank")
                     }
                     style={{
-                      backgroundColor:
-                        profile.theme?.backgroundcolor ||
-                        "var(--app-background-color)",
+                      backgroundColor: "var(--app-background-color)",
+                      scrollSnapAlign: "center" as any,
                     }}
                   >
                     <FontAwesomeIcon icon={faYoutube} size="2x" color="white" />
@@ -351,50 +335,49 @@ export default function PublicProfilePage() {
                       window.open(formatUrl(profile.Linkedin!), "_blank")
                     }
                     style={{
-                      backgroundColor:
-                        profile.theme?.backgroundcolor ||
-                        "var(--app-background-color)",
+                      backgroundColor: "var(--app-background-color)",
+                      scrollSnapAlign: "center" as any,
                     }}
                   >
                     <FontAwesomeIcon icon={faGlobe} size="2x" color="white" />
                   </div>
                 )}
               </div>
+              <button
+                aria-label="Scroll right"
+                className={`absolute right-0 top-1/2 -translate-y-1/2 translate-x-1/2 z-20 p-1 bg-white/10 rounded-full ${
+                  canScrollRight
+                    ? "opacity-100"
+                    : "opacity-30 pointer-events-none"
+                }`}
+                onClick={() => {
+                  const el = iconsRef.current;
+                  if (!el) return;
+                  el.scrollBy({
+                    left: el.clientWidth * 0.6,
+                    behavior: "smooth",
+                  });
+                  setTimeout(updateIconScroll, 300);
+                }}
+                style={{ display: showArrows ? "block" : "none" }}
+              >
+                <FontAwesomeIcon icon={faChevronRight} color="red" />
+              </button>
             </div>
           </div>
-
-          {/* Contact Information */}
-          {(profile.email ||
-            profile.contact ||
-            profile.address1 ||
-            profile.address2 ||
-            profile.address3) && (
-            <div className="w-full bg-white rounded-xl p-4 mb-4">
-              {profile.email && (
-                <div className="mb-2">
-                  <span className="font-semibold">Email: </span>
-                  <span>{profile.email}</span>
-                </div>
-              )}
-              {profile.contact && (
-                <div className="mb-2">
-                  <span className="font-semibold">Contact: </span>
-                  <span>{profile.contact}</span>
-                </div>
-              )}
-              {profile.address1 && (
-                <div className="mb-2">
-                  <span className="font-semibold">Address: </span>
-                  <span>{profile.address1}</span>
-                </div>
-              )}
-              {profile.address2 && (
-                <div className="mb-2">{profile.address2}</div>
-              )}
-              {profile.address3 && <div>{profile.address3}</div>}
-            </div>
-          )}
-        </section>
+          <div
+            className="w-full rounded-md bg-white p-4 mb-4 shadow text-center"
+            style={{
+              borderWidth: 2,
+              borderStyle: "solid",
+              borderColor: "var(--app-background-color)",
+            }}
+          >
+            <div className="text-app">{profile.address1}</div>
+            <div className="text-app">{profile.address2}</div>
+            <div className="text-app">{profile.address3}</div>
+          </div>
+        </div>
       </div>
     </PublicLayout>
   );

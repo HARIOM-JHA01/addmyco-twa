@@ -120,10 +120,7 @@ export default function PublicChamberPage() {
 
   if (chambers.length === 0) {
     return (
-      <PublicLayout
-        backgroundColor={profile.theme?.backgroundcolor}
-        fontColor={profile.theme?.fontcolor}
-      >
+      <PublicLayout>
         <div className="flex items-center justify-center min-h-screen">
           <div className="text-center text-gray-600">
             No chamber data found.
@@ -138,10 +135,7 @@ export default function PublicChamberPage() {
   const contactNumber = profile.contact || null;
 
   return (
-    <PublicLayout
-      backgroundColor={profile.theme?.backgroundcolor}
-      fontColor={profile.theme?.fontcolor}
-    >
+    <PublicLayout>
       <div className="flex flex-col items-center justify-center flex-grow px-2 pb-8 min-h-screen mt-2">
         <div className="bg-blue-100 bg-opacity-40 rounded-3xl p-4 w-full max-w-md mx-auto flex flex-col items-center shadow-lg">
           {/* Chamber Top Icon Carousel */}

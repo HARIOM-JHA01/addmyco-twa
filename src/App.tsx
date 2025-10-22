@@ -38,6 +38,44 @@ function AppRoutes() {
   const [profile, setProfile] = useState<any>(null);
   const [profileLoading, setProfileLoading] = useState(true);
 
+  // Check if this is a public path EARLY to bypass welcome page
+  const isPublicPath = (() => {
+    const path = location.pathname || "/";
+    const segments = path.split("/").filter(Boolean);
+    if (segments.length === 0) return false;
+    const first = segments[0];
+    // reserved app routes that should NOT be treated as username
+    const reserved = new Set([
+      "profile",
+      "update-profile",
+      "notifications",
+      "sub-company",
+      "chamber",
+      "create-chamber",
+      "search",
+      "my-qr",
+      "create-profile",
+      "create-company",
+      "theme",
+      "membership",
+      "payment-history",
+      "background",
+      "assets",
+      "favicon.ico",
+      "",
+    ]);
+    if (reserved.has(first)) return false;
+    // /:username
+    if (segments.length === 1) return true;
+    // /:username/company or /:username/chamber
+    if (
+      segments.length === 2 &&
+      (segments[1] === "company" || segments[1] === "chamber")
+    )
+      return true;
+    return false;
+  })();
+
   useEffect(() => {
     // Fetch profile/company data on mount
     // Also fetch global background/theme settings and apply CSS variables.
@@ -51,22 +89,55 @@ function AppRoutes() {
         });
         if (res?.data?.success && res.data.data) {
           const bg = res.data.data;
+          // Apply background color
           if (bg.backgroundcolor) {
             document.documentElement.style.setProperty(
               "--app-background-color",
               bg.backgroundcolor
             );
           }
+          // Apply font color
           if (bg.fontcolor) {
             document.documentElement.style.setProperty(
               "--app-font-color",
               bg.fontcolor
             );
           }
+          // Apply background image if available
+          if (bg.Thumbnail || bg.thumbnail || bg.backgroundImage) {
+            const bgImageUrl =
+              bg.Thumbnail || bg.thumbnail || bg.backgroundImage;
+            document.documentElement.style.setProperty(
+              "--app-background-image",
+              `url(${bgImageUrl})`
+            );
+            // Also apply to body for global background
+            document.body.style.backgroundImage = `url(${bgImageUrl})`;
+            document.body.style.backgroundSize = "cover";
+            document.body.style.backgroundPosition = "center";
+            document.body.style.backgroundAttachment = "fixed";
+          } else {
+            // If no background image, use default
+            document.documentElement.style.setProperty(
+              "--app-background-image",
+              "url(/src/assets/background.jpg)"
+            );
+          }
+        } else {
+          // No data from API, use default
+          document.documentElement.style.setProperty(
+            "--app-background-image",
+            "url(/src/assets/background.jpg)"
+          );
         }
       } catch (e) {
         // ignore failures, keep default theme
         console.debug("fetchBackground failed", e);
+        // Set default background image
+        document.documentElement.style.setProperty(
+          "--app-background-image",
+          "url(/src/assets/background.jpg)"
+        );
       }
     };
 
@@ -340,50 +411,9 @@ function AppRoutes() {
     }
   };
 
-  if (showWelcome) {
-    return <WelcomePage onLogin={handleLogin} />;
-  }
-
   // If this looks like a public deep-link (/:username or /:username/company or /:username/chamber)
   // bypass the welcome/auth gating and render public routes directly so the app works when
   // someone opens https://addmy.co/username from outside (Telegram, browser refresh, etc.).
-  const isPublicPath = (() => {
-    const path = location.pathname || "/";
-    const segments = path.split("/").filter(Boolean);
-    if (segments.length === 0) return false;
-    const first = segments[0];
-    // reserved app routes that should NOT be treated as username
-    const reserved = new Set([
-      "profile",
-      "update-profile",
-      "notifications",
-      "sub-company",
-      "chamber",
-      "create-chamber",
-      "search",
-      "my-qr",
-      "create-profile",
-      "create-company",
-      "theme",
-      "membership",
-      "payment-history",
-      "background",
-      "assets",
-      "favicon.ico",
-      "",
-    ]);
-    if (reserved.has(first)) return false;
-    // /:username
-    if (segments.length === 1) return true;
-    // /:username/company or /:username/chamber
-    if (
-      segments.length === 2 &&
-      (segments[1] === "company" || segments[1] === "chamber")
-    )
-      return true;
-    return false;
-  })();
-
   if (isPublicPath) {
     return (
       <Routes>
@@ -393,6 +423,10 @@ function AppRoutes() {
         <Route path="*" element={<div>404 Not Found</div>} />
       </Routes>
     );
+  }
+
+  if (showWelcome) {
+    return <WelcomePage onLogin={handleLogin} />;
   }
 
   if (profileLoading) {

@@ -85,7 +85,10 @@ export default function HomePage() {
 
   if (loading) {
     return (
-      <div className="bg-[url(/src/assets/background.jpg)] bg-cover bg-center min-h-screen w-full overflow-x-hidden flex items-center justify-center">
+      <div
+        className="bg-cover bg-center min-h-screen w-full overflow-x-hidden flex items-center justify-center"
+        style={{ backgroundImage: "var(--app-background-image)" }}
+      >
         <div className="text-white text-xl">Loading...</div>
       </div>
     );
@@ -95,7 +98,10 @@ export default function HomePage() {
   const qrLink = `https://addmy.co/${profile?._id || ""}`;
 
   return (
-    <div className="bg-[url(/src/assets/background.jpg)] bg-cover bg-center min-h-screen w-full overflow-x-hidden">
+    <div
+      className="bg-cover bg-center min-h-screen w-full overflow-x-hidden"
+      style={{ backgroundImage: "var(--app-background-image)" }}
+    >
       <Header />
       <div className="flex flex-col items-center justify-center flex-grow py-4 px-2 pb-32">
         <div className="bg-blue-100 bg-opacity-40 rounded-3xl p-6 w-full max-w-md mx-auto flex flex-col items-center shadow-lg">

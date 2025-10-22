@@ -210,7 +210,10 @@ export default function MembershipPage() {
 
   if (!profile) {
     return (
-      <div className="bg-[url(/src/assets/background.jpg)] bg-cover bg-center min-h-screen w-full overflow-x-hidden flex justify-center items-center">
+      <div
+        className="bg-cover bg-center min-h-screen w-full overflow-x-hidden flex justify-center items-center"
+        style={{ backgroundImage: "var(--app-background-image)" }}
+      >
         <Header />
         <div className="flex-1 flex justify-center items-center text-red-500">
           Profile not loaded. Please refresh or visit your profile page first.
@@ -237,7 +240,10 @@ export default function MembershipPage() {
   const features = isPremium ? PREMIUM_FEATURES : BASIC_FEATURES;
 
   return (
-    <div className="bg-[url(/src/assets/background.jpg)] bg-cover bg-center min-h-screen w-full overflow-x-hidden flex flex-col">
+    <div
+      className="bg-cover bg-center min-h-screen w-full overflow-x-hidden flex flex-col"
+      style={{ backgroundImage: "var(--app-background-image)" }}
+    >
       <Header />
       <div className="flex flex-col items-center justify-start flex-1 pb-32">
         <div className="w-full max-w-md mt-8 p-4 rounded-xl shadow-xl bg-white/90">
@@ -431,7 +437,8 @@ export default function MembershipPage() {
                               disabled={usdtModalLoading}
                             />
                             <label className="block mb-2 text-sm font-medium text-gray-700">
-                              {i18n.t("wallet_address_label") || "Wallet Address"}
+                              {i18n.t("wallet_address_label") ||
+                                "Wallet Address"}
                             </label>
                             <input
                               type="text"
@@ -440,7 +447,10 @@ export default function MembershipPage() {
                               onChange={(e) =>
                                 setUsdtWalletAddress(e.target.value)
                               }
-                              placeholder={i18n.t("wallet_address_placeholder") || "Recipient wallet address (e.g. 0x...)"}
+                              placeholder={
+                                i18n.t("wallet_address_placeholder") ||
+                                "Recipient wallet address (e.g. 0x...)"
+                              }
                               disabled={usdtModalLoading}
                             />
                             {usdtModalError && (
@@ -452,7 +462,9 @@ export default function MembershipPage() {
                               className="w-full bg-gradient-to-r from-[#2fa8e0] to-[#38bdf8] text-white font-semibold py-2 rounded-lg mt-2 hover:from-[#38bdf8] hover:to-[#2fa8e0] transition disabled:opacity-60 disabled:cursor-not-allowed shadow-lg"
                               onClick={handleUsdtPayment}
                               disabled={
-                                usdtModalLoading || !usdtTransactionId || !usdtWalletAddress
+                                usdtModalLoading ||
+                                !usdtTransactionId ||
+                                !usdtWalletAddress
                               }
                             >
                               {usdtModalLoading

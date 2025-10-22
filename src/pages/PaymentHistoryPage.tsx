@@ -31,7 +31,10 @@ export default function PaymentHistoryPage() {
   }, []);
 
   return (
-    <div className="bg-[url(/src/assets/background.jpg)] bg-cover px-2 bg-center min-h-screen w-full overflow-x-hidden flex flex-col">
+    <div
+      className="bg-cover px-2 bg-center min-h-screen w-full overflow-x-hidden flex flex-col"
+      style={{ backgroundImage: "var(--app-background-image)" }}
+    >
       <Header />
       <div className="flex flex-col items-center justify-start flex-1 pb-32">
         <div className="w-full max-w-md mt-8 p-4 rounded-xl shadow-xl bg-white/90">

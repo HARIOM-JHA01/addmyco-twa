@@ -188,9 +188,59 @@ export default function BackgroundPage() {
   const isFree =
     memberType === "free" || memberType === "Free" || memberType === "FREE";
 
+  const handleSetBackgroundImage = async () => {
+    setModalLoading(true);
+    setModalError(null);
+
+    try {
+      const token = localStorage.getItem("token");
+      if (!token) {
+        throw new Error("No token found. Please login.");
+      }
+
+      const imageUrl =
+        modalImage.url ||
+        (Array.isArray(modalImage.thumbnails) && modalImage.thumbnails[0]);
+
+      if (!imageUrl) {
+        throw new Error("No image URL found");
+      }
+
+      await axios.post(
+        `${API_BASE_URL}/backgroundimage`,
+        { Thumbnail: imageUrl },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+
+      // Apply locally and close modal
+      setSelectedImage(imageUrl);
+      setModalSuccess("Background set successfully");
+
+      // Notify app to refetch background
+      window.dispatchEvent(new Event("background-updated"));
+
+      // Close modal after short delay
+      setTimeout(() => {
+        setModalOpen(false);
+        setModalSuccess(null);
+      }, 900);
+    } catch (err: any) {
+      setModalError(
+        err?.response?.data?.message ||
+          err.message ||
+          "Failed to set background"
+      );
+    } finally {
+      setModalLoading(false);
+    }
+  };
+
   return (
     <Layout>
-      <div className="bg-[url(/src/assets/background.jpg)] bg-cover bg-center min-h-screen w-full overflow-x-hidden flex flex-col">
+      <div
+        className="bg-cover bg-center min-h-screen w-full overflow-x-hidden flex flex-col"
+        style={{ backgroundImage: "var(--app-background-image)" }}
+      >
         <div className="px-2 pt-3 pb-28 flex-1 flex justify-center">
           <div className="w-full max-w-[880px] bg-white/20 backdrop-blur-sm rounded-2xl p-4 shadow-md">
             {/* Category buttons with upload button - styled scrollbar matching ContactPage */}
@@ -439,44 +489,7 @@ export default function BackgroundPage() {
                             "linear-gradient(135deg, var(--app-background-color, #007cb6) 0%, #0056b3 100%)",
                         }}
                         disabled={modalLoading}
-                        onClick={async () => {
-                          // call the POST API to set background
-                          setModalLoading(true);
-                          setModalError(null);
-                          try {
-                            const token = localStorage.getItem("token");
-                            if (!token)
-                              throw new Error("No token found. Please login.");
-                            const thumb =
-                              modalImage.url ||
-                              (Array.isArray(modalImage.thumbnails) &&
-                                modalImage.thumbnails[0]);
-                            await axios.post(
-                              `${API_BASE_URL}/backgroundimage`,
-                              { Thumbnail: thumb },
-                              { headers: { Authorization: `Bearer ${token}` } }
-                            );
-                            // apply locally and close
-                            setSelectedImage(thumb);
-                            setModalSuccess("Background set successfully");
-                            // notify app
-                            window.dispatchEvent(
-                              new Event("background-updated")
-                            );
-                            setTimeout(() => {
-                              setModalOpen(false);
-                              setModalSuccess(null);
-                            }, 900);
-                          } catch (err: any) {
-                            setModalError(
-                              err?.response?.data?.message ||
-                                err.message ||
-                                "Failed to set background"
-                            );
-                          } finally {
-                            setModalLoading(false);
-                          }
-                        }}
+                        onClick={handleSetBackgroundImage}
                       >
                         {modalLoading ? (
                           <span className="flex items-center justify-center gap-2">

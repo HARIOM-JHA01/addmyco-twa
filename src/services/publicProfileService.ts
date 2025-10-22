@@ -31,6 +31,11 @@ export interface PublicProfileData {
   TikTok?: string;
   profile_image?: string;
   video?: string;
+  website?: string;
+  companydata?: {
+    company_name_english?: string;
+    company_name_chinese?: string;
+  };
   userDoc?: CompanyData[];
   chamberDoc?: ChamberData[];
   theme?: ThemeData;

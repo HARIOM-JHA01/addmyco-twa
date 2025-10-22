@@ -119,10 +119,7 @@ export default function PublicCompanyPage() {
 
   if (companies.length === 0) {
     return (
-      <PublicLayout
-        backgroundColor={profile.theme?.backgroundcolor}
-        fontColor={profile.theme?.fontcolor}
-      >
+      <PublicLayout>
         <div className="flex items-center justify-center min-h-screen">
           <div className="text-center text-gray-600">
             No company profile found.
@@ -133,10 +130,7 @@ export default function PublicCompanyPage() {
   }
 
   return (
-    <PublicLayout
-      backgroundColor={profile.theme?.backgroundcolor}
-      fontColor={profile.theme?.fontcolor}
-    >
+    <PublicLayout>
       <div className="flex flex-col items-center justify-center flex-grow py-4 px-2 pb-8">
         <section className="bg-blue-100 bg-opacity-40 rounded-3xl p-6 w-full max-w-md mx-auto flex flex-col items-center shadow-lg">
           {/* Top Icon Carousel */}
