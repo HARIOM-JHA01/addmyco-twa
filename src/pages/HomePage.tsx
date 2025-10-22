@@ -1,6 +1,5 @@
 import { useEffect, useState, useRef } from "react";
 import logo from "../assets/logo.png";
-import addmycoLogo from "../assets/addmyco.png";
 import chamberIcon from "../assets/chamber.svg";
 import companyIcon from "../assets/company.svg";
 import { Share2, Camera } from "lucide-react";
@@ -177,7 +176,7 @@ export default function HomePage() {
                 )
               ) : (
                 <img
-                  src={addmycoLogo}
+                  src={logo}
                   alt="Default Profile"
                   className="w-full h-full object-cover rounded-full"
                 />

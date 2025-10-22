@@ -1,7 +1,7 @@
 import Layout from "../components/Layout";
 import { useState, useRef, useEffect } from "react";
 // import pencilImage from '../assets/pencil.png';
-import addmycoIcon from "../assets/addmyco.png";
+import logo from "../assets/logo.png";
 import WebApp from "@twa-dev/sdk";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
@@ -293,7 +293,7 @@ export default function UpdateProfilePage() {
                 )
               ) : (
                 <img
-                  src={addmycoIcon}
+                  src={logo}
                   alt="Default Icon"
                   className="w-[180px] h-[180px] object-cover rounded-full"
                 />

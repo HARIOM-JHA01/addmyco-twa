@@ -33,7 +33,7 @@
 :root {
     --app-background-color: #007cb6; /* default */
     --app-font-color: #000000; /* default */
-    --app-background-image: url(/src/assets/background.jpg); /* default */
+    --app-background-image: url('./assets/background.jpg'); /* default */
 }
 
 /* Make all text use the fetched font color by default */

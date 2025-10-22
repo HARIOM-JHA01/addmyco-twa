@@ -27,6 +27,7 @@ import HomePage from "./pages/HomePage";
 import PublicProfilePage from "./pages/PublicProfilePage";
 import PublicCompanyPage from "./pages/PublicCompanyPage";
 import PublicChamberPage from "./pages/PublicChamberPage";
+import backgroundImg from "./assets/background.jpg";
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
@@ -160,7 +161,7 @@ function AppRoutes() {
             // If no background image, use default
             document.documentElement.style.setProperty(
               "--app-background-image",
-              "url(/src/assets/background.jpg)"
+              `url(${backgroundImg})`
             );
           }
         } else {
@@ -184,7 +185,7 @@ function AppRoutes() {
           // Set default background image
           document.documentElement.style.setProperty(
             "--app-background-image",
-            "url(/src/assets/background.jpg)"
+            `url(${backgroundImg})`
           );
         }
       } catch (e) {
@@ -210,7 +211,7 @@ function AppRoutes() {
         // Set default background image
         document.documentElement.style.setProperty(
           "--app-background-image",
-          "url(/src/assets/background.jpg)"
+          `url(${backgroundImg})`
         );
       }
     };

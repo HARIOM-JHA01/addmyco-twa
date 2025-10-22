@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useRef } from "react";
 import Header from "../components/Header";
 import axios from "axios";
+import backgroundImg from "../assets/background.jpg";
 // import { useNavigate } from "react-router-dom";
 
 interface WelcomePageProps {
@@ -68,7 +69,9 @@ const WelcomePage: React.FC<WelcomePageProps> = ({ onLogin }) => {
   return (
     <div
       className="relative flex flex-col min-h-screen bg-cover bg-center"
-      style={{ backgroundImage: "var(--app-background-image)" }}
+      style={{
+        backgroundImage: `var(--app-background-image, url(${backgroundImg}))`,
+      }}
     >
       <div className="absolute inset-0 bg-black/30 z-0" />
       <div className="relative z-10 flex flex-col min-h-screen">

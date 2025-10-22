@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import Header from "../components/Header";
-import addmycoIcon from "../assets/addmyco.png";
+import addmycoIcon from "../assets/logo.png";
 import WebApp from "@twa-dev/sdk";
 import { useProfileStore } from "../store/profileStore";
 import {
