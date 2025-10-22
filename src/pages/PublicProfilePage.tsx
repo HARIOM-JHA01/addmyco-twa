@@ -21,7 +21,7 @@ import {
   fetchPublicProfile,
   PublicProfileData,
 } from "../services/publicProfileService";
-import { formatUrl } from "../utils/validation";
+import { formatUrl, formatImageUrl } from "../utils/validation";
 
 export default function PublicProfilePage() {
   const { username } = useParams<{ username: string }>();
@@ -103,6 +103,10 @@ export default function PublicProfilePage() {
   const hasCompanies = profile.userDoc && profile.userDoc.length > 0;
   const hasChambers = profile.chamberDoc && profile.chamberDoc.length > 0;
 
+  // Get first company for display on profile page
+  const firstCompany =
+    hasCompanies && profile.userDoc ? profile.userDoc[0] : null;
+
   return (
     <PublicLayout>
       <div className="flex flex-col items-center justify-center flex-grow py-4 px-2 pb-32">
@@ -112,19 +116,23 @@ export default function PublicProfilePage() {
               className="w-full rounded-full bg-app text-app text-xl font-bold py-2 mb-2 flex items-center justify-center"
               style={{ borderRadius: "2rem", width: "100%" }}
             >
-              {profile.companydata?.company_name_english || "Company Name"}
+              {firstCompany?.company_name_english ||
+                profile.companydata?.company_name_english ||
+                "Company Name"}
             </button>
             <button
               className="w-full rounded-full bg-app text-app text-xl font-bold mb-2 py-2 flex items-center justify-center"
               style={{ borderRadius: "2rem", width: "100%" }}
             >
-              {profile.companydata?.company_name_chinese || "公司名称"}
+              {firstCompany?.company_name_chinese ||
+                profile.companydata?.company_name_chinese ||
+                "公司名称"}
             </button>
             <div className="rounded-full mb-2 w-[180px] h-[180px] flex items-center justify-center overflow-hidden bg-white self-center">
               {profile.profile_image &&
               profile.profile_image.endsWith(".mp4") ? (
                 <video
-                  src={profile.profile_image}
+                  src={formatImageUrl(profile.profile_image)}
                   autoPlay
                   loop
                   muted
@@ -133,7 +141,7 @@ export default function PublicProfilePage() {
                 />
               ) : (
                 <img
-                  src={profile.profile_image || logo}
+                  src={formatImageUrl(profile.profile_image) || logo}
                   alt="Profile"
                   className="w-full h-full object-cover rounded-full"
                 />

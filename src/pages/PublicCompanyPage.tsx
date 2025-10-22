@@ -22,7 +22,7 @@ import {
   PublicProfileData,
   CompanyData,
 } from "../services/publicProfileService";
-import { formatUrl } from "../utils/validation";
+import { formatUrl, formatImageUrl } from "../utils/validation";
 
 export default function PublicCompanyPage() {
   const { username } = useParams<{ username: string }>();
@@ -315,7 +315,7 @@ export default function PublicCompanyPage() {
               {companyProfile.image ? (
                 companyProfile.image.endsWith(".mp4") ? (
                   <video
-                    src={companyProfile.image}
+                    src={formatImageUrl(companyProfile.image)}
                     autoPlay
                     loop
                     muted
@@ -324,14 +324,14 @@ export default function PublicCompanyPage() {
                   />
                 ) : (
                   <img
-                    src={companyProfile.image}
+                    src={formatImageUrl(companyProfile.image)}
                     alt="company"
                     className="w-full h-48 object-cover rounded-xl"
                   />
                 )
               ) : profile.theme?.Thumbnail ? (
                 <img
-                  src={profile.theme.Thumbnail}
+                  src={formatImageUrl(profile.theme.Thumbnail)}
                   alt="Company thumbnail"
                   className="w-full h-48 object-cover rounded-xl"
                 />

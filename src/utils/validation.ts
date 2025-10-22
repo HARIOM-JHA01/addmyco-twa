@@ -151,3 +151,22 @@ export const hasValidationErrors = (errors: {
 }): boolean => {
   return Object.values(errors).some((error) => error !== "");
 };
+
+// Format image URL - handles both full URLs and relative paths
+export const formatImageUrl = (imageUrl: string | undefined): string => {
+  if (!imageUrl) return "";
+
+  // If already a full URL, return as-is
+  if (imageUrl.startsWith("http://") || imageUrl.startsWith("https://")) {
+    return imageUrl;
+  }
+
+  // If it's a relative path, prepend the API base URL
+  const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || "";
+
+  // Remove leading slash if present to avoid double slashes
+  const cleanPath = imageUrl.startsWith("/") ? imageUrl.slice(1) : imageUrl;
+
+  // Construct full URL
+  return `${apiBaseUrl}/assets/${cleanPath}`;
+};

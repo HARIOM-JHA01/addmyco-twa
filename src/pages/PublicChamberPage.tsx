@@ -22,7 +22,7 @@ import {
   PublicProfileData,
   ChamberData,
 } from "../services/publicProfileService";
-import { formatUrl } from "../utils/validation";
+import { formatUrl, formatImageUrl } from "../utils/validation";
 
 export default function PublicChamberPage() {
   const { username } = useParams<{ username: string }>();
@@ -315,7 +315,7 @@ export default function PublicChamberPage() {
             <div className="w-full flex justify-center mb-4">
               {c.video && c.video.endsWith(".mp4") ? (
                 <video
-                  src={c.video}
+                  src={formatImageUrl(c.video)}
                   autoPlay
                   loop
                   muted
@@ -324,13 +324,13 @@ export default function PublicChamberPage() {
                 />
               ) : c.image ? (
                 <img
-                  src={c.image}
+                  src={formatImageUrl(c.image)}
                   alt="chamber"
                   className="w-full h-48 object-cover rounded-xl"
                 />
               ) : profile.theme?.Thumbnail ? (
                 <img
-                  src={profile.theme.Thumbnail}
+                  src={formatImageUrl(profile.theme.Thumbnail)}
                   alt="Chamber thumbnail"
                   className="w-full h-48 object-cover rounded-xl"
                 />
