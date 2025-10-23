@@ -369,9 +369,18 @@ export default function SubCompanyPage() {
           editProfile.order !== undefined && editProfile.order !== ""
             ? editProfile.order
             : companyProfile?.company_order ?? 0,
-        image: editProfile.image || "",
-        video: editProfile.video || "",
       };
+
+      // Only include image if it's a new base64 upload (user changed the image)
+      // Don't send existing image URL as it will break the backend
+      if (editProfile.image && editProfile.image.startsWith("data:")) {
+        companyDoc.image = editProfile.image;
+      }
+
+      // Video field (if needed for premium users in future)
+      if (editProfile.video && editProfile.video.startsWith("data:")) {
+        companyDoc.video = editProfile.video;
+      }
 
       // If we're updating an existing company, include its _id
       if (editMode === "update" && companyProfile?._id) {

@@ -95,7 +95,6 @@ export default function ChamberPage() {
       facebook: chamber.Facebook,
       order: chamber.chamber_order,
       _id: chamber._id,
-      user_id: chamber.user_id,
       image: chamber.image,
       whatsapp: chamber.WhatsApp,
       wechat: chamber.WeChat,
@@ -235,8 +234,7 @@ export default function ChamberPage() {
       if (!token) throw new Error("No token found. Please login again.");
       if (editMode === "update") {
         // Update
-        const payload = {
-          user_id: editChamber.user_id,
+        const payload: any = {
           data: [
             {
               _id: editChamber._id,
@@ -247,11 +245,28 @@ export default function ChamberPage() {
               detail: editChamber.details,
               WhatsApp: editChamber.whatsapp,
               WeChat: editChamber.wechat,
+              Line: editChamber.line,
               Instagram: editChamber.instagram,
-              image: editChamber.image,
+              Facebook: editChamber.facebook,
+              Twitter: editChamber.twitter,
+              Youtube: editChamber.youtube,
+              Linkedin: editChamber.linkedin,
+              SnapChat: editChamber.snapchat,
+              Skype: editChamber.skype,
+              TikTok: editChamber.tiktok,
+              tgchannel: editChamber.telegram,
+              chamberfanpage: editChamber.chamberfanpage,
+              chamber_order: editChamber.order,
             },
           ],
         };
+
+        // Only include image if it's a new base64 upload (user changed the image)
+        // Don't send existing image URL as it will break the backend
+        if (editChamber.image && editChamber.image.startsWith("data:")) {
+          payload.data[0].image = editChamber.image;
+        }
+
         await axios.post(`${API_BASE_URL}/updatechamber`, payload, {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -832,7 +847,7 @@ export default function ChamberPage() {
                       {[
                         {
                           key: "telegram",
-                          enabled: !!c.telegramId,
+                          enabled: !!c.tgchannel,
                           render: () => (
                             <FontAwesomeIcon
                               icon={faTelegram}
@@ -842,7 +857,7 @@ export default function ChamberPage() {
                           ),
                           onClick: () => {
                             if (c.telegramId)
-                              WebApp.openLink(formatUrl(c.telegramId));
+                              WebApp.openLink(formatUrl(c.tgchannel));
                             else if (c.tgchannel) {
                               // if no full link, try to open as t.me/username
                               // remove leading @ if present

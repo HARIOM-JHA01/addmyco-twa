@@ -213,7 +213,7 @@ export default function HomePage() {
             <div
               ref={iconsRef}
               onScroll={updateScroll}
-              className="flex gap-4 px-4 overflow-x-auto no-scrollbar items-center"
+              className="flex gap-2 px-4 overflow-x-auto no-scrollbar items-center"
               style={{
                 scrollBehavior: "smooth",
                 scrollSnapType: "x mandatory" as any,
