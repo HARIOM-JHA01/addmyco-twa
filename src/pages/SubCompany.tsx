@@ -6,10 +6,6 @@ import chamberIcon from "../assets/chamber.svg";
 import profileIcon from "../assets/profileIcon.png";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
-  faChevronLeft,
-  faChevronRight,
-} from "@fortawesome/free-solid-svg-icons";
-import {
   faWhatsapp,
   faTelegram,
   faFacebook,
@@ -877,8 +873,8 @@ export default function SubCompanyPage() {
                 </div>
               </div>
 
-              {/* Company Names with navigation arrows (overlay, name stays full-width) */}
-              <div className="relative w-full mb-2">
+              {/* Company Names */}
+              <div className="w-full mb-2">
                 <div
                   className="w-full rounded-full bg-app text-app text-xl font-bold py-1 flex items-center justify-center"
                   style={{ borderRadius: "2rem" }}
@@ -886,37 +882,6 @@ export default function SubCompanyPage() {
                   {companyProfile.company_name_english ||
                     "English Company Name"}
                 </div>
-                <button
-                  aria-label="Prev company"
-                  className="absolute left-0 -translate-x-1/2 p-1 rounded-full"
-                  style={{
-                    top: "calc(50% + 2px)",
-                    display: currentCompanyIndex > 0 ? "block" : "none",
-                  }}
-                  onClick={() =>
-                    setCurrentCompanyIndex((i) => Math.max(i - 1, 0))
-                  }
-                >
-                  <FontAwesomeIcon icon={faChevronLeft} color="pink" />
-                </button>
-                <button
-                  aria-label="Next company"
-                  className="absolute right-0 translate-x-1/2 p-1 rounded-full"
-                  style={{
-                    top: "calc(60% + 2px)",
-                    display:
-                      currentCompanyIndex < companies.length - 1
-                        ? "block"
-                        : "none",
-                  }}
-                  onClick={() =>
-                    setCurrentCompanyIndex((i) =>
-                      Math.min(i + 1, companies.length - 1)
-                    )
-                  }
-                >
-                  <FontAwesomeIcon icon={faChevronRight} color="red" />
-                </button>
               </div>
               <div
                 className="w-full rounded-full bg-app text-app text-xl font-bold py-1 mb-2 flex items-center justify-center"
