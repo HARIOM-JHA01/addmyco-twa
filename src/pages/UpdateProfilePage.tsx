@@ -233,7 +233,14 @@ export default function UpdateProfilePage() {
           <div className="bg-black text-white text-center border-2 border-gray-400">
             <h2 className="text-lg font-bold mb-2">
               Upgrade to Premium Membership to avail exciting features{" "}
-              <span className="text-[#00AEEF]">Upgrade now</span>
+              <span
+                onClick={() => {
+                  navigate("/membership");
+                }}
+                className="text-[#00AEEF]"
+              >
+                Upgrade now
+              </span>
             </h2>
           </div>
         )}
