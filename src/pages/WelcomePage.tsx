@@ -79,7 +79,7 @@ const WelcomePage: React.FC<WelcomePageProps> = ({ onLogin }) => {
         <main className="flex-1 flex flex-col items-center justify-center">
           <div
             className="bg-opacity-90 rounded-lg p-8 shadow-lg flex flex-col items-center w-[368px]"
-            style={{ backgroundColor: "var(--app-background-color)" }}
+            style={{ backgroundColor: "#0099cc" }}
           >
             <h1 className="text-3xl font-space-bold mb-6 text-white">
               Welcome to AddMy

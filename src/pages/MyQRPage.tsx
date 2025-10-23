@@ -54,28 +54,47 @@ export default function MyQRPage() {
   const copyToClipboard = async (text: string) => {
     try {
       await navigator.clipboard.writeText(text);
-      alert("Copied to clipboard!");
+      alert("Link copied to clipboard!");
     } catch (err) {
       console.error("Copy failed", err);
-      setError("Copy failed");
+      // Fallback for older browsers or when clipboard API is not available
+      try {
+        // Create a temporary textarea element
+        const textarea = document.createElement("textarea");
+        textarea.value = text;
+        textarea.style.position = "fixed";
+        textarea.style.opacity = "0";
+        document.body.appendChild(textarea);
+        textarea.select();
+        const success = document.execCommand("copy");
+        document.body.removeChild(textarea);
+
+        if (success) {
+          alert("Link copied to clipboard!");
+        } else {
+          throw new Error("execCommand failed");
+        }
+      } catch (fallbackErr) {
+        console.error("Fallback copy also failed", fallbackErr);
+        alert(`Copy failed. Here's the link: ${text}`);
+      }
     }
   };
 
   const copyQRCodeImage = async () => {
+    // First, try to copy as image
     try {
-      if (!qrRef.current) return;
+      if (!qrRef.current) throw new Error("QR ref not found");
 
-      // Find the SVG element inside the QR container
       const svgElement = qrRef.current.querySelector("svg");
-      if (!svgElement) {
-        alert("QR Code not found");
-        return;
-      }
+      if (!svgElement) throw new Error("SVG element not found");
 
       // Get SVG data
       const svgData = new XMLSerializer().serializeToString(svgElement);
       const canvas = document.createElement("canvas");
       const ctx = canvas.getContext("2d");
+      if (!ctx) throw new Error("Canvas context not available");
+
       const img = new Image();
 
       // Set canvas size to match SVG
@@ -89,41 +108,50 @@ export default function MyQRPage() {
       const url = URL.createObjectURL(svgBlob);
 
       img.onload = async () => {
-        if (ctx) {
+        try {
           // Draw white background
           ctx.fillStyle = "#ffffff";
           ctx.fillRect(0, 0, canvas.width, canvas.height);
           // Draw the QR code
           ctx.drawImage(img, 0, 0);
-        }
 
-        // Convert canvas to blob
-        canvas.toBlob(async (blob) => {
-          if (blob) {
+          // Convert canvas to blob
+          canvas.toBlob(async (blob) => {
+            if (!blob) throw new Error("Failed to create blob");
+
             try {
               await navigator.clipboard.write([
                 new ClipboardItem({ "image/png": blob }),
               ]);
-              alert("QR Code copied to clipboard!");
+              alert("QR Code image copied to clipboard!");
             } catch (err) {
               console.error("Failed to copy image:", err);
-              alert(
-                "Failed to copy QR Code image. Your browser may not support this feature."
-              );
+              // Fallback: copy the link as text
+              await copyToClipboard(qrLink);
+            } finally {
+              URL.revokeObjectURL(url);
             }
-          }
-        }, "image/png");
+          }, "image/png");
+        } catch (err) {
+          URL.revokeObjectURL(url);
+          // Fallback: copy the link as text
+          await copyToClipboard(qrLink);
+        }
+      };
 
+      img.onerror = async () => {
         URL.revokeObjectURL(url);
+        // Fallback: copy the link as text
+        await copyToClipboard(qrLink);
       };
 
       img.src = url;
     } catch (err) {
-      console.error("Copy QR failed", err);
-      alert("Failed to copy QR Code");
+      console.error("Copy QR image failed, using text fallback:", err);
+      // Fallback: copy the link as text
+      await copyToClipboard(qrLink);
     }
   };
-
   const handleCopyDetails = () => {
     if (!profile) return;
     const name =
