@@ -13,12 +13,7 @@ import {
   faInstagram,
   faFacebook,
 } from "@fortawesome/free-brands-svg-icons";
-import {
-  faGlobe,
-  faPhone,
-  faChevronLeft,
-  faChevronRight,
-} from "@fortawesome/free-solid-svg-icons";
+import { faGlobe, faPhone } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import WebApp from "@twa-dev/sdk";
 import i18n from "../i18n";
@@ -41,6 +36,12 @@ export default function ChamberPage() {
   const [validationErrors, setValidationErrors] = useState<{
     [key: string]: string;
   }>({});
+
+  // Delete chamber state
+  const [deleteLoading, setDeleteLoading] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
+
   // Icon carousel refs & state for chamber page
   const topIconsRef = useRef<HTMLDivElement | null>(null);
   const bottomIconsRef = useRef<HTMLDivElement | null>(null);
@@ -110,6 +111,91 @@ export default function ChamberPage() {
     setFile(null);
     setEditError("");
   };
+
+  // Function to handle chamber deletion
+  const deleteChamber = async () => {
+    const currentChamber = Array.isArray(chamberData)
+      ? chamberData[currentChamberIndex]
+      : chamberData;
+
+    if (!currentChamber?._id) {
+      return;
+    }
+
+    setDeleteLoading(true);
+    try {
+      const token = localStorage.getItem("token");
+      if (!token) throw new Error("No token found. Please login again.");
+
+      // Call the delete chamber API
+      await axios.delete(
+        `${API_BASE_URL}/deletechamber/${currentChamber._id}`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+
+      // After successful delete, fetch all chambers from server to refresh state
+      try {
+        const res = await axios.get(`${API_BASE_URL}/getchamberprofile`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+
+        const data = res.data?.data || res.data;
+
+        // Check if data is array with items
+        if (Array.isArray(data) && data.length > 0) {
+          const sorted = [...data].sort((a: any, b: any) => {
+            const ao = Number(a.chamber_order ?? a.order ?? 0);
+            const bo = Number(b.chamber_order ?? b.order ?? 0);
+            return ao - bo;
+          });
+          setChamberData(sorted);
+          setCurrentChamberIndex(0);
+        } else if (data && typeof data === "object" && !Array.isArray(data)) {
+          setChamberData([data]);
+          setCurrentChamberIndex(0);
+        } else {
+          // empty array or null -> no chambers
+          setChamberData(null);
+          setCurrentChamberIndex(0);
+        }
+      } catch (err) {
+        // If refresh fails, fall back to removing locally
+        if (Array.isArray(chamberData)) {
+          const updatedChambers = chamberData.filter(
+            (c) => c._id !== currentChamber._id
+          );
+          setChamberData(updatedChambers.length > 0 ? updatedChambers : null);
+          setCurrentChamberIndex(0);
+        } else {
+          setChamberData(null);
+        }
+      }
+
+      // Show success feedback and close modal / edit mode
+      setSuccessMessage("Chamber deleted successfully.");
+      setEditMode(null);
+      setEditChamber(null);
+      setFile(null);
+      setFilePreview(null);
+      setValidationErrors({});
+      setShowDeleteConfirm(false);
+
+      // Auto-hide success message after 3s
+      window.setTimeout(() => setSuccessMessage(null), 3000);
+    } catch (err: any) {
+      console.error("Error deleting chamber:", err);
+      setEditError(
+        err?.response?.data?.message ||
+          err.message ||
+          "Failed to delete chamber"
+      );
+    } finally {
+      setDeleteLoading(false);
+    }
+  };
+
   // Handle edit form input
   const handleEditInput = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
@@ -647,6 +733,17 @@ export default function ChamberPage() {
                   : i18n.t("save")}
               </button>
             </div>
+            {/* Delete button inside edit mode (only for updates) */}
+            {editMode === "update" && (
+              <button
+                type="button"
+                className="w-full bg-red-600 text-white rounded-full py-2 font-bold mt-2"
+                onClick={() => setShowDeleteConfirm(true)}
+                disabled={deleteLoading || editLoading}
+              >
+                Delete Chamber
+              </button>
+            )}
           </form>
         ) : (
           <div className="bg-blue-100 bg-opacity-40 rounded-3xl p-4 w-full max-w-md mx-auto flex flex-col items-center shadow-lg">
@@ -751,46 +848,14 @@ export default function ChamberPage() {
                         </div>
                       </div>
                     </div>
-                    {/* Chamber names and designation (company-style) */}
-                    {/* Chamber Names with navigation arrows (overlay, name stays full-width) */}
-                    <div className="relative w-full mb-2">
+                    {/* Chamber names and designation */}
+                    <div className="w-full mb-2">
                       <div
                         className="w-full rounded-full bg-app text-app text-xl font-bold py-2 flex items-center justify-center"
                         style={{ borderRadius: "2rem" }}
                       >
                         {c.chamber_name_english}
                       </div>
-                      <button
-                        aria-label="Prev chamber"
-                        className="absolute left-0 -translate-x-1/2 p-1 rounded-full"
-                        style={{
-                          top: "calc(50% + 2px)",
-                          display: currentChamberIndex > 0 ? "block" : "none",
-                        }}
-                        onClick={() =>
-                          setCurrentChamberIndex((i) => Math.max(i - 1, 0))
-                        }
-                      >
-                        <FontAwesomeIcon icon={faChevronLeft} color="red" />
-                      </button>
-                      <button
-                        aria-label="Next chamber"
-                        className="absolute right-0 translate-x-1/2 p-1 rounded-full"
-                        style={{
-                          top: "calc(50% + 2px)",
-                          display:
-                            currentChamberIndex < chambers.length - 1
-                              ? "block"
-                              : "none",
-                        }}
-                        onClick={() =>
-                          setCurrentChamberIndex((i) =>
-                            Math.min(i + 1, chambers.length - 1)
-                          )
-                        }
-                      >
-                        <FontAwesomeIcon icon={faChevronRight} color="red" />
-                      </button>
                     </div>
                     <div
                       className="w-full rounded-full bg-app text-app text-xl font-bold py-2 mb-2 flex items-center justify-center"
@@ -999,6 +1064,44 @@ export default function ChamberPage() {
           </div>
         )}
       </div>
+
+      {/* Success Message */}
+      {successMessage && (
+        <div className="fixed top-4 left-1/2 transform -translate-x-1/2 bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg z-50">
+          {successMessage}
+        </div>
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {showDeleteConfirm && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center">
+          <div className="bg-white rounded-lg p-6 m-4 max-w-sm w-full">
+            <h3 className="text-xl font-bold mb-4 text-center">
+              Delete Chamber?
+            </h3>
+            <p className="mb-6 text-center">
+              Are you sure you want to delete this chamber? This action cannot
+              be undone.
+            </p>
+            <div className="flex gap-4">
+              <button
+                className="flex-1 p-2 bg-gray-300 rounded-md"
+                onClick={() => setShowDeleteConfirm(false)}
+                disabled={deleteLoading}
+              >
+                Cancel
+              </button>
+              <button
+                className="flex-1 p-2 bg-red-500 text-white rounded-md"
+                onClick={deleteChamber}
+                disabled={deleteLoading}
+              >
+                {deleteLoading ? "Deleting..." : "Delete"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </Layout>
   );
 }
