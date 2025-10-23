@@ -89,6 +89,13 @@ export default function MyQRPage() {
       const svgElement = qrRef.current.querySelector("svg");
       if (!svgElement) throw new Error("SVG element not found");
 
+      // Check if ClipboardItem is supported (not available in many mobile browsers)
+      if (!window.ClipboardItem) {
+        console.log("ClipboardItem not supported, falling back to text");
+        await copyToClipboard(qrLink);
+        return;
+      }
+
       // Get SVG data
       const svgData = new XMLSerializer().serializeToString(svgElement);
       const canvas = document.createElement("canvas");
@@ -120,10 +127,30 @@ export default function MyQRPage() {
             if (!blob) throw new Error("Failed to create blob");
 
             try {
+              // Check if clipboard.write is supported
+              if (!navigator.clipboard || !navigator.clipboard.write) {
+                throw new Error("Clipboard API not supported");
+              }
+
               await navigator.clipboard.write([
                 new ClipboardItem({ "image/png": blob }),
               ]);
-              alert("QR Code image copied to clipboard!");
+
+              // Verify the copy worked by trying to read it back
+              try {
+                const clipboardItems = await navigator.clipboard.read();
+                if (clipboardItems && clipboardItems.length > 0) {
+                  alert("QR Code image copied to clipboard!");
+                } else {
+                  throw new Error("Image not in clipboard");
+                }
+              } catch (readErr) {
+                // If we can't verify, assume it worked on desktop but failed on mobile
+                console.warn("Could not verify clipboard content:", readErr);
+                alert(
+                  "QR Code image copied to clipboard! (Note: Image copying may not work on all mobile devices)"
+                );
+              }
             } catch (err) {
               console.error("Failed to copy image:", err);
               // Fallback: copy the link as text
