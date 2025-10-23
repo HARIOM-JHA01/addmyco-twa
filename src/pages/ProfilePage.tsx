@@ -154,7 +154,7 @@ export default function ProfilePage() {
                   <div
                     ref={iconsRef}
                     onScroll={updateIconScroll}
-                    className="flex gap-4 px-4 overflow-x-hidden items-center"
+                    className="flex gap-2 px-4 overflow-x-hidden items-center"
                     style={{
                       scrollBehavior: "smooth",
                       scrollSnapType: "x mandatory" as any,

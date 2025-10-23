@@ -16,7 +16,7 @@ export default function BackgroundPage() {
   const [error, setError] = useState<string | null>(null);
 
   // UI state matching screenshot
-  const [activeTab, setActiveTab] = useState<string>("system"); // system category slug or 'my'
+  const [activeTab, setActiveTab] = useState<string>("all"); // 'all', system category slug, or 'my'
   // Category key is tracked via activeTab; no separate state required
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
@@ -27,6 +27,12 @@ export default function BackgroundPage() {
   const gridRef = useRef<HTMLDivElement | null>(null);
   const [scrollProgress, setScrollProgress] = useState(0);
   const uploadInputRef = useRef<HTMLInputElement | null>(null);
+
+  // membership check - free users can't upload or see user images
+  const profile = useProfileStore((s) => s.profile);
+  const memberType = profile?.membertype || profile?.membertype || "free";
+  const isFree =
+    memberType === "free" || memberType === "Free" || memberType === "FREE";
 
   useEffect(() => {
     const fetchAll = async () => {
@@ -94,6 +100,7 @@ export default function BackgroundPage() {
 
   // Build tabs similar to screenshot: dynamic categories + My images
   // Tabs: show actual category names from API, plus 'Your Images'
+  // Hide 'Your Images' tab for free users
   const tabs = useMemo(() => {
     const catTabs = (categories || []).map((c: any) => ({
       key: c.slug || c._id || c.id || c.categoryname || String(Math.random()),
@@ -101,20 +108,66 @@ export default function BackgroundPage() {
       type: "category" as const,
       payload: c,
     }));
-    return [
-      ...catTabs,
-      {
-        key: "my",
-        label: i18n.t("your_images") || "Your Images",
-        type: "my" as const,
-      },
-    ];
-  }, [categories]);
+
+    const allTab = {
+      key: "all",
+      label: i18n.t("all") || "All",
+      type: "all" as const,
+    };
+
+    const myTab = {
+      key: "my",
+      label: i18n.t("your_images") || "Your Images",
+      type: "my" as const,
+    };
+
+    // Free users should not see "Your Images" tab
+    if (isFree) {
+      return [allTab, ...catTabs];
+    }
+
+    return [allTab, ...catTabs, myTab];
+  }, [categories, isFree]);
 
   // Images for the active tab (mock: use systemImages for categories, userImages for my)
   // Show images for the selected category, or user's images for 'my'
+  // Flatten Thumbnail arrays so each individual thumbnail becomes a separate grid item
+  // Free users should not see user images
   const imagesForTab = useMemo(() => {
-    if (activeTab === "my") return userImages;
+    if (activeTab === "my") {
+      // Free users should not see user images
+      return isFree ? [] : userImages;
+    }
+
+    // Helper function to expand thumbnails array into separate image objects
+    const expandThumbnails = (images: any[]) => {
+      const expanded: any[] = [];
+      images.forEach((img: any) => {
+        const thumbnails = img.thumbnails || [];
+        if (thumbnails.length > 0) {
+          // Create a separate item for each thumbnail
+          thumbnails.forEach((thumbUrl: string, index: number) => {
+            expanded.push({
+              ...img,
+              url: thumbUrl,
+              thumbnailIndex: index,
+              // Keep original _id but make unique key for React
+              uniqueKey: `${img._id}-thumb-${index}`,
+            });
+          });
+        } else {
+          // No thumbnails array, use the main url
+          expanded.push(img);
+        }
+      });
+      return expanded;
+    };
+
+    // Show all system images for "all" tab
+    if (activeTab === "all") {
+      return expandThumbnails(systemImages);
+    }
+
     // Find the selected category object
     const cat = categories.find(
       (c: any) =>
@@ -124,11 +177,12 @@ export default function BackgroundPage() {
         c.name === activeTab ||
         c.categoryname === activeTab
     );
+
     // Filter systemImages by category if possible
     if (cat && systemImages.length > 0) {
       // Filter normalized system images by category id or categoryName
       const catKey = cat.slug || cat._id || cat.id || cat.name;
-      return systemImages.filter((img: any) => {
+      const filtered = systemImages.filter((img: any) => {
         return (
           img.categoryId === catKey ||
           img.categoryId === cat._id ||
@@ -138,10 +192,12 @@ export default function BackgroundPage() {
           img.categoryName === cat.categoryname
         );
       });
+      return expandThumbnails(filtered);
     }
+
     // fallback: show all system images
-    return systemImages;
-  }, [activeTab, categories, systemImages, userImages]);
+    return expandThumbnails(systemImages);
+  }, [activeTab, categories, systemImages, userImages, isFree]);
 
   // Scroll progress handler
   useEffect(() => {
@@ -181,12 +237,6 @@ export default function BackgroundPage() {
     };
     reader.readAsDataURL(file);
   };
-
-  // membership check - free users can't upload
-  const profile = useProfileStore((s) => s.profile);
-  const memberType = profile?.membertype || profile?.membertype || "free";
-  const isFree =
-    memberType === "free" || memberType === "Free" || memberType === "FREE";
 
   const handleSetBackgroundImage = async () => {
     setModalLoading(true);
@@ -252,7 +302,13 @@ export default function BackgroundPage() {
                     <div key={t.key} className="flex items-center w-30">
                       <button
                         type="button"
-                        onClick={() => setActiveTab(t.key)}
+                        onClick={(e) => {
+                          setActiveTab(t.key);
+                          // Clear any inline hover styles when clicking
+                          const el = e.currentTarget as HTMLElement;
+                          el.style.backgroundColor = "";
+                          el.style.color = "";
+                        }}
                         className={`flex justify-between items-center w-full px-4 py-1 rounded-sm ${
                           isActive
                             ? "bg-[var(--app-background-color,#0099cc)] text-white"
@@ -274,8 +330,8 @@ export default function BackgroundPage() {
                           ).trim();
                         }}
                         onMouseLeave={(e) => {
-                          const el = e.currentTarget as HTMLElement;
                           if (isActive) return;
+                          const el = e.currentTarget as HTMLElement;
                           el.style.backgroundColor = "white";
                           el.style.color = "#374151";
                         }}
@@ -361,7 +417,7 @@ export default function BackgroundPage() {
                     const isSelected = selectedImage === url;
                     return (
                       <button
-                        key={img.id || img._id || idx}
+                        key={img.uniqueKey || img.id || img._id || idx}
                         className="relative w-full pt-[60%] rounded-lg overflow-hidden shadow-md bg-white/70"
                         onClick={() => {
                           setModalImage(img);
