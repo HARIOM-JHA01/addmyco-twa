@@ -363,10 +363,10 @@ export default function MembershipPage() {
                       </td>
                       {/* USDT Payment Modal */}
                       {usdtModalOpen && (
-                        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
-                          <div className="bg-white rounded-xl shadow-xl p-6 w-full max-w-xs relative">
+                        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40 p-4">
+                          <div className="bg-white rounded-xl shadow-xl w-full max-w-xs relative max-h-[90vh] flex flex-col">
                             <button
-                              className="absolute top-2 right-2 text-gray-400 hover:text-gray-700 text-xl"
+                              className="absolute top-2 right-2 text-gray-400 hover:text-gray-700 text-xl z-10"
                               onClick={() => {
                                 setUsdtModalOpen(false);
                                 setUsdtTransactionId("");
@@ -377,100 +377,104 @@ export default function MembershipPage() {
                             >
                               &times;
                             </button>
-                            <h3 className="text-lg font-bold text-[#2fa8e0] mb-4 text-center">
-                              {i18n.t("usdt_payment")}
-                            </h3>
-                            <div className="flex flex-col items-center gap-3 mb-4">
-                              <img
-                                src={walletTransferImage}
-                                alt="Wallet Transfer"
-                                className="rounded-lg max-h-32 object-contain"
-                              />
-                              <p className="text-sm font-medium break-all bg-gray-100 p-4 rounded-lg text-center">
-                                {i18n.t("copy_wallet_address")}
-                                <br />
-                                <span
-                                  className="text-blue-600 cursor-pointer"
-                                  onClick={async () => {
-                                    try {
-                                      await navigator.clipboard.writeText(
-                                        "TK2TMn99SBCrdbZpSef7rFE3vTccvR6dCz"
-                                      );
-                                      WebApp.showAlert(
-                                        i18n.t("wallet_address_copied")
-                                      );
-                                    } catch (e) {
-                                      WebApp.showAlert(
-                                        i18n.t("wallet_copy_failed")
-                                      );
-                                    }
-                                  }}
-                                >
-                                  TK2TMn99SBCrdbZpSef7rFE3vTccvR6dCz
-                                </span>
-                              </p>
-                            </div>
-                            <div className="mb-2 text-sm text-gray-700">
-                              <span className="font-semibold">
-                                {i18n.t("period_label")}
-                              </span>{" "}
-                              {usdtModalItem?.membershiperiod ?? "-"}{" "}
-                              {i18n.t("years_label")}
-                            </div>
-                            <div className="mb-2 text-sm text-gray-700">
-                              <span className="font-semibold">
-                                {i18n.t("usdt_label")}
-                              </span>{" "}
-                              {usdtModalItem?.usdt ?? "-"}
-                            </div>
-                            <label className="block mb-2 text-sm font-medium text-gray-700">
-                              {i18n.t("transaction_id_label")}
-                            </label>
-                            <input
-                              type="text"
-                              className="w-full border border-gray-300 rounded px-3 py-2 mb-2 focus:outline-none focus:ring-2 focus:ring-[#2fa8e0]"
-                              value={usdtTransactionId}
-                              onChange={(e) =>
-                                setUsdtTransactionId(e.target.value)
-                              }
-                              placeholder={i18n.t("transaction_id_placeholder")}
-                              disabled={usdtModalLoading}
-                            />
-                            <label className="block mb-2 text-sm font-medium text-gray-700">
-                              {i18n.t("wallet_address_label") ||
-                                "Wallet Address"}
-                            </label>
-                            <input
-                              type="text"
-                              className="w-full border border-gray-300 rounded px-3 py-2 mb-2 focus:outline-none focus:ring-2 focus:ring-[#2fa8e0]"
-                              value={usdtWalletAddress}
-                              onChange={(e) =>
-                                setUsdtWalletAddress(e.target.value)
-                              }
-                              placeholder={
-                                i18n.t("wallet_address_placeholder") ||
-                                "Recipient wallet address (e.g. 0x...)"
-                              }
-                              disabled={usdtModalLoading}
-                            />
-                            {usdtModalError && (
-                              <div className="text-red-500 text-sm mb-2">
-                                {usdtModalError}
+                            <div className="overflow-y-auto p-6">
+                              <h3 className="text-lg font-bold text-[#2fa8e0] mb-4 text-center">
+                                {i18n.t("usdt_payment")}
+                              </h3>
+                              <div className="flex flex-col items-center gap-3 mb-4">
+                                <img
+                                  src={walletTransferImage}
+                                  alt="Wallet Transfer"
+                                  className="rounded-lg max-h-32 object-contain"
+                                />
+                                <p className="text-sm font-medium break-all bg-gray-100 p-4 rounded-lg text-center">
+                                  {i18n.t("copy_wallet_address")}
+                                  <br />
+                                  <span
+                                    className="text-blue-600 cursor-pointer"
+                                    onClick={async () => {
+                                      try {
+                                        await navigator.clipboard.writeText(
+                                          "TK2TMn99SBCrdbZpSef7rFE3vTccvR6dCz"
+                                        );
+                                        WebApp.showAlert(
+                                          i18n.t("wallet_address_copied")
+                                        );
+                                      } catch (e) {
+                                        WebApp.showAlert(
+                                          i18n.t("wallet_copy_failed")
+                                        );
+                                      }
+                                    }}
+                                  >
+                                    TK2TMn99SBCrdbZpSef7rFE3vTccvR6dCz
+                                  </span>
+                                </p>
                               </div>
-                            )}
-                            <button
-                              className="w-full bg-gradient-to-r from-[#2fa8e0] to-[#38bdf8] text-white font-semibold py-2 rounded-lg mt-2 hover:from-[#38bdf8] hover:to-[#2fa8e0] transition disabled:opacity-60 disabled:cursor-not-allowed shadow-lg"
-                              onClick={handleUsdtPayment}
-                              disabled={
-                                usdtModalLoading ||
-                                !usdtTransactionId ||
-                                !usdtWalletAddress
-                              }
-                            >
-                              {usdtModalLoading
-                                ? i18n.t("submitting")
-                                : i18n.t("submit_payment")}
-                            </button>
+                              <div className="mb-2 text-sm text-gray-700">
+                                <span className="font-semibold">
+                                  {i18n.t("period_label")}
+                                </span>{" "}
+                                {usdtModalItem?.membershiperiod ?? "-"}{" "}
+                                {i18n.t("years_label")}
+                              </div>
+                              <div className="mb-2 text-sm text-gray-700">
+                                <span className="font-semibold">
+                                  {i18n.t("usdt_label")}
+                                </span>{" "}
+                                {usdtModalItem?.usdt ?? "-"}
+                              </div>
+                              <label className="block mb-2 text-sm font-medium text-gray-700">
+                                {i18n.t("transaction_id_label")}
+                              </label>
+                              <input
+                                type="text"
+                                className="w-full border border-gray-300 rounded px-3 py-2 mb-2 focus:outline-none focus:ring-2 focus:ring-[#2fa8e0]"
+                                value={usdtTransactionId}
+                                onChange={(e) =>
+                                  setUsdtTransactionId(e.target.value)
+                                }
+                                placeholder={i18n.t(
+                                  "transaction_id_placeholder"
+                                )}
+                                disabled={usdtModalLoading}
+                              />
+                              <label className="block mb-2 text-sm font-medium text-gray-700">
+                                {i18n.t("wallet_address_label") ||
+                                  "Wallet Address"}
+                              </label>
+                              <input
+                                type="text"
+                                className="w-full border border-gray-300 rounded px-3 py-2 mb-2 focus:outline-none focus:ring-2 focus:ring-[#2fa8e0]"
+                                value={usdtWalletAddress}
+                                onChange={(e) =>
+                                  setUsdtWalletAddress(e.target.value)
+                                }
+                                placeholder={
+                                  i18n.t("wallet_address_placeholder") ||
+                                  "Recipient wallet address (e.g. 0x...)"
+                                }
+                                disabled={usdtModalLoading}
+                              />
+                              {usdtModalError && (
+                                <div className="text-red-500 text-sm mb-2">
+                                  {usdtModalError}
+                                </div>
+                              )}
+                              <button
+                                className="w-full bg-gradient-to-r from-[#2fa8e0] to-[#38bdf8] text-white font-semibold py-2 rounded-lg mt-2 hover:from-[#38bdf8] hover:to-[#2fa8e0] transition disabled:opacity-60 disabled:cursor-not-allowed shadow-lg"
+                                onClick={handleUsdtPayment}
+                                disabled={
+                                  usdtModalLoading ||
+                                  !usdtTransactionId ||
+                                  !usdtWalletAddress
+                                }
+                              >
+                                {usdtModalLoading
+                                  ? i18n.t("submitting")
+                                  : i18n.t("submit_payment")}
+                              </button>
+                            </div>
                           </div>
                         </div>
                       )}
