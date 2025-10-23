@@ -1,6 +1,6 @@
 import Layout from "../components/Layout";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faCopy } from "@fortawesome/free-solid-svg-icons";
+import { faCopy, faDownload } from "@fortawesome/free-solid-svg-icons";
 import { QRCodeSVG } from "qrcode.react";
 import logo from "../assets/logo.png";
 import i18n from "../i18n";
@@ -81,18 +81,16 @@ export default function MyQRPage() {
     }
   };
 
-  const copyQRCodeImage = async () => {
-    // First, try to copy as image
+  const downloadQRCodeImage = async () => {
     try {
-      if (!qrRef.current) throw new Error("QR ref not found");
+      if (!qrRef.current) {
+        alert("QR Code not found");
+        return;
+      }
 
       const svgElement = qrRef.current.querySelector("svg");
-      if (!svgElement) throw new Error("SVG element not found");
-
-      // Check if ClipboardItem is supported (not available in many mobile browsers)
-      if (!window.ClipboardItem) {
-        console.log("ClipboardItem not supported, falling back to text");
-        await copyToClipboard(qrLink);
+      if (!svgElement) {
+        alert("QR Code not found");
         return;
       }
 
@@ -100,13 +98,17 @@ export default function MyQRPage() {
       const svgData = new XMLSerializer().serializeToString(svgElement);
       const canvas = document.createElement("canvas");
       const ctx = canvas.getContext("2d");
-      if (!ctx) throw new Error("Canvas context not available");
+
+      if (!ctx) {
+        alert("Unable to generate QR Code image");
+        return;
+      }
 
       const img = new Image();
 
-      // Set canvas size to match SVG
-      canvas.width = 192;
-      canvas.height = 192;
+      // Set canvas size to match SVG (larger for better quality)
+      canvas.width = 512;
+      canvas.height = 512;
 
       // Convert SVG to image
       const svgBlob = new Blob([svgData], {
@@ -114,71 +116,63 @@ export default function MyQRPage() {
       });
       const url = URL.createObjectURL(svgBlob);
 
-      img.onload = async () => {
+      img.onload = () => {
         try {
           // Draw white background
           ctx.fillStyle = "#ffffff";
           ctx.fillRect(0, 0, canvas.width, canvas.height);
-          // Draw the QR code
-          ctx.drawImage(img, 0, 0);
 
-          // Convert canvas to blob
-          canvas.toBlob(async (blob) => {
-            if (!blob) throw new Error("Failed to create blob");
+          // Draw the QR code (scaled up)
+          ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
 
-            try {
-              // Check if clipboard.write is supported
-              if (!navigator.clipboard || !navigator.clipboard.write) {
-                throw new Error("Clipboard API not supported");
-              }
-
-              await navigator.clipboard.write([
-                new ClipboardItem({ "image/png": blob }),
-              ]);
-
-              // Verify the copy worked by trying to read it back
-              try {
-                const clipboardItems = await navigator.clipboard.read();
-                if (clipboardItems && clipboardItems.length > 0) {
-                  alert("QR Code image copied to clipboard!");
-                } else {
-                  throw new Error("Image not in clipboard");
-                }
-              } catch (readErr) {
-                // If we can't verify, assume it worked on desktop but failed on mobile
-                console.warn("Could not verify clipboard content:", readErr);
-                alert(
-                  "QR Code image copied to clipboard! (Note: Image copying may not work on all mobile devices)"
-                );
-              }
-            } catch (err) {
-              console.error("Failed to copy image:", err);
-              // Fallback: copy the link as text
-              await copyToClipboard(qrLink);
-            } finally {
+          // Convert canvas to blob and download
+          canvas.toBlob((blob) => {
+            if (!blob) {
+              alert("Failed to generate QR Code image");
               URL.revokeObjectURL(url);
+              return;
             }
+
+            // Create download link
+            const downloadUrl = URL.createObjectURL(blob);
+            const link = document.createElement("a");
+
+            // Get username for filename
+            const username =
+              profile?.username || profile?.telegram_username || "QRCode";
+            link.download = `${username}-QRCode.png`;
+            link.href = downloadUrl;
+
+            // Trigger download
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+
+            // Cleanup
+            URL.revokeObjectURL(downloadUrl);
+            URL.revokeObjectURL(url);
+
+            alert("QR Code downloaded successfully!");
           }, "image/png");
         } catch (err) {
+          console.error("Error generating QR Code:", err);
+          alert("Failed to download QR Code");
           URL.revokeObjectURL(url);
-          // Fallback: copy the link as text
-          await copyToClipboard(qrLink);
         }
       };
 
-      img.onerror = async () => {
+      img.onerror = () => {
         URL.revokeObjectURL(url);
-        // Fallback: copy the link as text
-        await copyToClipboard(qrLink);
+        alert("Failed to load QR Code");
       };
 
       img.src = url;
     } catch (err) {
-      console.error("Copy QR image failed, using text fallback:", err);
-      // Fallback: copy the link as text
-      await copyToClipboard(qrLink);
+      console.error("Download QR failed:", err);
+      alert("Failed to download QR Code");
     }
   };
+
   const handleCopyDetails = () => {
     if (!profile) return;
     const name =
@@ -226,13 +220,15 @@ export default function MyQRPage() {
     <Layout>
       <div className="flex flex-col items-center justify-center flex-grow py-4 px-2 pb-32">
         <div className="bg-blue-100 bg-opacity-40 rounded-3xl p-6 w-full max-w-md mx-auto flex flex-col items-center shadow-lg">
-          {/* Copy QR Code */}
+          {/* Download QR Code */}
           <div
             className="flex items-center gap-2 mb-4 cursor-pointer"
-            onClick={copyQRCodeImage}
+            onClick={downloadQRCodeImage}
           >
-            <p className="font-semibold text-app">{i18n.t("copy_qr")}</p>
-            <FontAwesomeIcon icon={faCopy} className="text-app" />
+            <p className="font-semibold text-app">
+              {i18n.t("download_qr") || "Download QR Code"}
+            </p>
+            <FontAwesomeIcon icon={faDownload} className="text-app" />
           </div>
 
           {/* QR Code Generator */}
