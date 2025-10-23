@@ -22,7 +22,12 @@ import {
   PublicProfileData,
   CompanyData,
 } from "../services/publicProfileService";
-import { formatUrl, formatImageUrl } from "../utils/validation";
+import {
+  formatUrl,
+  formatImageUrl,
+  isTelegramWebApp,
+  createTelegramMiniAppLink,
+} from "../utils/validation";
 
 export default function PublicCompanyPage() {
   const { username } = useParams<{ username: string }>();
@@ -47,6 +52,20 @@ export default function PublicCompanyPage() {
     setCanTopLeft(el.scrollLeft > 8);
     setCanTopRight(el.scrollLeft + el.clientWidth < el.scrollWidth - 8);
   };
+
+  // Automatic redirect to Telegram if not in the Telegram app
+  useEffect(() => {
+    if (username) {
+      // Check if we're outside Telegram WebApp
+      const isInTelegram = isTelegramWebApp();
+
+      if (!isInTelegram) {
+        // Instead of showing a banner, immediately redirect to Telegram
+        const telegramUrl = createTelegramMiniAppLink(username);
+        window.location.href = telegramUrl;
+      }
+    }
+  }, [username]);
 
   useEffect(() => {
     updateTopScroll();

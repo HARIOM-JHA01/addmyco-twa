@@ -12,8 +12,8 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faTelegram, faWhatsapp } from "@fortawesome/free-brands-svg-icons";
 import {
   faPhone,
-  faChevronLeft,
-  faChevronRight,
+  // faChevronLeft,
+  // faChevronRight,
 } from "@fortawesome/free-solid-svg-icons";
 import { formatUrl } from "../utils/validation";
 import WebApp from "@twa-dev/sdk";
@@ -207,7 +207,7 @@ export default function HomePage() {
               }}
               style={{ display: showArrows ? "block" : "none" }}
             >
-              <FontAwesomeIcon icon={faChevronLeft} color="red" />
+              {/* <FontAwesomeIcon icon={faChevronLeft} color="red" /> */}
             </button>
 
             <div
@@ -300,7 +300,7 @@ export default function HomePage() {
               }}
               style={{ display: showArrows ? "block" : "none" }}
             >
-              <FontAwesomeIcon icon={faChevronRight} color="red" />
+              {/* <FontAwesomeIcon icon={faChevronRight} color="red" /> */}
             </button>
           </div>
 

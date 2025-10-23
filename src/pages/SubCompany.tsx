@@ -22,6 +22,7 @@ import { formatUrl, getUrlError, getEmailError } from "../utils/validation";
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
 import i18n from "../i18n";
+import WebApp from "@twa-dev/sdk";
 
 export default function SubCompanyPage() {
   const navigate = useNavigate();
@@ -84,7 +85,7 @@ export default function SubCompanyPage() {
           profileData = res.data.company;
         }
 
-        // If array, set all companies; else, wrap single object in array
+        // If array with items, set all companies; else, if a single object (not an array) wrap it in an array
         if (Array.isArray(profileData) && profileData.length > 0) {
           // Sort by company_order / order ascending to honor display order
           const sorted = [...profileData].sort((a: any, b: any) => {
@@ -94,7 +95,11 @@ export default function SubCompanyPage() {
           });
           setCompanies(sorted);
           setCurrentCompanyIndex(0);
-        } else if (profileData && typeof profileData === "object") {
+        } else if (
+          profileData &&
+          typeof profileData === "object" &&
+          !Array.isArray(profileData)
+        ) {
           setCompanies([profileData]);
           setCurrentCompanyIndex(0);
         } else {
@@ -111,17 +116,132 @@ export default function SubCompanyPage() {
     fetchProfile();
   }, []);
 
+  // Delete company profile
+  const [deleteLoading, setDeleteLoading] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
+
+  // Function to handle company deletion
+  const deleteCompany = async () => {
+    if (!companyProfile?._id) {
+      return;
+    }
+
+    setDeleteLoading(true);
+    try {
+      const token = localStorage.getItem("token");
+      if (!token) throw new Error("No token found. Please login again.");
+
+      // Call the delete company API
+      await axios.delete(
+        `${API_BASE_URL}/deletecompany/${companyProfile._id}`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+
+      // After successful delete, fetch all companies from server to refresh state
+      try {
+        const res = await axios.get(`${API_BASE_URL}/getcompanyprofile`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+
+        let profileData: any = null;
+        if (res.data && res.data.data) {
+          profileData = res.data.data;
+        } else if (res.data && typeof res.data === "object") {
+          profileData = res.data;
+        } else if (res.data && res.data.company) {
+          profileData = res.data.company;
+        }
+
+        // Only treat as "has companies" when profileData is a non-empty array
+        if (Array.isArray(profileData) && profileData.length > 0) {
+          const sorted = [...profileData].sort((a: any, b: any) => {
+            const ao = Number(a.company_order ?? a.order ?? 0);
+            const bo = Number(b.company_order ?? b.order ?? 0);
+            return ao - bo;
+          });
+          setCompanies(sorted);
+          setCurrentCompanyIndex(0);
+        } else if (
+          profileData &&
+          typeof profileData === "object" &&
+          !Array.isArray(profileData)
+        ) {
+          setCompanies([profileData]);
+          setCurrentCompanyIndex(0);
+        } else {
+          // empty array or null -> no companies
+          setCompanies([]);
+          setCurrentCompanyIndex(0);
+        }
+      } catch (err) {
+        // If refresh fails, fall back to removing locally
+        const updatedCompanies = companies.filter(
+          (c) => c._id !== companyProfile._id
+        );
+        setCompanies(updatedCompanies);
+        setCurrentCompanyIndex(0);
+      }
+
+      // Show success feedback and close modal / edit mode
+      setSuccessMessage("Company deleted successfully.");
+      setEditMode(null);
+      setEditProfile(null);
+      setFile(null);
+      setFilePreview(null);
+      setValidationErrors({});
+      setShowDeleteConfirm(false);
+
+      // Auto-hide success message after 3s
+      window.setTimeout(() => setSuccessMessage(null), 3000);
+    } catch (err: any) {
+      console.error("Error deleting company:", err);
+      setEditError(
+        err?.response?.data?.message ||
+          err.message ||
+          "Failed to delete company"
+      );
+    } finally {
+      setDeleteLoading(false);
+    }
+  };
+
   // Open edit form for update
   const openEditProfile = () => {
     setEditMode("update");
-    setEditProfile(companyProfile);
+    // Prefill editProfile with mapped fields from companyProfile
+    const mapped = {
+      company_name_english: companyProfile?.company_name_english || "",
+      company_name_chinese: companyProfile?.company_name_chinese || "",
+      companydesignation: companyProfile?.companydesignation || "",
+      description: companyProfile?.description || "",
+      email: companyProfile?.email || "",
+      WhatsApp: companyProfile?.WhatsApp || "",
+      Instagram: companyProfile?.Instagram || "",
+      Facebook: companyProfile?.Facebook || "",
+      Youtube: companyProfile?.Youtube || "",
+      telegramId: companyProfile?.telegramId || "",
+      website: companyProfile?.website || "",
+      order: companyProfile?.company_order ?? companyProfile?.order ?? "",
+      image: companyProfile?.image || companyProfile?.video || "",
+      video: companyProfile?.video || "",
+    };
+    setEditProfile(mapped);
+    // If there's an image URL, show it as the preview (no local file selected)
+    if (mapped.image) {
+      setFile(null);
+      setFilePreview(mapped.image);
+    } else {
+      setFilePreview(null);
+    }
     setEditError("");
   };
   // Open edit form for create
   const openCreateProfile = () => {
-    setEditMode("create");
-    setEditProfile({});
-    setEditError("");
+    // Redirect to the dedicated create-company page
+    navigate("/create-company");
   };
   // Handle edit form input
   const handleEditInput = (
@@ -147,9 +267,9 @@ export default function SubCompanyPage() {
       "website",
       "telegramId",
       "WhatsApp",
-      "facebook",
-      "instagram",
-      "youtube",
+      "Facebook",
+      "Instagram",
+      "Youtube",
     ];
 
     if (urlFields.includes(name)) {
@@ -208,9 +328,9 @@ export default function SubCompanyPage() {
       website: editProfile.website,
       telegramId: editProfile.telegramId,
       WhatsApp: editProfile.WhatsApp,
-      facebook: editProfile.facebook,
-      instagram: editProfile.instagram,
-      youtube: editProfile.youtube,
+      Facebook: editProfile.Facebook,
+      Instagram: editProfile.Instagram,
+      Youtube: editProfile.Youtube,
     };
 
     Object.entries(urlFields).forEach(([field, value]) => {
@@ -231,41 +351,44 @@ export default function SubCompanyPage() {
     try {
       const token = localStorage.getItem("token");
       if (!token) throw new Error("No token found. Please login again.");
-      const formData = new FormData();
-      formData.append(
-        "company_name_english",
-        editProfile.company_name_english || ""
-      );
-      formData.append(
-        "company_name_chinese",
-        editProfile.company_name_chinese || ""
-      );
-      formData.append(
-        "companydesignation",
-        editProfile.companydesignation || ""
-      );
-      formData.append("telegramId", editProfile.telegramId || "");
-      formData.append("description", editProfile.description || "");
-      formData.append("email", editProfile.email || "");
-      formData.append("WhatsApp", editProfile.WhatsApp || "");
-      formData.append("website", editProfile.website || "");
-      formData.append("facebook", editProfile.facebook || "");
-      if (editProfile.image && editProfile.image.startsWith("data:image")) {
-        // Convert base64 to blob and append
-        const arr = editProfile.image.split(",");
-        const mime = arr[0].match(/:(.*?);/)[1];
-        const bstr = atob(arr[1]);
-        let n = bstr.length;
-        const u8arr = new Uint8Array(n);
-        while (n--) u8arr[n] = bstr.charCodeAt(n);
-        formData.append("image", new Blob([u8arr], { type: mime }));
+
+      // Build the company document matching backend structure
+      const companyDoc: any = {
+        company_name_english: editProfile.company_name_english || "",
+        company_name_chinese: editProfile.company_name_chinese || "",
+        companydesignation: editProfile.companydesignation || "",
+        description: editProfile.description || "",
+        email: editProfile.email || "",
+        WhatsApp: editProfile.WhatsApp || "",
+        Instagram: editProfile.Instagram || "",
+        Facebook: editProfile.Facebook || "",
+        Youtube: editProfile.Youtube || "",
+        telegramId: editProfile.telegramId || "",
+        website: editProfile.website || "",
+        company_order:
+          editProfile.order !== undefined && editProfile.order !== ""
+            ? editProfile.order
+            : companyProfile?.company_order ?? 0,
+        image: editProfile.image || "",
+        video: editProfile.video || "",
+      };
+
+      // If we're updating an existing company, include its _id
+      if (editMode === "update" && companyProfile?._id) {
+        companyDoc._id = companyProfile._id;
       }
-      await axios.post(`${API_BASE_URL}/companyprofile`, formData, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "multipart/form-data",
-        },
-      });
+
+      // Send as JSON with data array structure
+      await axios.post(
+        `${API_BASE_URL}/updatecompany`,
+        { data: [companyDoc] },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
 
       // Refresh company data with fresh GET call
       const res = await axios.get(`${API_BASE_URL}/getcompanyprofile`, {
@@ -317,6 +440,11 @@ export default function SubCompanyPage() {
 
   return (
     <Layout>
+      {successMessage && (
+        <div className="fixed top-4 left-1/2 -translate-x-1/2 bg-green-500 text-white px-4 py-2 rounded-md z-50">
+          {successMessage}
+        </div>
+      )}
       <div className="flex flex-col items-center justify-center flex-grow py-4 px-2 pb-32">
         <section className="bg-blue-100 bg-opacity-40 rounded-3xl p-6 w-full max-w-md mx-auto flex flex-col items-center shadow-lg">
           {loading ? (
@@ -514,60 +642,60 @@ export default function SubCompanyPage() {
               <div className="w-full">
                 <input
                   className={`rounded-full border-2 px-4 py-2 mb-1 w-full focus:outline-none focus:ring-2 focus:ring-blue-400 bg-white placeholder-gray-500 ${
-                    validationErrors.facebook
+                    validationErrors.Facebook
                       ? "border-red-500"
                       : "border-blue-200"
                   }`}
                   type="text"
-                  name="facebook"
-                  placeholder="https://Facebook"
-                  value={editProfile?.facebook || ""}
+                  name="Facebook"
+                  placeholder="Facebook URL"
+                  value={editProfile?.Facebook || ""}
                   onChange={handleEditInput}
                   disabled={editLoading}
                 />
-                {validationErrors.facebook && (
+                {validationErrors.Facebook && (
                   <div className="text-red-500 text-xs mb-2 px-2">
-                    {validationErrors.facebook}
+                    {validationErrors.Facebook}
                   </div>
                 )}
               </div>
               <div className="w-full">
                 <input
                   className={`rounded-full border-2 px-4 py-2 mb-1 w-full focus:outline-none focus:ring-2 focus:ring-blue-400 bg-white placeholder-gray-500 ${
-                    validationErrors.instagram
+                    validationErrors.Instagram
                       ? "border-red-500"
                       : "border-blue-200"
                   }`}
                   type="text"
-                  name="instagram"
-                  placeholder="https://Instagram"
-                  value={editProfile?.instagram || ""}
+                  name="Instagram"
+                  placeholder="Instagram URL"
+                  value={editProfile?.Instagram || ""}
                   onChange={handleEditInput}
                   disabled={editLoading}
                 />
-                {validationErrors.instagram && (
+                {validationErrors.Instagram && (
                   <div className="text-red-500 text-xs mb-2 px-2">
-                    {validationErrors.instagram}
+                    {validationErrors.Instagram}
                   </div>
                 )}
               </div>
               <div className="w-full">
                 <input
                   className={`rounded-full border-2 px-4 py-2 mb-1 w-full focus:outline-none focus:ring-2 focus:ring-blue-400 bg-white placeholder-gray-500 ${
-                    validationErrors.youtube
+                    validationErrors.Youtube
                       ? "border-red-500"
                       : "border-blue-200"
                   }`}
                   type="text"
-                  name="youtube"
-                  placeholder="https://Youtube"
-                  value={editProfile?.youtube || ""}
+                  name="Youtube"
+                  placeholder="Youtube URL"
+                  value={editProfile?.Youtube || ""}
                   onChange={handleEditInput}
                   disabled={editLoading}
                 />
-                {validationErrors.youtube && (
+                {validationErrors.Youtube && (
                   <div className="text-red-500 text-xs mb-2 px-2">
-                    {validationErrors.youtube}
+                    {validationErrors.Youtube}
                   </div>
                 )}
               </div>
@@ -588,8 +716,16 @@ export default function SubCompanyPage() {
                 (Number(editProfile.order) < 0 ||
                   Number(editProfile.order) > companies.length) && (
                   <div className="text-red-500 mb-2 text-center">
-                    Display order must be between 0 and {companies.length}{" "}
-                    (currently you have {companies.length} companies)
+                    {companies.length === 0 ? (
+                      "Display order must be 0 (no companies exist yet)"
+                    ) : companies.length === 1 ? (
+                      "Display order must be 0 or 1 (you have 1 company)"
+                    ) : (
+                      <>
+                        Display order must be between 0 and {companies.length}{" "}
+                        (you have {companies.length} companies)
+                      </>
+                    )}
                   </div>
                 )}
               {editError && (
@@ -626,6 +762,17 @@ export default function SubCompanyPage() {
               >
                 Cancel
               </button>
+              {/* Delete button inside edit mode (only for updates) */}
+              {editMode === "update" && (
+                <button
+                  type="button"
+                  className="w-full bg-red-600 text-white rounded-full py-2 font-bold mt-2"
+                  onClick={() => setShowDeleteConfirm(true)}
+                  disabled={deleteLoading || editLoading}
+                >
+                  Delete Company
+                </button>
+              )}
             </form>
           ) : companyProfile ? (
             <>
@@ -827,11 +974,11 @@ export default function SubCompanyPage() {
                           /^@/,
                           ""
                         );
-                        window.open(`https://t.me/${id}`, "_blank");
+                        WebApp.openLink(`https://t.me/${id}`);
                       }
                     },
                   },
-                  ...(companyProfile?.facebook
+                  ...(companyProfile?.Facebook || companyProfile?.facebook
                     ? [
                         {
                           key: "facebook",
@@ -844,15 +991,15 @@ export default function SubCompanyPage() {
                             />
                           ),
                           onClick: () => {
-                            window.open(
-                              formatUrl(companyProfile.facebook),
-                              "_blank"
-                            );
+                            const url =
+                              companyProfile.Facebook ||
+                              companyProfile.facebook;
+                            window.open(formatUrl(url), "_blank");
                           },
                         },
                       ]
                     : []),
-                  ...(companyProfile?.instagram
+                  ...(companyProfile?.Instagram || companyProfile?.instagram
                     ? [
                         {
                           key: "instagram",
@@ -865,15 +1012,15 @@ export default function SubCompanyPage() {
                             />
                           ),
                           onClick: () => {
-                            window.open(
-                              formatUrl(companyProfile.instagram),
-                              "_blank"
-                            );
+                            const url =
+                              companyProfile.Instagram ||
+                              companyProfile.instagram;
+                            WebApp.openLink(formatUrl(url));
                           },
                         },
                       ]
                     : []),
-                  ...(companyProfile?.youtube
+                  ...(companyProfile?.Youtube || companyProfile?.youtube
                     ? [
                         {
                           key: "youtube",
@@ -886,10 +1033,9 @@ export default function SubCompanyPage() {
                             />
                           ),
                           onClick: () => {
-                            window.open(
-                              formatUrl(companyProfile.youtube),
-                              "_blank"
-                            );
+                            const url =
+                              companyProfile.Youtube || companyProfile.youtube;
+                            WebApp.openLink(formatUrl(url));
                           },
                         },
                       ]
@@ -940,28 +1086,68 @@ export default function SubCompanyPage() {
                   </div>
                 ))}
               </div>
-              <div className="flex justify-center w-full gap-4 text-center mt-6">
+              <div className="flex justify-center w-full gap-3 text-center mt-6">
                 <button
-                  className="p-2 w-full text-white bg-[#d50078] shadow-md rounded-full"
+                  className="p-2 flex-1 text-white bg-[#d50078] shadow-md rounded-full"
                   onClick={openEditProfile}
                 >
                   {i18n.t("update")}
                 </button>
                 <button
-                  className="p-2 w-full text-white bg-[#009944] shadow-md rounded-full"
+                  className="p-2 flex-1 text-white bg-[#009944] shadow-md rounded-full"
                   onClick={openCreateProfile}
                 >
                   {i18n.t("add_more")}
                 </button>
+                {/* Delete action is available only in the update/edit screen */}
               </div>
             </>
           ) : (
-            <div className="text-center text-gray-600">
-              No company profile found.
+            <div className=" flex flex-col items-center justify-center py-12">
+              <p className="text-gray-600 mb-4 text-center max-w-sm">
+                You don't have any company profiles yet. Add a company to
+                display it here.
+              </p>
+              <button
+                className="px-6 py-2 bg-[#009944] text-white rounded-full font-bold"
+                onClick={openCreateProfile}
+              >
+                Add Company
+              </button>
             </div>
           )}
         </section>
       </div>
+      {/* Delete Confirmation Modal (rendered globally within this component) */}
+      {showDeleteConfirm && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center">
+          <div className="bg-white rounded-lg p-6 m-4 max-w-sm w-full">
+            <h3 className="text-xl font-bold mb-4 text-center">
+              Delete Company?
+            </h3>
+            <p className="mb-6 text-center">
+              Are you sure you want to delete this company? This action cannot
+              be undone.
+            </p>
+            <div className="flex gap-4">
+              <button
+                className="flex-1 p-2 bg-gray-300 rounded-md"
+                onClick={() => setShowDeleteConfirm(false)}
+                disabled={deleteLoading}
+              >
+                Cancel
+              </button>
+              <button
+                className="flex-1 p-2 bg-red-500 text-white rounded-md"
+                onClick={deleteCompany}
+                disabled={deleteLoading}
+              >
+                {deleteLoading ? "Deleting..." : "Delete"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </Layout>
   );
 }

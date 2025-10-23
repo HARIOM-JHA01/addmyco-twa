@@ -153,20 +153,35 @@ export const hasValidationErrors = (errors: {
 };
 
 // Format image URL - handles both full URLs and relative paths
-export const formatImageUrl = (imageUrl: string | undefined): string => {
-  if (!imageUrl) return "";
-
-  // If already a full URL, return as-is
-  if (imageUrl.startsWith("http://") || imageUrl.startsWith("https://")) {
-    return imageUrl;
+export const formatImageUrl = (url: string | undefined): string => {
+  if (!url) return "";
+  if (url.startsWith("http://") || url.startsWith("https://")) {
+    return url; // Already an absolute URL
   }
+  const apiBaseUrl = import.meta.env.VITE_API_URL || "https://admin.addmy.co";
+  return `${apiBaseUrl}${url}`;
+};
 
-  // If it's a relative path, prepend the API base URL
-  const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || "";
+// Function to detect if running inside Telegram WebApp
+export const isTelegramWebApp = (): boolean => {
+  try {
+    // Check for Telegram WebApp object and Telegram in user agent
+    return !!(
+      window.Telegram &&
+      window.Telegram.WebApp &&
+      window.navigator.userAgent.includes("Telegram")
+    );
+  } catch (e) {
+    return false;
+  }
+};
 
-  // Remove leading slash if present to avoid double slashes
-  const cleanPath = imageUrl.startsWith("/") ? imageUrl.slice(1) : imageUrl;
+// Function to create a proper Telegram Mini App deep link
+export const createTelegramMiniAppLink = (username: string): string => {
+  // Use the startapp parameter to directly open the Mini App
+  // The 'startapp' parameter takes a JSON string that gets passed to the Mini App
+  const startAppParam = encodeURIComponent(JSON.stringify({ start: username }));
 
-  // Construct full URL
-  return `${apiBaseUrl}/assets/${cleanPath}`;
+  // Using Telegram's direct Mini App opening format
+  return `https://t.me/AddmyCo_bot/app?startapp=${startAppParam}`;
 };

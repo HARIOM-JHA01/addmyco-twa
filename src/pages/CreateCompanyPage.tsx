@@ -123,7 +123,7 @@ export default function CreateCompanyPage() {
       "website",
       "WhatsApp",
       "telegramId",
-      "facebook",
+      "Facebook",
       "Instagram",
       "Youtube",
     ];
@@ -266,14 +266,14 @@ export default function CreateCompanyPage() {
               className="w-full rounded-full px-[12px] py-2 border border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-400 mb-2"
             />
             {/* Info box for image/video upload instructions or preview */}
-            <div className="w-full flex justify-center">
+            <div className="w-full flex justify-center mb-4">
               {form.image ? (
-                <div className="flex items-center justify-center rounded-lg w-[366px] h-[200px] overflow-hidden bg-[#01a2e9]">
+                <div className="flex items-center justify-center rounded-xl w-full h-48 overflow-hidden bg-[#01a2e9]">
                   {form.image.type.startsWith("image/") ? (
                     <img
                       src={previewUrl || undefined}
                       alt="Preview"
-                      className="object-cover w-[366px] h-[200px]"
+                      className="object-cover w-full h-48 rounded-xl"
                     />
                   ) : form.image.type.startsWith("video/") ? (
                     <video
@@ -282,12 +282,12 @@ export default function CreateCompanyPage() {
                       loop
                       muted
                       playsInline
-                      className="object-cover w-[366px] h-[200px]"
+                      className="object-cover w-full h-48 rounded-xl"
                     />
                   ) : null}
                 </div>
               ) : (
-                <div className="bg-[#01a2e9] text-center text-white font-bold py-6 mb-4 relative flex flex-col items-center justify-center w-[366px] h-[200px] rounded-2xl">
+                <div className="bg-[#01a2e9] text-center text-white font-bold py-6 mb-4 relative flex flex-col items-center justify-center w-full h-48 rounded-xl">
                   <div className="text-lg">
                     Please upload
                     <br />
@@ -334,7 +334,7 @@ export default function CreateCompanyPage() {
               placeholder="Company description"
               value={form.description}
               onChange={handleChange}
-              className="w-[330px] h-[200px] rounded-2xl px-[12px] py-2 border border-blue-500 mb-2 focus:outline-none focus:ring-2 focus:ring-blue-400 resize-none"
+              className="w-full h-48 rounded-xl px-4 py-2 border border-blue-500 mb-2 focus:outline-none focus:ring-2 focus:ring-blue-400 resize-none"
               rows={6}
             />
             <div className="w-full">
