@@ -32,20 +32,28 @@ import backgroundImg from "./assets/background.jpg";
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
 function AppRoutes() {
-  // Always show Welcome page on startup to display banners
   const navigate = useNavigate();
   const location = useLocation();
   const [showWelcome, setShowWelcome] = useState(true);
   const [profile, setProfile] = useState<any>(null);
   const [profileLoading, setProfileLoading] = useState(true);
 
-  // Check if this is a public path EARLY to bypass welcome page
+  useEffect(() => {
+    try {
+      const startParam = WebApp.initDataUnsafe?.start_param;
+      if (startParam) {
+        navigate(`/${startParam}`);
+      }
+    } catch (e) {
+      console.error("Failed to read start_param", e);
+    }
+  }, [navigate]);
+
   const isPublicPath = (() => {
     const path = location.pathname || "/";
     const segments = path.split("/").filter(Boolean);
     if (segments.length === 0) return false;
     const first = segments[0];
-    // reserved app routes that should NOT be treated as username
     const reserved = new Set([
       "profile",
       "update-profile",
@@ -66,9 +74,7 @@ function AppRoutes() {
       "",
     ]);
     if (reserved.has(first)) return false;
-    // /:username
     if (segments.length === 1) return true;
-    // /:username/company or /:username/chamber
     if (
       segments.length === 2 &&
       (segments[1] === "company" || segments[1] === "chamber")
@@ -78,10 +84,6 @@ function AppRoutes() {
   })();
 
   useEffect(() => {
-    // Fetch profile/company data on mount
-    // Also fetch global background/theme settings and apply CSS variables.
-
-    // Apply saved colors from localStorage immediately (before API call)
     const savedBgColor = localStorage.getItem("app-background-color");
     const savedFontColor = localStorage.getItem("app-font-color");
 
@@ -108,16 +110,13 @@ function AppRoutes() {
         });
         if (res?.data?.success && res.data.data) {
           const bg = res.data.data;
-          // Apply background color
           if (bg.backgroundcolor) {
             document.documentElement.style.setProperty(
               "--app-background-color",
               bg.backgroundcolor
             );
-            // Save to localStorage for persistence
             localStorage.setItem("app-background-color", bg.backgroundcolor);
           } else {
-            // Try to restore from localStorage
             const savedBgColor = localStorage.getItem("app-background-color");
             if (savedBgColor) {
               document.documentElement.style.setProperty(
@@ -126,16 +125,13 @@ function AppRoutes() {
               );
             }
           }
-          // Apply font color
           if (bg.fontcolor) {
             document.documentElement.style.setProperty(
               "--app-font-color",
               bg.fontcolor
             );
-            // Save to localStorage for persistence
             localStorage.setItem("app-font-color", bg.fontcolor);
           } else {
-            // Try to restore from localStorage
             const savedFontColor = localStorage.getItem("app-font-color");
             if (savedFontColor) {
               document.documentElement.style.setProperty(
@@ -144,7 +140,6 @@ function AppRoutes() {
               );
             }
           }
-          // Apply background image if available
           if (bg.Thumbnail || bg.thumbnail || bg.backgroundImage) {
             const bgImageUrl =
               bg.Thumbnail || bg.thumbnail || bg.backgroundImage;
@@ -152,20 +147,17 @@ function AppRoutes() {
               "--app-background-image",
               `url(${bgImageUrl})`
             );
-            // Also apply to body for global background
             document.body.style.backgroundImage = `url(${bgImageUrl})`;
             document.body.style.backgroundSize = "cover";
             document.body.style.backgroundPosition = "center";
             document.body.style.backgroundAttachment = "fixed";
           } else {
-            // If no background image, use default
             document.documentElement.style.setProperty(
               "--app-background-image",
               `url(${backgroundImg})`
             );
           }
         } else {
-          // No data from API, try to restore from localStorage
           const savedBgColor = localStorage.getItem("app-background-color");
           const savedFontColor = localStorage.getItem("app-font-color");
 
@@ -181,17 +173,13 @@ function AppRoutes() {
               savedFontColor
             );
           }
-
-          // Set default background image
           document.documentElement.style.setProperty(
             "--app-background-image",
             `url(${backgroundImg})`
           );
         }
       } catch (e) {
-        // ignore failures, try to restore from localStorage
         console.debug("fetchBackground failed", e);
-
         const savedBgColor = localStorage.getItem("app-background-color");
         const savedFontColor = localStorage.getItem("app-font-color");
 
@@ -207,8 +195,6 @@ function AppRoutes() {
             savedFontColor
           );
         }
-
-        // Set default background image
         document.documentElement.style.setProperty(
           "--app-background-image",
           `url(${backgroundImg})`
@@ -216,10 +202,8 @@ function AppRoutes() {
       }
     };
 
-    // Call once at startup
     fetchBackground();
 
-    // Re-fetch when other parts of the app signal an update (ThemePage dispatches this)
     const onBackgroundUpdated = () => fetchBackground();
     window.addEventListener("background-updated", onBackgroundUpdated);
     const fetchProfile = async () => {
@@ -242,13 +226,11 @@ function AppRoutes() {
       }
     };
     fetchProfile();
-    // cleanup listener when component unmounts
     return () => {
       window.removeEventListener("background-updated", onBackgroundUpdated);
     };
   }, []);
 
-  // Listen for profile updates from other pages so we can refresh the local state
   useEffect(() => {
     const onProfileUpdated = (e: any) => {
       try {
@@ -271,14 +253,23 @@ function AppRoutes() {
 
   const handleLogin = async () => {
     try {
-      // Ensure WebApp is ready before accessing init data
       try {
         await WebApp.ready();
       } catch (e) {
         console.debug("WebApp.ready() failed or not available", e);
       }
 
-      // initData may be available on different properties depending on SDK initialization
+      let deepLinkPath: string | null = null;
+      try {
+        const startParam = WebApp.initDataUnsafe?.start_param;
+        if (startParam) {
+          deepLinkPath = `/${decodeURIComponent(startParam)}`;
+          console.log("Deep link detected:", deepLinkPath);
+        }
+      } catch (e) {
+        console.debug("Failed to read start_param", e);
+      }
+
       let user: any = null;
       try {
         if (
@@ -306,7 +297,6 @@ function AppRoutes() {
       );
       let username = user?.username;
       if (!username) {
-        // If running outside Telegram or no username available, allow a manual prompt (dev/test)
         try {
           const promptName = window.prompt(
             "Telegram username not available. Enter a test username to continue (cancel to abort):"
@@ -347,7 +337,6 @@ function AppRoutes() {
       if (data && data.success) {
         localStorage.setItem("token", data.data.token);
 
-        // Show welcome message based on API response
         if (data.message) {
           if (
             data.message.includes(
@@ -368,12 +357,10 @@ function AppRoutes() {
             )
           ) {
             try {
-              // Prefer a popup with a dedicated button for the channel; fall back to alert
               const popupOptions = {
                 title: "Signed up",
                 message:
                   "You have been signed up successfully\n\nSubscribe and Contact @DynamicNameCard to get one year premium membership absolutely Free",
-                // include two buttons: OK and a channel button labelled with the handle
                 buttons: [
                   { type: "close", text: "Close" },
                   { type: "default", text: "Join DynamicNameCard" },
@@ -383,11 +370,9 @@ function AppRoutes() {
               let handled = false;
               try {
                 const maybePromise = WebApp.showPopup?.(popupOptions as any);
-                // If showPopup returns a promise-like value, handle the result
                 const mp: any = maybePromise;
                 if (mp && typeof mp.then === "function") {
                   mp.then((result: any) => {
-                    // Result shape depends on SDK version; try to detect selected button text
                     const selectedText =
                       (result && result.button && result.button.text) ||
                       result?.text ||
@@ -406,7 +391,6 @@ function AppRoutes() {
                   handled = true;
                 }
               } catch (e) {
-                // ignore and fall back to alert
                 handled = false;
               }
 
@@ -421,8 +405,6 @@ function AppRoutes() {
           }
         }
 
-        // Check if profile exists by looking for owner_name_english and owner_name_chinese
-        // Ensure they are non-empty strings (trim to avoid whitespace-only values)
         const hasProfile =
           data.data.owner_name_english &&
           data.data.owner_name_chinese &&
@@ -432,15 +414,12 @@ function AppRoutes() {
           data.data.owner_name_chinese.trim().length > 0;
 
         if (!hasProfile) {
-          // No profile exists, go to create profile page
           setShowWelcome(false);
           setProfileLoading(false);
           navigate("/create-profile");
           return;
         }
 
-        // Profile exists, now check for company
-        // Call getProfile API to check company data
         try {
           const res = await axios.get(`${API_BASE_URL}/getProfile`, {
             headers: { Authorization: `Bearer ${data.data.token}` },
@@ -448,7 +427,6 @@ function AppRoutes() {
           const profileData = res.data.data;
           setProfile(profileData || null);
 
-          // Check if company exists by looking for company_name_english and company_name_chinese in companydata
           const hasCompany =
             profileData &&
             profileData.companydata &&
@@ -458,18 +436,22 @@ function AppRoutes() {
           setShowWelcome(false);
           setProfileLoading(false);
 
-          if (hasCompany) {
-            // Both profile and company exist, go to home page
+          if (
+            deepLinkPath &&
+            deepLinkPath !== "/start" &&
+            deepLinkPath !== "/"
+          ) {
+            console.log("Navigating to deep link:", deepLinkPath);
+            navigate(deepLinkPath);
+          } else if (hasCompany) {
             navigate("/");
           } else {
-            // Profile exists but no company, go to create company page
             console.log(
               "App: navigating to /create-company after getProfile (profile exists but no company)"
             );
             navigate("/create-company");
           }
         } catch {
-          // If getProfile fails, assume no company and go to create company
           setProfile(null);
           setShowWelcome(false);
           setProfileLoading(false);
@@ -486,9 +468,6 @@ function AppRoutes() {
     }
   };
 
-  // If this looks like a public deep-link (/:username or /:username/company or /:username/chamber)
-  // bypass the welcome/auth gating and render public routes directly so the app works when
-  // someone opens https://addmy.co/username from outside (Telegram, browser refresh, etc.).
   if (isPublicPath) {
     return (
       <Routes>
@@ -508,7 +487,6 @@ function AppRoutes() {
     return <div>Loading...</div>;
   }
 
-  // If no profile/company data, allow create-profile and create-company routes to render.
   if (!profile) {
     const path = location.pathname || "/";
     if (path === "/create-company" || path === "/create-profile") {
@@ -525,12 +503,9 @@ function AppRoutes() {
 
   return (
     <Routes>
-      {/* Public routes - accessible without authentication */}
       <Route path="/:username" element={<PublicProfilePage />} />
       <Route path="/:username/company" element={<PublicCompanyPage />} />
       <Route path="/:username/chamber" element={<PublicChamberPage />} />
-
-      {/* Authenticated routes */}
       <Route path="/" element={<HomePage />} />
       <Route path="/profile" element={<ProfilePage />} />
       <Route path="/update-profile" element={<UpdateProfilePage />} />

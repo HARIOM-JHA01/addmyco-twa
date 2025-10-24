@@ -2,7 +2,7 @@ import React, { useEffect, useState, useRef } from "react";
 import Header from "../components/Header";
 import axios from "axios";
 import backgroundImg from "../assets/background.jpg";
-// import { useNavigate } from "react-router-dom";
+import WebApp from "@twa-dev/sdk";
 
 interface WelcomePageProps {
   onLogin: () => void;
@@ -15,8 +15,23 @@ const WelcomePage: React.FC<WelcomePageProps> = ({ onLogin }) => {
   const [bannerError, setBannerError] = useState<string | null>(null);
   const [currentBanner, setCurrentBanner] = useState(0);
   const [loginLoading, setLoginLoading] = useState(false);
+  const [isInTelegram, setIsInTelegram] = useState(true);
   const carouselInterval = useRef<NodeJS.Timeout | null>(null);
-  // const navigate = useNavigate();
+
+  useEffect(() => {
+    try {
+      WebApp.ready();
+      const hasValidTelegramData = !!(
+        WebApp.initDataUnsafe?.user ||
+        (WebApp.initData &&
+          typeof WebApp.initData === "object" &&
+          (WebApp.initData as any).user)
+      );
+      setIsInTelegram(hasValidTelegramData);
+    } catch (e) {
+      setIsInTelegram(false);
+    }
+  }, []);
 
   useEffect(() => {
     const fetchBanners = async () => {
@@ -32,7 +47,7 @@ const WelcomePage: React.FC<WelcomePageProps> = ({ onLogin }) => {
       }
     };
     fetchBanners();
-  }, []);
+  }, [API_BASE_URL]);
 
   useEffect(() => {
     if (banners.length === 0) return;
@@ -52,11 +67,9 @@ const WelcomePage: React.FC<WelcomePageProps> = ({ onLogin }) => {
   }, [banners]);
 
   useEffect(() => {
-    // Remove token on every startup
     localStorage.removeItem("token");
   }, []);
 
-  // Wrap onLogin to show loader
   const handleLogin = async () => {
     setLoginLoading(true);
     try {
@@ -84,39 +97,47 @@ const WelcomePage: React.FC<WelcomePageProps> = ({ onLogin }) => {
             <h1 className="text-3xl font-space-bold mb-6 text-white">
               Welcome to AddMy
             </h1>
-            <button
-              className="px-6 py-3 bg-gray-500 text-white text-2xl rounded-lg shadow hover:bg-blue-700 transition flex items-center justify-center min-w-[180px]"
-              onClick={handleLogin}
-              disabled={loginLoading}
-            >
-              {loginLoading ? (
-                <span className="flex items-center gap-2 font-space-bold">
-                  <svg
-                    className="animate-spin h-6 w-6 text-white"
-                    xmlns="http://www.w3.org/2000/svg"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                  >
-                    <circle
-                      className="opacity-25"
-                      cx="12"
-                      cy="12"
-                      r="10"
-                      stroke="currentColor"
-                      strokeWidth="4"
-                    ></circle>
-                    <path
-                      className="opacity-75"
-                      fill="currentColor"
-                      d="M4 12a8 8 0 018-8v8z"
-                    ></path>
-                  </svg>
-                  Loading...
-                </span>
-              ) : (
-                "Get in to the app"
-              )}
-            </button>
+            {!isInTelegram ? (
+              <div className="text-center">
+                <p className="text-white mb-4">
+                  This app must be opened inside Telegram.
+                </p>
+              </div>
+            ) : (
+              <button
+                className="px-6 py-3 bg-gray-500 text-white text-2xl rounded-lg shadow hover:bg-blue-700 transition flex items-center justify-center min-w-[180px]"
+                onClick={handleLogin}
+                disabled={loginLoading}
+              >
+                {loginLoading ? (
+                  <span className="flex items-center gap-2 font-space-bold">
+                    <svg
+                      className="animate-spin h-6 w-6 text-white"
+                      xmlns="http://www.w3.org/2000/svg"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                    >
+                      <circle
+                        className="opacity-25"
+                        cx="12"
+                        cy="12"
+                        r="10"
+                        stroke="currentColor"
+                        strokeWidth="4"
+                      ></circle>
+                      <path
+                        className="opacity-75"
+                        fill="currentColor"
+                        d="M4 12a8 8 0 018-8v8z"
+                      ></path>
+                    </svg>
+                    Loading...
+                  </span>
+                ) : (
+                  "Get in to the app"
+                )}
+              </button>
+            )}
           </div>
         </main>
         <div className="w-full flex flex-col items-center mt-6">

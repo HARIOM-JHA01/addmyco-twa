@@ -21,12 +21,7 @@ import {
   fetchPublicProfile,
   PublicProfileData,
 } from "../services/publicProfileService";
-import {
-  formatUrl,
-  formatImageUrl,
-  isTelegramWebApp,
-  createTelegramMiniAppLink,
-} from "../utils/validation";
+import { formatUrl, formatImageUrl } from "../utils/validation";
 
 export default function PublicProfilePage() {
   const { username } = useParams<{ username: string }>();
@@ -60,20 +55,6 @@ export default function PublicProfilePage() {
     };
 
     loadProfile();
-  }, [username]);
-
-  // Automatic redirect to Telegram if not in the Telegram app
-  useEffect(() => {
-    if (username) {
-      // Check if we're outside Telegram WebApp
-      const isInTelegram = isTelegramWebApp();
-
-      if (!isInTelegram) {
-        // Instead of showing a banner, immediately redirect to Telegram
-        const telegramUrl = createTelegramMiniAppLink(username);
-        window.location.href = telegramUrl;
-      }
-    }
   }, [username]);
 
   const updateIconScroll = () => {
@@ -121,8 +102,6 @@ export default function PublicProfilePage() {
 
   const hasCompanies = profile.userDoc && profile.userDoc.length > 0;
   const hasChambers = profile.chamberDoc && profile.chamberDoc.length > 0;
-
-  // Get first company for display on profile page
   const firstCompany =
     hasCompanies && profile.userDoc ? profile.userDoc[0] : null;
 
