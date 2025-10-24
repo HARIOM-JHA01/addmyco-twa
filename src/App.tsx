@@ -49,6 +49,18 @@ function AppRoutes() {
     }
   }, [navigate]);
 
+  // Handle /t.me/* routes - redirect to Telegram if they somehow reach the React app
+  useEffect(() => {
+    const path = location.pathname;
+    if (path.startsWith('/t.me/')) {
+      const userId = path.replace('/t.me/', '');
+      if (userId) {
+        // Redirect to Telegram Mini App
+        window.location.href = `https://t.me/AddmyCo_bot/addmy?startapp=${userId}`;
+      }
+    }
+  }, [location.pathname]);
+
   const isPublicPath = (() => {
     const path = location.pathname || "/";
     const segments = path.split("/").filter(Boolean);

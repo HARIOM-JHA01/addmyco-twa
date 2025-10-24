@@ -1,6 +1,7 @@
 import axios from "axios";
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+const API_BASE_URL =
+  import.meta.env.VITE_API_BASE_URL || "https://admin.addmy.co";
 
 export interface PublicProfileData {
   _id: string;
@@ -98,16 +99,55 @@ export const fetchPublicProfile = async (
   username: string
 ): Promise<PublicProfileData> => {
   try {
-    const response = await axios.post(`${API_BASE_URL}/getlandingpage`, {
+    // New API: /getuserdata returns { success: true, data: { profile, companies, chambers } }
+    const response = await axios.post(`${API_BASE_URL}/getuserdata`, {
       username,
     });
 
-    if (
-      response.data.success &&
-      response.data.data &&
-      response.data.data.length > 0
-    ) {
-      return response.data.data[0];
+    if (response.data && response.data.success && response.data.data) {
+      const apiData = response.data.data;
+      const profile = apiData.profile || {};
+      const companies = apiData.companies || [];
+      const chambers = apiData.chambers || [];
+
+      // Map API shape into our PublicProfileData expected shape
+      const result: PublicProfileData = {
+        _id: profile._id,
+        username: profile.username,
+        tgid: profile.tgid,
+        country: profile.country,
+        countryCode: profile.countryCode,
+        memberid: profile.memberid,
+        membertype: profile.membertype,
+        owner_name_english: profile.owner_name_english,
+        owner_name_chinese: profile.owner_name_chinese,
+        email: profile.email,
+        contact: profile.contact,
+        address1: profile.address1,
+        address2: profile.address2,
+        address3: profile.address3,
+        telegramId: profile.telegramId || profile.tgid || profile.tgId,
+        WhatsApp: profile.WhatsApp,
+        Facebook: profile.Facebook,
+        Instagram: profile.Instagram,
+        Youtube: profile.Youtube,
+        Linkedin: profile.Linkedin,
+        Twitter: profile.Twitter,
+        Line: profile.Line,
+        WeChat: profile.WeChat,
+        SnapChat: profile.SnapChat,
+        Skype: profile.Skype,
+        TikTok: profile.TikTok,
+        profile_image: profile.profile_image,
+        video: profile.video,
+        website: profile.website,
+        companydata: profile.companydata,
+        userDoc: companies as CompanyData[],
+        chamberDoc: chambers as ChamberData[],
+        // theme remains optional/not provided by this API
+      };
+
+      return result;
     } else {
       throw new Error("Profile not found");
     }
@@ -123,23 +163,32 @@ export const fetchPublicChambers = async (
   username: string
 ): Promise<ChamberData[]> => {
   try {
-    const response = await axios.post(`${API_BASE_URL}/getlandingpage`, {
+    const response = await axios.post(`${API_BASE_URL}/getuserdata`, {
       username,
     });
-
-    if (
-      response.data.success &&
-      response.data.data &&
-      response.data.data.length > 0
-    ) {
-      const profileData = response.data.data[0];
-      // Assuming chambers are also included in the response similar to companies
-      // Adjust this based on actual API response structure
-      return profileData.chamberDoc || [];
+    if (response.data && response.data.success && response.data.data) {
+      return response.data.data.chambers || [];
     }
     return [];
   } catch (error) {
     console.error("Failed to fetch chambers:", error);
+    return [];
+  }
+};
+
+export const fetchPublicCompanies = async (
+  username: string
+): Promise<CompanyData[]> => {
+  try {
+    const response = await axios.post(`${API_BASE_URL}/getuserdata`, {
+      username,
+    });
+    if (response.data && response.data.success && response.data.data) {
+      return response.data.data.companies || [];
+    }
+    return [];
+  } catch (error) {
+    console.error("Failed to fetch companies:", error);
     return [];
   }
 };
