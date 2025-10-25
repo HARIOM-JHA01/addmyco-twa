@@ -1,5 +1,4 @@
 import { useEffect, useState, useRef } from "react";
-import { useParams, useNavigate } from "react-router-dom";
 import logo from "../assets/logo.png";
 import company from "../assets/company.svg";
 import chamber from "../assets/chamber.svg";
@@ -18,55 +17,29 @@ import {
 import { faPhone, faGlobe } from "@fortawesome/free-solid-svg-icons";
 import PublicLayout from "../components/PublicLayout";
 import {
-  fetchUserProfile,
-  fetchPublicCompanies,
-  fetchPublicChambers,
   PublicProfileData,
+  CompanyData,
+  ChamberData,
 } from "../services/publicProfileService";
 import { formatUrl, formatImageUrl } from "../utils/validation";
 
-export default function PublicProfilePage() {
-  const { username } = useParams<{ username: string }>();
-  const navigate = useNavigate();
-  const [profile, setProfile] = useState<PublicProfileData | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
+interface PublicProfileViewProps {
+  profile: PublicProfileData;
+  companies: CompanyData[];
+  chambers: ChamberData[];
+  onViewChange: (view: "profile" | "company" | "chamber") => void;
+}
+
+export default function PublicProfileView({
+  profile,
+  companies,
+  chambers,
+  onViewChange,
+}: PublicProfileViewProps) {
   const iconsRef = useRef<HTMLDivElement | null>(null);
   const [showArrows, setShowArrows] = useState(false);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(false);
-
-  useEffect(() => {
-    const loadProfile = async () => {
-      if (!username) {
-        setError("Username is required");
-        setLoading(false);
-        return;
-      }
-
-      setLoading(true);
-      setError("");
-      try {
-        // Fetch profile, companies and chambers from separate endpoints
-        const [profileData, companies, chambers] = await Promise.all([
-          fetchUserProfile(username),
-          fetchPublicCompanies(username),
-          fetchPublicChambers(username),
-        ]);
-
-        // Attach companies and chambers to profile so existing UI works
-        profileData.userDoc = companies as any;
-        profileData.chamberDoc = chambers as any;
-        setProfile(profileData);
-      } catch (err: any) {
-        setError(err.message || "Failed to load profile");
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    loadProfile();
-  }, [username]);
 
   const updateIconScroll = () => {
     const el = iconsRef.current;
@@ -84,37 +57,9 @@ export default function PublicProfilePage() {
     return () => window.removeEventListener("resize", onResize);
   }, [profile]);
 
-  if (loading) {
-    return (
-      <PublicLayout>
-        <div className="flex items-center justify-center min-h-screen">
-          <div className="text-center text-gray-600">Loading profile...</div>
-        </div>
-      </PublicLayout>
-    );
-  }
-
-  if (error || !profile) {
-    return (
-      <PublicLayout>
-        <div className="flex items-center justify-center min-h-screen">
-          <div className="text-center">
-            <h1 className="text-2xl font-bold mb-4 text-red-600">
-              Profile Not Found
-            </h1>
-            <p className="text-gray-600">
-              {error || "The requested profile does not exist."}
-            </p>
-          </div>
-        </div>
-      </PublicLayout>
-    );
-  }
-
-  const hasCompanies = profile.userDoc && profile.userDoc.length > 0;
-  const hasChambers = profile.chamberDoc && profile.chamberDoc.length > 0;
-  const firstCompany =
-    hasCompanies && profile.userDoc ? profile.userDoc[0] : null;
+  const hasCompanies = companies && companies.length > 0;
+  const hasChambers = chambers && chambers.length > 0;
+  const firstCompany = hasCompanies ? companies[0] : null;
 
   return (
     <PublicLayout>
@@ -199,15 +144,7 @@ export default function PublicProfilePage() {
                 {hasCompanies && (
                   <div
                     className="w-12 h-12 rounded-full flex items-center justify-center p-2 overflow-hidden cursor-pointer flex-shrink-0"
-                    onClick={() =>
-                      navigate(`/${username}/company`, {
-                        state: {
-                          profile,
-                          companies: profile.userDoc,
-                          chambers: profile.chamberDoc,
-                        },
-                      })
-                    }
+                    onClick={() => onViewChange("company")}
                     style={{
                       backgroundColor: "var(--app-background-color)",
                       scrollSnapAlign: "center" as any,
@@ -276,15 +213,7 @@ export default function PublicProfilePage() {
                 {hasChambers && (
                   <div
                     className="w-12 h-12 rounded-full flex items-center justify-center p-2 overflow-hidden cursor-pointer flex-shrink-0"
-                    onClick={() =>
-                      navigate(`/${username}/chamber`, {
-                        state: {
-                          profile,
-                          companies: profile.userDoc,
-                          chambers: profile.chamberDoc,
-                        },
-                      })
-                    }
+                    onClick={() => onViewChange("chamber")}
                     style={{
                       backgroundColor: "var(--app-background-color)",
                       scrollSnapAlign: "center" as any,

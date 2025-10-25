@@ -1,7 +1,6 @@
 import { useEffect, useState, useRef } from "react";
-import { useParams, useNavigate, useLocation } from "react-router-dom";
-import ProfileIcon from "../assets/profileIcon.png";
-import CompanyLogo from "../assets/company.svg";
+import profileIcon from "../assets/profileIcon.png";
+import chamberIcon from "../assets/chamber.svg";
 import logo from "../assets/logo.png";
 import {
   faChevronLeft,
@@ -11,41 +10,39 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faWhatsapp,
   faTelegram,
-  faYoutube,
-  faInstagram,
   faFacebook,
+  faInstagram,
+  faYoutube,
 } from "@fortawesome/free-brands-svg-icons";
-import { faGlobe, faPhone } from "@fortawesome/free-solid-svg-icons";
+import { faPhone, faGlobe } from "@fortawesome/free-solid-svg-icons";
 import PublicLayout from "../components/PublicLayout";
 import {
-  fetchUserProfile,
-  fetchPublicChambers,
   PublicProfileData,
+  CompanyData,
   ChamberData,
 } from "../services/publicProfileService";
-import {
-  formatUrl,
-  formatImageUrl,
-  isTelegramWebApp,
-  createTelegramMiniAppLink,
-} from "../utils/validation";
+import { formatUrl, formatImageUrl } from "../utils/validation";
 
-export default function PublicChamberPage() {
-  const { username } = useParams<{ username: string }>();
-  const navigate = useNavigate();
-  const location = useLocation();
-  const [profile, setProfile] = useState<PublicProfileData | null>(null);
-  const [chamberData, setChamberData] = useState<ChamberData[]>([]);
-  const [currentChamberIndex, setCurrentChamberIndex] = useState(0);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
+interface PublicCompanyViewProps {
+  profile: PublicProfileData;
+  companies: CompanyData[];
+  chambers: ChamberData[];
+  onViewChange: (view: "profile" | "company" | "chamber") => void;
+}
+
+export default function PublicCompanyView({
+  profile,
+  companies,
+  chambers,
+  onViewChange,
+}: PublicCompanyViewProps) {
+  const [currentCompanyIndex, setCurrentCompanyIndex] = useState(0);
   const topIconsRef = useRef<HTMLDivElement | null>(null);
   const [showTopArrows, setShowTopArrows] = useState(false);
   const [canTopLeft, setCanTopLeft] = useState(false);
   const [canTopRight, setCanTopRight] = useState(false);
 
-  const chambers = chamberData;
-  const c = chambers[currentChamberIndex] || null;
+  const companyProfile = companies[currentCompanyIndex] || null;
 
   const updateTopScroll = () => {
     const el = topIconsRef.current;
@@ -61,127 +58,29 @@ export default function PublicChamberPage() {
     const onResize = () => updateTopScroll();
     window.addEventListener("resize", onResize);
     return () => window.removeEventListener("resize", onResize);
-  }, [c]);
+  }, [companyProfile]);
 
-  // Automatic redirect to Telegram if not in the Telegram app
-  useEffect(() => {
-    if (username) {
-      // Check if we're outside Telegram WebApp
-      const isInTelegram = isTelegramWebApp();
-
-      if (!isInTelegram) {
-        // Instead of showing a banner, immediately redirect to Telegram
-        const telegramUrl = createTelegramMiniAppLink(username);
-        window.location.href = telegramUrl;
-      }
-    }
-  }, [username]);
-
-  useEffect(() => {
-    const loadProfile = async () => {
-      if (!username) {
-        setError("Username is required");
-        setLoading(false);
-        return;
-      }
-
-      const stateData = location.state as any;
-      if (stateData?.profile && stateData?.chambers) {
-        setProfile(stateData.profile);
-        const sorted = [...stateData.chambers].sort(
-          (a: ChamberData, b: ChamberData) => {
-            const ao = Number(a.chamber_order ?? 0);
-            const bo = Number(b.chamber_order ?? 0);
-            return ao - bo;
-          }
-        );
-        setChamberData(sorted);
-        setLoading(false);
-        return;
-      }
-
-      setLoading(true);
-      setError("");
-      try {
-        const [profileData, chambersData] = await Promise.all([
-          fetchUserProfile(username),
-          fetchPublicChambers(username),
-        ]);
-
-        setProfile(profileData);
-
-        if (chambersData && chambersData.length > 0) {
-          const sorted = [...chambersData].sort((a, b) => {
-            const ao = Number(a.chamber_order ?? 0);
-            const bo = Number(b.chamber_order ?? 0);
-            return ao - bo;
-          });
-          setChamberData(sorted as ChamberData[]);
-        } else {
-          setChamberData([]);
-        }
-      } catch (err: any) {
-        setError(err.message || "Failed to load profile");
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    loadProfile();
-  }, [username, location.state]);
-
-  if (loading) {
-    return (
-      <PublicLayout>
-        <div className="flex items-center justify-center min-h-screen">
-          <div className="text-center text-gray-600">Loading chamber...</div>
-        </div>
-      </PublicLayout>
-    );
-  }
-
-  if (error || !profile) {
-    return (
-      <PublicLayout>
-        <div className="flex items-center justify-center min-h-screen">
-          <div className="text-center">
-            <h1 className="text-2xl font-bold mb-4 text-red-600">
-              Profile Not Found
-            </h1>
-            <p className="text-gray-600">
-              {error || "The requested profile does not exist."}
-            </p>
-          </div>
-        </div>
-      </PublicLayout>
-    );
-  }
-
-  if (chambers.length === 0) {
+  if (companies.length === 0) {
     return (
       <PublicLayout>
         <div className="flex items-center justify-center min-h-screen">
           <div className="text-center text-gray-600">
-            No chamber data found.
+            No company profile found.
           </div>
         </div>
       </PublicLayout>
     );
   }
 
-  const whatsappLink = profile.WhatsApp || null;
-  const telegramLink = profile.telegramId || null;
-  const contactNumber = profile.contact || null;
-
   return (
     <PublicLayout>
-      <div className="flex flex-col items-center justify-center flex-grow px-2 pb-8 min-h-screen mt-2">
-        <div className="bg-blue-100 bg-opacity-40 rounded-3xl p-4 w-full max-w-md mx-auto flex flex-col items-center shadow-lg">
-          {/* Chamber Top Icon Carousel */}
+      <div className="flex flex-col items-center justify-center flex-grow py-4 px-2 pb-8">
+        <section className="bg-blue-100 bg-opacity-40 rounded-3xl p-6 w-full max-w-md mx-auto flex flex-col items-center shadow-lg">
+          {/* Top Icon Carousel */}
           <div className="relative w-full mb-4">
             <button
               aria-label="Top scroll left"
-              className="absolute left-6 top-1/2 -translate-y-1/2 z-20 p-2 bg-white/10 rounded-full"
+              className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-1/2 z-20 p-1 bg-white/10 rounded-full"
               style={{
                 display: showTopArrows && canTopLeft ? "block" : "none",
               }}
@@ -200,20 +99,32 @@ export default function PublicChamberPage() {
             <div
               ref={topIconsRef}
               onScroll={updateTopScroll}
-              className="flex gap-4 px-6 overflow-x-auto no-scrollbar items-center"
+              className="flex gap-4 px-4 overflow-x-hidden items-center"
               style={{
                 scrollBehavior: "smooth",
                 scrollSnapType: "x mandatory" as any,
               }}
             >
-              {profile.userDoc && profile.userDoc.length > 0 && (
+              <div
+                className="w-12 h-12 rounded-full flex items-center justify-center p-2 overflow-hidden cursor-pointer flex-shrink-0"
+                onClick={() => onViewChange("profile")}
+                style={{
+                  backgroundColor:
+                    profile.theme?.backgroundcolor ||
+                    "var(--app-background-color)",
+                  scrollSnapAlign: "center" as any,
+                }}
+              >
+                <img
+                  src={profileIcon}
+                  alt="Profile"
+                  className="w-9 h-9 object-contain"
+                />
+              </div>
+              {chambers.length > 0 && (
                 <div
                   className="w-12 h-12 rounded-full flex items-center justify-center p-2 overflow-hidden cursor-pointer flex-shrink-0"
-                  onClick={() =>
-                    navigate(`/${username}/company`, {
-                      state: { profile, companies: profile.userDoc, chambers },
-                    })
-                  }
+                  onClick={() => onViewChange("chamber")}
                   style={{
                     backgroundColor:
                       profile.theme?.backgroundcolor ||
@@ -222,16 +133,18 @@ export default function PublicChamberPage() {
                   }}
                 >
                   <img
-                    src={CompanyLogo}
-                    alt="Company"
+                    src={chamberIcon}
+                    alt="Chamber"
                     className="w-9 h-9 object-contain"
                   />
                 </div>
               )}
-              {whatsappLink && (
+              {profile.WhatsApp && (
                 <div
                   className="w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0 cursor-pointer"
-                  onClick={() => window.open(formatUrl(whatsappLink), "_blank")}
+                  onClick={() =>
+                    window.open(formatUrl(profile.WhatsApp!), "_blank")
+                  }
                   style={{
                     backgroundColor:
                       profile.theme?.backgroundcolor ||
@@ -242,10 +155,12 @@ export default function PublicChamberPage() {
                   <FontAwesomeIcon icon={faWhatsapp} size="2x" color="white" />
                 </div>
               )}
-              {telegramLink && (
+              {profile.telegramId && (
                 <div
                   className="w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0 cursor-pointer"
-                  onClick={() => window.open(formatUrl(telegramLink), "_blank")}
+                  onClick={() =>
+                    window.open(formatUrl(profile.telegramId!), "_blank")
+                  }
                   style={{
                     backgroundColor:
                       profile.theme?.backgroundcolor ||
@@ -256,10 +171,10 @@ export default function PublicChamberPage() {
                   <FontAwesomeIcon icon={faTelegram} size="2x" color="white" />
                 </div>
               )}
-              {contactNumber && (
+              {profile.contact && (
                 <div
                   className="w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0 cursor-pointer"
-                  onClick={() => window.open(`tel:${contactNumber}`, "_self")}
+                  onClick={() => window.open(`tel:${profile.contact}`, "_self")}
                   style={{
                     backgroundColor:
                       profile.theme?.backgroundcolor ||
@@ -270,30 +185,10 @@ export default function PublicChamberPage() {
                   <FontAwesomeIcon icon={faPhone} size="2x" color="white" />
                 </div>
               )}
-              <div
-                className="w-12 h-12 rounded-full flex items-center justify-center p-2 overflow-hidden cursor-pointer flex-shrink-0"
-                onClick={() =>
-                  navigate(`/${username}`, {
-                    state: { profile, companies: profile.userDoc, chambers },
-                  })
-                }
-                style={{
-                  backgroundColor:
-                    profile.theme?.backgroundcolor ||
-                    "var(--app-background-color)",
-                  scrollSnapAlign: "center" as any,
-                }}
-              >
-                <img
-                  src={ProfileIcon}
-                  alt="Profile"
-                  className="w-9 h-9 object-contain"
-                />
-              </div>
             </div>
             <button
               aria-label="Top scroll right"
-              className="absolute right-6 top-1/2 -translate-y-1/2 z-20 p-2 bg-white/10 rounded-full"
+              className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-1/2 z-20 p-1 bg-white/10 rounded-full"
               style={{
                 display: showTopArrows && canTopRight ? "block" : "none",
               }}
@@ -308,36 +203,36 @@ export default function PublicChamberPage() {
             </button>
           </div>
 
-          {/* Chamber Names with navigation arrows */}
+          {/* Company Names with navigation arrows */}
           <div className="relative w-full mb-2">
             <div
-              className="w-full rounded-full bg-app text-app text-xl font-bold py-2 flex items-center justify-center"
+              className="w-full rounded-full bg-app text-app text-xl font-bold py-1 flex items-center justify-center"
               style={{ borderRadius: "2rem" }}
             >
-              {c.chamber_name_english}
+              {companyProfile.company_name_english || "Company Name"}
             </div>
             <button
-              aria-label="Prev chamber"
+              aria-label="Prev company"
               className="absolute left-0 -translate-x-1/2 p-1 rounded-full"
               style={{
                 top: "calc(50% + 2px)",
-                display: currentChamberIndex > 0 ? "block" : "none",
+                display: currentCompanyIndex > 0 ? "block" : "none",
               }}
-              onClick={() => setCurrentChamberIndex((i) => Math.max(i - 1, 0))}
+              onClick={() => setCurrentCompanyIndex((i) => Math.max(i - 1, 0))}
             >
               <FontAwesomeIcon icon={faChevronLeft} color="red" />
             </button>
             <button
-              aria-label="Next chamber"
+              aria-label="Next company"
               className="absolute right-0 translate-x-1/2 p-1 rounded-full"
               style={{
                 top: "calc(50% + 2px)",
                 display:
-                  currentChamberIndex < chambers.length - 1 ? "block" : "none",
+                  currentCompanyIndex < companies.length - 1 ? "block" : "none",
               }}
               onClick={() =>
-                setCurrentChamberIndex((i) =>
-                  Math.min(i + 1, chambers.length - 1)
+                setCurrentCompanyIndex((i) =>
+                  Math.min(i + 1, companies.length - 1)
                 )
               }
             >
@@ -345,52 +240,54 @@ export default function PublicChamberPage() {
             </button>
           </div>
           <div
-            className="w-full rounded-full bg-app text-app text-xl font-bold py-2 mb-2 flex items-center justify-center"
+            className="w-full rounded-full bg-app text-app text-xl font-bold py-1 mb-2 flex items-center justify-center"
             style={{ borderRadius: "2rem" }}
           >
-            {c.chamber_name_chinese}
+            {companyProfile.company_name_chinese || "中文公司名稱"}
           </div>
           <div
-            className="w-full rounded-full bg-app text-app text-lg font-bold py-2 mb-4 flex items-center justify-center"
+            className="w-full rounded-full bg-app text-app text-xl font-bold py-1 mb-4 flex items-center justify-center"
             style={{ borderRadius: "2rem" }}
           >
-            {c.chamberdesignation}
+            {companyProfile.companydesignation || "Company Designation"}
           </div>
 
-          {/* Image or video */}
+          {/* Company Image and Description */}
           <div className="flex flex-col items-center mb-6 w-full">
             <div className="w-full flex justify-center mb-4">
-              {c.video && c.video.endsWith(".mp4") ? (
-                <video
-                  src={formatImageUrl(c.video)}
-                  autoPlay
-                  loop
-                  muted
-                  playsInline
-                  className="w-full h-48 object-cover rounded-xl"
-                />
-              ) : c.image ? (
-                <img
-                  src={formatImageUrl(c.image)}
-                  alt="chamber"
-                  className="w-full h-48 object-cover rounded-xl"
-                />
+              {companyProfile.image ? (
+                companyProfile.image.endsWith(".mp4") ? (
+                  <video
+                    src={formatImageUrl(companyProfile.image)}
+                    autoPlay
+                    loop
+                    muted
+                    playsInline
+                    className="w-full h-48 object-cover rounded-xl"
+                  />
+                ) : (
+                  <img
+                    src={formatImageUrl(companyProfile.image)}
+                    alt="company"
+                    className="w-full h-48 object-cover rounded-xl"
+                  />
+                )
               ) : profile.theme?.Thumbnail ? (
                 <img
                   src={formatImageUrl(profile.theme.Thumbnail)}
-                  alt="Chamber thumbnail"
+                  alt="Company thumbnail"
                   className="w-full h-48 object-cover rounded-xl"
                 />
               ) : (
                 <img
                   src={logo}
-                  alt="No chamber"
+                  alt="No company"
                   className="w-full h-48 object-cover rounded-xl bg-white"
                 />
               )}
             </div>
             <div
-              className="w-full h-48 bg-white rounded-md p-2 overflow-auto mb-4"
+              className="w-full h-48 bg-white rounded-md p-2 overflow-auto"
               style={{
                 borderWidth: 2,
                 borderStyle: "solid",
@@ -399,7 +296,7 @@ export default function PublicChamberPage() {
                   "var(--app-background-color)",
               }}
             >
-              {c.detail}
+              {companyProfile.description || "No description available"}
             </div>
           </div>
 
@@ -408,39 +305,45 @@ export default function PublicChamberPage() {
             {[
               {
                 key: "telegram",
-                enabled: !!c.tgchannel,
+                enabled: !!companyProfile.telegramId,
                 icon: faTelegram,
                 onClick: () => {
-                  if (c.tgchannel) {
-                    const id = (c.tgchannel || "").replace(/^@/, "");
+                  if (companyProfile.telegramId) {
+                    const id = (companyProfile.telegramId || "").replace(
+                      /^@/,
+                      ""
+                    );
                     window.open(`https://t.me/${id}`, "_blank");
                   }
                 },
               },
               {
                 key: "facebook",
-                enabled: !!c.Facebook,
+                enabled: !!companyProfile.facebook,
                 icon: faFacebook,
-                onClick: () => window.open(formatUrl(c.Facebook!), "_blank"),
+                onClick: () =>
+                  window.open(formatUrl(companyProfile.facebook!), "_blank"),
               },
               {
                 key: "instagram",
-                enabled: !!c.Instagram,
+                enabled: !!companyProfile.Instagram,
                 icon: faInstagram,
-                onClick: () => window.open(formatUrl(c.Instagram!), "_blank"),
+                onClick: () =>
+                  window.open(formatUrl(companyProfile.Instagram!), "_blank"),
               },
               {
                 key: "youtube",
-                enabled: !!c.Youtube,
+                enabled: !!companyProfile.Youtube,
                 icon: faYoutube,
-                onClick: () => window.open(formatUrl(c.Youtube!), "_blank"),
+                onClick: () =>
+                  window.open(formatUrl(companyProfile.Youtube!), "_blank"),
               },
               {
                 key: "website",
-                enabled: !!c.chamberwebsite,
+                enabled: !!companyProfile.website,
                 icon: faGlobe,
                 onClick: () =>
-                  window.open(formatUrl(c.chamberwebsite!), "_blank"),
+                  window.open(formatUrl(companyProfile.website!), "_blank"),
               },
             ]
               .filter((item) => item.enabled)
@@ -459,7 +362,7 @@ export default function PublicChamberPage() {
                 </div>
               ))}
           </div>
-        </div>
+        </section>
       </div>
     </PublicLayout>
   );

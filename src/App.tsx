@@ -24,9 +24,7 @@ import WebApp from "@twa-dev/sdk";
 import CreateCompanyPage from "./pages/CreateCompanyPage";
 import BackgroundPage from "./pages/BackgroundPage";
 import HomePage from "./pages/HomePage";
-import PublicProfilePage from "./pages/PublicProfilePage";
-import PublicCompanyPage from "./pages/PublicCompanyPage";
-import PublicChamberPage from "./pages/PublicChamberPage";
+import PublicProfileContainer from "./pages/PublicProfileContainer";
 import backgroundImg from "./assets/background.jpg";
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
@@ -484,9 +482,8 @@ function AppRoutes() {
   if (isPublicPath) {
     return (
       <Routes>
-        <Route path="/:username" element={<PublicProfilePage />} />
-        <Route path="/:username/company" element={<PublicCompanyPage />} />
-        <Route path="/:username/chamber" element={<PublicChamberPage />} />
+        <Route path="/:username" element={<PublicProfileContainer />} />
+        <Route path="/:username/:view" element={<PublicProfileContainer />} />
         <Route path="*" element={<div>404 Not Found</div>} />
       </Routes>
     );
@@ -516,9 +513,8 @@ function AppRoutes() {
 
   return (
     <Routes>
-      <Route path="/:username" element={<PublicProfilePage />} />
-      <Route path="/:username/company" element={<PublicCompanyPage />} />
-      <Route path="/:username/chamber" element={<PublicChamberPage />} />
+      <Route path="/:username" element={<PublicProfileContainer />} />
+      <Route path="/:username/:view" element={<PublicProfileContainer />} />
       <Route path="/" element={<HomePage />} />
       <Route path="/profile" element={<ProfilePage />} />
       <Route path="/update-profile" element={<UpdateProfilePage />} />
