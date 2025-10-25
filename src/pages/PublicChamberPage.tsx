@@ -1,5 +1,5 @@
 import { useEffect, useState, useRef } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, useLocation } from "react-router-dom";
 import ProfileIcon from "../assets/profileIcon.png";
 import CompanyLogo from "../assets/company.svg";
 import logo from "../assets/logo.png";
@@ -33,6 +33,7 @@ import {
 export default function PublicChamberPage() {
   const { username } = useParams<{ username: string }>();
   const navigate = useNavigate();
+  const location = useLocation();
   const [profile, setProfile] = useState<PublicProfileData | null>(null);
   const [chamberData, setChamberData] = useState<ChamberData[]>([]);
   const [currentChamberIndex, setCurrentChamberIndex] = useState(0);
@@ -84,10 +85,24 @@ export default function PublicChamberPage() {
         return;
       }
 
+      const stateData = location.state as any;
+      if (stateData?.profile && stateData?.chambers) {
+        setProfile(stateData.profile);
+        const sorted = [...stateData.chambers].sort(
+          (a: ChamberData, b: ChamberData) => {
+            const ao = Number(a.chamber_order ?? 0);
+            const bo = Number(b.chamber_order ?? 0);
+            return ao - bo;
+          }
+        );
+        setChamberData(sorted);
+        setLoading(false);
+        return;
+      }
+
       setLoading(true);
       setError("");
       try {
-        // Fetch profile for theme/metadata and chambers separately
         const [profileData, chambersData] = await Promise.all([
           fetchUserProfile(username),
           fetchPublicChambers(username),
@@ -113,7 +128,7 @@ export default function PublicChamberPage() {
     };
 
     loadProfile();
-  }, [username]);
+  }, [username, location.state]);
 
   if (loading) {
     return (
@@ -194,7 +209,11 @@ export default function PublicChamberPage() {
               {profile.userDoc && profile.userDoc.length > 0 && (
                 <div
                   className="w-12 h-12 rounded-full flex items-center justify-center p-2 overflow-hidden cursor-pointer flex-shrink-0"
-                  onClick={() => navigate(`/${username}/company`)}
+                  onClick={() =>
+                    navigate(`/${username}/company`, {
+                      state: { profile, companies: profile.userDoc, chambers },
+                    })
+                  }
                   style={{
                     backgroundColor:
                       profile.theme?.backgroundcolor ||
@@ -253,7 +272,11 @@ export default function PublicChamberPage() {
               )}
               <div
                 className="w-12 h-12 rounded-full flex items-center justify-center p-2 overflow-hidden cursor-pointer flex-shrink-0"
-                onClick={() => navigate(`/${username}`)}
+                onClick={() =>
+                  navigate(`/${username}`, {
+                    state: { profile, companies: profile.userDoc, chambers },
+                  })
+                }
                 style={{
                   backgroundColor:
                     profile.theme?.backgroundcolor ||

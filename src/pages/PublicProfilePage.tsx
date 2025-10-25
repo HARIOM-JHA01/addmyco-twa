@@ -199,7 +199,15 @@ export default function PublicProfilePage() {
                 {hasCompanies && (
                   <div
                     className="w-12 h-12 rounded-full flex items-center justify-center p-2 overflow-hidden cursor-pointer flex-shrink-0"
-                    onClick={() => navigate(`/${username}/company`)}
+                    onClick={() =>
+                      navigate(`/${username}/company`, {
+                        state: {
+                          profile,
+                          companies: profile.userDoc,
+                          chambers: profile.chamberDoc,
+                        },
+                      })
+                    }
                     style={{
                       backgroundColor: "var(--app-background-color)",
                       scrollSnapAlign: "center" as any,
@@ -268,7 +276,15 @@ export default function PublicProfilePage() {
                 {hasChambers && (
                   <div
                     className="w-12 h-12 rounded-full flex items-center justify-center p-2 overflow-hidden cursor-pointer flex-shrink-0"
-                    onClick={() => navigate(`/${username}/chamber`)}
+                    onClick={() =>
+                      navigate(`/${username}/chamber`, {
+                        state: {
+                          profile,
+                          companies: profile.userDoc,
+                          chambers: profile.chamberDoc,
+                        },
+                      })
+                    }
                     style={{
                       backgroundColor: "var(--app-background-color)",
                       scrollSnapAlign: "center" as any,

@@ -1,5 +1,5 @@
 import { useEffect, useState, useRef } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, useLocation } from "react-router-dom";
 import profileIcon from "../assets/profileIcon.png";
 import chamberIcon from "../assets/chamber.svg";
 import logo from "../assets/logo.png";
@@ -33,6 +33,7 @@ import {
 export default function PublicCompanyPage() {
   const { username } = useParams<{ username: string }>();
   const navigate = useNavigate();
+  const location = useLocation();
   const [profile, setProfile] = useState<PublicProfileData | null>(null);
   const [companies, setCompanies] = useState<CompanyData[]>([]);
   const [currentCompanyIndex, setCurrentCompanyIndex] = useState(0);
@@ -83,10 +84,24 @@ export default function PublicCompanyPage() {
         return;
       }
 
+      const stateData = location.state as any;
+      if (stateData?.profile && stateData?.companies) {
+        setProfile(stateData.profile);
+        const sorted = [...stateData.companies].sort(
+          (a: CompanyData, b: CompanyData) => {
+            const ao = Number(a.company_order ?? 0);
+            const bo = Number(b.company_order ?? 0);
+            return ao - bo;
+          }
+        );
+        setCompanies(sorted);
+        setLoading(false);
+        return;
+      }
+
       setLoading(true);
       setError("");
       try {
-        // Fetch profile for theme and other metadata and companies separately
         const [profileData, companiesData] = await Promise.all([
           fetchUserProfile(username),
           fetchPublicCompanies(username),
@@ -112,7 +127,7 @@ export default function PublicCompanyPage() {
     };
 
     loadProfile();
-  }, [username]);
+  }, [username, location.state]);
 
   if (loading) {
     return (
@@ -188,7 +203,11 @@ export default function PublicCompanyPage() {
             >
               <div
                 className="w-12 h-12 rounded-full flex items-center justify-center p-2 overflow-hidden cursor-pointer flex-shrink-0"
-                onClick={() => navigate(`/${username}`)}
+                onClick={() =>
+                  navigate(`/${username}`, {
+                    state: { profile, companies, chambers: profile.chamberDoc },
+                  })
+                }
                 style={{
                   backgroundColor:
                     profile.theme?.backgroundcolor ||
@@ -205,7 +224,15 @@ export default function PublicCompanyPage() {
               {profile.chamberDoc && profile.chamberDoc.length > 0 && (
                 <div
                   className="w-12 h-12 rounded-full flex items-center justify-center p-2 overflow-hidden cursor-pointer flex-shrink-0"
-                  onClick={() => navigate(`/${username}/chamber`)}
+                  onClick={() =>
+                    navigate(`/${username}/chamber`, {
+                      state: {
+                        profile,
+                        companies,
+                        chambers: profile.chamberDoc,
+                      },
+                    })
+                  }
                   style={{
                     backgroundColor:
                       profile.theme?.backgroundcolor ||
