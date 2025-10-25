@@ -145,8 +145,18 @@ export default function PublicProfileView({
 
       WebApp.showAlert(message);
 
+      // Use a full navigation to the root so the app reloads into the
+      // non-public routes (which include the Footer). This avoids cases
+      // where Telegram WebApp deep-link/start_param or other state can
+      // cause the SPA navigation to revert back to the public profile.
       setTimeout(() => {
-        navigate("/");
+        try {
+          // replace() avoids leaving the current URL in history
+          window.location.replace("/");
+        } catch (e) {
+          // Fallback to SPA navigation if window.location is not available
+          navigate("/");
+        }
       }, 500);
     } catch (error: any) {
       console.error("Failed to add contact:", error);

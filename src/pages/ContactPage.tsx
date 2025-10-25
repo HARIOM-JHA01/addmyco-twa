@@ -558,9 +558,9 @@ export default function ContactPage() {
                       <div className="relative w-20 h-20 rounded-full bg-gray-200 flex items-center justify-center overflow-hidden shadow-md hover:shadow-lg transition-shadow">
                         {userDetail?.profile_image || contact.profile_image ? (
                           <img
-                            src={
+                            src={`https://admin.addmy.co/assets/${
                               userDetail?.profile_image || contact.profile_image
-                            }
+                            }`}
                             alt="Profile"
                             className="w-full h-full object-cover rounded-full"
                           />
