@@ -22,6 +22,7 @@ import {
   ChamberData,
 } from "../services/publicProfileService";
 import { formatUrl } from "../utils/validation";
+import { callOrCopyPhone } from "../utils/phone";
 
 interface PublicCompanyViewProps {
   profile: PublicProfileData;
@@ -160,7 +161,7 @@ export default function PublicCompanyView({
               {profile.contact && (
                 <div
                   className="w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0 cursor-pointer"
-                  onClick={() => window.open(`tel:${profile.contact}`, "_self")}
+                  onClick={() => callOrCopyPhone(String(profile.contact))}
                   style={{
                     backgroundColor:
                       profile.theme?.backgroundcolor ||

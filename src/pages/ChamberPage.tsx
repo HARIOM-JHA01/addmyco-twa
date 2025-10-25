@@ -23,6 +23,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import WebApp from "@twa-dev/sdk";
 import i18n from "../i18n";
 import { formatUrl, getUrlError } from "../utils/validation";
+import { callOrCopyPhone } from "../utils/phone";
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
@@ -827,10 +828,8 @@ export default function ChamberPage() {
                         )}
                         {contactNumber && (
                           <div
-                            className="w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0"
-                            onClick={() =>
-                              WebApp.openLink(`tel:${contactNumber}`)
-                            }
+                            className="w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0 cursor-pointer"
+                            onClick={() => callOrCopyPhone(String(contactNumber))}
                             style={{
                               backgroundColor: "var(--app-background-color)",
                               scrollSnapAlign: "center" as any,

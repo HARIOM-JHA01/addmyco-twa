@@ -78,21 +78,41 @@ export default function UpdateProfilePage() {
         setMemberType(data.membertype || "");
         // Prefill profile image/video preview if present
         if (data.profile_image) {
+          // Normalize server URL (may be relative) before using as src
+          const normalized = formatUrl(data.profile_image);
           if (data.profile_image.endsWith(".mp4")) {
-            setMediaPreview(data.profile_image);
+            setMediaPreview(normalized);
             setProfileImage(null);
             setVideo(null);
           } else {
-            setMediaPreview(data.profile_image);
+            setMediaPreview(normalized);
             setProfileImage(null);
             setVideo(null);
           }
+        } else {
+          // Clear preview if no image exists
+          setMediaPreview(null);
+          setProfileImage(null);
+          setVideo(null);
         }
       } catch (err) {
         // ignore
       }
     };
     fetchProfile();
+
+    // Also fetch when component becomes visible (user navigates back)
+    const handleVisibilityChange = () => {
+      if (!document.hidden) {
+        fetchProfile();
+      }
+    };
+
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+
+    return () => {
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+    };
   }, []);
 
   const handleProfileUpdate = async () => {
@@ -178,8 +198,24 @@ export default function UpdateProfilePage() {
       );
       if (res.status === 200) {
         WebApp.showAlert("Profile updated successfully!");
-        // Navigate to profile page to fetch fresh data
-        navigate("/profile");
+
+        // Fetch the updated profile data to refresh the preview
+        try {
+          const updatedRes = await axios.get(`${API_BASE_URL}/getprofile`, {
+            headers: { Authorization: `Bearer ${token}` },
+          });
+          const data = updatedRes.data.data;
+          if (data && data.profile_image) {
+            setMediaPreview(formatUrl(data.profile_image));
+            setProfileImage(null);
+            setVideo(null);
+          }
+        } catch (fetchErr) {
+          console.error("Failed to fetch updated profile:", fetchErr);
+        }
+
+        // Navigate to profile page to see the changes
+        setTimeout(() => navigate("/profile"), 1000);
       }
     } catch (err: any) {
       WebApp.showAlert(
@@ -188,6 +224,16 @@ export default function UpdateProfilePage() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleCancel = () => {
+    // Clear any staged files / previews and navigate back to profile
+    setProfileImage(null);
+    setVideo(null);
+    if (fileInputRef.current) fileInputRef.current.value = "";
+    // Optionally clear the preview while navigating away
+    setMediaPreview(null);
+    navigate("/profile");
   };
 
   // Handle profile icon click
@@ -208,7 +254,9 @@ export default function UpdateProfilePage() {
     if (file.type.startsWith("image/")) {
       setProfileImage(file);
       setVideo(null);
-      setMediaPreview(URL.createObjectURL(file));
+      const previewUrl = URL.createObjectURL(file);
+      console.debug("Set local image preview:", previewUrl);
+      setMediaPreview(previewUrl);
     } else if (file.type.startsWith("video/")) {
       if (!isPremium) {
         WebApp.showAlert("Video upload is only available for premium members.");
@@ -286,18 +334,23 @@ export default function UpdateProfilePage() {
               onClick={handleProfileIconClick}
             >
               {mediaPreview ? (
-                profileImage ? (
-                  <img
-                    src={mediaPreview}
-                    alt="Profile Preview"
-                    className="w-[180px] h-[180px] object-cover rounded-full"
-                  />
-                ) : (
+                // Decide between image or video preview. If `video` state is set
+                // or the URL ends with .mp4, render a <video>; otherwise render an <img>
+                video ||
+                (typeof mediaPreview === "string" &&
+                  mediaPreview.endsWith(".mp4")) ? (
                   <video
                     src={mediaPreview}
                     autoPlay
                     loop
                     muted
+                    playsInline
+                    className="w-[180px] h-[180px] object-cover rounded-full"
+                  />
+                ) : (
+                  <img
+                    src={mediaPreview}
+                    alt="Profile Preview"
                     className="w-[180px] h-[180px] object-cover rounded-full"
                   />
                 )
@@ -317,12 +370,12 @@ export default function UpdateProfilePage() {
               onChange={handleFileChange}
             />
             {memberType === "premium" ? (
-              <span className="text-xs text-gray-600 text-center">
+              <span className="text-xs text-black text-center">
                 You can upload a 180 x 180 image or a video as your profile
                 media.
               </span>
             ) : (
-              <span className="text-xs text-gray-600 text-center">
+              <span className="text-xs text-black text-center">
                 Upload Profile Image
                 <br />
                 Size 180 x 180
@@ -705,15 +758,29 @@ export default function UpdateProfilePage() {
           </div>
         </section>
 
-        <div
-          className="text-white mt-6 p-1 w-full bg-[#d50078] text-center"
-          onClick={handleProfileUpdate}
-          style={{
-            opacity: loading ? 0.6 : 1,
-            pointerEvents: loading ? "none" : "auto",
-          }}
-        >
-          {loading ? "Updating..." : "Update your Profile"}
+        <div className="mt-6 w-full flex gap-3">
+          <button
+            type="button"
+            onClick={handleCancel}
+            className="flex-1 bg-white text-[#333] border-2 border-gray-300 py-2 rounded-full"
+            aria-label="Cancel and go back to profile"
+            disabled={loading}
+          >
+            Cancel
+          </button>
+
+          <button
+            type="button"
+            onClick={handleProfileUpdate}
+            className="flex-1 text-white bg-[#d50078] py-2 rounded-full"
+            style={{
+              opacity: loading ? 0.6 : 1,
+              pointerEvents: loading ? "none" : "auto",
+            }}
+            aria-label="Save profile changes"
+          >
+            {loading ? "Updating..." : "Update your Profile"}
+          </button>
         </div>
       </div>
     </Layout>

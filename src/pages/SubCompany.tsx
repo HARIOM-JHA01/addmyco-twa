@@ -18,6 +18,7 @@ import {
   faChevronLeft,
   faChevronRight,
 } from "@fortawesome/free-solid-svg-icons";
+import { callOrCopyPhone } from "../utils/phone";
 import { formatUrl, getUrlError, getEmailError } from "../utils/validation";
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
@@ -861,9 +862,7 @@ export default function SubCompanyPage() {
                   {profile?.contact ? (
                     <div
                       className="w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0 cursor-pointer"
-                      onClick={() =>
-                        window.open(`tel:${profile.contact}`, "_self")
-                      }
+                      onClick={() => callOrCopyPhone(String(profile.contact))}
                       style={{
                         backgroundColor: "var(--app-background-color)",
                         scrollSnapAlign: "center" as any,

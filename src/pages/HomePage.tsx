@@ -30,6 +30,7 @@ import {
   faGlobe,
 } from "@fortawesome/free-solid-svg-icons";
 import { formatUrl } from "../utils/validation";
+import { callOrCopyPhone } from "../utils/phone";
 import WebApp from "@twa-dev/sdk";
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
@@ -279,8 +280,8 @@ export default function HomePage() {
               )}
               {profile?.contact && (
                 <div
-                  className="w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0"
-                  onClick={() => window.open(`tel:${profile.contact}`, "_self")}
+                  className="w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0 cursor-pointer"
+                  onClick={() => callOrCopyPhone(String(profile.contact))}
                   style={{
                     backgroundColor: "var(--app-background-color)",
                     scrollSnapAlign: "center" as any,

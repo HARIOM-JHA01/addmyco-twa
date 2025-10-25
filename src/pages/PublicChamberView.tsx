@@ -15,6 +15,7 @@ import {
   faFacebook,
 } from "@fortawesome/free-brands-svg-icons";
 import { faGlobe, faPhone } from "@fortawesome/free-solid-svg-icons";
+import { callOrCopyPhone } from "../utils/phone";
 import PublicLayout from "../components/PublicLayout";
 import {
   PublicProfileData,
@@ -158,7 +159,7 @@ export default function PublicChamberView({
               {contactNumber && (
                 <div
                   className="w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0 cursor-pointer"
-                  onClick={() => window.open(`tel:${contactNumber}`, "_self")}
+                  onClick={() => callOrCopyPhone(String(contactNumber))}
                   style={{
                     backgroundColor:
                       profile.theme?.backgroundcolor ||

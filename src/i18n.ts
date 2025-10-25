@@ -106,6 +106,7 @@ const translations: Record<Lang, Record<string, string>> = {
     saving: "Saving...",
     wallet_address_label: "Wallet Address",
     upgrade_to_upload: "Upgrade to upload",
+    download_qr: "Download QR Code",
   },
   zh: {
     membership: "會員",
@@ -203,6 +204,7 @@ const translations: Record<Lang, Record<string, string>> = {
     saving: "儲存中...",
     wallet_address_label: "錢包地址",
     upgrade_to_upload: "升級以上傳",
+    download_qr: "下載二維碼",
   },
 };
 

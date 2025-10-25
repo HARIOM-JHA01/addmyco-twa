@@ -24,6 +24,7 @@ import {
   faSkype,
 } from "@fortawesome/free-brands-svg-icons";
 import { faPhone, faGlobe } from "@fortawesome/free-solid-svg-icons";
+import { callOrCopyPhone } from "../utils/phone";
 import Layout from "../components/Layout";
 import { useNavigate } from "react-router-dom";
 import i18n from "../i18n";
@@ -226,9 +227,7 @@ export default function ProfilePage() {
                     {profile?.contact ? (
                       <div
                         className="w-12 h-12 rounded-full flex items-center justify-center overflow-hidden cursor-pointer flex-shrink-0"
-                        onClick={() =>
-                          window.open(`tel:${profile.contact}`, "_self")
-                        }
+                        onClick={() => callOrCopyPhone(String(profile.contact))}
                         style={{
                           backgroundColor: "var(--app-background-color)",
                           scrollSnapAlign: "center" as any,

@@ -95,8 +95,7 @@ export default function MyQRPage() {
         return;
       }
 
-      // Get SVG data
-      const svgData = new XMLSerializer().serializeToString(svgElement);
+      // Create a larger canvas for better quality
       const canvas = document.createElement("canvas");
       const ctx = canvas.getContext("2d");
 
@@ -105,34 +104,63 @@ export default function MyQRPage() {
         return;
       }
 
-      const img = new Image();
+      const size = 1024; // High resolution
+      const padding = 80; // Padding around QR code
+      const qrSize = size - padding * 2;
 
-      // Set canvas size to match SVG (larger for better quality)
-      const size = 1024; // Increased for better quality
       canvas.width = size;
       canvas.height = size;
 
-      // Convert SVG to image
+      // Draw white background with rounded corners
+      ctx.fillStyle = "#ffffff";
+      ctx.fillRect(0, 0, size, size);
+
+      // Get SVG data
+      const svgData = new XMLSerializer().serializeToString(svgElement);
       const svgBlob = new Blob([svgData], {
         type: "image/svg+xml;charset=utf-8",
       });
-      const url = URL.createObjectURL(svgBlob);
+      const svgUrl = URL.createObjectURL(svgBlob);
 
-      img.onload = () => {
-        try {
-          // Draw white background
+      const qrImg = new Image();
+
+      qrImg.onload = () => {
+        // Draw the QR code
+        ctx.drawImage(qrImg, padding, padding, qrSize, qrSize);
+
+        // Load and draw the logo in the center
+        const logoImg = new Image();
+        logoImg.crossOrigin = "anonymous";
+
+        logoImg.onload = () => {
+          const logoSize = qrSize * 0.2; // Logo is 20% of QR code size
+          const logoX = (size - logoSize) / 2;
+          const logoY = (size - logoSize) / 2;
+
+          // Draw white circle background for logo
+          const logoRadius = logoSize / 2;
+          const logoCenterX = logoX + logoRadius;
+          const logoCenterY = logoY + logoRadius;
+
           ctx.fillStyle = "#ffffff";
-          ctx.fillRect(0, 0, canvas.width, canvas.height);
+          ctx.beginPath();
+          ctx.arc(logoCenterX, logoCenterY, logoRadius + 8, 0, Math.PI * 2);
+          ctx.fill();
 
-          // Draw the QR code (scaled up)
-          ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+          // Draw the logo
+          ctx.drawImage(logoImg, logoX, logoY, logoSize, logoSize);
+
+          // Add a subtle border around the whole QR code
+          ctx.strokeStyle = "#e5e7eb";
+          ctx.lineWidth = 2;
+          ctx.strokeRect(padding - 10, padding - 10, qrSize + 20, qrSize + 20);
 
           // Convert canvas to blob and download
           canvas.toBlob(
             async (blob) => {
               if (!blob) {
                 alert("Failed to generate QR Code image");
-                URL.revokeObjectURL(url);
+                URL.revokeObjectURL(svgUrl);
                 return;
               }
 
@@ -155,10 +183,9 @@ export default function MyQRPage() {
                   try {
                     // @ts-ignore
                     await navigator.share({ files: [file], title: filename });
-                    URL.revokeObjectURL(url);
+                    URL.revokeObjectURL(svgUrl);
                     return;
                   } catch (shareErr) {
-                    // Fall through to download fallback
                     console.warn(
                       "Share failed, falling back to download:",
                       shareErr
@@ -171,14 +198,12 @@ export default function MyQRPage() {
                 // iOS Safari doesn't support the download attribute reliably.
                 const isIOS = /iP(hone|od|ad)/.test(navigator.userAgent);
                 if (isIOS) {
-                  // Open the image in a new tab/window and instruct the user to long-press to save
                   const newWin = window.open(downloadUrl, "_blank");
                   if (newWin) {
                     alert(
                       "A new tab was opened with the QR image. Long-press the image and choose 'Save Image' to download it."
                     );
                   } else {
-                    // As a last resort try a clickable link (may show 'Open Link' dialog on iOS)
                     const link = document.createElement("a");
                     link.href = downloadUrl;
                     link.rel = "noopener noreferrer";
@@ -188,10 +213,9 @@ export default function MyQRPage() {
                     document.body.removeChild(link);
                   }
 
-                  // Cleanup later
                   setTimeout(() => {
                     URL.revokeObjectURL(downloadUrl);
-                    URL.revokeObjectURL(url);
+                    URL.revokeObjectURL(svgUrl);
                   }, 2000);
 
                   return;
@@ -201,14 +225,13 @@ export default function MyQRPage() {
                 const link = document.createElement("a");
                 link.download = filename;
                 link.href = downloadUrl;
-                // Some browsers require the link to be in document
                 document.body.appendChild(link);
                 link.click();
                 document.body.removeChild(link);
 
                 setTimeout(() => {
                   URL.revokeObjectURL(downloadUrl);
-                  URL.revokeObjectURL(url);
+                  URL.revokeObjectURL(svgUrl);
                 }, 100);
 
                 alert("QR Code downloaded successfully!");
@@ -217,25 +240,55 @@ export default function MyQRPage() {
                 alert(
                   "Failed to download QR Code. Please try long-pressing the image to save it."
                 );
-                URL.revokeObjectURL(url);
+                URL.revokeObjectURL(svgUrl);
               }
             },
             "image/png",
             1.0
           );
-        } catch (err) {
-          console.error("Error generating QR Code:", err);
-          alert("Failed to download QR Code");
-          URL.revokeObjectURL(url);
-        }
+        };
+
+        logoImg.onerror = () => {
+          // If logo fails to load, still download QR without logo
+          console.warn("Logo failed to load, downloading QR without logo");
+          canvas.toBlob(
+            async (blob) => {
+              if (!blob) {
+                URL.revokeObjectURL(svgUrl);
+                return;
+              }
+              const username =
+                profile?.username ||
+                profile?.telegram_username ||
+                profile?.tgid ||
+                "QRCode";
+              const filename = `AddMyCo-${username}-QR.png`;
+              const downloadUrl = URL.createObjectURL(blob);
+              const link = document.createElement("a");
+              link.download = filename;
+              link.href = downloadUrl;
+              document.body.appendChild(link);
+              link.click();
+              document.body.removeChild(link);
+              setTimeout(() => {
+                URL.revokeObjectURL(downloadUrl);
+                URL.revokeObjectURL(svgUrl);
+              }, 100);
+            },
+            "image/png",
+            1.0
+          );
+        };
+
+        logoImg.src = logo;
       };
 
-      img.onerror = () => {
-        URL.revokeObjectURL(url);
+      qrImg.onerror = () => {
+        URL.revokeObjectURL(svgUrl);
         alert("Failed to load QR Code image. Please try again.");
       };
 
-      img.src = url;
+      qrImg.src = svgUrl;
     } catch (err) {
       console.error("Download QR failed:", err);
       alert("Failed to download QR Code. Please try again.");
@@ -300,14 +353,17 @@ export default function MyQRPage() {
             <FontAwesomeIcon icon={faDownload} className="text-app" />
           </div>
 
-          {/* QR Code Generator */}
+          {/* QR Code Generator - Enhanced Design */}
           <div
             ref={qrRef}
-            className="p-4 bg-white mb-4 flex flex-col items-center"
+            className="p-1 bg-white mb-4 flex flex-col items-center rounded-md shadow-xl border-2 border-gray-100"
+            style={{
+              background: "linear-gradient(135deg, #ffffff 0%, #f9fafb 100%)",
+            }}
           >
             <QRCodeSVG
               value={qrLink}
-              size={192}
+              size={220}
               bgColor="#ffffff"
               fgColor={(() => {
                 try {
@@ -323,8 +379,8 @@ export default function MyQRPage() {
               level="H"
               imageSettings={{
                 src: logo,
-                height: 32,
-                width: 32,
+                height: 40,
+                width: 40,
                 excavate: true,
               }}
             />
