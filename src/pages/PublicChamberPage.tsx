@@ -18,7 +18,8 @@ import {
 import { faGlobe, faPhone } from "@fortawesome/free-solid-svg-icons";
 import PublicLayout from "../components/PublicLayout";
 import {
-  fetchPublicProfile,
+  fetchUserProfile,
+  fetchPublicChambers,
   PublicProfileData,
   ChamberData,
 } from "../services/publicProfileService";
@@ -86,17 +87,21 @@ export default function PublicChamberPage() {
       setLoading(true);
       setError("");
       try {
-        const data = await fetchPublicProfile(username);
-        setProfile(data);
+        // Fetch profile for theme/metadata and chambers separately
+        const [profileData, chambersData] = await Promise.all([
+          fetchUserProfile(username),
+          fetchPublicChambers(username),
+        ]);
 
-        // Sort chambers by chamber_order
-        if (data.chamberDoc && data.chamberDoc.length > 0) {
-          const sorted = [...data.chamberDoc].sort((a, b) => {
+        setProfile(profileData);
+
+        if (chambersData && chambersData.length > 0) {
+          const sorted = [...chambersData].sort((a, b) => {
             const ao = Number(a.chamber_order ?? 0);
             const bo = Number(b.chamber_order ?? 0);
             return ao - bo;
           });
-          setChamberData(sorted);
+          setChamberData(sorted as ChamberData[]);
         } else {
           setChamberData([]);
         }

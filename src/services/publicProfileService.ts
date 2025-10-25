@@ -95,22 +95,17 @@ export interface ThemeData {
   iconcolor?: string;
 }
 
-export const fetchPublicProfile = async (
+export const fetchUserProfile = async (
   username: string
 ): Promise<PublicProfileData> => {
   try {
-    // New API: /getuserdata returns { success: true, data: { profile, companies, chambers } }
-    const response = await axios.post(`${API_BASE_URL}/getuserdata`, {
+    const response = await axios.post(`${API_BASE_URL}/getuserprofile`, {
       username,
     });
 
     if (response.data && response.data.success && response.data.data) {
-      const apiData = response.data.data;
-      const profile = apiData.profile || {};
-      const companies = apiData.companies || [];
-      const chambers = apiData.chambers || [];
+      const profile = response.data.data;
 
-      // Map API shape into our PublicProfileData expected shape
       const result: PublicProfileData = {
         _id: profile._id,
         username: profile.username,
@@ -142,15 +137,12 @@ export const fetchPublicProfile = async (
         video: profile.video,
         website: profile.website,
         companydata: profile.companydata,
-        userDoc: companies as CompanyData[],
-        chamberDoc: chambers as ChamberData[],
-        // theme remains optional/not provided by this API
       };
 
       return result;
-    } else {
-      throw new Error("Profile not found");
     }
+
+    throw new Error("Profile not found");
   } catch (error: any) {
     if (error.response?.status === 422) {
       throw new Error("User not found");
@@ -163,11 +155,11 @@ export const fetchPublicChambers = async (
   username: string
 ): Promise<ChamberData[]> => {
   try {
-    const response = await axios.post(`${API_BASE_URL}/getuserdata`, {
+    const response = await axios.post(`${API_BASE_URL}/getuserchambers`, {
       username,
     });
-    if (response.data && response.data.success && response.data.data) {
-      return response.data.data.chambers || [];
+    if (response.data && response.data.success) {
+      return response.data.data || [];
     }
     return [];
   } catch (error) {
@@ -180,11 +172,11 @@ export const fetchPublicCompanies = async (
   username: string
 ): Promise<CompanyData[]> => {
   try {
-    const response = await axios.post(`${API_BASE_URL}/getuserdata`, {
+    const response = await axios.post(`${API_BASE_URL}/getusercompanies`, {
       username,
     });
-    if (response.data && response.data.success && response.data.data) {
-      return response.data.data.companies || [];
+    if (response.data && response.data.success) {
+      return response.data.data || [];
     }
     return [];
   } catch (error) {

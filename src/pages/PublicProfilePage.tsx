@@ -18,7 +18,9 @@ import {
 import { faPhone, faGlobe } from "@fortawesome/free-solid-svg-icons";
 import PublicLayout from "../components/PublicLayout";
 import {
-  fetchPublicProfile,
+  fetchUserProfile,
+  fetchPublicCompanies,
+  fetchPublicChambers,
   PublicProfileData,
 } from "../services/publicProfileService";
 import { formatUrl, formatImageUrl } from "../utils/validation";
@@ -45,8 +47,17 @@ export default function PublicProfilePage() {
       setLoading(true);
       setError("");
       try {
-        const data = await fetchPublicProfile(username);
-        setProfile(data);
+        // Fetch profile, companies and chambers from separate endpoints
+        const [profileData, companies, chambers] = await Promise.all([
+          fetchUserProfile(username),
+          fetchPublicCompanies(username),
+          fetchPublicChambers(username),
+        ]);
+
+        // Attach companies and chambers to profile so existing UI works
+        profileData.userDoc = companies as any;
+        profileData.chamberDoc = chambers as any;
+        setProfile(profileData);
       } catch (err: any) {
         setError(err.message || "Failed to load profile");
       } finally {

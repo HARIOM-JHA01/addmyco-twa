@@ -38,7 +38,8 @@ export default function MyQRPage() {
           "";
 
         const origin = (window.location && window.location.origin) || "";
-        const link = username ? `${origin}/${username}` : origin;
+        // Use /t.me/ prefix for shareable links that redirect to Telegram mini app
+        const link = username ? `${origin}/t.me/${username}` : origin;
         setQrLink(link);
       } catch (err: any) {
         console.error(err);
@@ -107,8 +108,9 @@ export default function MyQRPage() {
       const img = new Image();
 
       // Set canvas size to match SVG (larger for better quality)
-      canvas.width = 512;
-      canvas.height = 512;
+      const size = 1024; // Increased for better quality
+      canvas.width = size;
+      canvas.height = size;
 
       // Convert SVG to image
       const svgBlob = new Blob([svgData], {
@@ -126,34 +128,43 @@ export default function MyQRPage() {
           ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
 
           // Convert canvas to blob and download
-          canvas.toBlob((blob) => {
-            if (!blob) {
-              alert("Failed to generate QR Code image");
-              URL.revokeObjectURL(url);
-              return;
-            }
+          canvas.toBlob(
+            (blob) => {
+              if (!blob) {
+                alert("Failed to generate QR Code image");
+                URL.revokeObjectURL(url);
+                return;
+              }
 
-            // Create download link
-            const downloadUrl = URL.createObjectURL(blob);
-            const link = document.createElement("a");
+              // Create download link
+              const downloadUrl = URL.createObjectURL(blob);
+              const link = document.createElement("a");
 
-            // Get username for filename
-            const username =
-              profile?.username || profile?.telegram_username || "QRCode";
-            link.download = `${username}-QRCode.png`;
-            link.href = downloadUrl;
+              // Get username for filename
+              const username =
+                profile?.username ||
+                profile?.telegram_username ||
+                profile?.tgid ||
+                "QRCode";
+              link.download = `AddMyCo-${username}-QR.png`;
+              link.href = downloadUrl;
 
-            // Trigger download
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
+              // Trigger download
+              document.body.appendChild(link);
+              link.click();
+              document.body.removeChild(link);
 
-            // Cleanup
-            URL.revokeObjectURL(downloadUrl);
-            URL.revokeObjectURL(url);
+              // Cleanup
+              setTimeout(() => {
+                URL.revokeObjectURL(downloadUrl);
+                URL.revokeObjectURL(url);
+              }, 100);
 
-            alert("QR Code downloaded successfully!");
-          }, "image/png");
+              alert("QR Code downloaded successfully!");
+            },
+            "image/png",
+            1.0 // Maximum quality
+          );
         } catch (err) {
           console.error("Error generating QR Code:", err);
           alert("Failed to download QR Code");
@@ -163,13 +174,13 @@ export default function MyQRPage() {
 
       img.onerror = () => {
         URL.revokeObjectURL(url);
-        alert("Failed to load QR Code");
+        alert("Failed to load QR Code image. Please try again.");
       };
 
       img.src = url;
     } catch (err) {
       console.error("Download QR failed:", err);
-      alert("Failed to download QR Code");
+      alert("Failed to download QR Code. Please try again.");
     }
   };
 

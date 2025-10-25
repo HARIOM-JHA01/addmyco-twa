@@ -18,7 +18,8 @@ import {
 import { faPhone, faGlobe } from "@fortawesome/free-solid-svg-icons";
 import PublicLayout from "../components/PublicLayout";
 import {
-  fetchPublicProfile,
+  fetchUserProfile,
+  fetchPublicCompanies,
   PublicProfileData,
   CompanyData,
 } from "../services/publicProfileService";
@@ -85,17 +86,21 @@ export default function PublicCompanyPage() {
       setLoading(true);
       setError("");
       try {
-        const data = await fetchPublicProfile(username);
-        setProfile(data);
+        // Fetch profile for theme and other metadata and companies separately
+        const [profileData, companiesData] = await Promise.all([
+          fetchUserProfile(username),
+          fetchPublicCompanies(username),
+        ]);
 
-        // Sort companies by company_order
-        if (data.userDoc && data.userDoc.length > 0) {
-          const sorted = [...data.userDoc].sort((a, b) => {
+        setProfile(profileData);
+
+        if (companiesData && companiesData.length > 0) {
+          const sorted = [...companiesData].sort((a, b) => {
             const ao = Number(a.company_order ?? 0);
             const bo = Number(b.company_order ?? 0);
             return ao - bo;
           });
-          setCompanies(sorted);
+          setCompanies(sorted as CompanyData[]);
         } else {
           setCompanies([]);
         }
