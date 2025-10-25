@@ -129,41 +129,99 @@ export default function MyQRPage() {
 
           // Convert canvas to blob and download
           canvas.toBlob(
-            (blob) => {
+            async (blob) => {
               if (!blob) {
                 alert("Failed to generate QR Code image");
                 URL.revokeObjectURL(url);
                 return;
               }
 
-              // Create download link
-              const downloadUrl = URL.createObjectURL(blob);
-              const link = document.createElement("a");
+              try {
+                // Prepare filename
+                const username =
+                  profile?.username ||
+                  profile?.telegram_username ||
+                  profile?.tgid ||
+                  "QRCode";
+                const filename = `AddMyCo-${username}-QR.png`;
 
-              // Get username for filename
-              const username =
-                profile?.username ||
-                profile?.telegram_username ||
-                profile?.tgid ||
-                "QRCode";
-              link.download = `AddMyCo-${username}-QR.png`;
-              link.href = downloadUrl;
+                // Try Web Share API with files (mobile friendly)
+                const file = new File([blob], filename, { type: "image/png" });
+                // @ts-ignore navigator.canShare may not exist in all browsers
+                if (
+                  navigator.canShare &&
+                  navigator.canShare({ files: [file] })
+                ) {
+                  try {
+                    // @ts-ignore
+                    await navigator.share({ files: [file], title: filename });
+                    URL.revokeObjectURL(url);
+                    return;
+                  } catch (shareErr) {
+                    // Fall through to download fallback
+                    console.warn(
+                      "Share failed, falling back to download:",
+                      shareErr
+                    );
+                  }
+                }
 
-              // Trigger download
-              document.body.appendChild(link);
-              link.click();
-              document.body.removeChild(link);
+                const downloadUrl = URL.createObjectURL(blob);
 
-              // Cleanup
-              setTimeout(() => {
-                URL.revokeObjectURL(downloadUrl);
+                // iOS Safari doesn't support the download attribute reliably.
+                const isIOS = /iP(hone|od|ad)/.test(navigator.userAgent);
+                if (isIOS) {
+                  // Open the image in a new tab/window and instruct the user to long-press to save
+                  const newWin = window.open(downloadUrl, "_blank");
+                  if (newWin) {
+                    alert(
+                      "A new tab was opened with the QR image. Long-press the image and choose 'Save Image' to download it."
+                    );
+                  } else {
+                    // As a last resort try a clickable link (may show 'Open Link' dialog on iOS)
+                    const link = document.createElement("a");
+                    link.href = downloadUrl;
+                    link.rel = "noopener noreferrer";
+                    link.target = "_blank";
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                  }
+
+                  // Cleanup later
+                  setTimeout(() => {
+                    URL.revokeObjectURL(downloadUrl);
+                    URL.revokeObjectURL(url);
+                  }, 2000);
+
+                  return;
+                }
+
+                // Desktop / modern browsers: use anchor with download attribute
+                const link = document.createElement("a");
+                link.download = filename;
+                link.href = downloadUrl;
+                // Some browsers require the link to be in document
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+
+                setTimeout(() => {
+                  URL.revokeObjectURL(downloadUrl);
+                  URL.revokeObjectURL(url);
+                }, 100);
+
+                alert("QR Code downloaded successfully!");
+              } catch (err) {
+                console.error("Download flow failed:", err);
+                alert(
+                  "Failed to download QR Code. Please try long-pressing the image to save it."
+                );
                 URL.revokeObjectURL(url);
-              }, 100);
-
-              alert("QR Code downloaded successfully!");
+              }
             },
             "image/png",
-            1.0 // Maximum quality
+            1.0
           );
         } catch (err) {
           console.error("Error generating QR Code:", err);

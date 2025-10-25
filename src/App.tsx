@@ -41,25 +41,34 @@ function AppRoutes() {
   useEffect(() => {
     try {
       const startParam = WebApp.initDataUnsafe?.start_param;
-      if (startParam) {
-        navigate(`/${startParam}`);
-      }
+      if (startParam) navigate(`/${startParam}`);
     } catch (e) {
       console.error("Failed to read start_param", e);
     }
   }, [navigate]);
 
-  // Handle /t.me/* routes - redirect to Telegram if they somehow reach the React app
   useEffect(() => {
     const path = location.pathname;
-    if (path.startsWith('/t.me/')) {
-      const userId = path.replace('/t.me/', '');
-      if (userId) {
-        // Redirect to Telegram Mini App
-        window.location.href = `https://t.me/AddmyCo_bot/addmy?startapp=${userId}`;
+    if (path.startsWith("/t.me/")) {
+      const userId = decodeURIComponent(path.replace("/t.me/", ""));
+      if (!userId) return;
+      try {
+        if (window.Telegram && window.Telegram.WebApp) {
+          navigate(`/${userId}`);
+          return;
+        }
+      } catch (e) {
+        console.debug("Telegram WebApp check failed", e);
+      }
+      try {
+        window.location.href = `https://t.me/AddmyCo_bot/app?startapp=${encodeURIComponent(
+          userId
+        )}`;
+      } catch (e) {
+        console.error("Failed to redirect to Telegram deep link", e);
       }
     }
-  }, [location.pathname]);
+  }, [location.pathname, navigate]);
 
   const isPublicPath = (() => {
     const path = location.pathname || "/";
@@ -130,12 +139,11 @@ function AppRoutes() {
             localStorage.setItem("app-background-color", bg.backgroundcolor);
           } else {
             const savedBgColor = localStorage.getItem("app-background-color");
-            if (savedBgColor) {
+            if (savedBgColor)
               document.documentElement.style.setProperty(
                 "--app-background-color",
                 savedBgColor
               );
-            }
           }
           if (bg.fontcolor) {
             document.documentElement.style.setProperty(
@@ -145,12 +153,11 @@ function AppRoutes() {
             localStorage.setItem("app-font-color", bg.fontcolor);
           } else {
             const savedFontColor = localStorage.getItem("app-font-color");
-            if (savedFontColor) {
+            if (savedFontColor)
               document.documentElement.style.setProperty(
                 "--app-font-color",
                 savedFontColor
               );
-            }
           }
           if (bg.Thumbnail || bg.thumbnail || bg.backgroundImage) {
             const bgImageUrl =
@@ -172,19 +179,16 @@ function AppRoutes() {
         } else {
           const savedBgColor = localStorage.getItem("app-background-color");
           const savedFontColor = localStorage.getItem("app-font-color");
-
-          if (savedBgColor) {
+          if (savedBgColor)
             document.documentElement.style.setProperty(
               "--app-background-color",
               savedBgColor
             );
-          }
-          if (savedFontColor) {
+          if (savedFontColor)
             document.documentElement.style.setProperty(
               "--app-font-color",
               savedFontColor
             );
-          }
           document.documentElement.style.setProperty(
             "--app-background-image",
             `url(${backgroundImg})`
@@ -194,19 +198,16 @@ function AppRoutes() {
         console.debug("fetchBackground failed", e);
         const savedBgColor = localStorage.getItem("app-background-color");
         const savedFontColor = localStorage.getItem("app-font-color");
-
-        if (savedBgColor) {
+        if (savedBgColor)
           document.documentElement.style.setProperty(
             "--app-background-color",
             savedBgColor
           );
-        }
-        if (savedFontColor) {
+        if (savedFontColor)
           document.documentElement.style.setProperty(
             "--app-font-color",
             savedFontColor
           );
-        }
         document.documentElement.style.setProperty(
           "--app-background-image",
           `url(${backgroundImg})`
