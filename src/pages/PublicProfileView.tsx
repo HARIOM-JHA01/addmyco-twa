@@ -48,25 +48,92 @@ export default function PublicProfileView({
 
   const API_BASE_URL =
     import.meta.env.VITE_API_BASE_URL || "https://admin.addmy.co";
-  const profileUrl = `https://addmy.co/${profile.username}`;
+  const profileUrl = `https://addmy.co/t.me/${profile.username}`;
 
   const handleAddToContact = async () => {
     try {
-      const initData = WebApp.initData;
-
-      if (!initData) {
-        window.location.href = "/";
-        return;
-      }
-
       setIsAddingContact(true);
 
+      // Check if user is already logged in
+      let token = localStorage.getItem("token");
+
+      // If no token, perform Telegram login first
+      if (!token) {
+        await WebApp.ready();
+
+        let user: any = null;
+        try {
+          if (
+            WebApp.initData &&
+            typeof WebApp.initData === "object" &&
+            (WebApp.initData as any).user
+          ) {
+            user = (WebApp.initData as any).user;
+          } else if (
+            WebApp.initDataUnsafe &&
+            (WebApp.initDataUnsafe as any).user
+          ) {
+            user = (WebApp.initDataUnsafe as any).user;
+          }
+        } catch (e) {
+          console.debug("Error reading Telegram init data", e);
+        }
+
+        const username = user?.username;
+        if (!username) {
+          WebApp.showAlert("No Telegram username available.");
+          setIsAddingContact(false);
+          return;
+        }
+
+        // Get country information
+        let country = "";
+        let countryCode = "";
+        try {
+          if (navigator.onLine) {
+            const countryResponse = await axios.get("https://ipapi.co/json/");
+            country = countryResponse?.data?.country_name || "";
+            countryCode = countryResponse?.data?.country_code || "";
+          }
+        } catch (e) {
+          console.debug("Failed to fetch country:", e);
+        }
+
+        // Perform Telegram login
+        const loginResponse = await axios.post(
+          `${API_BASE_URL}/telegram-login`,
+          {
+            telegram_username: username,
+            country: country || "India",
+            countryCode: countryCode || "IN",
+          }
+        );
+
+        if (loginResponse.data && loginResponse.data.success) {
+          token = loginResponse.data.data.token;
+          if (token) {
+            localStorage.setItem("token", token);
+          }
+        } else {
+          WebApp.showAlert("Login failed. Please try again.");
+          setIsAddingContact(false);
+          return;
+        }
+
+        if (!token) {
+          WebApp.showAlert("Failed to get authentication token.");
+          setIsAddingContact(false);
+          return;
+        }
+      }
+
+      // Now add to contact using the token
       const response = await axios.post(
         `${API_BASE_URL}/addtocontact`,
         { contact_id: profile._id },
         {
           headers: {
-            Authorization: `tma ${initData}`,
+            Authorization: `Bearer ${token}`,
             "Content-Type": "application/json",
           },
         }
@@ -78,7 +145,9 @@ export default function PublicProfileView({
     } catch (error: any) {
       console.error("Failed to add contact:", error);
       if (error.response?.status === 401) {
-        window.location.href = "/";
+        // Clear invalid token and ask user to try again
+        localStorage.removeItem("token");
+        WebApp.showAlert("Session expired. Please try again.");
       } else {
         WebApp.showAlert(
           error.response?.data?.message || "Failed to add contact"
@@ -389,17 +458,28 @@ export default function PublicProfileView({
           </div>
 
           {/* QR Code and Add Contact Section */}
-          <div className="w-full flex flex-col items-center gap-4 mb-4">
+          <div className="w-full flex items-center gap-4 mb-4">
             <div className="bg-white p-4 rounded-lg shadow-md">
               <QRCodeSVG
                 value={profileUrl}
-                size={150}
+                size={192}
+                bgColor="#ffffff"
+                fgColor={(() => {
+                  try {
+                    return (
+                      getComputedStyle(document.documentElement)
+                        .getPropertyValue("--app-background-color")
+                        .trim() || "#007cb6"
+                    );
+                  } catch (e) {
+                    return "#007cb6";
+                  }
+                })()}
                 level="H"
-                includeMargin={true}
                 imageSettings={{
                   src: logo,
-                  height: 30,
-                  width: 30,
+                  height: 32,
+                  width: 32,
                   excavate: true,
                 }}
               />
