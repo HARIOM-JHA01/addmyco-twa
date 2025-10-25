@@ -1,11 +1,28 @@
 import { useState, useEffect } from "react";
-import { FaEllipsisV } from "react-icons/fa";
+import { FaEllipsisV, FaTrash } from "react-icons/fa";
 import axios from "axios";
 import Layout from "../components/Layout";
 import i18n from "../i18n";
 import { useProfileStore } from "../store/profileStore";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faSearch } from "@fortawesome/free-solid-svg-icons";
+import { useNavigate } from "react-router-dom";
+
+interface ContactData {
+  _id: string;
+  user_id: string;
+  contact_id: string;
+  status: number;
+  userdetails?: Array<{
+    owner_name_english?: string;
+    owner_name_chinese?: string;
+    profile_image?: string;
+    username?: string;
+    companydetails?: any[];
+  }>;
+  contactfolders_data?: any[];
+  profile_image?: string;
+}
 
 // Inline component to handle Add Folder button with membership check
 function AddFolderButton({ openModal }: { openModal: () => void }) {
@@ -16,7 +33,6 @@ function AddFolderButton({ openModal }: { openModal: () => void }) {
 
   const handleClick = () => {
     if (isFree) {
-      // show a simple browser alert suggesting upgrade (keeps no external deps)
       alert(
         "Folder creation is available for premium users only. Please upgrade to create more folders."
       );
@@ -42,9 +58,16 @@ function AddFolderButton({ openModal }: { openModal: () => void }) {
 }
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
-export default function SearchPage() {
+
+export default function ContactPage() {
+  const navigate = useNavigate();
   const [folderName, setFolderName] = useState("");
   const [folders, setFolders] = useState<any[]>([]);
+  const [contacts, setContacts] = useState<ContactData[]>([]);
+  const [filteredContacts, setFilteredContacts] = useState<ContactData[]>([]);
+  const [selectedFolder, setSelectedFolder] = useState<string>("All");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [loading, setLoading] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const [modalLoading, setModalLoading] = useState(false);
   const [modalError, setModalError] = useState("");
@@ -55,6 +78,96 @@ export default function SearchPage() {
   } | null>(null);
   const [editLoading, setEditLoading] = useState(false);
   const [editError, setEditError] = useState("");
+
+  const getAuthHeaders = () => {
+    const token = localStorage.getItem("token");
+    return {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
+    };
+  };
+
+  // Fetch all contacts
+  const fetchContacts = async () => {
+    try {
+      setLoading(true);
+      const res = await axios.get(`${API_BASE_URL}/getcontact`, {
+        headers: getAuthHeaders(),
+      });
+      if (res.data.success) {
+        setContacts(res.data.data || []);
+        setFilteredContacts(res.data.data || []);
+      }
+    } catch (error: any) {
+      console.error("Failed to fetch contacts:", error);
+      if (error.response?.status === 401) {
+        navigate("/");
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Fetch contacts by folder
+  const fetchContactsByFolder = async (folderId: string) => {
+    try {
+      setLoading(true);
+      const res = await axios.get(`${API_BASE_URL}/contactlist/${folderId}`, {
+        headers: getAuthHeaders(),
+      });
+      if (res.data.success) {
+        setFilteredContacts(res.data.data || []);
+      }
+    } catch (error: any) {
+      console.error("Failed to fetch folder contacts:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Search contacts
+  const searchContacts = async (query: string) => {
+    if (!query.trim()) {
+      setFilteredContacts(contacts);
+      return;
+    }
+
+    try {
+      const res = await axios.post(
+        `${API_BASE_URL}/searchcontact`,
+        { search: query },
+        { headers: getAuthHeaders() }
+      );
+      if (res.data.success && res.data.data) {
+        setFilteredContacts([res.data.data]);
+      } else {
+        setFilteredContacts([]);
+      }
+    } catch (error: any) {
+      console.error("Search failed:", error);
+      setFilteredContacts([]);
+    }
+  };
+
+  // Remove contact
+  const removeContact = async (contactId: string) => {
+    if (!confirm("Are you sure you want to remove this contact?")) return;
+
+    try {
+      const res = await axios.delete(
+        `${API_BASE_URL}/removefromcontact/${contactId}`,
+        { headers: getAuthHeaders() }
+      );
+      if (res.data.success) {
+        alert(res.data.message || "Contact removed successfully");
+        fetchContacts();
+      }
+    } catch (error: any) {
+      console.error("Failed to remove contact:", error);
+      alert(error.response?.data?.message || "Failed to remove contact");
+    }
+  };
+
   // Helper to refresh folders
   const refreshFolders = async () => {
     try {
@@ -67,20 +180,36 @@ export default function SearchPage() {
     } catch {}
   };
 
-  // Fetch folders on mount
+  // Fetch folders and contacts on mount
   useEffect(() => {
     refreshFolders();
+    fetchContacts();
   }, []);
+
+  // Handle search input change with debounce
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (searchQuery) {
+        searchContacts(searchQuery);
+      } else {
+        setFilteredContacts(contacts);
+      }
+    }, 300);
+
+    return () => clearTimeout(timer);
+  }, [searchQuery, contacts]);
 
   const openModal = () => {
     setFolderName("");
     setModalError("");
     setShowModal(true);
   };
+
   const closeModal = () => {
     setShowModal(false);
     setModalError("");
   };
+
   const handleAddFolder = async () => {
     setModalLoading(true);
     setModalError("");
@@ -114,10 +243,12 @@ export default function SearchPage() {
     });
     setEditError("");
   };
+
   const closeEditModal = () => {
     setEditModal(null);
     setEditError("");
   };
+
   const handleEditFolder = async () => {
     if (!editModal) return;
     setEditLoading(true);
@@ -142,6 +273,7 @@ export default function SearchPage() {
       setEditLoading(false);
     }
   };
+
   const handleDeleteFolder = async () => {
     if (!editModal) return;
     setEditLoading(true);
@@ -160,6 +292,22 @@ export default function SearchPage() {
       );
     } finally {
       setEditLoading(false);
+    }
+  };
+
+  const handleFolderClick = (folderName: string, folderId?: string) => {
+    setSelectedFolder(folderName);
+    if (folderName === "All") {
+      fetchContacts();
+    } else if (folderId) {
+      fetchContactsByFolder(folderId);
+    }
+  };
+
+  const handleContactClick = (contact: ContactData) => {
+    const username = contact.userdetails?.[0]?.username || contact.contact_id;
+    if (username) {
+      navigate(`/${username}`);
     }
   };
 
@@ -209,6 +357,63 @@ export default function SearchPage() {
             </div>
           </div>
         )}
+
+        {/* Edit folder modal */}
+        {editModal?.open && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
+            <div className="bg-white rounded-xl p-6 w-80 max-w-full flex flex-col items-center shadow-lg">
+              <h3 className="text-lg font-bold mb-2">Edit Folder</h3>
+              <input
+                type="text"
+                className="border border-gray-300 rounded-full px-3 py-2 w-full mb-3 focus:outline-none focus:ring-2 focus:ring-blue-400"
+                placeholder="Folder Name"
+                value={editModal.folderName}
+                onChange={(e) =>
+                  setEditModal((m) =>
+                    m ? { ...m, folderName: e.target.value } : m
+                  )
+                }
+                disabled={editLoading}
+              />
+              {editError && (
+                <div className="text-red-500 mb-2 text-center">
+                  {editError}
+                </div>
+              )}
+              <div className="flex gap-4 w-full">
+                <button
+                  className="flex-1 bg-gray-300 text-gray-700 rounded-full py-2 font-bold"
+                  onClick={closeEditModal}
+                  type="button"
+                  disabled={editLoading}
+                >
+                  Cancel
+                </button>
+                <button
+                  className="flex-1 rounded-full py-2 font-bold disabled:opacity-50"
+                  style={{
+                    backgroundColor: "var(--app-background-color)",
+                    color: "var(--app-font-color)",
+                  }}
+                  onClick={handleEditFolder}
+                  type="button"
+                  disabled={editLoading || !editModal.folderName.trim()}
+                >
+                  {editLoading ? "Updating..." : "Update"}
+                </button>
+                <button
+                  className="flex-1 bg-red-500 text-white rounded-full py-2 font-bold disabled:opacity-50"
+                  onClick={handleDeleteFolder}
+                  type="button"
+                  disabled={editLoading}
+                >
+                  {editLoading ? "Deleting..." : "Delete"}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Search box container */}
         <div className="bg-blue-100 bg-opacity-40 rounded-3xl p-4 w-full max-w-md mx-auto shadow-lg">
           <div className="relative">
@@ -216,6 +421,8 @@ export default function SearchPage() {
               type="text"
               className="border border-gray-300 rounded-lg p-2 pr-10 w-full bg-white placeholder-gray-500"
               placeholder={i18n.t("search_placeholder")}
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
             />
             <FontAwesomeIcon
               icon={faSearch}
@@ -231,45 +438,14 @@ export default function SearchPage() {
                 <div key={name} className="flex items-center w-30">
                   <button
                     type="button"
-                    className="flex justify-between items-center w-full px-4 py-1 rounded-sm bg-white text-gray-700"
+                    className={`flex justify-between items-center w-full px-4 py-1 rounded-sm ${
+                      selectedFolder === name
+                        ? "bg-[#007cb6] text-white"
+                        : "bg-white text-gray-700"
+                    }`}
+                    onClick={() => handleFolderClick(name)}
                     onMouseEnter={(e) => {
-                      const el = e.currentTarget as HTMLElement;
-                      el.style.backgroundColor = (
-                        getComputedStyle(
-                          document.documentElement
-                        ).getPropertyValue("--app-background-color") ||
-                        "#007cb6"
-                      ).trim();
-                      el.style.color = (
-                        getComputedStyle(
-                          document.documentElement
-                        ).getPropertyValue("--app-font-color") || "#ffffff"
-                      ).trim();
-                    }}
-                    onMouseLeave={(e) => {
-                      const el = e.currentTarget as HTMLElement;
-                      el.style.backgroundColor = "white";
-                      el.style.color = "#374151";
-                    }}
-                  >
-                    <span className="text-left w-full truncate">{name}</span>
-                  </button>
-                </div>
-              ))}
-              {/* User-created folders (exclude default ones) */}
-              {folders
-                .filter(
-                  (f) =>
-                    !["All", "Business", "Friends", "Partner"].includes(
-                      f.Folder
-                    )
-                )
-                .map((folder) => (
-                  <div key={folder._id} className="flex items-center w-30">
-                    <button
-                      type="button"
-                      className="flex justify-between items-center w-full px-4 py-1 rounded-sm bg-white text-gray-700"
-                      onMouseEnter={(e) => {
+                      if (selectedFolder !== name) {
                         const el = e.currentTarget as HTMLElement;
                         el.style.backgroundColor = (
                           getComputedStyle(
@@ -282,11 +458,60 @@ export default function SearchPage() {
                             document.documentElement
                           ).getPropertyValue("--app-font-color") || "#ffffff"
                         ).trim();
-                      }}
-                      onMouseLeave={(e) => {
+                      }
+                    }}
+                    onMouseLeave={(e) => {
+                      if (selectedFolder !== name) {
                         const el = e.currentTarget as HTMLElement;
                         el.style.backgroundColor = "white";
                         el.style.color = "#374151";
+                      }
+                    }}
+                  >
+                    <span className="text-left w-full truncate">{name}</span>
+                  </button>
+                </div>
+              ))}
+              {/* User-created folders */}
+              {folders
+                .filter(
+                  (f) =>
+                    !["All", "Business", "Friends", "Partner"].includes(
+                      f.Folder
+                    )
+                )
+                .map((folder) => (
+                  <div key={folder._id} className="flex items-center w-30">
+                    <button
+                      type="button"
+                      className={`flex justify-between items-center w-full px-4 py-1 rounded-sm ${
+                        selectedFolder === folder.Folder
+                          ? "bg-[#007cb6] text-white"
+                          : "bg-white text-gray-700"
+                      }`}
+                      onClick={() => handleFolderClick(folder.Folder, folder._id)}
+                      onMouseEnter={(e) => {
+                        if (selectedFolder !== folder.Folder) {
+                          const el = e.currentTarget as HTMLElement;
+                          el.style.backgroundColor = (
+                            getComputedStyle(
+                              document.documentElement
+                            ).getPropertyValue("--app-background-color") ||
+                            "#007cb6"
+                          ).trim();
+                          el.style.color = (
+                            getComputedStyle(
+                              document.documentElement
+                            ).getPropertyValue("--app-font-color") || "#ffffff"
+                          ).trim();
+                        }
+                      }}
+                      onMouseLeave={(e) => {
+                        if (selectedFolder !== folder.Folder) {
+                          const el = e.currentTarget as HTMLElement;
+                          el.style.backgroundColor = "white";
+                          el.style.color = "#374151";
+                        }
                       }}
                     >
                       <span className="text-left w-full truncate">
@@ -305,70 +530,69 @@ export default function SearchPage() {
                   </div>
                 ))}
               <div className="flex items-center w-30">
-                {/** Disable add for free users; show upgrade prompt instead */}
                 <AddFolderButton openModal={openModal} />
               </div>
             </div>
-            {/* Edit folder modal */}
-            {editModal?.open && (
-              <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
-                <div className="bg-white rounded-xl p-6 w-80 max-w-full flex flex-col items-center shadow-lg">
-                  <h3 className="text-lg font-bold mb-2">Edit Folder</h3>
-                  <input
-                    type="text"
-                    className="border border-gray-300 rounded-full px-3 py-2 w-full mb-3 focus:outline-none focus:ring-2 focus:ring-blue-400"
-                    placeholder="Folder Name"
-                    value={editModal.folderName}
-                    onChange={(e) =>
-                      setEditModal((m) =>
-                        m ? { ...m, folderName: e.target.value } : m
-                      )
-                    }
-                    disabled={editLoading}
-                  />
-                  {editError && (
-                    <div className="text-red-500 mb-2 text-center">
-                      {editError}
-                    </div>
-                  )}
-                  <div className="flex gap-4 w-full">
-                    <button
-                      className="flex-1 bg-gray-300 text-gray-700 rounded-full py-2 font-bold"
-                      onClick={closeEditModal}
-                      type="button"
-                      disabled={editLoading}
-                    >
-                      Cancel
-                    </button>
-                    <button
-                      className="flex-1 rounded-full py-2 font-bold disabled:opacity-50"
-                      style={{
-                        backgroundColor: "var(--app-background-color)",
-                        color: "var(--app-font-color)",
-                      }}
-                      onClick={handleEditFolder}
-                      type="button"
-                      disabled={editLoading || !editModal.folderName.trim()}
-                    >
-                      {editLoading ? "Updating..." : "Update"}
-                    </button>
-                    <button
-                      className="flex-1 bg-red-500 text-white rounded-full py-2 font-bold disabled:opacity-50"
-                      onClick={handleDeleteFolder}
-                      type="button"
-                      disabled={editLoading}
-                    >
-                      {editLoading ? "Deleting..." : "Delete"}
-                    </button>
-                  </div>
-                </div>
-              </div>
-            )}
           </div>
 
-          {/* No contacts message */}
-          <div className="mt-8 font-extrabold text-lg text-center text-black">
-            {i18n.t("no_contacts")}
+          {/* Contacts List */}
+          <div className="mt-8">
+            {loading ? (
+              <div className="text-center text-gray-600">Loading contacts...</div>
+            ) : filteredContacts.length === 0 ? (
+              <div className="font-extrabold text-lg text-center text-black">
+                {i18n.t("no_contacts")}
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {filteredContacts.map((contact) => {
+                  const userDetail = contact.userdetails?.[0];
+                  return (
+                    <div
+                      key={contact._id}
+                      className="bg-white rounded-lg p-4 shadow-md flex items-center justify-between hover:shadow-lg transition-shadow cursor-pointer"
+                      onClick={() => handleContactClick(contact)}
+                    >
+                      <div className="flex items-center gap-4 flex-1">
+                        <div className="w-12 h-12 rounded-full bg-gray-200 flex items-center justify-center overflow-hidden">
+                          {userDetail?.profile_image || contact.profile_image ? (
+                            <img
+                              src={userDetail?.profile_image || contact.profile_image}
+                              alt="Profile"
+                              className="w-full h-full object-cover"
+                            />
+                          ) : (
+                            <span className="text-gray-400 text-xl font-bold">
+                              {userDetail?.owner_name_english?.charAt(0) || "?"}
+                            </span>
+                          )}
+                        </div>
+                        <div className="flex-1">
+                          <div className="font-bold text-gray-800">
+                            {userDetail?.owner_name_english || "Unknown"}
+                          </div>
+                          {userDetail?.owner_name_chinese && (
+                            <div className="text-sm text-gray-600">
+                              {userDetail.owner_name_chinese}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          removeContact(contact.contact_id);
+                        }}
+                        className="p-2 text-red-500 hover:bg-red-50 rounded-full transition-colors"
+                        aria-label="Remove contact"
+                      >
+                        <FaTrash size={18} />
+                      </button>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
           </div>
         </div>
       </div>

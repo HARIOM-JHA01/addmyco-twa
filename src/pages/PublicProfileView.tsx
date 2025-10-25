@@ -1,10 +1,12 @@
 import { useEffect, useState, useRef } from "react";
+import { QRCodeSVG } from "qrcode.react";
 import logo from "../assets/logo.png";
 import company from "../assets/company.svg";
 import chamber from "../assets/chamber.svg";
 import {
   faChevronLeft,
   faChevronRight,
+  faPlus,
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
@@ -22,6 +24,8 @@ import {
   ChamberData,
 } from "../services/publicProfileService";
 import { formatUrl, formatImageUrl } from "../utils/validation";
+import WebApp from "@twa-dev/sdk";
+import axios from "axios";
 
 interface PublicProfileViewProps {
   profile: PublicProfileData;
@@ -40,6 +44,50 @@ export default function PublicProfileView({
   const [showArrows, setShowArrows] = useState(false);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(false);
+  const [isAddingContact, setIsAddingContact] = useState(false);
+
+  const API_BASE_URL =
+    import.meta.env.VITE_API_BASE_URL || "https://admin.addmy.co";
+  const profileUrl = `https://addmy.co/${profile.username}`;
+
+  const handleAddToContact = async () => {
+    try {
+      const initData = WebApp.initData;
+
+      if (!initData) {
+        window.location.href = "/";
+        return;
+      }
+
+      setIsAddingContact(true);
+
+      const response = await axios.post(
+        `${API_BASE_URL}/addtocontact`,
+        { contact_id: profile._id },
+        {
+          headers: {
+            Authorization: `tma ${initData}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
+      if (response.data.success) {
+        WebApp.showAlert("Contact added successfully!");
+      }
+    } catch (error: any) {
+      console.error("Failed to add contact:", error);
+      if (error.response?.status === 401) {
+        window.location.href = "/";
+      } else {
+        WebApp.showAlert(
+          error.response?.data?.message || "Failed to add contact"
+        );
+      }
+    } finally {
+      setIsAddingContact(false);
+    }
+  };
 
   const updateIconScroll = () => {
     const el = iconsRef.current;
@@ -338,6 +386,36 @@ export default function PublicProfileView({
             <div className="text-app">{profile.address1}</div>
             <div className="text-app">{profile.address2}</div>
             <div className="text-app">{profile.address3}</div>
+          </div>
+
+          {/* QR Code and Add Contact Section */}
+          <div className="w-full flex flex-col items-center gap-4 mb-4">
+            <div className="bg-white p-4 rounded-lg shadow-md">
+              <QRCodeSVG
+                value={profileUrl}
+                size={150}
+                level="H"
+                includeMargin={true}
+                imageSettings={{
+                  src: logo,
+                  height: 30,
+                  width: 30,
+                  excavate: true,
+                }}
+              />
+            </div>
+
+            <button
+              onClick={handleAddToContact}
+              disabled={isAddingContact}
+              className="w-12 h-12 rounded-full flex items-center justify-center cursor-pointer shadow-lg hover:shadow-xl transition-shadow disabled:opacity-50 disabled:cursor-not-allowed"
+              style={{
+                backgroundColor: "var(--app-background-color)",
+              }}
+              aria-label="Add to contacts"
+            >
+              <FontAwesomeIcon icon={faPlus} size="lg" color="white" />
+            </button>
           </div>
         </div>
       </div>
