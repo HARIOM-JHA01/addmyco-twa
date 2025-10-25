@@ -13,7 +13,7 @@ export default function Header({ hideNotification }: HeaderProps) {
   const navigate = useNavigate();
   return (
     <div className="flex justify-center w-full">
-      <div className="flex items-center justify-between px-2 py-2 bg-[#007cb6] rounded-full w-full max-w-md mt-4 shadow-lg mx-4">
+      <div className="flex items-center justify-between px-2 py-2 bg-[#007cb6] rounded-full w-full max-w-md mt-4 shadow-lg mx-4 sm:mx-auto">
         <div className="flex items-center gap-1">
           <img
             src={logo}
