@@ -105,84 +105,202 @@ export default function PublicCompanyView({
                 scrollSnapType: "x mandatory" as any,
               }}
             >
+              {/* Keep consistent order: profile, WhatsApp, Telegram, Phone, Chamber */}
               <div
-                className="w-12 h-12 rounded-full flex items-center justify-center p-2 overflow-hidden cursor-pointer flex-shrink-0"
+                className="w-12 h-12 flex-shrink-0"
                 onClick={() => onViewChange("profile")}
-                style={{
-                  backgroundColor:
-                    profile.theme?.backgroundcolor ||
-                    "var(--app-background-color)",
-                  scrollSnapAlign: "center" as any,
-                }}
+                style={{ scrollSnapAlign: "center" as any }}
               >
-                <img
-                  src={profileIcon}
-                  alt="Profile"
-                  className="w-9 h-9 object-contain"
-                />
-              </div>
-              {chambers.length > 0 && (
                 <div
-                  className="w-12 h-12 rounded-full flex items-center justify-center p-2 overflow-hidden cursor-pointer flex-shrink-0"
-                  onClick={() => onViewChange("chamber")}
                   style={{
+                    clipPath:
+                      "polygon(30% 0%, 70% 0%, 100% 30%, 100% 70%, 70% 100%, 30% 100%, 0% 70%, 0% 30%)",
                     backgroundColor:
                       profile.theme?.backgroundcolor ||
                       "var(--app-background-color)",
-                    scrollSnapAlign: "center" as any,
+                    padding: 3,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    width: "100%",
+                    height: "100%",
+                    cursor: "pointer",
                   }}
                 >
-                  <img
-                    src={chamberIcon}
-                    alt="Chamber"
-                    className="w-9 h-9 object-contain"
-                  />
+                  <div
+                    className="w-full h-full flex items-center justify-center"
+                    style={{
+                      clipPath:
+                        "polygon(30% 0%, 70% 0%, 100% 30%, 100% 70%, 70% 100%, 30% 100%, 0% 70%, 0% 30%)",
+                      background: "rgba(255,255,255,0.15)",
+                    }}
+                  >
+                    <img
+                      src={profileIcon}
+                      alt="Profile"
+                      className="w-7 h-7 object-contain"
+                    />
+                  </div>
                 </div>
-              )}
+              </div>
+
               {profile.WhatsApp && (
                 <div
-                  className="w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0 cursor-pointer"
+                  className="w-12 h-12 flex-shrink-0"
                   onClick={() =>
                     window.open(formatUrl(profile.WhatsApp!), "_blank")
                   }
-                  style={{
-                    backgroundColor:
-                      profile.theme?.backgroundcolor ||
-                      "var(--app-background-color)",
-                    scrollSnapAlign: "center" as any,
-                  }}
+                  style={{ scrollSnapAlign: "center" as any }}
                 >
-                  <FontAwesomeIcon icon={faWhatsapp} size="2x" color="white" />
+                  <div
+                    style={{
+                      clipPath:
+                        "polygon(30% 0%, 70% 0%, 100% 30%, 100% 70%, 70% 100%, 30% 100%, 0% 70%, 0% 30%)",
+                      backgroundColor:
+                        profile.theme?.backgroundcolor ||
+                        "var(--app-background-color)",
+                      padding: 3,
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      width: "100%",
+                      height: "100%",
+                      cursor: "pointer",
+                    }}
+                  >
+                    <div
+                      className="w-full h-full flex items-center justify-center"
+                      style={{
+                        clipPath:
+                          "polygon(30% 0%, 70% 0%, 100% 30%, 100% 70%, 70% 100%, 30% 100%, 0% 70%, 0% 30%)",
+                        background: "rgba(255,255,255,0.15)",
+                      }}
+                    >
+                      <FontAwesomeIcon
+                        icon={faWhatsapp}
+                        size="lg"
+                        color="white"
+                      />
+                    </div>
+                  </div>
                 </div>
               )}
+
               {profile.telegramId && (
                 <div
-                  className="w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0 cursor-pointer"
+                  className="w-12 h-12 flex-shrink-0"
                   onClick={() =>
                     window.open(formatUrl(profile.telegramId!), "_blank")
                   }
-                  style={{
-                    backgroundColor:
-                      profile.theme?.backgroundcolor ||
-                      "var(--app-background-color)",
-                    scrollSnapAlign: "center" as any,
-                  }}
+                  style={{ scrollSnapAlign: "center" as any }}
                 >
-                  <FontAwesomeIcon icon={faTelegram} size="2x" color="white" />
+                  <div
+                    style={{
+                      clipPath:
+                        "polygon(30% 0%, 70% 0%, 100% 30%, 100% 70%, 70% 100%, 30% 100%, 0% 70%, 0% 30%)",
+                      backgroundColor:
+                        profile.theme?.backgroundcolor ||
+                        "var(--app-background-color)",
+                      padding: 3,
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      width: "100%",
+                      height: "100%",
+                      cursor: "pointer",
+                    }}
+                  >
+                    <div
+                      className="w-full h-full flex items-center justify-center"
+                      style={{
+                        clipPath:
+                          "polygon(30% 0%, 70% 0%, 100% 30%, 100% 70%, 70% 100%, 30% 100%, 0% 70%, 0% 30%)",
+                        background: "rgba(255,255,255,0.15)",
+                      }}
+                    >
+                      <FontAwesomeIcon
+                        icon={faTelegram}
+                        size="lg"
+                        color="white"
+                      />
+                    </div>
+                  </div>
                 </div>
               )}
+
               {profile.contact && (
                 <div
-                  className="w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0 cursor-pointer"
+                  className="w-12 h-12 flex-shrink-0"
                   onClick={() => window.open(`tel:${profile.contact}`, "_self")}
-                  style={{
-                    backgroundColor:
-                      profile.theme?.backgroundcolor ||
-                      "var(--app-background-color)",
-                    scrollSnapAlign: "center" as any,
-                  }}
+                  style={{ scrollSnapAlign: "center" as any }}
                 >
-                  <FontAwesomeIcon icon={faPhone} size="2x" color="white" />
+                  <div
+                    style={{
+                      clipPath:
+                        "polygon(30% 0%, 70% 0%, 100% 30%, 100% 70%, 70% 100%, 30% 100%, 0% 70%, 0% 30%)",
+                      backgroundColor:
+                        profile.theme?.backgroundcolor ||
+                        "var(--app-background-color)",
+                      padding: 3,
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      width: "100%",
+                      height: "100%",
+                      cursor: "pointer",
+                    }}
+                  >
+                    <div
+                      className="w-full h-full flex items-center justify-center"
+                      style={{
+                        clipPath:
+                          "polygon(30% 0%, 70% 0%, 100% 30%, 100% 70%, 70% 100%, 30% 100%, 0% 70%, 0% 30%)",
+                        background: "rgba(255,255,255,0.15)",
+                      }}
+                    >
+                      <FontAwesomeIcon icon={faPhone} size="lg" color="white" />
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {chambers.length > 0 && (
+                <div
+                  className="w-12 h-12 flex-shrink-0"
+                  onClick={() => onViewChange("chamber")}
+                  style={{ scrollSnapAlign: "center" as any }}
+                >
+                  <div
+                    style={{
+                      clipPath:
+                        "polygon(30% 0%, 70% 0%, 100% 30%, 100% 70%, 70% 100%, 30% 100%, 0% 70%, 0% 30%)",
+                      backgroundColor:
+                        profile.theme?.backgroundcolor ||
+                        "var(--app-background-color)",
+                      padding: 3,
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      width: "100%",
+                      height: "100%",
+                      cursor: "pointer",
+                    }}
+                  >
+                    <div
+                      className="w-full h-full flex items-center justify-center"
+                      style={{
+                        clipPath:
+                          "polygon(30% 0%, 70% 0%, 100% 30%, 100% 70%, 70% 100%, 30% 100%, 0% 70%, 0% 30%)",
+                        background: "rgba(255,255,255,0.15)",
+                      }}
+                    >
+                      <img
+                        src={chamberIcon}
+                        alt="Chamber"
+                        className="w-7 h-7 object-contain"
+                      />
+                    </div>
+                  </div>
                 </div>
               )}
             </div>
@@ -350,15 +468,43 @@ export default function PublicCompanyView({
               .map((item) => (
                 <div
                   key={item.key}
-                  className="w-12 h-12 flex-shrink-0 cursor-pointer rounded-full flex items-center justify-center"
+                  className={`w-12 h-12 flex-shrink-0 ${
+                    item.enabled
+                      ? "cursor-pointer"
+                      : "opacity-40 pointer-events-none"
+                  }`}
                   onClick={item.onClick}
-                  style={{
-                    backgroundColor:
-                      profile.theme?.backgroundcolor ||
-                      "var(--app-background-color)",
-                  }}
+                  style={{ padding: 3 }}
                 >
-                  <FontAwesomeIcon icon={item.icon} size="lg" color="white" />
+                  <div
+                    style={{
+                      clipPath:
+                        "polygon(30% 0%, 70% 0%, 100% 30%, 100% 70%, 70% 100%, 30% 100%, 0% 70%, 0% 30%)",
+                      backgroundColor:
+                        profile.theme?.backgroundcolor ||
+                        "var(--app-background-color)",
+                      width: "100%",
+                      height: "100%",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                    }}
+                  >
+                    <div
+                      className="w-full h-full flex items-center justify-center"
+                      style={{
+                        clipPath:
+                          "polygon(30% 0%, 70% 0%, 100% 30%, 100% 70%, 70% 100%, 30% 100%, 0% 70%, 0% 30%)",
+                        background: "rgba(255,255,255,0.15)",
+                      }}
+                    >
+                      <FontAwesomeIcon
+                        icon={item.icon}
+                        size="lg"
+                        color="white"
+                      />
+                    </div>
+                  </div>
                 </div>
               ))}
           </div>
