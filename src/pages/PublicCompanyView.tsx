@@ -21,7 +21,7 @@ import {
   CompanyData,
   ChamberData,
 } from "../services/publicProfileService";
-import { formatUrl, formatImageUrl } from "../utils/validation";
+import { formatUrl } from "../utils/validation";
 
 interface PublicCompanyViewProps {
   profile: PublicProfileData;
@@ -258,7 +258,7 @@ export default function PublicCompanyView({
               {companyProfile.image ? (
                 companyProfile.image.endsWith(".mp4") ? (
                   <video
-                    src={formatImageUrl(companyProfile.image)}
+                    src={companyProfile.image}
                     autoPlay
                     loop
                     muted
@@ -267,14 +267,14 @@ export default function PublicCompanyView({
                   />
                 ) : (
                   <img
-                    src={formatImageUrl(companyProfile.image)}
+                    src={companyProfile.image}
                     alt="company"
                     className="w-full h-48 object-cover rounded-xl"
                   />
                 )
               ) : profile.theme?.Thumbnail ? (
                 <img
-                  src={formatImageUrl(profile.theme.Thumbnail)}
+                  src={profile.theme.Thumbnail}
                   alt="Company thumbnail"
                   className="w-full h-48 object-cover rounded-xl"
                 />

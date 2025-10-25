@@ -155,32 +155,7 @@ export const hasValidationErrors = (errors: {
 // Format image URL - handles both full URLs and relative paths
 export const formatImageUrl = (url: string | undefined): string => {
   if (!url) return "";
-  url = url.trim();
-
-  const apiBaseUrl = (
-    import.meta.env.VITE_API_URL || "https://admin.addmy.co"
-  ).replace(/\/+$/g, "");
-
-  // If the value already contains an absolute URL anywhere (some API responses are malformed
-  // and embed the full URL after a leading path like '/assets/https://...'), extract and return
-  // the absolute URL portion.
-  const httpIndex = url.indexOf("http://");
-  const httpsIndex = url.indexOf("https://");
-  const absIndex =
-    httpIndex >= 0 ? httpIndex : httpsIndex >= 0 ? httpsIndex : -1;
-  if (absIndex >= 0) {
-    return url.slice(absIndex);
-  }
-
-  // If it already starts with protocol, return as-is (defensive)
-  if (url.startsWith("http://") || url.startsWith("https://")) return url;
-
-  // Normalize leading slash and join with base
-  if (url.startsWith("/")) {
-    return `${apiBaseUrl}${url}`;
-  }
-
-  return `${apiBaseUrl}/${url}`;
+  return url.trim();
 };
 
 // Function to detect if running inside Telegram WebApp

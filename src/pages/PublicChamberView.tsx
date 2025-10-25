@@ -21,7 +21,7 @@ import {
   CompanyData,
   ChamberData,
 } from "../services/publicProfileService";
-import { formatUrl, formatImageUrl } from "../utils/validation";
+import { formatUrl } from "../utils/validation";
 
 interface PublicChamberViewProps {
   profile: PublicProfileData;
@@ -257,7 +257,7 @@ export default function PublicChamberView({
             <div className="w-full flex justify-center mb-4">
               {c.video && c.video.endsWith(".mp4") ? (
                 <video
-                  src={formatImageUrl(c.video)}
+                  src={c.video}
                   autoPlay
                   loop
                   muted
@@ -266,13 +266,13 @@ export default function PublicChamberView({
                 />
               ) : c.image ? (
                 <img
-                  src={formatImageUrl(c.image)}
+                  src={c.image}
                   alt="chamber"
                   className="w-full h-48 object-cover rounded-xl"
                 />
               ) : profile.theme?.Thumbnail ? (
                 <img
-                  src={formatImageUrl(profile.theme.Thumbnail)}
+                  src={profile.theme.Thumbnail}
                   alt="Chamber thumbnail"
                   className="w-full h-48 object-cover rounded-xl"
                 />
