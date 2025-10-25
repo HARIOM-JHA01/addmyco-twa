@@ -477,9 +477,17 @@ export default function PublicProfileView({
             <div className="text-app">{profile.address3}</div>
           </div>
 
-          {/* QR Code and Add Contact Section */}
-          <div className="w-full flex items-center justify-around gap-4 mb-4">
-            <div className="p-2 bg-white">
+          {/* QR Code absolute-centered within a fixed-height area; + button to the right */}
+          <div className="w-full mb-4 relative" style={{ height: 220 }}>
+            <div
+              className="p-2 bg-white"
+              style={{
+                position: "absolute",
+                left: "50%",
+                top: "50%",
+                transform: "translate(-50%, -50%)",
+              }}
+            >
               <QRCodeSVG
                 value={profileUrl}
                 size={160}
@@ -511,6 +519,10 @@ export default function PublicProfileView({
               className="w-12 h-12 rounded-full flex items-center justify-center cursor-pointer shadow-lg hover:shadow-xl transition-shadow disabled:opacity-50 disabled:cursor-not-allowed"
               style={{
                 backgroundColor: "var(--app-background-color)",
+                position: "absolute",
+                left: `calc(50% + ${160 / 2 + 24}px)`,
+                top: "50%",
+                transform: "translateY(-50%)",
               }}
               aria-label="Add to contacts"
             >
