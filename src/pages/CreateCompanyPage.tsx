@@ -4,6 +4,7 @@ import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import { useProfileStore } from "../store/profileStore";
 import { formatUrl, getEmailError, getUrlError } from "../utils/validation";
+import WebApp from "@twa-dev/sdk";
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
@@ -84,7 +85,9 @@ export default function CreateCompanyPage() {
       // If file is a video, only allow mp4 and only for premium users
       if (file.type.startsWith("video/")) {
         if (!isPremium) {
-          setError("Video uploads are available for premium users only.");
+          WebApp.showAlert(
+            "Video uploads are available for premium users only."
+          );
           setForm({ ...form, image: null });
           if (fileInputRef.current) fileInputRef.current.value = "";
           return;

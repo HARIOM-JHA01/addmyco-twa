@@ -15,6 +15,13 @@ import {
   faFacebook,
   faInstagram,
   faYoutube,
+  faTwitter,
+  faLinkedin,
+  faLine,
+  faSnapchat,
+  faTiktok,
+  faWeixin,
+  faSkype,
 } from "@fortawesome/free-brands-svg-icons";
 import { faPhone, faGlobe } from "@fortawesome/free-solid-svg-icons";
 import Layout from "../components/Layout";
@@ -154,10 +161,14 @@ export default function ProfilePage() {
                   <div
                     ref={iconsRef}
                     onScroll={updateIconScroll}
-                    className="flex gap-2 px-4 overflow-x-hidden items-center"
+                    className="flex gap-5 items-center no-scrollbar"
                     style={{
                       scrollBehavior: "smooth",
                       scrollSnapType: "x mandatory" as any,
+                      overflowX: "auto",
+                      paddingLeft: showArrows ? 28 : 8,
+                      paddingRight: showArrows ? 48 : 8,
+                      WebkitOverflowScrolling: "touch",
                     }}
                   >
                     <div
@@ -328,7 +339,115 @@ export default function ProfilePage() {
                         }}
                       >
                         <FontAwesomeIcon
-                          icon={faGlobe}
+                          icon={faLinkedin}
+                          size="2x"
+                          color="white"
+                        />
+                      </div>
+                    )}
+                    {profile?.Twitter && (
+                      <div
+                        className="w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0 cursor-pointer"
+                        onClick={() =>
+                          window.open(formatUrl(profile.Twitter), "_blank")
+                        }
+                        style={{
+                          backgroundColor: "var(--app-background-color)",
+                          scrollSnapAlign: "center" as any,
+                        }}
+                      >
+                        <FontAwesomeIcon
+                          icon={faTwitter}
+                          size="2x"
+                          color="white"
+                        />
+                      </div>
+                    )}
+                    {profile?.Line && (
+                      <div
+                        className="w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0 cursor-pointer"
+                        onClick={() =>
+                          window.open(formatUrl(profile.Line), "_blank")
+                        }
+                        style={{
+                          backgroundColor: "var(--app-background-color)",
+                          scrollSnapAlign: "center" as any,
+                        }}
+                      >
+                        <FontAwesomeIcon
+                          icon={faLine}
+                          size="2x"
+                          color="white"
+                        />
+                      </div>
+                    )}
+                    {profile?.SnapChat && (
+                      <div
+                        className="w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0 cursor-pointer"
+                        onClick={() =>
+                          window.open(formatUrl(profile.SnapChat), "_blank")
+                        }
+                        style={{
+                          backgroundColor: "var(--app-background-color)",
+                          scrollSnapAlign: "center" as any,
+                        }}
+                      >
+                        <FontAwesomeIcon
+                          icon={faSnapchat}
+                          size="2x"
+                          color="white"
+                        />
+                      </div>
+                    )}
+                    {profile?.TikTok && (
+                      <div
+                        className="w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0 cursor-pointer"
+                        onClick={() =>
+                          window.open(formatUrl(profile.TikTok), "_blank")
+                        }
+                        style={{
+                          backgroundColor: "var(--app-background-color)",
+                          scrollSnapAlign: "center" as any,
+                        }}
+                      >
+                        <FontAwesomeIcon
+                          icon={faTiktok}
+                          size="2x"
+                          color="white"
+                        />
+                      </div>
+                    )}
+                    {profile?.WeChat && (
+                      <div
+                        className="w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0 cursor-pointer"
+                        onClick={() =>
+                          window.open(formatUrl(profile.WeChat), "_blank")
+                        }
+                        style={{
+                          backgroundColor: "var(--app-background-color)",
+                          scrollSnapAlign: "center" as any,
+                        }}
+                      >
+                        <FontAwesomeIcon
+                          icon={faWeixin}
+                          size="2x"
+                          color="white"
+                        />
+                      </div>
+                    )}
+                    {profile?.Skype && (
+                      <div
+                        className="w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0 cursor-pointer"
+                        onClick={() =>
+                          window.open(formatUrl(profile.Skype), "_blank")
+                        }
+                        style={{
+                          backgroundColor: "var(--app-background-color)",
+                          scrollSnapAlign: "center" as any,
+                        }}
+                      >
+                        <FontAwesomeIcon
+                          icon={faSkype}
                           size="2x"
                           color="white"
                         />

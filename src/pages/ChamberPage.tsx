@@ -13,7 +13,12 @@ import {
   faInstagram,
   faFacebook,
 } from "@fortawesome/free-brands-svg-icons";
-import { faGlobe, faPhone } from "@fortawesome/free-solid-svg-icons";
+import {
+  faGlobe,
+  faPhone,
+  faChevronLeft,
+  faChevronRight,
+} from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import WebApp from "@twa-dev/sdk";
 import i18n from "../i18n";
@@ -255,15 +260,22 @@ export default function ChamberPage() {
     if (e.target.files && e.target.files[0]) {
       const selectedFile = e.target.files[0];
 
-      // Validate file type
-      if (
-        selectedFile.type.startsWith("video/") &&
-        selectedFile.type !== "video/mp4"
-      ) {
-        setEditError("Only MP4 video files are allowed.");
-        setFile(null);
-        setFilePreview(null);
-        return;
+      const isPremium = profile?.membertype === "premium";
+
+      // Check if file is a video
+      if (selectedFile.type.startsWith("video/")) {
+        if (!isPremium) {
+          setEditError("Video upload is only available for premium members.");
+          setFile(null);
+          setFilePreview(null);
+          return;
+        }
+        if (selectedFile.type !== "video/mp4") {
+          setEditError("Only MP4 video files are allowed.");
+          setFile(null);
+          setFilePreview(null);
+          return;
+        }
       }
 
       setEditError("");
@@ -284,7 +296,7 @@ export default function ChamberPage() {
     const errors: { [key: string]: string } = {};
     const urlFields = {
       website: editChamber?.website,
-      telegram: editChamber?.telegram,
+      tgchannel: editChamber?.tgchannel,
       instagram: editChamber?.instagram,
       youtube: editChamber?.youtube,
       facebook: editChamber?.facebook,
@@ -296,7 +308,6 @@ export default function ChamberPage() {
       snapchat: editChamber?.snapchat,
       skype: editChamber?.skype,
       tiktok: editChamber?.tiktok,
-      tgchannel: editChamber?.tgchannel,
       chamberfanpage: editChamber?.chamberfanpage,
     };
 
@@ -848,14 +859,49 @@ export default function ChamberPage() {
                         </div>
                       </div>
                     </div>
-                    {/* Chamber names and designation */}
-                    <div className="w-full mb-2">
+                    {/* Chamber names and designation with navigation arrows */}
+                    <div className="relative w-full mb-2">
                       <div
                         className="w-full rounded-full bg-app text-app text-xl font-bold py-2 flex items-center justify-center"
                         style={{ borderRadius: "2rem" }}
                       >
                         {c.chamber_name_english}
                       </div>
+                      <button
+                        aria-label="Prev chamber"
+                        className="absolute left-0 -translate-x-1/2 p-1 rounded-full"
+                        style={{
+                          top: "calc(50% + 2px)",
+                          display: currentChamberIndex > 0 ? "block" : "none",
+                        }}
+                        onClick={() =>
+                          setCurrentChamberIndex((i) => Math.max(i - 1, 0))
+                        }
+                      >
+                        <FontAwesomeIcon icon={faChevronLeft} color="red" />
+                      </button>
+                      <button
+                        aria-label="Next chamber"
+                        className="absolute right-0 translate-x-1/2 p-1 rounded-full"
+                        style={{
+                          top: "calc(50% + 2px)",
+                          display:
+                            currentChamberIndex < chambers.length - 1
+                              ? "block"
+                              : "none",
+                        }}
+                        onClick={() =>
+                          setCurrentChamberIndex((i) =>
+                            Math.min(i + 1, chambers.length - 1)
+                          )
+                        }
+                      >
+                        <FontAwesomeIcon
+                          icon={faChevronRight}
+                          color="red"
+                          className="pt-2"
+                        />
+                      </button>
                     </div>
                     <div
                       className="w-full rounded-full bg-app text-app text-xl font-bold py-2 mb-2 flex items-center justify-center"

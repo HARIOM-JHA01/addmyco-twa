@@ -14,7 +14,6 @@ import {
 
 export default function UpdateProfilePage() {
   const navigate = useNavigate();
-  const [isPremiumMember] = useState(false);
   const [ownerNameEnglish, setOwnerNameEnglish] = useState("");
   const [ownerNameChinese, setOwnerNameChinese] = useState("");
   const [telegramId, setTelegramId] = useState("");
@@ -203,26 +202,30 @@ export default function UpdateProfilePage() {
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0] || null;
     if (!file) return;
-    if (isPremiumMember) {
-      if (file.type.startsWith("image/")) {
-        setProfileImage(file);
-        setVideo(null);
-        setMediaPreview(URL.createObjectURL(file));
-      } else if (file.type.startsWith("video/")) {
-        setVideo(file);
-        setProfileImage(null);
-        setMediaPreview(URL.createObjectURL(file));
-      } else {
-        WebApp.showAlert("Please select an image or video file.");
+
+    const isPremium = memberType === "premium";
+
+    if (file.type.startsWith("image/")) {
+      setProfileImage(file);
+      setVideo(null);
+      setMediaPreview(URL.createObjectURL(file));
+    } else if (file.type.startsWith("video/")) {
+      if (!isPremium) {
+        WebApp.showAlert("Video upload is only available for premium members.");
+        if (fileInputRef.current) fileInputRef.current.value = "";
+        return;
       }
+      if (file.type !== "video/mp4") {
+        WebApp.showAlert("Only MP4 video files are allowed.");
+        if (fileInputRef.current) fileInputRef.current.value = "";
+        return;
+      }
+      setVideo(file);
+      setProfileImage(null);
+      setMediaPreview(URL.createObjectURL(file));
     } else {
-      if (file.type.startsWith("image/")) {
-        setProfileImage(file);
-        setVideo(null);
-        setMediaPreview(URL.createObjectURL(file));
-      } else {
-        WebApp.showAlert("Only image upload is allowed for basic users.");
-      }
+      WebApp.showAlert("Please select an image or video file.");
+      if (fileInputRef.current) fileInputRef.current.value = "";
     }
   };
 

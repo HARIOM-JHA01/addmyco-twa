@@ -4,6 +4,7 @@ import { useProfileStore } from "../store/profileStore";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import { formatUrl, getUrlError } from "../utils/validation";
+import WebApp from "@twa-dev/sdk";
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
@@ -87,7 +88,9 @@ export default function CreateChamberPage() {
       // If file is a video, only allow mp4 and only for premium users
       if (selectedFile.type.startsWith("video/")) {
         if (!isPremium) {
-          setError("Video uploads are available for premium users only.");
+          WebApp.showAlert(
+            "Video uploads are available for premium users only."
+          );
           setFile(null);
           setFilePreview(null);
           if (fileInputRef.current) fileInputRef.current.value = "";

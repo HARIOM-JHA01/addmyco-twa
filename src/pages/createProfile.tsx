@@ -127,7 +127,7 @@ export default function CreateProfile() {
       setError("");
     } else if (file.type === "video/mp4") {
       if (!isPremium) {
-        setError("Video uploads are available for premium users only.");
+        WebApp.showAlert("Video uploads are available for premium users only.");
         setMediaPreview(null);
         setMediaType(null);
         setProfileImage(null);

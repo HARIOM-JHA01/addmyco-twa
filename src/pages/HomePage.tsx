@@ -9,11 +9,25 @@ import Footer from "../components/Footer";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faTelegram, faWhatsapp } from "@fortawesome/free-brands-svg-icons";
+import {
+  faTelegram,
+  faWhatsapp,
+  faFacebook,
+  faInstagram,
+  faYoutube,
+  faTwitter,
+  faLinkedin,
+  faLine,
+  faSnapchat,
+  faTiktok,
+  faWeixin,
+  faSkype,
+} from "@fortawesome/free-brands-svg-icons";
 import {
   faPhone,
-  // faChevronLeft,
-  // faChevronRight,
+  faChevronLeft,
+  faChevronRight,
+  faGlobe,
 } from "@fortawesome/free-solid-svg-icons";
 import { formatUrl } from "../utils/validation";
 import WebApp from "@twa-dev/sdk";
@@ -207,16 +221,20 @@ export default function HomePage() {
               }}
               style={{ display: showArrows ? "block" : "none" }}
             >
-              {/* <FontAwesomeIcon icon={faChevronLeft} color="red" /> */}
+              <FontAwesomeIcon icon={faChevronLeft} color="red" />
             </button>
 
             <div
               ref={iconsRef}
               onScroll={updateScroll}
-              className="flex gap-2 px-4 overflow-x-auto no-scrollbar items-center"
+              className="flex gap-5 items-center no-scrollbar"
               style={{
                 scrollBehavior: "smooth",
                 scrollSnapType: "x mandatory" as any,
+                overflowX: "auto",
+                paddingLeft: showArrows ? 28 : 8,
+                paddingRight: showArrows ? 48 : 8,
+                WebkitOverflowScrolling: "touch",
               }}
             >
               <div
@@ -285,6 +303,158 @@ export default function HomePage() {
                   className="w-9 h-9 object-contain"
                 />
               </div>
+              {profile?.website && (
+                <div
+                  className="w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0 cursor-pointer"
+                  onClick={() =>
+                    window.open(formatUrl(profile.website), "_blank")
+                  }
+                  style={{
+                    backgroundColor: "var(--app-background-color)",
+                    scrollSnapAlign: "center" as any,
+                  }}
+                >
+                  <FontAwesomeIcon icon={faGlobe} size="2x" color="white" />
+                </div>
+              )}
+              {profile?.Facebook && (
+                <div
+                  className="w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0 cursor-pointer"
+                  onClick={() =>
+                    window.open(formatUrl(profile.Facebook), "_blank")
+                  }
+                  style={{
+                    backgroundColor: "var(--app-background-color)",
+                    scrollSnapAlign: "center" as any,
+                  }}
+                >
+                  <FontAwesomeIcon icon={faFacebook} size="2x" color="white" />
+                </div>
+              )}
+              {profile?.Instagram && (
+                <div
+                  className="w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0 cursor-pointer"
+                  onClick={() =>
+                    window.open(formatUrl(profile.Instagram), "_blank")
+                  }
+                  style={{
+                    backgroundColor: "var(--app-background-color)",
+                    scrollSnapAlign: "center" as any,
+                  }}
+                >
+                  <FontAwesomeIcon icon={faInstagram} size="2x" color="white" />
+                </div>
+              )}
+              {profile?.Youtube && (
+                <div
+                  className="w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0 cursor-pointer"
+                  onClick={() =>
+                    window.open(formatUrl(profile.Youtube), "_blank")
+                  }
+                  style={{
+                    backgroundColor: "var(--app-background-color)",
+                    scrollSnapAlign: "center" as any,
+                  }}
+                >
+                  <FontAwesomeIcon icon={faYoutube} size="2x" color="white" />
+                </div>
+              )}
+              {profile?.Linkedin && (
+                <div
+                  className="w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0 cursor-pointer"
+                  onClick={() =>
+                    window.open(formatUrl(profile.Linkedin), "_blank")
+                  }
+                  style={{
+                    backgroundColor: "var(--app-background-color)",
+                    scrollSnapAlign: "center" as any,
+                  }}
+                >
+                  <FontAwesomeIcon icon={faLinkedin} size="2x" color="white" />
+                </div>
+              )}
+              {profile?.Twitter && (
+                <div
+                  className="w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0 cursor-pointer"
+                  onClick={() =>
+                    window.open(formatUrl(profile.Twitter), "_blank")
+                  }
+                  style={{
+                    backgroundColor: "var(--app-background-color)",
+                    scrollSnapAlign: "center" as any,
+                  }}
+                >
+                  <FontAwesomeIcon icon={faTwitter} size="2x" color="white" />
+                </div>
+              )}
+              {profile?.Line && (
+                <div
+                  className="w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0 cursor-pointer"
+                  onClick={() => window.open(formatUrl(profile.Line), "_blank")}
+                  style={{
+                    backgroundColor: "var(--app-background-color)",
+                    scrollSnapAlign: "center" as any,
+                  }}
+                >
+                  <FontAwesomeIcon icon={faLine} size="2x" color="white" />
+                </div>
+              )}
+              {profile?.SnapChat && (
+                <div
+                  className="w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0 cursor-pointer"
+                  onClick={() =>
+                    window.open(formatUrl(profile.SnapChat), "_blank")
+                  }
+                  style={{
+                    backgroundColor: "var(--app-background-color)",
+                    scrollSnapAlign: "center" as any,
+                  }}
+                >
+                  <FontAwesomeIcon icon={faSnapchat} size="2x" color="white" />
+                </div>
+              )}
+              {profile?.TikTok && (
+                <div
+                  className="w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0 cursor-pointer"
+                  onClick={() =>
+                    window.open(formatUrl(profile.TikTok), "_blank")
+                  }
+                  style={{
+                    backgroundColor: "var(--app-background-color)",
+                    scrollSnapAlign: "center" as any,
+                  }}
+                >
+                  <FontAwesomeIcon icon={faTiktok} size="2x" color="white" />
+                </div>
+              )}
+              {profile?.WeChat && (
+                <div
+                  className="w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0 cursor-pointer"
+                  onClick={() =>
+                    window.open(formatUrl(profile.WeChat), "_blank")
+                  }
+                  style={{
+                    backgroundColor: "var(--app-background-color)",
+                    scrollSnapAlign: "center" as any,
+                  }}
+                >
+                  <FontAwesomeIcon icon={faWeixin} size="2x" color="white" />
+                </div>
+              )}
+              {profile?.Skype && (
+                <div
+                  className="w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0 cursor-pointer"
+                  onClick={() =>
+                    window.open(formatUrl(profile.Skype), "_blank")
+                  }
+                  style={{
+                    backgroundColor: "var(--app-background-color)",
+                    scrollSnapAlign: "center" as any,
+                  }}
+                >
+                  <FontAwesomeIcon icon={faSkype} size="2x" color="white" />
+                </div>
+              )}
             </div>
 
             <button
@@ -300,7 +470,7 @@ export default function HomePage() {
               }}
               style={{ display: showArrows ? "block" : "none" }}
             >
-              {/* <FontAwesomeIcon icon={faChevronRight} color="red" /> */}
+              <FontAwesomeIcon icon={faChevronRight} color="red" />
             </button>
           </div>
 
