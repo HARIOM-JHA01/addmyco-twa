@@ -157,9 +157,20 @@ function AppRoutes() {
                 savedFontColor
               );
           }
-          if (bg.Thumbnail || bg.thumbnail || bg.backgroundImage) {
-            const bgImageUrl =
-              bg.Thumbnail || bg.thumbnail || bg.backgroundImage;
+          const candidateImage =
+            (bg && (bg.Thumbnail || bg.thumbnail || bg.backgroundImage)) || "";
+
+          const hasValidImage =
+            typeof candidateImage === "string" &&
+            candidateImage.trim().length > 0;
+
+          if (hasValidImage) {
+            let bgImageUrl = (candidateImage as string).trim();
+            if (!/^https?:\/\//i.test(bgImageUrl)) {
+              const s = bgImageUrl.replace(/^\/+/, "");
+              bgImageUrl = `${API_BASE_URL.replace(/\/$/, "")}/${s}`;
+            }
+
             document.documentElement.style.setProperty(
               "--app-background-image",
               `url(${bgImageUrl})`
@@ -169,10 +180,15 @@ function AppRoutes() {
             document.body.style.backgroundPosition = "center";
             document.body.style.backgroundAttachment = "fixed";
           } else {
+            // fallback to bundled background image
             document.documentElement.style.setProperty(
               "--app-background-image",
               `url(${backgroundImg})`
             );
+            document.body.style.backgroundImage = `url(${backgroundImg})`;
+            document.body.style.backgroundSize = "cover";
+            document.body.style.backgroundPosition = "center";
+            document.body.style.backgroundAttachment = "fixed";
           }
         } else {
           const savedBgColor = localStorage.getItem("app-background-color");

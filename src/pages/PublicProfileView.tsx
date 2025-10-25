@@ -1,4 +1,5 @@
 import { useEffect, useState, useRef } from "react";
+import { useNavigate } from "react-router-dom";
 import { QRCodeSVG } from "qrcode.react";
 import logo from "../assets/logo.png";
 import company from "../assets/company.svg";
@@ -40,6 +41,7 @@ export default function PublicProfileView({
   chambers,
   onViewChange,
 }: PublicProfileViewProps) {
+  const navigate = useNavigate();
   const iconsRef = useRef<HTMLDivElement | null>(null);
   const [showArrows, setShowArrows] = useState(false);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
@@ -141,6 +143,10 @@ export default function PublicProfileView({
 
       if (response.data.success) {
         WebApp.showAlert("Contact added successfully!");
+        // Navigate to homepage after successful login and contact addition
+        setTimeout(() => {
+          navigate("/home");
+        }, 500);
       }
     } catch (error: any) {
       console.error("Failed to add contact:", error);
@@ -458,7 +464,7 @@ export default function PublicProfileView({
           </div>
 
           {/* QR Code and Add Contact Section */}
-          <div className="w-full flex items-center gap-4 mb-4">
+          <div className="w-full flex items-center justify-center gap-4 mb-4">
             <div className="bg-white p-4 rounded-lg shadow-md">
               <QRCodeSVG
                 value={profileUrl}

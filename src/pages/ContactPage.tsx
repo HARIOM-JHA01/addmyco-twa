@@ -376,9 +376,7 @@ export default function ContactPage() {
                 disabled={editLoading}
               />
               {editError && (
-                <div className="text-red-500 mb-2 text-center">
-                  {editError}
-                </div>
+                <div className="text-red-500 mb-2 text-center">{editError}</div>
               )}
               <div className="flex gap-4 w-full">
                 <button
@@ -489,7 +487,9 @@ export default function ContactPage() {
                           ? "bg-[#007cb6] text-white"
                           : "bg-white text-gray-700"
                       }`}
-                      onClick={() => handleFolderClick(folder.Folder, folder._id)}
+                      onClick={() =>
+                        handleFolderClick(folder.Folder, folder._id)
+                      }
                       onMouseEnter={(e) => {
                         if (selectedFolder !== folder.Folder) {
                           const el = e.currentTarget as HTMLElement;
@@ -538,56 +538,58 @@ export default function ContactPage() {
           {/* Contacts List */}
           <div className="mt-8">
             {loading ? (
-              <div className="text-center text-gray-600">Loading contacts...</div>
+              <div className="text-center text-gray-600">
+                Loading contacts...
+              </div>
             ) : filteredContacts.length === 0 ? (
               <div className="font-extrabold text-lg text-center text-black">
                 {i18n.t("no_contacts")}
               </div>
             ) : (
-              <div className="space-y-3">
+              <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-4">
                 {filteredContacts.map((contact) => {
                   const userDetail = contact.userdetails?.[0];
                   return (
                     <div
                       key={contact._id}
-                      className="bg-white rounded-lg p-4 shadow-md flex items-center justify-between hover:shadow-lg transition-shadow cursor-pointer"
+                      className="flex flex-col items-center text-center cursor-pointer"
                       onClick={() => handleContactClick(contact)}
                     >
-                      <div className="flex items-center gap-4 flex-1">
-                        <div className="w-12 h-12 rounded-full bg-gray-200 flex items-center justify-center overflow-hidden">
-                          {userDetail?.profile_image || contact.profile_image ? (
-                            <img
-                              src={userDetail?.profile_image || contact.profile_image}
-                              alt="Profile"
-                              className="w-full h-full object-cover"
-                            />
-                          ) : (
-                            <span className="text-gray-400 text-xl font-bold">
-                              {userDetail?.owner_name_english?.charAt(0) || "?"}
-                            </span>
-                          )}
-                        </div>
-                        <div className="flex-1">
-                          <div className="font-bold text-gray-800">
-                            {userDetail?.owner_name_english || "Unknown"}
-                          </div>
-                          {userDetail?.owner_name_chinese && (
-                            <div className="text-sm text-gray-600">
-                              {userDetail.owner_name_chinese}
-                            </div>
-                          )}
-                        </div>
+                      <div className="relative w-20 h-20 rounded-full bg-gray-200 flex items-center justify-center overflow-hidden shadow-md hover:shadow-lg transition-shadow">
+                        {userDetail?.profile_image || contact.profile_image ? (
+                          <img
+                            src={
+                              userDetail?.profile_image || contact.profile_image
+                            }
+                            alt="Profile"
+                            className="w-full h-full object-cover rounded-full"
+                          />
+                        ) : (
+                          <span className="text-gray-400 text-2xl font-bold">
+                            {userDetail?.owner_name_english?.charAt(0) || "?"}
+                          </span>
+                        )}
+
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            removeContact(contact.contact_id);
+                          }}
+                          className="absolute -top-2 -right-2 bg-white p-1 rounded-full text-red-500 shadow-sm hover:bg-red-50"
+                          aria-label="Remove contact"
+                          title="Remove contact"
+                        >
+                          <FaTrash size={14} />
+                        </button>
                       </div>
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          removeContact(contact.contact_id);
-                        }}
-                        className="p-2 text-red-500 hover:bg-red-50 rounded-full transition-colors"
-                        aria-label="Remove contact"
-                      >
-                        <FaTrash size={18} />
-                      </button>
+                      <div className="mt-2 max-w-[96px] truncate text-sm font-semibold text-gray-800">
+                        {userDetail?.owner_name_english || "Unknown"}
+                      </div>
+                      {userDetail?.owner_name_chinese && (
+                        <div className="text-xs text-gray-600 truncate max-w-[96px]">
+                          {userDetail.owner_name_chinese}
+                        </div>
+                      )}
                     </div>
                   );
                 })}
