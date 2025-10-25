@@ -141,16 +141,9 @@ export default function PublicProfileView({
         }
       );
 
-      const apiMessage =
-        response?.data?.message ||
-        (response?.data?.success ? "Contact added successfully!" : "");
-      try {
-        if (apiMessage && typeof WebApp?.showAlert === "function") {
-          WebApp.showAlert(apiMessage);
-        }
-      } catch (e) {
-        console.log("WebApp.showAlert error:", e);
-      }
+      const message = response.data.message;
+
+      WebApp.showAlert(message);
 
       setTimeout(() => {
         navigate("/");
