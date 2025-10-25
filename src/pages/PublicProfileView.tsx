@@ -141,13 +141,20 @@ export default function PublicProfileView({
         }
       );
 
-      if (response.data.success) {
-        WebApp.showAlert("Contact added successfully!");
-        // Navigate to homepage after successful login and contact addition
-        setTimeout(() => {
-          navigate("/home");
-        }, 500);
+      const apiMessage =
+        response?.data?.message ||
+        (response?.data?.success ? "Contact added successfully!" : "");
+      try {
+        if (apiMessage && typeof WebApp?.showAlert === "function") {
+          WebApp.showAlert(apiMessage);
+        }
+      } catch (e) {
+        console.log("WebApp.showAlert error:", e);
       }
+
+      setTimeout(() => {
+        navigate("/");
+      }, 500);
     } catch (error: any) {
       console.error("Failed to add contact:", error);
       if (error.response?.status === 401) {
