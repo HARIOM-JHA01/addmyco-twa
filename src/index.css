@@ -29,6 +29,15 @@
     scrollbar-color: #007cb6 #ffffff;
 }
 
+/* Hide scrollbar but keep scrolling (cross-browser) */
+.no-scrollbar {
+    -ms-overflow-style: none; /* IE and Edge */
+    scrollbar-width: none; /* Firefox */
+}
+.no-scrollbar::-webkit-scrollbar {
+    display: none; /* Chrome, Safari, Opera */
+}
+
 /* App-level theme variables (will be updated at startup from remote API) */
 :root {
     --app-background-color: #007cb6; /* default */

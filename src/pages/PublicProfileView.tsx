@@ -268,10 +268,14 @@ export default function PublicProfileView({
               <div
                 ref={iconsRef}
                 onScroll={updateIconScroll}
-                className="flex gap-4 px-4 overflow-x-hidden items-center"
+                className="flex gap-5 items-center no-scrollbar"
                 style={{
                   scrollBehavior: "smooth",
                   scrollSnapType: "x mandatory" as any,
+                  overflowX: "auto",
+                  paddingLeft: showArrows ? 28 : 8,
+                  paddingRight: showArrows ? 48 : 8,
+                  WebkitOverflowScrolling: "touch",
                 }}
               >
                 {hasCompanies && (
@@ -474,11 +478,11 @@ export default function PublicProfileView({
           </div>
 
           {/* QR Code and Add Contact Section */}
-          <div className="w-full flex items-center justify-center gap-4 mb-4">
-            <div className="bg-white p-4 rounded-lg shadow-md">
+          <div className="w-full flex items-center justify-around gap-4 mb-4">
+            <div className="p-2 bg-white">
               <QRCodeSVG
                 value={profileUrl}
-                size={192}
+                size={160}
                 bgColor="#ffffff"
                 fgColor={(() => {
                   try {
@@ -487,11 +491,11 @@ export default function PublicProfileView({
                         .getPropertyValue("--app-background-color")
                         .trim() || "#007cb6"
                     );
-                  } catch (e) {
+                  } catch {
                     return "#007cb6";
                   }
                 })()}
-                level="H"
+                level="Q"
                 imageSettings={{
                   src: logo,
                   height: 32,

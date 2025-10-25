@@ -786,7 +786,7 @@ export default function SubCompanyPage() {
                 <div
                   ref={topIconsRef}
                   onScroll={updateTopScroll}
-                  className="flex gap-3 px-2 overflow-x-hidden items-center"
+                  className="flex gap-3 px-2 overflow-x-hidden items-center no-scrollbar"
                   style={{
                     scrollBehavior: "smooth",
                     scrollSnapType: "x mandatory" as any,
