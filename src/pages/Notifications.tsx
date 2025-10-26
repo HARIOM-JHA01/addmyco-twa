@@ -13,13 +13,7 @@ export default function Notifications() {
   const profile = useProfileStore((s) => s.profile);
   const isPremium =
     (profile?.membertype || "").toString().toLowerCase() !== "free";
-  const [notifications, setNotifications] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [modalOpen, setModalOpen] = useState(false);
-  const [modalNotification, setModalNotification] = useState<any>(null);
-  const [modalLoading, setModalLoading] = useState(false);
-  const [deleteLoading, setDeleteLoading] = useState<string | null>(null);
   const [pendingContacts, setPendingContacts] = useState<any[]>([]);
   const [contactFolders, setContactFolders] = useState<any[]>([]);
   const [acceptModal, setAcceptModal] = useState<{
@@ -31,25 +25,10 @@ export default function Notifications() {
     newFolderName?: string;
   } | null>(null);
 
-  // Fetch notifications
+  // Fetch pending contact requests (notifications removed per design)
   useEffect(() => {
-    const fetchNotifications = async () => {
-      setLoading(true);
-      setError(null);
-      try {
-        const token = localStorage.getItem("token");
-        const res = await axios.get(`${API_BASE_URL}/getnotification`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        setNotifications(res.data.data || []);
-      } catch (err: any) {
-        setError("Failed to load notifications");
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchNotifications();
     const fetchPendingContacts = async () => {
+      setLoading(true);
       try {
         const token = localStorage.getItem("token");
         const res = await axios.get(`${API_BASE_URL}/getcontact`, {
@@ -60,52 +39,13 @@ export default function Notifications() {
         setPendingContacts(pending);
       } catch (err) {
         // ignore
+      } finally {
+        setLoading(false);
       }
     };
     fetchPendingContacts();
   }, []);
 
-  // View notification (mark as read and show modal)
-  const handleViewNotification = async (notification: any) => {
-    setModalLoading(true);
-    setModalNotification(notification);
-    setModalOpen(true);
-    try {
-      const token = localStorage.getItem("token");
-      await axios.get(`${API_BASE_URL}/viewnotification/${notification._id}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      // Optionally update notification as read in UI
-      setNotifications((prev) =>
-        prev.map((n) => (n._id === notification._id ? { ...n, read: true } : n))
-      );
-    } catch {}
-    setModalLoading(false);
-  };
-
-  // (Mark all as read removed) --- kept function removed as it's no longer used
-
-  // Delete notification
-  const handleDeleteNotification = async (notificationId: string) => {
-    setDeleteLoading(notificationId);
-    try {
-      const token = localStorage.getItem("token");
-      await axios.delete(
-        `${API_BASE_URL}/deletenotification/${notificationId}`,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
-      setNotifications((prev) => prev.filter((n) => n._id !== notificationId));
-      if (modalNotification && modalNotification._id === notificationId) {
-        setModalOpen(false);
-        setModalNotification(null);
-      }
-    } catch {}
-    setDeleteLoading(null);
-  };
-
-  // Accept modal handlers for pending contact requests
   const openAcceptModal = async (contactId: string) => {
     setAcceptModal({ open: true, contactId, loading: true, error: null });
     try {
@@ -292,89 +232,11 @@ export default function Notifications() {
           )}
           {loading ? (
             <div className="text-gray-500">Loading...</div>
-          ) : error ? (
-            <div className="text-red-500">{error}</div>
-          ) : notifications.length === 0 ? (
-            <p className="text-gray-700">No new notifications</p>
-          ) : (
-            <ul className="w-full divide-y divide-blue-200">
-              {notifications.map((n) => (
-                <li
-                  key={n._id}
-                  className={`flex items-center justify-between py-3 px-2 rounded-lg transition ${
-                    n.read ? "bg-white" : "bg-blue-50"
-                  }`}
-                >
-                  <div
-                    className="flex-1 cursor-pointer"
-                    onClick={() => handleViewNotification(n)}
-                  >
-                    <div className="font-semibold text-gray-800">
-                      {n.title || "Notification"}
-                    </div>
-                    <div className="text-xs text-gray-500">
-                      {n.createdAt
-                        ? new Date(n.createdAt).toLocaleString()
-                        : ""}
-                    </div>
-                  </div>
-                  <button
-                    className="ml-2 text-red-500 hover:text-red-700 px-2 py-1 rounded"
-                    onClick={() => handleDeleteNotification(n._id)}
-                    disabled={deleteLoading === n._id}
-                  >
-                    {deleteLoading === n._id ? "Deleting..." : "Delete"}
-                  </button>
-                </li>
-              ))}
-            </ul>
-          )}
+          ) : pendingContacts.length === 0 ? (
+            <p className="text-gray-700">No pending contact requests</p>
+          ) : null}
         </div>
-        {/* Modal for notification details */}
-        {modalOpen && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
-            <div className="bg-white rounded-xl shadow-xl p-6 w-full max-w-xs relative">
-              <button
-                className="absolute top-2 right-2 text-gray-400 hover:text-gray-700 text-xl"
-                onClick={() => {
-                  setModalOpen(false);
-                  setModalNotification(null);
-                }}
-                aria-label="Close"
-              >
-                &times;
-              </button>
-              <h3 className="text-lg font-bold text-[#2fa8e0] mb-2 text-center">
-                {modalNotification?.title || "Notification"}
-              </h3>
-              {modalLoading ? (
-                <div className="text-center text-gray-500">Loading...</div>
-              ) : (
-                <>
-                  <div className="mb-2 text-gray-700 whitespace-pre-line">
-                    {modalNotification?.message || "No details."}
-                  </div>
-                  <div className="text-xs text-gray-400 text-center mb-2">
-                    {modalNotification?.createdAt
-                      ? new Date(modalNotification.createdAt).toLocaleString()
-                      : ""}
-                  </div>
-                  <button
-                    className="w-full bg-red-500 text-white font-semibold py-2 rounded-lg mt-2 hover:bg-red-600 transition disabled:opacity-60 disabled:cursor-not-allowed"
-                    onClick={() =>
-                      handleDeleteNotification(modalNotification._id)
-                    }
-                    disabled={deleteLoading === modalNotification._id}
-                  >
-                    {deleteLoading === modalNotification._id
-                      ? "Deleting..."
-                      : "Delete"}
-                  </button>
-                </>
-              )}
-            </div>
-          </div>
-        )}
+        {/* Notification UI removed per request */}
         {/* Accept modal for pending contact requests */}
         {acceptModal?.open && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">

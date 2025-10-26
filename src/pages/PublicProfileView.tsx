@@ -7,7 +7,7 @@ import chamber from "../assets/chamber.svg";
 import {
   faChevronLeft,
   faChevronRight,
-  faPlus,
+  faUserPlus,
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
@@ -658,7 +658,7 @@ export default function PublicProfileView({
                 }}
                 aria-label="Add to contacts"
               >
-                <FontAwesomeIcon icon={faPlus} size="lg" color="white" />
+                <FontAwesomeIcon icon={faUserPlus} size="lg" color="white" />
               </button>
             )}
           </div>
