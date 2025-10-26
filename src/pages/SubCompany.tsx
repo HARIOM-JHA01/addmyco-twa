@@ -42,6 +42,15 @@ export default function SubCompanyPage() {
   const [validationErrors, setValidationErrors] = useState<{
     [key: string]: string;
   }>({});
+  const [occupiedOrders, setOccupiedOrders] = useState<number[]>([]);
+
+  // Update occupied orders when companies change
+  useEffect(() => {
+    const orders = (companies || [])
+      .map((c: any) => Number(c.company_order ?? c.order ?? -1))
+      .filter((n: number) => !isNaN(n) && n > 0 && n <= 15);
+    setOccupiedOrders(orders);
+  }, [companies]);
 
   // Top and bottom icon carousel refs & state
   const topIconsRef = useRef<HTMLDivElement | null>(null);
@@ -717,19 +726,42 @@ export default function SubCompanyPage() {
                   </div>
                 )}
               </div>
-              <input
-                className="rounded-full border-2 border-blue-200 px-4 py-2 mb-4 w-full focus:outline-none focus:ring-2 focus:ring-blue-400 bg-white placeholder-gray-500"
-                type="number"
-                name="order"
-                min={0}
-                max={companies.length}
-                placeholder={
-                  i18n.t("placeholder_display_order") || "Set display order"
-                }
-                value={editProfile?.order || ""}
-                onChange={handleEditInput}
-                disabled={editLoading}
-              />
+              <div className="w-full mb-2">
+                <label className="block text-sm mb-1">Display Order</label>
+                <select
+                  name="order"
+                  value={editProfile?.order || ""}
+                  onChange={(e) => {
+                    const v = e.target.value;
+                    setEditProfile({ ...editProfile, order: v });
+                    if (validationErrors["order"])
+                      setValidationErrors({ ...validationErrors, order: "" });
+                  }}
+                  disabled={editLoading}
+                  className="w-full rounded-full px-4 py-2 mb-2 border-2 border-blue-200 focus:outline-none focus:ring-2 focus:ring-blue-400 bg-white"
+                >
+                  {Array.from({ length: 15 }, (_, i) => i + 1).map((n) => (
+                    <option
+                      key={n}
+                      value={String(n)}
+                      disabled={
+                        occupiedOrders.includes(n) &&
+                        Number(editProfile?.order) !== n
+                      }
+                    >
+                      {n}
+                      {occupiedOrders.includes(n) &&
+                      Number(editProfile?.order) !== n
+                        ? " (taken)"
+                        : ""}
+                    </option>
+                  ))}
+                </select>
+                <div className="text-xs text-gray-500 mt-1">
+                  Numbers marked "(taken)" are already used by other companies
+                  and are disabled.
+                </div>
+              </div>
               {editProfile?.order !== undefined &&
                 (Number(editProfile.order) < 0 ||
                   Number(editProfile.order) > companies.length) && (

@@ -1,5 +1,5 @@
 import Layout from "../components/Layout";
-import { useState, useRef, useMemo } from "react";
+import { useState, useRef, useMemo, useEffect } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import { useProfileStore } from "../store/profileStore";
@@ -32,6 +32,7 @@ export default function CreateCompanyPage() {
   const [validationErrors, setValidationErrors] = useState<{
     [key: string]: string;
   }>({});
+  const [occupiedOrders, setOccupiedOrders] = useState<number[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const profile = useProfileStore((state) => state.profile);
   const isPremium = profile?.membertype === "premium";
@@ -45,6 +46,32 @@ export default function CreateCompanyPage() {
     // eslint-disable-next-line
   }, [form.image]);
 
+  // Fetch existing companies to determine occupied display orders (1..15)
+  const fetchCompanies = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      if (!token) return;
+      const res = await axios.get(`${API_BASE_URL}/getcompanyprofile`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      let data: any = null;
+      if (res.data && res.data.data) data = res.data.data;
+      else if (res.data && typeof res.data === "object") data = res.data;
+      else if (res.data && res.data.company) data = res.data.company;
+
+      const items = Array.isArray(data) ? data : data ? [data] : [];
+      const orders = items
+        .map((c: any) => Number(c.company_order ?? c.order ?? -1))
+        .filter((n: number) => !isNaN(n) && n > 0 && n <= 15);
+      setOccupiedOrders(orders);
+    } catch (e) {
+      // ignore
+    }
+  };
+
+  useEffect(() => {
+    fetchCompanies();
+  }, []);
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
   ) => {
@@ -219,6 +246,11 @@ export default function CreateCompanyPage() {
           pfErr
         );
       }
+
+      // refresh occupied orders so UI reflects newly created company immediately
+      try {
+        await fetchCompanies();
+      } catch {}
 
       setTimeout(() => {
         navigate("/");
@@ -430,7 +462,38 @@ export default function CreateCompanyPage() {
                 </div>
               )}
             </div>
-            {/* Display order is set to 1 by default and hidden from the user */}
+            <div className="w-full mb-2">
+              <label className="block text-sm mb-1">Display Order</label>
+              <select
+                name="company_order"
+                value={form.company_order}
+                onChange={(e) => {
+                  const v = e.target.value;
+                  setForm({ ...form, company_order: v });
+                  if (validationErrors["company_order"])
+                    setValidationErrors({
+                      ...validationErrors,
+                      company_order: "",
+                    });
+                }}
+                className="w-full rounded-full px-[12px] py-2 border-2 border-blue-200 mb-2 focus:outline-none focus:ring-2 focus:ring-blue-400 bg-white"
+              >
+                {Array.from({ length: 15 }, (_, i) => i + 1).map((n) => (
+                  <option
+                    key={n}
+                    value={String(n)}
+                    disabled={occupiedOrders.includes(n)}
+                  >
+                    {n}
+                    {occupiedOrders.includes(n) ? " (taken)" : ""}
+                  </option>
+                ))}
+              </select>
+              <div className="text-xs text-gray-500 mt-1">
+                Numbers marked "(taken)" are already used by other companies and
+                are disabled.
+              </div>
+            </div>
             {error && (
               <div className="text-red-500 mt-2 text-center w-full">
                 {error}

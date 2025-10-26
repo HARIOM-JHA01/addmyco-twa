@@ -702,15 +702,45 @@ export default function ChamberPage() {
                 </div>
               )}
             </div>
-            <input
-              className="rounded-full border-2 border-blue-200 px-4 py-2 mb-4 w-full focus:outline-none focus:ring-2 focus:ring-blue-400 bg-white placeholder-gray-500"
-              type="text"
-              name="order"
-              placeholder={i18n.t("placeholder_display_order")}
-              value={editChamber?.order || ""}
-              onChange={handleEditInput}
-              disabled={editLoading}
-            />
+            <div className="w-full mb-4">
+              <label className="block text-sm mb-1">Display Order</label>
+              <select
+                name="order"
+                value={editChamber?.order || ""}
+                onChange={(e) => {
+                  const v = e.target.value;
+                  setEditChamber({ ...editChamber, order: v });
+                }}
+                disabled={editLoading}
+                className="w-full rounded-full px-4 py-2 mb-2 border-2 border-blue-200 focus:outline-none focus:ring-2 focus:ring-blue-400 bg-white"
+              >
+                {Array.from({ length: 15 }, (_, i) => i + 1).map((n) => {
+                  const used = Array.isArray(chamberData)
+                    ? chamberData
+                        .map((c: any) =>
+                          Number(c.chamber_order ?? c.order ?? -1)
+                        )
+                        .filter((m: number) => !isNaN(m) && m > 0 && m <= 15)
+                        .includes(n)
+                    : false;
+                  const current = Number(editChamber?.order) === n;
+                  return (
+                    <option
+                      key={n}
+                      value={String(n)}
+                      disabled={used && !current}
+                    >
+                      {n}
+                      {used && !current ? " (taken)" : ""}
+                    </option>
+                  );
+                })}
+              </select>
+              <div className="text-xs text-gray-500 mt-1">
+                Numbers marked "(taken)" are already used by other chambers and
+                are disabled.
+              </div>
+            </div>
             {editError && (
               <div className="text-red-500 mb-2 text-center">{editError}</div>
             )}
@@ -829,7 +859,9 @@ export default function ChamberPage() {
                         {contactNumber && (
                           <div
                             className="w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0 cursor-pointer"
-                            onClick={() => callOrCopyPhone(String(contactNumber))}
+                            onClick={() =>
+                              callOrCopyPhone(String(contactNumber))
+                            }
                             style={{
                               backgroundColor: "var(--app-background-color)",
                               scrollSnapAlign: "center" as any,

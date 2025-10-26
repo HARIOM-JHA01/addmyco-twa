@@ -1,5 +1,5 @@
 import Layout from "../components/Layout";
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useProfileStore } from "../store/profileStore";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
@@ -43,6 +43,32 @@ export default function CreateChamberPage() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const profile = useProfileStore((state) => state.profile);
   const isPremium = profile?.membertype === "premium";
+  const [occupiedOrders, setOccupiedOrders] = useState<number[]>([]);
+
+  const fetchChambers = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      if (!token) return;
+      const res = await axios.get(`${API_BASE_URL}/getchamberprofile`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      let data: any = null;
+      if (res.data && res.data.data) data = res.data.data;
+      else if (res.data && typeof res.data === "object") data = res.data;
+      else if (res.data && res.data.chamber) data = res.data.chamber;
+      const items = Array.isArray(data) ? data : data ? [data] : [];
+      const orders = items
+        .map((c: any) => Number(c.chamber_order ?? c.order ?? -1))
+        .filter((n: number) => !isNaN(n) && n > 0 && n <= 15);
+      setOccupiedOrders(orders);
+    } catch (e) {
+      // ignore
+    }
+  };
+
+  useEffect(() => {
+    fetchChambers();
+  }, []);
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
@@ -277,6 +303,11 @@ export default function CreateChamberPage() {
         );
       }
 
+      // refresh occupied orders so UI shows newly created chamber's order
+      try {
+        await fetchChambers();
+      } catch {}
+
       setTimeout(() => {
         navigate("/chamber");
       }, 1200);
@@ -477,13 +508,30 @@ export default function CreateChamberPage() {
               onChange={handleChange}
               className="w-full rounded-full px-[12px] py-2 border-2 border-blue-200 mb-2 focus:outline-none focus:ring-2 focus:ring-blue-400 bg-white placeholder-gray-500"
             />
-            <input
-              name="order"
-              placeholder="Set display order"
-              value={form.order}
-              onChange={handleChange}
-              className="w-full rounded-full px-[12px] py-2 border-2 border-blue-200 mb-2 focus:outline-none focus:ring-2 focus:ring-blue-400 bg-white placeholder-gray-500"
-            />
+            <div className="w-full mb-2">
+              <label className="block text-sm mb-1">Display Order</label>
+              <select
+                name="order"
+                value={form.order}
+                onChange={(e) => setForm({ ...form, order: e.target.value })}
+                className="w-full rounded-full px-[12px] py-2 border-2 border-blue-200 mb-2 focus:outline-none focus:ring-2 focus:ring-blue-400 bg-white"
+              >
+                {Array.from({ length: 15 }, (_, i) => i + 1).map((n) => (
+                  <option
+                    key={n}
+                    value={String(n)}
+                    disabled={occupiedOrders.includes(n)}
+                  >
+                    {n}
+                    {occupiedOrders.includes(n) ? " (taken)" : ""}
+                  </option>
+                ))}
+              </select>
+              <div className="text-xs text-gray-500 mt-1">
+                Numbers marked "(taken)" are already used by other chambers and
+                are disabled.
+              </div>
+            </div>
 
             {error && (
               <div className="text-red-500 mt-2 text-center w-full">
