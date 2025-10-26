@@ -64,12 +64,10 @@ export default function PublicProfileView({
     try {
       setIsAddingContact(true);
 
-      // Check if user is already logged in
       let token = localStorage.getItem("token");
 
-      // If no token, perform Telegram login first
       if (!token) {
-        await WebApp.ready();
+        WebApp.ready();
 
         let user: any = null;
         try {
@@ -96,7 +94,6 @@ export default function PublicProfileView({
           return;
         }
 
-        // Get country information
         let country = "";
         let countryCode = "";
         try {
@@ -109,7 +106,6 @@ export default function PublicProfileView({
           console.debug("Failed to fetch country:", e);
         }
 
-        // Perform Telegram login
         const loginResponse = await axios.post(
           `${API_BASE_URL}/telegram-login`,
           {
@@ -137,8 +133,44 @@ export default function PublicProfileView({
         }
       }
 
-      // Now add to contact using the token
-      const response = await axios.post(
+      try {
+        const profileRes = await axios.get(`${API_BASE_URL}/getProfile`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        const myProfile = profileRes?.data?.data || null;
+
+        const companyRes = await axios.get(
+          `${API_BASE_URL}/getcompanyprofile`,
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          }
+        );
+        let myCompanies: any = companyRes?.data?.data || companyRes?.data || [];
+        if (myCompanies && !Array.isArray(myCompanies))
+          myCompanies = [myCompanies];
+
+        const hasPersonal = !!myProfile && Object.keys(myProfile).length > 0;
+        const hasCompany = Array.isArray(myCompanies) && myCompanies.length > 0;
+
+        if (!hasPersonal || !hasCompany) {
+          WebApp.showAlert(
+            "Before adding this to your contact, you must complete your profile and revisit the link again"
+          );
+          setTimeout(() => {
+            try {
+              navigate("/create-profile");
+            } catch (e) {
+              window.location.href = "/create-profile";
+            }
+          }, 400);
+          setIsAddingContact(false);
+          return;
+        }
+      } catch (verifyErr) {
+        console.warn("Verification of profile/company failed:", verifyErr);
+      }
+
+      await axios.post(
         `${API_BASE_URL}/addtocontact`,
         { contact_id: profile._id },
         {
@@ -149,27 +181,20 @@ export default function PublicProfileView({
         }
       );
 
-      const message = response.data.message;
+      WebApp.showAlert(
+        "your invitation for adding contact has been sent successfully"
+      );
 
-      WebApp.showAlert(message);
-
-      // Use a full navigation to the root so the app reloads into the
-      // non-public routes (which include the Footer). This avoids cases
-      // where Telegram WebApp deep-link/start_param or other state can
-      // cause the SPA navigation to revert back to the public profile.
       setTimeout(() => {
         try {
-          // replace() avoids leaving the current URL in history
           window.location.replace("/");
         } catch (e) {
-          // Fallback to SPA navigation if window.location is not available
           navigate("/");
         }
       }, 500);
     } catch (error: any) {
       console.error("Failed to add contact:", error);
       if (error.response?.status === 401) {
-        // Clear invalid token and ask user to try again
         localStorage.removeItem("token");
         WebApp.showAlert("Session expired. Please try again.");
       } else {
