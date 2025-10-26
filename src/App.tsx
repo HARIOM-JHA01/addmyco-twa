@@ -42,11 +42,24 @@ function AppRoutes() {
   useEffect(() => {
     try {
       const startParam = WebApp.initDataUnsafe?.start_param;
-      if (startParam) navigate(`/${startParam}`);
+      const hasToken = !!localStorage.getItem("token");
+      const path = location.pathname || "/";
+
+      // Only auto-navigate to deep-linked public profile when user is not authenticated
+      // and we're effectively at the app root. Prevents bouncing back to public profile
+      // after login when navigating to /profile or other private routes.
+      const atAppRoot = path === "/" || path === "/start" || path === "";
+      const alreadyHandled =
+        sessionStorage.getItem("start_param_handled") === "1";
+
+      if (startParam && !hasToken && atAppRoot && !alreadyHandled) {
+        sessionStorage.setItem("start_param_handled", "1");
+        navigate(`/${startParam}`, { replace: true });
+      }
     } catch (e) {
       console.error("Failed to read start_param", e);
     }
-  }, [navigate]);
+  }, [navigate, location.pathname]);
 
   useEffect(() => {
     const path = location.pathname;
