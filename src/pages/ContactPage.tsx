@@ -98,7 +98,11 @@ export default function ContactPage() {
       if (res.data.success) {
         const data = res.data.data || [];
         setContacts(data);
-        setFilteredContacts(data);
+        // show only accepted contacts on the contacts page
+        const accepted = (data || []).filter(
+          (c: any) => Number(c.status) === 1
+        );
+        setFilteredContacts(accepted);
         // dispatch event to notify header / other listeners about pending count
         const pendingCount = (data || []).filter(
           (c: any) => Number(c.status) === 0
@@ -125,7 +129,11 @@ export default function ContactPage() {
         headers: getAuthHeaders(),
       });
       if (res.data.success) {
-        setFilteredContacts(res.data.data || []);
+        // ensure we only show accepted contacts inside folders
+        const data = res.data.data || [];
+        setFilteredContacts(
+          (data || []).filter((c: any) => Number(c.status) === 1)
+        );
       }
     } catch (error: any) {
       console.error("Failed to fetch folder contacts:", error);
@@ -148,7 +156,9 @@ export default function ContactPage() {
         { headers: getAuthHeaders() }
       );
       if (res.data.success && res.data.data) {
-        setFilteredContacts([res.data.data]);
+        // API may return an array or a single object
+        const d = res.data.data;
+        setFilteredContacts(Array.isArray(d) ? d : [d]);
       } else {
         setFilteredContacts([]);
       }
@@ -452,29 +462,6 @@ export default function ContactPage() {
                         : "bg-white text-gray-700"
                     }`}
                     onClick={() => handleFolderClick(name)}
-                    onMouseEnter={(e) => {
-                      if (selectedFolder !== name) {
-                        const el = e.currentTarget as HTMLElement;
-                        el.style.backgroundColor = (
-                          getComputedStyle(
-                            document.documentElement
-                          ).getPropertyValue("--app-background-color") ||
-                          "#007cb6"
-                        ).trim();
-                        el.style.color = (
-                          getComputedStyle(
-                            document.documentElement
-                          ).getPropertyValue("--app-font-color") || "#ffffff"
-                        ).trim();
-                      }
-                    }}
-                    onMouseLeave={(e) => {
-                      if (selectedFolder !== name) {
-                        const el = e.currentTarget as HTMLElement;
-                        el.style.backgroundColor = "white";
-                        el.style.color = "#374151";
-                      }
-                    }}
                   >
                     <span className="text-left w-full truncate">{name}</span>
                   </button>
@@ -500,29 +487,6 @@ export default function ContactPage() {
                       onClick={() =>
                         handleFolderClick(folder.Folder, folder._id)
                       }
-                      onMouseEnter={(e) => {
-                        if (selectedFolder !== folder.Folder) {
-                          const el = e.currentTarget as HTMLElement;
-                          el.style.backgroundColor = (
-                            getComputedStyle(
-                              document.documentElement
-                            ).getPropertyValue("--app-background-color") ||
-                            "#007cb6"
-                          ).trim();
-                          el.style.color = (
-                            getComputedStyle(
-                              document.documentElement
-                            ).getPropertyValue("--app-font-color") || "#ffffff"
-                          ).trim();
-                        }
-                      }}
-                      onMouseLeave={(e) => {
-                        if (selectedFolder !== folder.Folder) {
-                          const el = e.currentTarget as HTMLElement;
-                          el.style.backgroundColor = "white";
-                          el.style.color = "#374151";
-                        }
-                      }}
                     >
                       <span className="text-left w-full truncate">
                         {folder.Folder}
@@ -575,9 +539,15 @@ export default function ContactPage() {
                             }`}
                             alt="Profile"
                             className="w-full h-full object-cover rounded-full"
+                            onClick={() => handleContactClick(contact)}
+                            style={{ cursor: "pointer" }}
                           />
                         ) : (
-                          <span className="text-gray-400 text-2xl font-bold">
+                          <span
+                            className="text-gray-400 text-2xl font-bold"
+                            onClick={() => handleContactClick(contact)}
+                            style={{ cursor: "pointer" }}
+                          >
                             {userDetail?.owner_name_english?.charAt(0) || "?"}
                           </span>
                         )}
