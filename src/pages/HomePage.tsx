@@ -53,6 +53,8 @@ export default function HomePage() {
     setCanRight(el.scrollLeft + el.clientWidth < el.scrollWidth - 8);
   };
 
+  const qrRef = useRef<HTMLDivElement | null>(null);
+
   useEffect(() => {
     updateScroll();
     const onResize = () => updateScroll();
@@ -78,19 +80,103 @@ export default function HomePage() {
     fetchProfile();
   }, []);
 
-  const handleShare = () => {
+  const handleShare = async () => {
     const qrLink = `https://addmy.co/${profile?._id || ""}`;
-    if (navigator.share) {
-      navigator
-        .share({
+
+    // Try to share the QR image as a file if supported (Web Share Level 2)
+    try {
+      // capture the SVG inside qrRef and convert to PNG blob
+      const qrEl = qrRef.current?.querySelector("svg");
+      if (qrEl) {
+        const serializer = new XMLSerializer();
+        const svgString = serializer.serializeToString(qrEl);
+        const svgBlob = new Blob([svgString], {
+          type: "image/svg+xml;charset=utf-8",
+        });
+        const url = URL.createObjectURL(svgBlob);
+
+        const img = new Image();
+        // Important for CORS-free images
+        img.crossOrigin = "anonymous";
+
+        const canvas = document.createElement("canvas");
+        const size = 640; // high-res
+        canvas.width = size;
+        canvas.height = size;
+        const ctx = canvas.getContext("2d");
+
+        await new Promise<void>((resolve, reject) => {
+          img.onload = () => {
+            try {
+              // Draw white background
+              if (ctx) {
+                ctx.fillStyle = "#ffffff";
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                // Draw image centered
+                ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+              }
+              resolve();
+            } catch (e) {
+              reject(e);
+            }
+          };
+          img.onerror = (e) => reject(e);
+          img.src = url;
+        });
+
+        URL.revokeObjectURL(url);
+
+        const blob: Blob | null = await new Promise((res) =>
+          canvas.toBlob((b) => res(b), "image/png", 0.95)
+        );
+
+        if (blob) {
+          const file = new File([blob], "addmy-qrcode.png", {
+            type: "image/png",
+          });
+
+          // Check if navigator.canShare supports files
+          const nav: any = navigator;
+          if (nav.canShare && nav.canShare({ files: [file] })) {
+            await navigator.share({
+              title: "My AddMy Profile",
+              text: "Scan or open my profile",
+              files: [file],
+              url: qrLink,
+            });
+            return;
+          }
+        }
+      }
+    } catch (err) {
+      // silently continue to fallback
+      console.warn("Share with image failed:", err);
+    }
+
+    // Fallback: share url/text or copy to clipboard
+    try {
+      if (navigator.share) {
+        await navigator.share({
           title: "My Profile",
           text: "Check out my profile!",
           url: qrLink,
-        })
-        .catch(() => {});
-    } else {
-      navigator.clipboard.writeText(qrLink);
-      alert("Link copied to clipboard!");
+        });
+      } else if (navigator.clipboard && navigator.clipboard.writeText) {
+        await navigator.clipboard.writeText(qrLink);
+        WebApp.showAlert("Link copied to clipboard!");
+      } else {
+        // last resort
+        const el = document.createElement("textarea");
+        el.value = qrLink;
+        document.body.appendChild(el);
+        el.select();
+        document.execCommand("copy");
+        document.body.removeChild(el);
+        WebApp.showAlert("Link copied to clipboard!");
+      }
+    } catch (e) {
+      console.error(e);
+      WebApp.showAlert("Unable to share or copy link in this browser");
     }
   };
 
@@ -497,7 +583,7 @@ export default function HomePage() {
           )}
 
           <div className="flex justify-center mb-4">
-            <div className="p-2 bg-white">
+            <div ref={qrRef} className="p-2 bg-white">
               <QRCodeSVG
                 value={qrLink}
                 size={160}
