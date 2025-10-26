@@ -5,7 +5,10 @@ import backgroundImg from "../assets/background.jpg";
 import WebApp from "@twa-dev/sdk";
 
 interface WelcomePageProps {
-  onLogin: () => void;
+  // onLogin accepts an optional boolean which indicates the login was
+  // initiated from the WelcomePage. This lets the app show welcome-specific
+  // UI (like the free-user popup) when appropriate.
+  onLogin: (fromWelcome?: boolean) => void | Promise<void>;
 }
 
 const WelcomePage: React.FC<WelcomePageProps> = ({ onLogin }) => {
@@ -73,7 +76,10 @@ const WelcomePage: React.FC<WelcomePageProps> = ({ onLogin }) => {
   const handleLogin = async () => {
     setLoginLoading(true);
     try {
-      await onLogin();
+      // pass `true` to indicate this login was triggered from the Welcome
+      // page so the app can show the free-user signup popup every time a
+      // free user logs in via this page.
+      await onLogin(true);
     } finally {
       setLoginLoading(false);
     }

@@ -200,8 +200,10 @@ function AppRoutes() {
       );
   }, []);
 
-  const handleLogin = async () => {
+  // fromWelcome: when true indicates login was triggered from WelcomePage
+  const handleLogin = async (fromWelcome?: boolean) => {
     try {
+      let shownFreePopup = false;
       try {
         await WebApp.ready();
       } catch (e) {
@@ -350,6 +352,9 @@ function AppRoutes() {
                   console.error("Failed to show alert:", err);
                 }
               }
+              // mark that we've shown the free-user popup so we don't duplicate
+              // it later after we fetch profile
+              shownFreePopup = true;
             } catch {}
           }
         }
@@ -383,6 +388,62 @@ function AppRoutes() {
             if (username) await fetchBackgroundByUsername(username);
           } catch (err) {
             console.debug("fetchBackgroundByUsername after login failed", err);
+          }
+
+          // New requirement: if this login was initiated from the Welcome
+          // page, show the free-user signup popup for free users every time
+          // they login via the WelcomePage. Avoid showing duplicate popup if
+          // it was already shown above (e.g., on first-time registration).
+          try {
+            const isPremium = profileData?.membertype === "premium";
+            if (fromWelcome && !shownFreePopup && !isPremium) {
+              const popupOptions = {
+                title: "Signed up",
+                message:
+                  "You have been signed up successfully\n\nSubscribe and Contact @DynamicNameCard to get one year premium membership absolutely Free",
+                buttons: [
+                  { type: "close", text: "Close" },
+                  { type: "default", text: "Join DynamicNameCard" },
+                ],
+              };
+
+              let handled2 = false;
+              try {
+                const maybePromise = WebApp.showPopup?.(popupOptions as any);
+                const mp: any = maybePromise;
+                if (mp && typeof mp.then === "function") {
+                  mp.then((result: any) => {
+                    const selectedText =
+                      (result && result.button && result.button.text) ||
+                      result?.text ||
+                      result;
+                    if (
+                      typeof selectedText === "string" &&
+                      selectedText.includes("@DynamicNameCard")
+                    ) {
+                      try {
+                        WebApp.openTelegramLink("https://t.me/DynamicNameCard");
+                      } catch (err) {
+                        console.error("Failed to open Telegram link:", err);
+                      }
+                    }
+                  }).catch(() => {});
+                  handled2 = true;
+                }
+              } catch (e) {
+                handled2 = false;
+              }
+
+              if (!handled2) {
+                try {
+                  WebApp.showAlert(popupOptions.message);
+                } catch (err) {
+                  console.error("Failed to show alert:", err);
+                }
+              }
+            }
+          } catch (err) {
+            console.debug("free-user welcome popup check failed", err);
           }
 
           const hasCompany =
