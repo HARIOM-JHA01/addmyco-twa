@@ -91,7 +91,7 @@ export default function Notifications() {
     try {
       const token = localStorage.getItem("token");
       await axios.delete(
-        `${API_BASE_URL}/user/deletenotification/${notificationId}`,
+        `${API_BASE_URL}/deletenotification/${notificationId}`,
         {
           headers: { Authorization: `Bearer ${token}` },
         }
