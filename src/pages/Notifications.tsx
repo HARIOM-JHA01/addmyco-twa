@@ -1,6 +1,8 @@
 import Layout from "../components/Layout";
 import { useEffect, useState } from "react";
 import axios from "axios";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faCheck, faTimes } from "@fortawesome/free-solid-svg-icons";
 import { useNavigate } from "react-router-dom";
 import { useProfileStore } from "../store/profileStore";
 
@@ -81,16 +83,7 @@ export default function Notifications() {
     setModalLoading(false);
   };
 
-  // Mark multiple as read
-  const handleMarkAllRead = async () => {
-    try {
-      const token = localStorage.getItem("token");
-      await axios.get(`${API_BASE_URL}/multiplenotification`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
-    } catch {}
-  };
+  // (Mark all as read removed) --- kept function removed as it's no longer used
 
   // Delete notification
   const handleDeleteNotification = async (notificationId: string) => {
@@ -232,13 +225,7 @@ export default function Notifications() {
       <div className="flex flex-col items-center justify-center flex-grow py-4 px-2 pb-32">
         <div className="bg-blue-100 bg-opacity-40 rounded-3xl p-6 w-full max-w-md mx-auto flex flex-col items-center shadow-lg">
           <h2 className="text-2xl font-bold mb-4">Notifications</h2>
-          <button
-            className="mb-4 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
-            onClick={handleMarkAllRead}
-            disabled={notifications.length === 0}
-          >
-            Mark all as read
-          </button>
+          {/* Mark all as read removed per design change */}
           {pendingContacts.length > 0 && (
             <div className="w-full mb-4">
               <h3 className="font-semibold text-lg mb-2">Contact Requests</h3>
@@ -280,16 +267,20 @@ export default function Notifications() {
                       </div>
                       <div className="flex items-center gap-2">
                         <button
-                          className="bg-green-500 text-white px-3 py-1 rounded"
+                          className="bg-green-500 text-white w-9 h-9 flex items-center justify-center rounded-full"
                           onClick={() => openAcceptModal(c._id)}
+                          aria-label="Approve contact"
+                          title="Approve"
                         >
-                          Approve
+                          <FontAwesomeIcon icon={faCheck} />
                         </button>
                         <button
-                          className="bg-red-200 text-red-700 px-3 py-1 rounded"
+                          className="bg-red-200 text-red-700 w-9 h-9 flex items-center justify-center rounded-full"
                           onClick={() => handleRejectPending(c._id)}
+                          aria-label="Reject contact"
+                          title="Reject"
                         >
-                          Reject
+                          <FontAwesomeIcon icon={faTimes} />
                         </button>
                       </div>
                     </li>
