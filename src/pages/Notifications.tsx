@@ -224,13 +224,12 @@ export default function Notifications() {
     <Layout>
       <div className="flex flex-col items-center justify-center flex-grow py-4 px-2 pb-32">
         <div className="bg-blue-100 bg-opacity-40 rounded-3xl p-6 w-full max-w-md mx-auto flex flex-col items-center shadow-lg">
-          <h2 className="text-2xl font-bold mb-4">Notifications</h2>
+          <h2 className="text-2xl font-bold mb-4">
+            You have received below contact requests
+          </h2>
           {/* Mark all as read removed per design change */}
           {pendingContacts.length > 0 && (
             <div className="w-full mb-4">
-              <h3 className="font-semibold text-lg mb-2">
-                You have received below contact requests
-              </h3>
               <ul className="w-full divide-y divide-blue-200 mb-3">
                 {pendingContacts.map((c: any) => {
                   const user = c.userdetails?.[0];

@@ -55,6 +55,7 @@ export default function PublicProfileView({
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(false);
   const [isAddingContact, setIsAddingContact] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
 
   const API_BASE_URL =
     import.meta.env.VITE_API_BASE_URL || "https://admin.addmy.co";
@@ -220,6 +221,12 @@ export default function PublicProfileView({
     updateIconScroll();
     const onResize = () => updateIconScroll();
     window.addEventListener("resize", onResize);
+    // determine login state from localStorage token
+    try {
+      setIsLoggedIn(!!localStorage.getItem("token"));
+    } catch (e) {
+      setIsLoggedIn(false);
+    }
     return () => window.removeEventListener("resize", onResize);
   }, [profile]);
 
@@ -636,21 +643,23 @@ export default function PublicProfileView({
               />
             </div>
 
-            <button
-              onClick={handleAddToContact}
-              disabled={isAddingContact}
-              className="w-12 h-12 rounded-full flex items-center justify-center cursor-pointer shadow-lg hover:shadow-xl transition-shadow disabled:opacity-50 disabled:cursor-not-allowed"
-              style={{
-                backgroundColor: "var(--app-background-color)",
-                position: "absolute",
-                left: `calc(50% + ${160 / 2 + 24}px)`,
-                top: "50%",
-                transform: "translateY(-50%)",
-              }}
-              aria-label="Add to contacts"
-            >
-              <FontAwesomeIcon icon={faPlus} size="lg" color="white" />
-            </button>
+            {!isLoggedIn && (
+              <button
+                onClick={handleAddToContact}
+                disabled={isAddingContact}
+                className="w-12 h-12 rounded-full flex items-center justify-center cursor-pointer shadow-lg hover:shadow-xl transition-shadow disabled:opacity-50 disabled:cursor-not-allowed"
+                style={{
+                  backgroundColor: "var(--app-background-color)",
+                  position: "absolute",
+                  left: `calc(50% + ${160 / 2 + 24}px)`,
+                  top: "50%",
+                  transform: "translateY(-50%)",
+                }}
+                aria-label="Add to contacts"
+              >
+                <FontAwesomeIcon icon={faPlus} size="lg" color="white" />
+              </button>
+            )}
           </div>
         </div>
       </div>
