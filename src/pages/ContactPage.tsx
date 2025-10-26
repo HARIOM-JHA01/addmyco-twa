@@ -98,18 +98,10 @@ export default function ContactPage() {
       if (res.data.success) {
         const data = res.data.data || [];
         setContacts(data);
-        // show only accepted contacts on the contacts page
         const accepted = (data || []).filter(
           (c: any) => Number(c.status) === 1
         );
         setFilteredContacts(accepted);
-        // dispatch event to notify header / other listeners about pending count
-        const pendingCount = (data || []).filter(
-          (c: any) => Number(c.status) === 0
-        ).length;
-        window.dispatchEvent(
-          new CustomEvent("contacts-updated", { detail: { pendingCount } })
-        );
       }
     } catch (error: any) {
       console.error("Failed to fetch contacts:", error);
@@ -225,7 +217,10 @@ export default function ContactPage() {
       if (searchQuery) {
         searchContacts(searchQuery);
       } else {
-        setFilteredContacts(contacts);
+        // ensure we only show accepted contacts when not searching
+        setFilteredContacts(
+          (contacts || []).filter((c: any) => Number(c.status) === 1)
+        );
       }
     }, 300);
 
