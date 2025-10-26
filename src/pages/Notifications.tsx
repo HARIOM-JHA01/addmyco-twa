@@ -228,7 +228,9 @@ export default function Notifications() {
           {/* Mark all as read removed per design change */}
           {pendingContacts.length > 0 && (
             <div className="w-full mb-4">
-              <h3 className="font-semibold text-lg mb-2">Contact Requests</h3>
+              <h3 className="font-semibold text-lg mb-2">
+                You have received below contact requests
+              </h3>
               <ul className="w-full divide-y divide-blue-200 mb-3">
                 {pendingContacts.map((c: any) => {
                   const user = c.userdetails?.[0];
