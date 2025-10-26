@@ -25,7 +25,7 @@ import CreateCompanyPage from "./pages/CreateCompanyPage";
 import BackgroundPage from "./pages/BackgroundPage";
 import HomePage from "./pages/HomePage";
 import PublicProfileContainer from "./pages/PublicProfileContainer";
-import backgroundImg from "./assets/background.jpg";
+import { fetchBackgroundByUsername as fetchBgByUsername } from "./utils/theme";
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
@@ -35,6 +35,9 @@ function AppRoutes() {
   const [showWelcome, setShowWelcome] = useState(true);
   const [profile, setProfile] = useState<any>(null);
   const [profileLoading, setProfileLoading] = useState(true);
+
+  // use shared theme helper to fetch/apply background by username
+  const fetchBackgroundByUsername = fetchBgByUsername;
 
   useEffect(() => {
     try {
@@ -103,6 +106,7 @@ function AppRoutes() {
   })();
 
   useEffect(() => {
+    // apply any saved values immediately so UI doesn't flash
     const savedBgColor = localStorage.getItem("app-background-color");
     const savedFontColor = localStorage.getItem("app-font-color");
 
@@ -119,120 +123,6 @@ function AppRoutes() {
       );
     }
 
-    const fetchBackground = async () => {
-      try {
-        const token = localStorage.getItem("token");
-        const headers: Record<string, string> = {};
-        if (token) headers["Authorization"] = `Bearer ${token}`;
-        const res = await axios.get(`${API_BASE_URL}/getbackground`, {
-          headers,
-        });
-        if (res?.data?.success && res.data.data) {
-          const bg = res.data.data;
-          if (bg.backgroundcolor) {
-            document.documentElement.style.setProperty(
-              "--app-background-color",
-              bg.backgroundcolor
-            );
-            localStorage.setItem("app-background-color", bg.backgroundcolor);
-          } else {
-            const savedBgColor = localStorage.getItem("app-background-color");
-            if (savedBgColor)
-              document.documentElement.style.setProperty(
-                "--app-background-color",
-                savedBgColor
-              );
-          }
-          if (bg.fontcolor) {
-            document.documentElement.style.setProperty(
-              "--app-font-color",
-              bg.fontcolor
-            );
-            localStorage.setItem("app-font-color", bg.fontcolor);
-          } else {
-            const savedFontColor = localStorage.getItem("app-font-color");
-            if (savedFontColor)
-              document.documentElement.style.setProperty(
-                "--app-font-color",
-                savedFontColor
-              );
-          }
-          const candidateImage =
-            (bg && (bg.Thumbnail || bg.thumbnail || bg.backgroundImage)) || "";
-
-          const hasValidImage =
-            typeof candidateImage === "string" &&
-            candidateImage.trim().length > 0;
-
-          if (hasValidImage) {
-            let bgImageUrl = (candidateImage as string).trim();
-            if (!/^https?:\/\//i.test(bgImageUrl)) {
-              const s = bgImageUrl.replace(/^\/+/, "");
-              bgImageUrl = `${API_BASE_URL.replace(/\/$/, "")}/${s}`;
-            }
-
-            document.documentElement.style.setProperty(
-              "--app-background-image",
-              `url(${bgImageUrl})`
-            );
-            document.body.style.backgroundImage = `url(${bgImageUrl})`;
-            document.body.style.backgroundSize = "cover";
-            document.body.style.backgroundPosition = "center";
-            document.body.style.backgroundAttachment = "fixed";
-          } else {
-            // fallback to bundled background image
-            document.documentElement.style.setProperty(
-              "--app-background-image",
-              `url(${backgroundImg})`
-            );
-            document.body.style.backgroundImage = `url(${backgroundImg})`;
-            document.body.style.backgroundSize = "cover";
-            document.body.style.backgroundPosition = "center";
-            document.body.style.backgroundAttachment = "fixed";
-          }
-        } else {
-          const savedBgColor = localStorage.getItem("app-background-color");
-          const savedFontColor = localStorage.getItem("app-font-color");
-          if (savedBgColor)
-            document.documentElement.style.setProperty(
-              "--app-background-color",
-              savedBgColor
-            );
-          if (savedFontColor)
-            document.documentElement.style.setProperty(
-              "--app-font-color",
-              savedFontColor
-            );
-          document.documentElement.style.setProperty(
-            "--app-background-image",
-            `url(${backgroundImg})`
-          );
-        }
-      } catch (e) {
-        console.debug("fetchBackground failed", e);
-        const savedBgColor = localStorage.getItem("app-background-color");
-        const savedFontColor = localStorage.getItem("app-font-color");
-        if (savedBgColor)
-          document.documentElement.style.setProperty(
-            "--app-background-color",
-            savedBgColor
-          );
-        if (savedFontColor)
-          document.documentElement.style.setProperty(
-            "--app-font-color",
-            savedFontColor
-          );
-        document.documentElement.style.setProperty(
-          "--app-background-image",
-          `url(${backgroundImg})`
-        );
-      }
-    };
-
-    fetchBackground();
-
-    const onBackgroundUpdated = () => fetchBackground();
-    window.addEventListener("background-updated", onBackgroundUpdated);
     const fetchProfile = async () => {
       setProfileLoading(true);
       try {
@@ -245,14 +135,33 @@ function AppRoutes() {
         const res = await axios.get(`${API_BASE_URL}/getProfile`, {
           headers: { Authorization: `Bearer ${token}` },
         });
-        setProfile(res.data.data || null);
+        const profileData = res.data.data || null;
+        setProfile(profileData);
+        // after we have a username, attempt to fetch user-specific background
+        try {
+          const username =
+            profileData?.username ||
+            profileData?.telegram_username ||
+            profileData?.telegramUsername;
+          if (username) await fetchBackgroundByUsername(username);
+        } catch (err) {
+          console.debug("fetchBackgroundByUsername after profile failed", err);
+        }
       } catch {
         setProfile(null);
       } finally {
         setProfileLoading(false);
       }
     };
+
+    const onBackgroundUpdated = () => {
+      // refresh profile & user background when background-updated event triggers
+      fetchProfile();
+    };
+
+    window.addEventListener("background-updated", onBackgroundUpdated);
     fetchProfile();
+
     return () => {
       window.removeEventListener("background-updated", onBackgroundUpdated);
     };
@@ -453,6 +362,15 @@ function AppRoutes() {
           });
           const profileData = res.data.data;
           setProfile(profileData || null);
+          try {
+            const username =
+              profileData?.username ||
+              profileData?.telegram_username ||
+              profileData?.telegramUsername;
+            if (username) await fetchBackgroundByUsername(username);
+          } catch (err) {
+            console.debug("fetchBackgroundByUsername after login failed", err);
+          }
 
           const hasCompany =
             profileData &&

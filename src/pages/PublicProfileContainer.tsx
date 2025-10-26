@@ -12,6 +12,7 @@ import PublicLayout from "../components/PublicLayout";
 import PublicProfileView from "./PublicProfileView";
 import PublicCompanyView from "./PublicCompanyView";
 import PublicChamberView from "./PublicChamberView";
+import { fetchBackgroundByUsername } from "../utils/theme";
 
 type ViewType = "profile" | "company" | "chamber";
 
@@ -52,6 +53,17 @@ export default function PublicProfileContainer() {
         ]);
 
         setProfile(profileData);
+
+        // attempt to fetch and apply user-specific background/theme for public pages
+        try {
+          const uname = username;
+          if (uname) await fetchBackgroundByUsername(uname);
+        } catch (err) {
+          console.debug(
+            "fetchBackgroundByUsername in PublicProfileContainer failed",
+            err
+          );
+        }
 
         if (companiesData && companiesData.length > 0) {
           const sortedCompanies = [...companiesData].sort((a, b) => {
