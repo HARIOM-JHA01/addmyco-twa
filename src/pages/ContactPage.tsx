@@ -158,7 +158,9 @@ export default function ContactPage() {
       if (res.data.success && res.data.data) {
         // API may return an array or a single object
         const d = res.data.data;
-        setFilteredContacts(Array.isArray(d) ? d : [d]);
+        const raw = Array.isArray(d) ? d : [d];
+        // only show accepted contacts on the contacts page
+        setFilteredContacts(raw.filter((c: any) => Number(c.status) === 1));
       } else {
         setFilteredContacts([]);
       }
@@ -203,6 +205,18 @@ export default function ContactPage() {
   useEffect(() => {
     refreshFolders();
     fetchContacts();
+    const handler = () => {
+      // when contacts updated elsewhere (Notifications), refresh list
+      try {
+        fetchContacts();
+      } catch (err) {
+        /* noop */
+      }
+    };
+    window.addEventListener("contacts-updated", handler as EventListener);
+    return () => {
+      window.removeEventListener("contacts-updated", handler as EventListener);
+    };
   }, []);
 
   // Handle search input change with debounce
@@ -566,7 +580,6 @@ export default function ContactPage() {
                         </button>
                       </div>
 
-                      {/* Names styled like homepage/profile buttons; clicks do nothing */}
                       <div className="mt-2 max-w-[96px] truncate">
                         <div className="w-full bg-app text-app text-sm font-semibold py-1 rounded-full px-2 truncate">
                           {userDetail?.owner_name_english || "Unknown"}
@@ -583,7 +596,6 @@ export default function ContactPage() {
               </div>
             )}
           </div>
-          {/* accept modal removed from ContactPage - handled in Notifications */}
         </div>
       </div>
     </Layout>

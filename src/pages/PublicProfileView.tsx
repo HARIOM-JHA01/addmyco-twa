@@ -186,11 +186,17 @@ export default function PublicProfileView({
         "your invitation for adding contact has been sent successfully"
       );
 
+      // navigate within the SPA (do not reload) so we don't re-trigger any
+      // Telegram start_param redirect (which would navigate back to this profile)
       setTimeout(() => {
         try {
-          window.location.replace("/");
-        } catch (e) {
           navigate("/");
+        } catch (e) {
+          try {
+            window.location.replace("/");
+          } catch {
+            /* noop */
+          }
         }
       }, 500);
     } catch (error: any) {
