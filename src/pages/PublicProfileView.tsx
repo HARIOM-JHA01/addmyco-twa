@@ -186,15 +186,12 @@ export default function PublicProfileView({
         "your invitation for adding contact has been sent successfully"
       );
 
+      // Force a full page reload to /profile to ensure proper route handling
       setTimeout(() => {
         try {
-          navigate("/profile");
+          window.location.href = "/profile";
         } catch (e) {
-          try {
-            window.location.replace("/");
-          } catch {
-            console.debug("Failed to redirect to home");
-          }
+          console.debug("Failed to redirect to profile");
         }
       }, 500);
     } catch (error: any) {
