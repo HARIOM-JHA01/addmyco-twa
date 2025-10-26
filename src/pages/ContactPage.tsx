@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { formatImageUrl } from "../utils/validation";
 import { FaEllipsisV, FaTrash } from "react-icons/fa";
 import axios from "axios";
 import Layout from "../components/Layout";
@@ -137,7 +138,10 @@ export default function ContactPage() {
   // Search contacts
   const searchContacts = async (query: string) => {
     if (!query.trim()) {
-      setFilteredContacts(contacts);
+      // ensure we only show accepted contacts when not searching
+      setFilteredContacts(
+        (contacts || []).filter((c: any) => Number(c.status) === 1)
+      );
       return;
     }
 
@@ -148,11 +152,66 @@ export default function ContactPage() {
         { headers: getAuthHeaders() }
       );
       if (res.data.success && res.data.data) {
-        // API may return an array or a single object
+        // API may return different shapes. Normalize into ContactData-like items.
         const d = res.data.data;
         const raw = Array.isArray(d) ? d : [d];
+
+        const normalized: ContactData[] = raw
+          .map((item: any) => {
+            if (!item) return null;
+            // If already in contact shape
+            if (item.status !== undefined && item.userdetails) return item;
+
+            // If shape is { user, company, isContact }
+            if (item.user) {
+              const user = item.user;
+              return {
+                _id: user._id || user.id || `${user._id || user.id}`,
+                user_id: user._id || user.id,
+                contact_id: user._id || user.id,
+                status: item.isContact ? 1 : 0,
+                userdetails: [
+                  {
+                    owner_name_english: user.owner_name_english,
+                    owner_name_chinese: user.owner_name_chinese,
+                    profile_image: user.profile_image,
+                    username: user.username,
+                    companydetails: item.company ? [item.company] : [],
+                  },
+                ],
+                profile_image: user.profile_image,
+              } as ContactData;
+            }
+
+            // Unknown shape: try to coerce if it has username
+            if (item.username || item.owner_name_english) {
+              return {
+                _id: item._id || item.id || `${item._id || item.id}`,
+                user_id: item._id || item.id,
+                contact_id: item._id || item.id,
+                status: item.status !== undefined ? Number(item.status) : 1,
+                userdetails: [
+                  {
+                    owner_name_english:
+                      item.owner_name_english || item.username,
+                    owner_name_chinese: item.owner_name_chinese,
+                    profile_image: item.profile_image,
+                    username: item.username,
+                    companydetails: item.companydetails || [],
+                  },
+                ],
+                profile_image: item.profile_image,
+              } as ContactData;
+            }
+
+            return null;
+          })
+          .filter(Boolean) as ContactData[];
+
         // only show accepted contacts on the contacts page
-        setFilteredContacts(raw.filter((c: any) => Number(c.status) === 1));
+        setFilteredContacts(
+          (normalized || []).filter((c: any) => Number(c.status) === 1)
+        );
       } else {
         setFilteredContacts([]);
       }
@@ -543,9 +602,10 @@ export default function ContactPage() {
                       >
                         {userDetail?.profile_image || contact.profile_image ? (
                           <img
-                            src={`https://admin.addmy.co/assets/${
-                              userDetail?.profile_image || contact.profile_image
-                            }`}
+                            src={formatImageUrl(
+                              (userDetail?.profile_image as any) ||
+                                (contact.profile_image as any)
+                            )}
                             alt="Profile"
                             className="w-full h-full object-cover rounded-full"
                             onClick={() => handleContactClick(contact)}

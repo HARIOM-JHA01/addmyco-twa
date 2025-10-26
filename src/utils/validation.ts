@@ -155,7 +155,13 @@ export const hasValidationErrors = (errors: {
 // Format image URL - handles both full URLs and relative paths
 export const formatImageUrl = (url: string | undefined): string => {
   if (!url) return "";
-  return url.trim();
+  const trimmed = url.trim();
+  // If already a full URL, return as-is
+  if (/^https?:\/\//i.test(trimmed)) return trimmed;
+  // Otherwise assume it's a relative asset path and prefix the admin assets base
+  const base = "https://admin.addmy.co/assets/";
+  // Avoid double slashes when url already starts with a slash
+  return base + (trimmed.startsWith("/") ? trimmed.slice(1) : trimmed);
 };
 
 // Function to detect if running inside Telegram WebApp
