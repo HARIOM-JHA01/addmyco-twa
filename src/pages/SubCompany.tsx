@@ -757,7 +757,7 @@ export default function SubCompanyPage() {
                     </option>
                   ))}
                 </select>
-                <div className="text-xs text-gray-500 mt-1">
+                <div className="text-xs text-black mt-1">
                   Numbers marked "(taken)" are already used by other companies
                   and are disabled.
                 </div>

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useParams } from "react-router-dom";
 import {
   fetchUserProfile,
@@ -24,6 +24,7 @@ export default function PublicProfileContainer() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [currentView, setCurrentView] = useState<ViewType>("profile");
+  const restoreRef = useRef<(() => void) | null>(null);
 
   useEffect(() => {
     if (view === "company") {
@@ -55,6 +56,28 @@ export default function PublicProfileContainer() {
         setProfile(profileData);
 
         // attempt to fetch and apply user-specific background/theme for public pages
+        // save current theme so we can restore it when leaving the public profile
+        let previousTheme: any = null;
+        try {
+          previousTheme = {
+            bgColor: getComputedStyle(
+              document.documentElement
+            ).getPropertyValue("--app-background-color"),
+            fontColor: getComputedStyle(
+              document.documentElement
+            ).getPropertyValue("--app-font-color"),
+            bgImage: getComputedStyle(
+              document.documentElement
+            ).getPropertyValue("--app-background-image"),
+            bodyBgImage: document.body.style.backgroundImage,
+            bodyBgSize: document.body.style.backgroundSize,
+            bodyBgPosition: document.body.style.backgroundPosition,
+            bodyBgAttachment: document.body.style.backgroundAttachment,
+          };
+        } catch (e) {
+          previousTheme = null;
+        }
+
         try {
           const uname = username;
           if (uname) await fetchBackgroundByUsername(uname);
@@ -64,6 +87,41 @@ export default function PublicProfileContainer() {
             err
           );
         }
+
+        // restore previous theme when unmounting or when username changes
+        const restoreTheme = () => {
+          try {
+            if (previousTheme) {
+              if (previousTheme.bgColor)
+                document.documentElement.style.setProperty(
+                  "--app-background-color",
+                  previousTheme.bgColor
+                );
+              if (previousTheme.fontColor)
+                document.documentElement.style.setProperty(
+                  "--app-font-color",
+                  previousTheme.fontColor
+                );
+              if (previousTheme.bgImage)
+                document.documentElement.style.setProperty(
+                  "--app-background-image",
+                  previousTheme.bgImage
+                );
+              document.body.style.backgroundImage =
+                previousTheme.bodyBgImage || "";
+              document.body.style.backgroundSize =
+                previousTheme.bodyBgSize || "";
+              document.body.style.backgroundPosition =
+                previousTheme.bodyBgPosition || "";
+              document.body.style.backgroundAttachment =
+                previousTheme.bodyBgAttachment || "";
+            }
+          } catch (e) {
+            console.debug("Failed to restore previous theme", e);
+          }
+        };
+        // store restore function in ref so cleanup can call it when effect re-runs or unmounts
+        restoreRef.current = restoreTheme;
 
         if (companiesData && companiesData.length > 0) {
           const sortedCompanies = [...companiesData].sort((a, b) => {
@@ -90,6 +148,17 @@ export default function PublicProfileContainer() {
     };
 
     loadAllData();
+  }, [username]);
+  // cleanup: run restoreRef.current when username changes or component unmounts
+  useEffect(() => {
+    return () => {
+      try {
+        if (restoreRef.current) restoreRef.current();
+      } catch (e) {
+        /* noop */
+      }
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [username]);
 
   const handleViewChange = (view: ViewType) => {

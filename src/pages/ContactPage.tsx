@@ -316,6 +316,10 @@ export default function ContactPage() {
   };
 
   // Contact circles are non-clickable on this page per design
+  const handleContactClick = (contact: ContactData) => {
+    const username = contact.userdetails?.[0]?.username || contact.contact_id;
+    if (username) navigate(`/${username}`);
+  };
 
   return (
     <Layout>
@@ -560,7 +564,10 @@ export default function ContactPage() {
                       key={contact._id}
                       className="flex flex-col items-center text-center"
                     >
-                      <div className="relative w-20 h-20 rounded-full bg-gray-200 flex items-center justify-center overflow-visible shadow-md transition-shadow">
+                      <div
+                        className="relative w-20 h-20 rounded-full bg-gray-200 flex items-center justify-center overflow-visible shadow-md transition-shadow cursor-pointer"
+                        onClick={() => handleContactClick(contact)}
+                      >
                         {userDetail?.profile_image || contact.profile_image ? (
                           <img
                             src={`https://admin.addmy.co/assets/${
