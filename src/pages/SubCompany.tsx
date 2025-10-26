@@ -19,7 +19,12 @@ import {
   faChevronRight,
 } from "@fortawesome/free-solid-svg-icons";
 import { callOrCopyPhone } from "../utils/phone";
-import { formatUrl, getUrlError, getEmailError } from "../utils/validation";
+import {
+  formatUrl,
+  getUrlError,
+  getEmailError,
+  formatImageUrl,
+} from "../utils/validation";
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
@@ -48,7 +53,7 @@ export default function SubCompanyPage() {
   useEffect(() => {
     const orders = (companies || [])
       .map((c: any) => Number(c.company_order ?? c.order ?? -1))
-      .filter((n: number) => !isNaN(n) && n > 0 && n <= 15);
+      .filter((n: number) => !isNaN(n) && n > 0 && n <= 20);
     setOccupiedOrders(orders);
   }, [companies]);
 
@@ -243,7 +248,7 @@ export default function SubCompanyPage() {
     // If there's an image URL, show it as the preview (no local file selected)
     if (mapped.image) {
       setFile(null);
-      setFilePreview(mapped.image);
+      setFilePreview(formatImageUrl(mapped.image));
     } else {
       setFilePreview(null);
     }
@@ -432,12 +437,16 @@ export default function SubCompanyPage() {
         profileData = res.data.company;
       }
 
-      // Handle array response - if profileData is an array, take the first item
+      // If the API returned an array of companies, sort and set them.
       if (Array.isArray(profileData) && profileData.length > 0) {
-        profileData = profileData[0];
-      }
-
-      if (
+        const sorted = [...profileData].sort((a: any, b: any) => {
+          const ao = Number(a.company_order ?? a.order ?? 0);
+          const bo = Number(b.company_order ?? b.order ?? 0);
+          return ao - bo;
+        });
+        setCompanies(sorted);
+        setCurrentCompanyIndex(0);
+      } else if (
         profileData &&
         typeof profileData === "object" &&
         !Array.isArray(profileData)
@@ -740,7 +749,7 @@ export default function SubCompanyPage() {
                   disabled={editLoading}
                   className="w-full rounded-full px-4 py-2 mb-2 border-2 border-blue-200 focus:outline-none focus:ring-2 focus:ring-blue-400 bg-white"
                 >
-                  {Array.from({ length: 15 }, (_, i) => i + 1).map((n) => (
+                  {Array.from({ length: 20 }, (_, i) => i + 1).map((n) => (
                     <option
                       key={n}
                       value={String(n)}
@@ -762,34 +771,14 @@ export default function SubCompanyPage() {
                   and are disabled.
                 </div>
               </div>
-              {editProfile?.order !== undefined &&
-                (Number(editProfile.order) < 0 ||
-                  Number(editProfile.order) > companies.length) && (
-                  <div className="text-red-500 mb-2 text-center">
-                    {companies.length === 0 ? (
-                      "Display order must be 0 (no companies exist yet)"
-                    ) : companies.length === 1 ? (
-                      "Display order must be 0 or 1 (you have 1 company)"
-                    ) : (
-                      <>
-                        Display order must be between 0 and {companies.length}{" "}
-                        (you have {companies.length} companies)
-                      </>
-                    )}
-                  </div>
-                )}
+              {/* Range validation removed per request - allow any value selection */}
               {editError && (
                 <div className="text-red-500 mb-2 text-center">{editError}</div>
               )}
               <button
                 type="submit"
                 className="w-full bg-[#007cb6] text-white rounded-full py-2 font-bold disabled:opacity-50 mt-2"
-                disabled={
-                  editLoading ||
-                  (editProfile?.order !== undefined &&
-                    (Number(editProfile.order) < 0 ||
-                      Number(editProfile.order) > companies.length))
-                }
+                disabled={editLoading}
               >
                 {editLoading
                   ? editMode === "update"
@@ -981,7 +970,7 @@ export default function SubCompanyPage() {
                 <div className="w-full flex justify-center mb-4">
                   {companyProfile.image?.endsWith(".mp4") ? (
                     <video
-                      src={companyProfile.image}
+                      src={formatImageUrl(companyProfile.image)}
                       autoPlay
                       loop
                       muted
@@ -990,7 +979,7 @@ export default function SubCompanyPage() {
                     />
                   ) : (
                     <img
-                      src={companyProfile.image || profileIcon}
+                      src={formatImageUrl(companyProfile.image) || profileIcon}
                       alt="Company Logo"
                       className="w-full h-48 object-cover rounded-xl"
                     />
