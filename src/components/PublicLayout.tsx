@@ -1,11 +1,18 @@
 import { ReactNode } from "react";
 import Header from "./Header";
+import Footer from "./Footer";
 
 interface PublicLayoutProps {
   children: ReactNode;
 }
 
 export default function PublicLayout({ children }: PublicLayoutProps) {
+  const token =
+    typeof window !== "undefined" ? localStorage.getItem("token") : null;
+  const profile =
+    typeof window !== "undefined" ? localStorage.getItem("profile") : null;
+  const showFooter = !!token && !!profile;
+
   return (
     <div
       className="min-h-screen flex flex-col bg-cover bg-center"
@@ -13,7 +20,7 @@ export default function PublicLayout({ children }: PublicLayoutProps) {
     >
       <Header />
       <main className="flex-grow">{children}</main>
-      {/* No Footer for public pages */}
+      {showFooter && <Footer />}
     </div>
   );
 }
