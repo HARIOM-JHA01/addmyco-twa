@@ -63,6 +63,7 @@ export default function ContactPage() {
   const navigate = useNavigate();
   const [folderName, setFolderName] = useState("");
   const [folders, setFolders] = useState<any[]>([]);
+  const [contactFolders, setContactFolders] = useState<any[]>([]);
   const [contacts, setContacts] = useState<ContactData[]>([]);
   const [filteredContacts, setFilteredContacts] = useState<ContactData[]>([]);
   const [selectedFolder, setSelectedFolder] = useState<string>("All");
@@ -95,8 +96,16 @@ export default function ContactPage() {
         headers: getAuthHeaders(),
       });
       if (res.data.success) {
-        setContacts(res.data.data || []);
-        setFilteredContacts(res.data.data || []);
+        const data = res.data.data || [];
+        setContacts(data);
+        setFilteredContacts(data);
+        // dispatch event to notify header / other listeners about pending count
+        const pendingCount = (data || []).filter(
+          (c: any) => Number(c.status) === 0
+        ).length;
+        window.dispatchEvent(
+          new CustomEvent("contacts-updated", { detail: { pendingCount } })
+        );
       }
     } catch (error: any) {
       console.error("Failed to fetch contacts:", error);
@@ -203,6 +212,95 @@ export default function ContactPage() {
     setFolderName("");
     setModalError("");
     setShowModal(true);
+  };
+
+  // Accept/Reject pending contact requests
+  const [acceptModal, setAcceptModal] = useState<{
+    open: boolean;
+    contactId?: string;
+    loading?: boolean;
+    error?: string;
+    selectedFolderId?: string;
+  } | null>(null);
+
+  const openAcceptModal = async (contactId: string) => {
+    try {
+      setAcceptModal({ open: true, contactId, loading: true, error: "" });
+      const token = localStorage.getItem("token");
+      if (!token) throw new Error("No token");
+      const res = await axios.get(`${API_BASE_URL}/getcontactfolder`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const data = res.data?.data || [];
+      setContactFolders(data);
+      setAcceptModal({
+        open: true,
+        contactId,
+        loading: false,
+        error: "",
+        selectedFolderId: data?.[0]?._id,
+      });
+    } catch (err: any) {
+      setAcceptModal({
+        open: true,
+        contactId,
+        loading: false,
+        error: err?.message || "Failed to load folders",
+      });
+    }
+  };
+
+  const closeAcceptModal = () => setAcceptModal(null);
+
+  const handleAccept = async () => {
+    if (!acceptModal?.contactId) return;
+    try {
+      setAcceptModal((m) => (m ? { ...m, loading: true, error: "" } : m));
+      const token = localStorage.getItem("token");
+      if (!token) throw new Error("No token");
+      await axios.post(
+        `${API_BASE_URL}/invitationcontact`,
+        {
+          id: acceptModal.contactId,
+          status: 1,
+          folder_id: acceptModal.selectedFolderId,
+        },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      alert("Contact Approved Successfully");
+      closeAcceptModal();
+      fetchContacts();
+    } catch (err: any) {
+      setAcceptModal((m) =>
+        m
+          ? {
+              ...m,
+              loading: false,
+              error:
+                err?.response?.data?.message ||
+                err.message ||
+                "Failed to accept",
+            }
+          : m
+      );
+    }
+  };
+
+  const handleReject = async (contactId: string) => {
+    if (!confirm("Reject this contact request?")) return;
+    try {
+      const token = localStorage.getItem("token");
+      if (!token) throw new Error("No token");
+      await axios.post(
+        `${API_BASE_URL}/invitationcontact`,
+        { id: contactId, status: 2 },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      alert("Contact Rejected Successfully");
+      fetchContacts();
+    } catch (err: any) {
+      alert(err?.response?.data?.message || err.message || "Failed to reject");
+    }
   };
 
   const closeModal = () => {
@@ -570,17 +668,44 @@ export default function ContactPage() {
                           </span>
                         )}
 
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            removeContact(contact.contact_id);
-                          }}
-                          className="absolute -top-2 -right-2 bg-white p-1 rounded-full text-red-500 shadow-sm hover:bg-red-50"
-                          aria-label="Remove contact"
-                          title="Remove contact"
-                        >
-                          <FaTrash size={14} />
-                        </button>
+                        {Number(contact.status) === 0 ? (
+                          <div className="absolute -top-2 -right-2 flex gap-1">
+                            <button
+                              onClick={async (e) => {
+                                e.stopPropagation();
+                                openAcceptModal(contact._id);
+                              }}
+                              className="bg-white p-1 rounded-full text-green-600 shadow-sm hover:bg-green-50"
+                              aria-label="Accept contact"
+                              title="Accept"
+                            >
+                              ✓
+                            </button>
+                            <button
+                              onClick={async (e) => {
+                                e.stopPropagation();
+                                handleReject(contact._id);
+                              }}
+                              className="bg-white p-1 rounded-full text-red-500 shadow-sm hover:bg-red-50"
+                              aria-label="Reject contact"
+                              title="Reject"
+                            >
+                              ✕
+                            </button>
+                          </div>
+                        ) : (
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              removeContact(contact.contact_id);
+                            }}
+                            className="absolute -top-2 -right-2 bg-white p-1 rounded-full text-red-500 shadow-sm hover:bg-red-50"
+                            aria-label="Remove contact"
+                            title="Remove contact"
+                          >
+                            <FaTrash size={14} />
+                          </button>
+                        )}
                       </div>
                       <div className="mt-2 max-w-[96px] truncate text-sm font-semibold text-gray-800">
                         {userDetail?.owner_name_english || "Unknown"}
@@ -596,6 +721,60 @@ export default function ContactPage() {
               </div>
             )}
           </div>
+          {/* Accept modal for pending requests */}
+          {acceptModal?.open && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
+              <div className="bg-white rounded-xl p-6 w-80 max-w-full flex flex-col items-center shadow-lg">
+                <h3 className="text-lg font-bold mb-2">Accept Contact</h3>
+                {acceptModal.loading ? (
+                  <div>Loading folders...</div>
+                ) : acceptModal.error ? (
+                  <div className="text-red-500 mb-2">{acceptModal.error}</div>
+                ) : (
+                  <>
+                    <label className="w-full text-sm mb-2">Select Folder</label>
+                    <select
+                      className="w-full rounded-full px-3 py-2 mb-3 border"
+                      value={acceptModal.selectedFolderId}
+                      onChange={(e) =>
+                        setAcceptModal((m) =>
+                          m ? { ...m, selectedFolderId: e.target.value } : m
+                        )
+                      }
+                    >
+                      {contactFolders.map((f) => (
+                        <option key={f._id} value={f._id}>
+                          {f.Folder}
+                        </option>
+                      ))}
+                    </select>
+                    <div className="flex gap-4 w-full">
+                      <button
+                        className="flex-1 bg-gray-300 text-gray-700 rounded-full py-2 font-bold"
+                        onClick={closeAcceptModal}
+                        type="button"
+                        disabled={acceptModal.loading}
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        className="flex-1 rounded-full py-2 font-bold disabled:opacity-50"
+                        style={{
+                          backgroundColor: "var(--app-background-color)",
+                          color: "var(--app-font-color)",
+                        }}
+                        onClick={handleAccept}
+                        type="button"
+                        disabled={acceptModal.loading}
+                      >
+                        {acceptModal.loading ? "Accepting..." : "Accept"}
+                      </button>
+                    </div>
+                  </>
+                )}
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </Layout>
