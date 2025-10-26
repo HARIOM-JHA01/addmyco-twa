@@ -224,7 +224,7 @@ export default function Notifications() {
     <Layout>
       <div className="flex flex-col items-center justify-center flex-grow py-4 px-2 pb-32">
         <div className="bg-blue-100 bg-opacity-40 rounded-3xl p-6 w-full max-w-md mx-auto flex flex-col items-center shadow-lg">
-          <h2 className="text-2xl font-bold mb-4">
+          <h2 className="text-lg font-bold mb-4 text-center">
             You have received below contact requests
           </h2>
           {/* Mark all as read removed per design change */}

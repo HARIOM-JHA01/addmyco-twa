@@ -560,7 +560,7 @@ export default function ContactPage() {
                       key={contact._id}
                       className="flex flex-col items-center text-center"
                     >
-                      <div className="relative w-20 h-20 rounded-full bg-gray-200 flex items-center justify-center overflow-hidden shadow-md transition-shadow">
+                      <div className="relative w-20 h-20 rounded-full bg-gray-200 flex items-center justify-center overflow-visible shadow-md transition-shadow">
                         {userDetail?.profile_image || contact.profile_image ? (
                           <img
                             src={`https://admin.addmy.co/assets/${
@@ -581,7 +581,7 @@ export default function ContactPage() {
                             e.stopPropagation();
                             removeContact(contact.contact_id);
                           }}
-                          className="absolute -top-2 -right-2 bg-white p-1 rounded-full text-red-500 shadow-sm hover:bg-red-50"
+                          className="absolute -top-2 -right-2 bg-white p-1 rounded-full text-red-500 shadow-sm hover:bg-red-50 z-10"
                           aria-label="Remove contact"
                           title="Remove contact"
                         >
