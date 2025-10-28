@@ -320,32 +320,46 @@ function AppRoutes() {
 
               let handled = false;
               try {
-                const maybePromise = WebApp.showPopup?.(popupOptions as any);
-                const mp: any = maybePromise;
-                if (mp && typeof mp.then === "function") {
-                  mp.then((result: any) => {
-                    const selectedText =
-                      (result && result.button && result.button.text) ||
-                      result?.text ||
-                      result;
-                    if (typeof selectedText === "string") {
-                      // If user clicked the Join button, open the AddmyCo
-                      // Telegram channel. We match on the button text which
-                      // contains "Join Channel" to be resilient to
-                      // localization/formatting.
-                      if (
-                        selectedText.includes("Join Channel") ||
-                        selectedText.includes("Join")
-                      ) {
-                        try {
-                          WebApp.openLink("https://t.me/AddmyCo");
-                        } catch (err) {
-                          console.error("Failed to open Telegram link:", err);
-                        }
+                const maybeResult = WebApp.showPopup?.(popupOptions as any);
+                const mp: any = maybeResult;
+
+                const processResult = (result: any) => {
+                  const selectedText =
+                    (result && result.button && result.button.text) ||
+                    result?.text ||
+                    result;
+                  if (typeof selectedText === "string") {
+                    if (
+                      selectedText.includes("Join Channel") ||
+                      selectedText.includes("Join")
+                    ) {
+                      try {
+                        WebApp.openLink("https://t.me/AddmyCo");
+                      } catch (err) {
+                        console.error("Failed to open Telegram link:", err);
                       }
                     }
-                  }).catch(() => {});
+                  }
+                };
+
+                if (mp && typeof mp.then === "function") {
+                  mp.then((result: any) => processResult(result)).catch(
+                    () => {}
+                  );
                   handled = true;
+                } else if (mp !== undefined) {
+                  // handle synchronous return value
+                  try {
+                    processResult(mp);
+                    handled = true;
+                  } catch (err) {
+                    // continue to fallback
+                    console.debug(
+                      "showPopup sync result processing failed",
+                      err
+                    );
+                    handled = false;
+                  }
                 }
               } catch (e) {
                 handled = false;
@@ -415,28 +429,44 @@ function AppRoutes() {
 
               let handled2 = false;
               try {
-                const maybePromise = WebApp.showPopup?.(popupOptions as any);
-                const mp: any = maybePromise;
-                if (mp && typeof mp.then === "function") {
-                  mp.then((result: any) => {
-                    const selectedText =
-                      (result && result.button && result.button.text) ||
-                      result?.text ||
-                      result;
-                    if (typeof selectedText === "string") {
-                      if (
-                        selectedText.includes("Join Channel") ||
-                        selectedText.includes("Join")
-                      ) {
-                        try {
-                          WebApp.openLink("https://t.me/AddmyCo");
-                        } catch (err) {
-                          console.error("Failed to open Telegram link:", err);
-                        }
+                const maybeResult = WebApp.showPopup?.(popupOptions as any);
+                const mp: any = maybeResult;
+
+                const processResult = (result: any) => {
+                  const selectedText =
+                    (result && result.button && result.button.text) ||
+                    result?.text ||
+                    result;
+                  if (typeof selectedText === "string") {
+                    if (
+                      selectedText.includes("Join Channel") ||
+                      selectedText.includes("Join")
+                    ) {
+                      try {
+                        WebApp.openLink("https://t.me/AddmyCo");
+                      } catch (err) {
+                        console.error("Failed to open Telegram link:", err);
                       }
                     }
-                  }).catch(() => {});
+                  }
+                };
+
+                if (mp && typeof mp.then === "function") {
+                  mp.then((result: any) => processResult(result)).catch(
+                    () => {}
+                  );
                   handled2 = true;
+                } else if (mp !== undefined) {
+                  try {
+                    processResult(mp);
+                    handled2 = true;
+                  } catch (err) {
+                    console.debug(
+                      "showPopup sync result processing failed",
+                      err
+                    );
+                    handled2 = false;
+                  }
                 }
               } catch (e) {
                 handled2 = false;
