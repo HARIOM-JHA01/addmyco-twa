@@ -31,7 +31,6 @@ export default function UpdateProfilePage() {
   const [twitter, setTwitter] = useState("");
   const [youtube, setYoutube] = useState("");
   const [linkedin, setLinkedin] = useState("");
-  const [snapchat, setSnapchat] = useState("");
   const [profileImage, setProfileImage] = useState<File | null>(null);
   const [video, setVideo] = useState<File | null>(null);
   const [mediaPreview, setMediaPreview] = useState<string | null>(null);
@@ -74,7 +73,6 @@ export default function UpdateProfilePage() {
         setTwitter(data.Twitter || "");
         setYoutube(data.Youtube || "");
         setLinkedin(data.Linkedin || "");
-        setSnapchat(data.SnapChat || "");
         setMemberType(data.membertype || "");
         // Prefill profile image/video preview if present
         if (data.profile_image) {
@@ -143,7 +141,6 @@ export default function UpdateProfilePage() {
       twitter,
       youtube,
       linkedin,
-      snapchat,
     };
 
     Object.entries(urlFields).forEach(([field, value]) => {
@@ -182,7 +179,6 @@ export default function UpdateProfilePage() {
       formData.append("Twitter", twitter ? formatUrl(twitter) : "");
       formData.append("Youtube", youtube ? formatUrl(youtube) : "");
       formData.append("Linkedin", linkedin ? formatUrl(linkedin) : "");
-      formData.append("SnapChat", snapchat ? formatUrl(snapchat) : "");
       if (profileImage) formData.append("profile_image", profileImage);
       if (video) formData.append("video", video);
 
@@ -658,35 +654,6 @@ export default function UpdateProfilePage() {
             {validationErrors.linkedin && (
               <div className="text-red-500 text-xs mt-1 px-2">
                 {validationErrors.linkedin}
-              </div>
-            )}
-          </div>
-
-          <div className="w-full">
-            <div
-              className={`bg-white rounded-full px-4 py-1 border-2 ${
-                validationErrors.snapchat ? "border-red-500" : "border-blue-300"
-              }`}
-            >
-              <input
-                type="text"
-                className="w-full bg-transparent text-gray-500 outline-none placeholder-gray-400"
-                placeholder="SnapChat"
-                value={snapchat}
-                onChange={(e) => {
-                  setSnapchat(e.target.value);
-                  if (validationErrors.snapchat) {
-                    setValidationErrors({
-                      ...validationErrors,
-                      snapchat: "",
-                    });
-                  }
-                }}
-              />
-            </div>
-            {validationErrors.snapchat && (
-              <div className="text-red-500 text-xs mt-1 px-2">
-                {validationErrors.snapchat}
               </div>
             )}
           </div>

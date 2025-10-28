@@ -123,7 +123,6 @@ export const formatAllUrls = (data: {
     "Twitter",
     "Youtube",
     "Linkedin",
-    "SnapChat",
     "TikTok",
     "website",
     "chamberwebsite",

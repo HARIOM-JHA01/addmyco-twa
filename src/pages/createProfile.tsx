@@ -35,7 +35,6 @@ export default function CreateProfile() {
     Twitter: "",
     Youtube: "",
     Linkedin: "",
-    SnapChat: "",
     TikTok: "",
   });
   const [profile_image, setProfileImage] = useState<File | null>(null);
@@ -94,7 +93,6 @@ export default function CreateProfile() {
         "Twitter",
         "Youtube",
         "Linkedin",
-        "SnapChat",
         "TikTok",
         "WeChat",
         "Line",
@@ -177,7 +175,6 @@ export default function CreateProfile() {
       "Twitter",
       "Youtube",
       "Linkedin",
-      "SnapChat",
       "TikTok",
       "WeChat",
       "Line",
@@ -438,24 +435,7 @@ export default function CreateProfile() {
                 </div>
               )}
             </div>
-            <div className="w-full mb-2">
-              <input
-                name="SnapChat"
-                placeholder="https://SnapChat"
-                value={form.SnapChat}
-                onChange={handleChange}
-                className={`w-full rounded-full px-3 py-2 border ${
-                  validationErrors.SnapChat
-                    ? "border-red-500"
-                    : "border-gray-300"
-                } focus:outline-none focus:ring-2 focus:ring-blue-400`}
-              />
-              {validationErrors.SnapChat && (
-                <div className="text-red-500 text-xs mt-1 px-2">
-                  {validationErrors.SnapChat}
-                </div>
-              )}
-            </div>
+
             <div className="w-full mb-2">
               <input
                 name="Instagram"
