@@ -95,13 +95,13 @@ const WelcomePage: React.FC<WelcomePageProps> = ({ onLogin }) => {
       <div className="absolute inset-0 bg-black/30 z-0" />
       <div className="relative z-10 flex flex-col min-h-screen">
         <Header hideNotification={true} />
-        <main className="flex-1 flex flex-col items-center justify-center">
+        <main className="flex-1 flex flex-col items-center justify-start mt-6">
           <div
-            className="bg-opacity-90 rounded-lg p-8 shadow-lg flex flex-col items-center w-[368px]"
-            style={{ backgroundColor: "#0099cc" }}
+            className="rounded-lg p-8 shadow-lg flex flex-col items-center w-[368px]"
+            style={{ backgroundColor: "rgba(0,153,204,0.75)" }}
           >
-            <h1 className="text-3xl font-space-bold mb-6 text-white">
-              Welcome to AddMy
+            <h1 className="text-2xl font-space-bold mb-6 text-white text-center">
+              Dynamic Namecard.. Connecting World !!
             </h1>
             {!isInTelegram ? (
               <div className="text-center">
@@ -111,7 +111,7 @@ const WelcomePage: React.FC<WelcomePageProps> = ({ onLogin }) => {
               </div>
             ) : (
               <button
-                className="px-6 py-3 bg-gray-500 text-white text-2xl rounded-lg shadow hover:bg-blue-700 transition flex items-center justify-center min-w-[180px]"
+                className="px-6 py-3 bg-green-600 text-white text-2xl rounded-lg shadow hover:bg-green-700 transition flex items-center justify-center min-w-[180px]"
                 onClick={handleLogin}
                 disabled={loginLoading}
               >
@@ -140,7 +140,7 @@ const WelcomePage: React.FC<WelcomePageProps> = ({ onLogin }) => {
                     Loading...
                   </span>
                 ) : (
-                  "Get in to the app"
+                  "Get in to Smart MiniApp"
                 )}
               </button>
             )}
