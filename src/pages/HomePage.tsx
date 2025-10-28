@@ -86,12 +86,32 @@ export default function HomePage() {
       profile?.username || profile?.telegram_username || profile?.tgid || "";
     const qrLink = username ? `${origin}/t.me/${username}` : origin;
 
+    // Prepare profile details text
+    const name =
+      profile?.owner_name_english ||
+      profile?.owner_name_chinese ||
+      profile?.owner_name ||
+      "";
+    const company =
+      profile?.companydata?.company_name_english ||
+      profile?.companydata?.company_name_chinese ||
+      profile?.companydata?.company_name ||
+      "";
+    const designation =
+      profile?.companydata?.companydesignation ||
+      profile?.designation ||
+      profile?.title ||
+      "";
+
+    const detailsText = `Name : ${name}\nCompany name : ${company}\nDesignation: ${designation}\nAddmyCo address : ${qrLink}`;
+
     try {
+      // If in Telegram, use Telegram forward/share
       if (window.Telegram && window.Telegram.WebApp) {
         window.Telegram.WebApp.openTelegramLink(
           `https://t.me/share/url?url=${encodeURIComponent(
             qrLink
-          )}&text=${encodeURIComponent("Check out my AddMy profile!")}`
+          )}&text=${encodeURIComponent(detailsText)}`
         );
         return;
       }
@@ -99,19 +119,27 @@ export default function HomePage() {
       console.error("Telegram share failed:", err);
     }
 
-    // fallback if opened in a normal browser
-    if (navigator.share) {
-      await navigator.share({
-        title: "My AddMy Profile",
-        text: "Check out my profile!",
-        url: qrLink,
-      });
-      return;
+    // Fallback: copy to clipboard
+    try {
+      await navigator.clipboard.writeText(detailsText);
+      WebApp.showAlert("Details copied to clipboard!");
+    } catch (clipErr) {
+      // Very old browsers fallback
+      try {
+        const textarea = document.createElement("textarea");
+        textarea.value = detailsText;
+        textarea.style.position = "fixed";
+        textarea.style.opacity = "0";
+        document.body.appendChild(textarea);
+        textarea.select();
+        document.execCommand("copy");
+        document.body.removeChild(textarea);
+        WebApp.showAlert("Details copied to clipboard!");
+      } catch (err) {
+        console.error("Clipboard failed:", err);
+        WebApp.showAlert("Unable to copy details");
+      }
     }
-
-    // fallback: copy to clipboard
-    await navigator.clipboard.writeText(qrLink);
-    WebApp.showAlert("Link copied to clipboard!");
   };
 
   const handleScan = () => {
