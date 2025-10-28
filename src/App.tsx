@@ -338,7 +338,7 @@ function AppRoutes() {
                         selectedText.includes("Join")
                       ) {
                         try {
-                          WebApp.openTelegramLink("https://t.me/AddmyCo");
+                          WebApp.openLink("https://t.me/AddmyCo");
                         } catch (err) {
                           console.error("Failed to open Telegram link:", err);
                         }
@@ -429,7 +429,7 @@ function AppRoutes() {
                         selectedText.includes("Join")
                       ) {
                         try {
-                          WebApp.openTelegramLink("https://t.me/AddmyCo");
+                          WebApp.openLink("https://t.me/AddmyCo");
                         } catch (err) {
                           console.error("Failed to open Telegram link:", err);
                         }
