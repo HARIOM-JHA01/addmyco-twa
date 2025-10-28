@@ -309,12 +309,12 @@ function AppRoutes() {
           ) {
             try {
               const popupOptions = {
-                title: "Signed up",
+                title: "Welcome to AddMyCo!",
                 message:
-                  "You have been signed up successfully\n\nSubscribe and Contact @DynamicNameCard to get one year premium membership absolutely Free",
+                  "You have been logged in Successfully\n\nSubscribe and Contact @DynamicNameCard to get one year premium membership absolutely Free",
                 buttons: [
                   { type: "close", text: "Close" },
-                  { type: "default", text: "Join DynamicNameCard" },
+                  { type: "default", text: "Join Channel to Get Rewards" },
                 ],
               };
 
@@ -398,12 +398,12 @@ function AppRoutes() {
             const isPremium = profileData?.membertype === "premium";
             if (fromWelcome && !shownFreePopup && !isPremium) {
               const popupOptions = {
-                title: "Signed up",
+                title: "Welcome to AddMyCo!",
                 message:
-                  "You have been signed up successfully\n\nSubscribe and Contact @DynamicNameCard to get one year premium membership absolutely Free",
+                  "You have been logged in Successfully\n\nSubscribe and Contact @DynamicNameCard to get one year premium membership absolutely Free",
                 buttons: [
                   { type: "close", text: "Close" },
-                  { type: "default", text: "Join DynamicNameCard" },
+                  { type: "default", text: "Join Channel to Get Rewards" },
                 ],
               };
 
