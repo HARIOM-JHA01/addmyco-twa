@@ -81,137 +81,37 @@ export default function HomePage() {
   }, []);
 
   const handleShare = async () => {
-    const qrLink = `https://addmy.co/${profile?._id || ""}`;
+    const origin = "https://addmy.co";
+    const username =
+      profile?.username || profile?.telegram_username || profile?.tgid || "";
+    const qrLink = username ? `${origin}/t.me/${username}` : origin;
 
-    // Try to share the QR image as a file (Web Share Level 2) first,
-    // but fall back to sharing the URL or copying it to clipboard.
     try {
-      const qrEl = qrRef.current?.querySelector("svg");
-      if (qrEl) {
-        const serializer = new XMLSerializer();
-        let svgString = serializer.serializeToString(qrEl);
-
-        // Ensure xmlns is present (required for some renderers)
-        if (!svgString.includes("xmlns=")) {
-          svgString = svgString.replace(
-            /<svg/,
-            '<svg xmlns="http://www.w3.org/2000/svg"'
-          );
-        }
-
-        // Remove any embedded <image> tags from the SVG so the canvas
-        // doesn't get tainted when we draw it. We'll draw the logo
-        // separately onto the canvas instead.
-        svgString = svgString.replace(/<image[\s\S]*?>\/?\s*<\/image>/gi, "");
-        svgString = svgString.replace(/<image[\s\S]*?\/>/gi, "");
-
-        // Convert to a data URL to avoid potential objectURL/cors issues
-        const svgDataUrl = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(
-          svgString
-        )}`;
-
-        const img = new Image();
-        img.crossOrigin = "anonymous";
-
-        const size = 1024; // generate a reasonably high-res PNG
-        const canvas = document.createElement("canvas");
-        canvas.width = size;
-        canvas.height = size;
-        const ctx = canvas.getContext("2d");
-
-        await new Promise<void>((resolve, reject) => {
-          img.onload = () => {
-            try {
-              if (ctx) {
-                ctx.fillStyle = "#ffffff"; // white background
-                ctx.fillRect(0, 0, canvas.width, canvas.height);
-                ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-              }
-              resolve();
-            } catch (err) {
-              reject(err);
-            }
-          };
-          img.onerror = (e) => reject(e);
-          img.src = svgDataUrl;
-        });
-
-        // Overlay the app logo at the center of the canvas to match
-        // QRCodeSVG's imageSettings (since we removed embedded images).
-        try {
-          const logoImg = new Image();
-          // imported `logo` should resolve to a same-origin URL in the app
-          logoImg.crossOrigin = "anonymous";
-          await new Promise<void>((resolve, reject) => {
-            logoImg.onload = () => resolve();
-            logoImg.onerror = (e) => reject(e);
-            logoImg.src = logo;
-          });
-          // Draw logo centered. Size about 20% of QR size (matches previous 32/160)
-          const logoSize = Math.floor(size * 0.2);
-          const dx = Math.floor((canvas.width - logoSize) / 2);
-          const dy = Math.floor((canvas.height - logoSize) / 2);
-          if (ctx) ctx.drawImage(logoImg, dx, dy, logoSize, logoSize);
-        } catch (logoErr) {
-          // If loading/drawing the logo fails, continue without logo.
-          console.warn("Failed to draw logo onto QR canvas:", logoErr);
-        }
-
-        const blob: Blob | null = await new Promise((res) =>
-          canvas.toBlob((b) => res(b), "image/png", 0.95)
+      if (window.Telegram && window.Telegram.WebApp) {
+        window.Telegram.WebApp.openTelegramLink(
+          `https://t.me/share/url?url=${encodeURIComponent(
+            qrLink
+          )}&text=${encodeURIComponent("Check out my AddMy profile!")}`
         );
-
-        if (blob) {
-          const file = new File([blob], "addmy-qrcode.png", {
-            type: "image/png",
-          });
-
-          // @ts-ignore canShare may not exist in all browsers
-          const nav: any = navigator;
-          if (nav.canShare && nav.canShare({ files: [file] })) {
-            await navigator.share({
-              title: "My AddMy Profile",
-              text: "Scan or open my profile",
-              files: [file],
-              url: qrLink,
-            });
-            return;
-          }
-        }
+        return;
       }
     } catch (err) {
-      console.warn("Share with image failed, falling back to URL share:", err);
+      console.error("Telegram share failed:", err);
     }
 
-    // Fallback: try Web Share API with URL/text first, otherwise copy link
-    try {
-      if (navigator.share) {
-        await navigator.share({
-          title: "My Profile",
-          text: "Check out my profile!",
-          url: qrLink,
-        });
-        return;
-      }
-
-      if (navigator.clipboard && navigator.clipboard.writeText) {
-        await navigator.clipboard.writeText(qrLink);
-        WebApp.showAlert("Link copied to clipboard!");
-        return;
-      }
-
-      // Last-resort fallback for very old browsers
-      const el = document.createElement("textarea");
-      el.value = qrLink;
-      document.body.appendChild(el);
-      el.select();
-      document.execCommand("copy");
-      document.body.removeChild(el);
-      WebApp.showAlert("Link copied to clipboard!");
-    } catch (e) {
-      console.error(e);
-      WebApp.showAlert("Unable to share or copy link in this browser");
+    // fallback if opened in a normal browser
+    if (navigator.share) {
+      await navigator.share({
+        title: "My AddMy Profile",
+        text: "Check out my profile!",
+        url: qrLink,
+      });
+      return;
     }
+
+    // fallback: copy to clipboard
+    await navigator.clipboard.writeText(qrLink);
+    WebApp.showAlert("Link copied to clipboard!");
   };
 
   const handleScan = () => {
@@ -265,7 +165,10 @@ export default function HomePage() {
   }
 
   const companyData = profile?.companydata;
-  const qrLink = `https://addmy.co/${profile?._id || ""}`;
+  const origin = "https://addmy.co";
+  const username =
+    profile?.username || profile?.telegram_username || profile?.tgid || "";
+  const qrLink = username ? `${origin}/t.me/${username}` : origin;
 
   return (
     <div

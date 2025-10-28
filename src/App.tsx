@@ -328,14 +328,20 @@ function AppRoutes() {
                       (result && result.button && result.button.text) ||
                       result?.text ||
                       result;
-                    if (
-                      typeof selectedText === "string" &&
-                      selectedText.includes("@DynamicNameCard")
-                    ) {
-                      try {
-                        WebApp.openTelegramLink("https://t.me/DynamicNameCard");
-                      } catch (err) {
-                        console.error("Failed to open Telegram link:", err);
+                    if (typeof selectedText === "string") {
+                      // If user clicked the Join button, open the AddmyCo
+                      // Telegram channel. We match on the button text which
+                      // contains "Join Channel" to be resilient to
+                      // localization/formatting.
+                      if (
+                        selectedText.includes("Join Channel") ||
+                        selectedText.includes("Join")
+                      ) {
+                        try {
+                          WebApp.openTelegramLink("https://t.me/AddmyCo");
+                        } catch (err) {
+                          console.error("Failed to open Telegram link:", err);
+                        }
                       }
                     }
                   }).catch(() => {});
@@ -417,14 +423,16 @@ function AppRoutes() {
                       (result && result.button && result.button.text) ||
                       result?.text ||
                       result;
-                    if (
-                      typeof selectedText === "string" &&
-                      selectedText.includes("@DynamicNameCard")
-                    ) {
-                      try {
-                        WebApp.openTelegramLink("https://t.me/DynamicNameCard");
-                      } catch (err) {
-                        console.error("Failed to open Telegram link:", err);
+                    if (typeof selectedText === "string") {
+                      if (
+                        selectedText.includes("Join Channel") ||
+                        selectedText.includes("Join")
+                      ) {
+                        try {
+                          WebApp.openTelegramLink("https://t.me/AddmyCo");
+                        } catch (err) {
+                          console.error("Failed to open Telegram link:", err);
+                        }
                       }
                     }
                   }).catch(() => {});
