@@ -437,15 +437,26 @@ function AppRoutes() {
                     (result && result.button && result.button.text) ||
                     result?.text ||
                     result;
+
                   if (typeof selectedText === "string") {
                     if (
                       selectedText.includes("Join Channel") ||
                       selectedText.includes("Join")
                     ) {
                       try {
-                        WebApp.openLink("https://t.me/AddmyCo");
+                        // ✅ Works inside Telegram
+                        if (window.Telegram?.WebApp?.openLink) {
+                          window.Telegram.WebApp.openLink(
+                            "https://t.me/AddmyCo"
+                          );
+                        } else {
+                          // ✅ Works in browsers or unsupported environments
+                          window.open("https://t.me/AddmyCo", "_blank");
+                        }
                       } catch (err) {
                         console.error("Failed to open Telegram link:", err);
+                        // ✅ Fallback
+                        window.location.href = "https://t.me/AddmyCo";
                       }
                     }
                   }
