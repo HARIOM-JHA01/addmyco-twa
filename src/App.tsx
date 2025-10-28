@@ -26,6 +26,7 @@ import BackgroundPage from "./pages/BackgroundPage";
 import HomePage from "./pages/HomePage";
 import PublicProfileContainer from "./pages/PublicProfileContainer";
 import { fetchBackgroundByUsername as fetchBgByUsername } from "./utils/theme";
+import WelcomePopup from "./components/WelcomePopup";
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
@@ -33,6 +34,7 @@ function AppRoutes() {
   const navigate = useNavigate();
   const location = useLocation();
   const [showWelcome, setShowWelcome] = useState(true);
+  const [showWelcomePopup, setShowWelcomePopup] = useState(false);
   const [profile, setProfile] = useState<any>(null);
   const [profileLoading, setProfileLoading] = useState(true);
 
@@ -200,6 +202,20 @@ function AppRoutes() {
       );
   }, []);
 
+  const handleJoinChannel = () => {
+    setShowWelcomePopup(false);
+    try {
+      window.open("https://t.me/AddmyCo", "_blank");
+    } catch (err) {
+      console.error("Failed to open Telegram link:", err);
+      window.location.href = "https://t.me/AddmyCo";
+    }
+  };
+
+  const handleClosePopup = () => {
+    setShowWelcomePopup(false);
+  };
+
   // fromWelcome: when true indicates login was triggered from WelcomePage
   const handleLogin = async (fromWelcome?: boolean) => {
     try {
@@ -307,75 +323,9 @@ function AppRoutes() {
               "Welcome! You have been registered as a free user."
             )
           ) {
-            try {
-              const popupOptions = {
-                title: "Welcome to AddMyCo!",
-                message:
-                  "You have been logged in Successfully\n\nSubscribe and Contact @DynamicNameCard to get one year premium membership absolutely Free",
-                buttons: [
-                  { type: "close", text: "Close" },
-                  { type: "default", text: "Join Channel to Get Rewards" },
-                ],
-              };
-
-              let handled = false;
-              try {
-                const maybeResult = WebApp.showPopup?.(popupOptions as any);
-                const mp: any = maybeResult;
-
-                const processResult = (result: any) => {
-                  const selectedText =
-                    (result && result.button && result.button.text) ||
-                    result?.text ||
-                    result;
-                  if (typeof selectedText === "string") {
-                    if (
-                      selectedText.includes("Join Channel") ||
-                      selectedText.includes("Join")
-                    ) {
-                      try {
-                        WebApp.openLink("https://t.me/AddmyCo");
-                      } catch (err) {
-                        console.error("Failed to open Telegram link:", err);
-                      }
-                    }
-                  }
-                };
-
-                if (mp && typeof mp.then === "function") {
-                  mp.then((result: any) => processResult(result)).catch(
-                    () => {}
-                  );
-                  handled = true;
-                } else if (mp !== undefined) {
-                  // handle synchronous return value
-                  try {
-                    processResult(mp);
-                    handled = true;
-                  } catch (err) {
-                    // continue to fallback
-                    console.debug(
-                      "showPopup sync result processing failed",
-                      err
-                    );
-                    handled = false;
-                  }
-                }
-              } catch (e) {
-                handled = false;
-              }
-
-              if (!handled) {
-                try {
-                  WebApp.showAlert(popupOptions.message);
-                } catch (err) {
-                  console.error("Failed to show alert:", err);
-                }
-              }
-              // mark that we've shown the free-user popup so we don't duplicate
-              // it later after we fetch profile
-              shownFreePopup = true;
-            } catch {}
+            // Show custom popup for free users
+            setShowWelcomePopup(true);
+            shownFreePopup = true;
           }
         }
 
@@ -417,79 +367,7 @@ function AppRoutes() {
           try {
             const isPremium = profileData?.membertype === "premium";
             if (fromWelcome && !shownFreePopup && !isPremium) {
-              const popupOptions = {
-                title: "Welcome to AddMyCo!",
-                message:
-                  "You have been logged in Successfully\n\nSubscribe and Contact @DynamicNameCard to get one year premium membership absolutely Free",
-                buttons: [
-                  { type: "close", text: "Close" },
-                  { type: "default", text: "Join Channel to Get Rewards" },
-                ],
-              };
-
-              let handled2 = false;
-              try {
-                const maybeResult = WebApp.showPopup?.(popupOptions as any);
-                const mp: any = maybeResult;
-
-                const processResult = (result: any) => {
-                  const selectedText =
-                    (result && result.button && result.button.text) ||
-                    result?.text ||
-                    result;
-
-                  if (typeof selectedText === "string") {
-                    if (
-                      selectedText.includes("Join Channel") ||
-                      selectedText.includes("Join")
-                    ) {
-                      try {
-                        // ✅ Works inside Telegram
-                        if (window.Telegram?.WebApp?.openLink) {
-                          window.Telegram.WebApp.openLink(
-                            "https://t.me/AddmyCo"
-                          );
-                        } else {
-                          // ✅ Works in browsers or unsupported environments
-                          window.open("https://t.me/AddmyCo", "_blank");
-                        }
-                      } catch (err) {
-                        console.error("Failed to open Telegram link:", err);
-                        // ✅ Fallback
-                        window.location.href = "https://t.me/AddmyCo";
-                      }
-                    }
-                  }
-                };
-
-                if (mp && typeof mp.then === "function") {
-                  mp.then((result: any) => processResult(result)).catch(
-                    () => {}
-                  );
-                  handled2 = true;
-                } else if (mp !== undefined) {
-                  try {
-                    processResult(mp);
-                    handled2 = true;
-                  } catch (err) {
-                    console.debug(
-                      "showPopup sync result processing failed",
-                      err
-                    );
-                    handled2 = false;
-                  }
-                }
-              } catch (e) {
-                handled2 = false;
-              }
-
-              if (!handled2) {
-                try {
-                  WebApp.showAlert(popupOptions.message);
-                } catch (err) {
-                  console.error("Failed to show alert:", err);
-                }
-              }
+              setShowWelcomePopup(true);
             }
           } catch (err) {
             console.debug("free-user welcome popup check failed", err);
@@ -569,26 +447,36 @@ function AppRoutes() {
   }
 
   return (
-    <Routes>
-      <Route path="/:username" element={<PublicProfileContainer />} />
-      <Route path="/:username/:view" element={<PublicProfileContainer />} />
-      <Route path="/" element={<HomePage />} />
-      <Route path="/profile" element={<ProfilePage />} />
-      <Route path="/update-profile" element={<UpdateProfilePage />} />
-      <Route path="/notifications" element={<Notifications />} />
-      <Route path="/sub-company" element={<SubCompanyPage />} />
-      <Route path="/chamber" element={<ChamberPage />} />
-      <Route path="/create-chamber" element={<CreateChamberPage />} />
-      <Route path="/search" element={<ContactPage />} />
-      <Route path="/my-qr" element={<MyQRPage />} />
-      <Route path="/create-profile" element={<CreateProfile />} />
-      <Route path="/create-company" element={<CreateCompanyPage />} />
-      <Route path="/theme" element={<ThemePage />} />
-      <Route path="/membership" element={<MembershipPage />} />
-      <Route path="/payment-history" element={<PaymentHistoryPage />} />
-      <Route path="/background" element={<BackgroundPage />} />
-      <Route path="*" element={<div>404 Not Found</div>} />
-    </Routes>
+    <>
+      <Routes>
+        <Route path="/:username" element={<PublicProfileContainer />} />
+        <Route path="/:username/:view" element={<PublicProfileContainer />} />
+        <Route path="/" element={<HomePage />} />
+        <Route path="/profile" element={<ProfilePage />} />
+        <Route path="/update-profile" element={<UpdateProfilePage />} />
+        <Route path="/notifications" element={<Notifications />} />
+        <Route path="/sub-company" element={<SubCompanyPage />} />
+        <Route path="/chamber" element={<ChamberPage />} />
+        <Route path="/create-chamber" element={<CreateChamberPage />} />
+        <Route path="/search" element={<ContactPage />} />
+        <Route path="/my-qr" element={<MyQRPage />} />
+        <Route path="/create-profile" element={<CreateProfile />} />
+        <Route path="/create-company" element={<CreateCompanyPage />} />
+        <Route path="/theme" element={<ThemePage />} />
+        <Route path="/membership" element={<MembershipPage />} />
+        <Route path="/payment-history" element={<PaymentHistoryPage />} />
+        <Route path="/background" element={<BackgroundPage />} />
+        <Route path="*" element={<div>404 Not Found</div>} />
+      </Routes>
+      {showWelcomePopup && (
+        <WelcomePopup
+          title="Welcome to AddMyCo!"
+          message="You have been logged in Successfully&#10;&#10;Subscribe and Contact @DynamicNameCard to get one year premium membership absolutely Free"
+          onClose={handleClosePopup}
+          onJoinChannel={handleJoinChannel}
+        />
+      )}
+    </>
   );
 }
 
