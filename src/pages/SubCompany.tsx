@@ -586,6 +586,47 @@ export default function SubCompanyPage() {
                   disabled={editLoading}
                   className="hidden"
                 />
+                {/* Browse / Cancel buttons to match CreateCompanyPage UX */}
+                <div className="flex gap-4 mb-4 w-full">
+                  <button
+                    type="button"
+                    className="bg-black text-white px-6 py-2 rounded-lg font-medium hover:bg-gray-700 transition-colors flex-1"
+                    onClick={() =>
+                      document.getElementById("company-file-input")?.click()
+                    }
+                    disabled={editLoading}
+                  >
+                    Browse
+                  </button>
+                  <button
+                    type="button"
+                    className="bg-black text-white px-6 py-2 rounded-lg font-medium hover:bg-gray-700 transition-colors flex-1"
+                    onClick={() => {
+                      // Revert selection to original company media (if any)
+                      setFile(null);
+                      // restore preview to original company image/video URL when available
+                      setFilePreview(
+                        companyProfile?.image
+                          ? formatImageUrl(companyProfile.image)
+                          : companyProfile?.video
+                          ? companyProfile.video
+                          : null
+                      );
+                      setEditProfile((prev: any) => ({
+                        ...prev,
+                        image:
+                          companyProfile?.image || companyProfile?.video || "",
+                      }));
+                      const el = document.getElementById(
+                        "company-file-input"
+                      ) as HTMLInputElement | null;
+                      if (el) el.value = "";
+                    }}
+                    disabled={editLoading}
+                  >
+                    Cancel
+                  </button>
+                </div>
               </div>
               <textarea
                 className="rounded-xl border-2 border-blue-200 px-4 py-2 mb-3 w-full h-48 focus:outline-none focus:ring-2 focus:ring-blue-400 bg-white placeholder-gray-500 resize-none"

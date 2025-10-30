@@ -589,6 +589,43 @@ export default function ChamberPage() {
                 disabled={editLoading}
                 className="hidden"
               />
+              {/* Browse / Cancel buttons to improve discoverability (matches company UI) */}
+              <div className="flex gap-4 mb-4 w-full">
+                <button
+                  type="button"
+                  className="bg-black text-white px-6 py-2 rounded-lg font-medium hover:bg-gray-700 transition-colors flex-1"
+                  onClick={() =>
+                    document.getElementById("chamber-file-input")?.click()
+                  }
+                  disabled={editLoading}
+                >
+                  Browse
+                </button>
+                <button
+                  type="button"
+                  className="bg-black text-white px-6 py-2 rounded-lg font-medium hover:bg-gray-700 transition-colors flex-1"
+                  onClick={() => {
+                    // Revert selected file and preview to original chamber media
+                    setFile(null);
+                    setFilePreview(null);
+                    const original = Array.isArray(chamberData)
+                      ? chamberData[currentChamberIndex]
+                      : chamberData;
+                    setEditChamber((prev: any) => ({
+                      ...prev,
+                      image: original?.image || original?.video || "",
+                    }));
+                    // clear underlying file input value if present
+                    const el = document.getElementById(
+                      "chamber-file-input"
+                    ) as HTMLInputElement | null;
+                    if (el) el.value = "";
+                  }}
+                  disabled={editLoading}
+                >
+                  Cancel
+                </button>
+              </div>
             </div>
             <textarea
               className="rounded-xl border-2 border-blue-200 px-4 py-2 mb-3 w-full h-48 focus:outline-none focus:ring-2 focus:ring-blue-400 bg-white placeholder-gray-500 resize-none"
