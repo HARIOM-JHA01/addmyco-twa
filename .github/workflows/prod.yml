@@ -2,7 +2,7 @@ name: Deploy to Production
 
 on:
   push:
-  branches: ["main"]
+    branches: ["main"]
 
 permissions:
   contents: read
@@ -12,12 +12,12 @@ permissions:
 concurrency:
   group: "production-deploy"
   cancel-in-progress: true
-  jobs:
-    deploy:
-      environment:
-        name: production
-      runs-on: ubuntu-latest
-      steps:
+jobs:
+  deploy:
+    environment:
+      name: production
+    runs-on: ubuntu-latest
+    steps:
         - name: Checkout code
           uses: actions/checkout@v3
         - name: Build project
