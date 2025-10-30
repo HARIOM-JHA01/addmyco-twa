@@ -39,6 +39,7 @@ jobs:
           chmod 600 key.pem
           ssh -i key.pem -o StrictHostKeyChecking=no $VPS_USER@$VPS_HOST << 'EOF'
             cd addmyco-twa/
+            git pull
             yarn install
             yarn build
           EOF
