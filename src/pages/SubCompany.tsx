@@ -587,10 +587,10 @@ export default function SubCompanyPage() {
                   className="hidden"
                 />
                 {/* Browse / Cancel buttons to match CreateCompanyPage UX */}
-                <div className="flex gap-4 mb-4 w-full">
+                <div className="flex gap-4 mb-4">
                   <button
                     type="button"
-                    className="bg-black text-white px-6 py-2 rounded-lg font-medium hover:bg-gray-700 transition-colors flex-1"
+                    className="bg-black text-white px-6 py-2 rounded-lg font-medium hover:bg-gray-700 transition-colors"
                     onClick={() =>
                       document.getElementById("company-file-input")?.click()
                     }
@@ -600,7 +600,7 @@ export default function SubCompanyPage() {
                   </button>
                   <button
                     type="button"
-                    className="bg-black text-white px-6 py-2 rounded-lg font-medium hover:bg-gray-700 transition-colors flex-1"
+                    className="bg-black text-white px-6 py-2 rounded-lg font-medium hover:bg-gray-700 transition-colors"
                     onClick={() => {
                       // Revert selection to original company media (if any)
                       setFile(null);

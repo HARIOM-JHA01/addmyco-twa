@@ -590,10 +590,10 @@ export default function ChamberPage() {
                 className="hidden"
               />
               {/* Browse / Cancel buttons to improve discoverability (matches company UI) */}
-              <div className="flex gap-4 mb-4 w-full">
+              <div className="flex gap-4 mb-4">
                 <button
                   type="button"
-                  className="bg-black text-white px-6 py-2 rounded-lg font-medium hover:bg-gray-700 transition-colors flex-1"
+                  className="bg-black text-white px-6 py-2 rounded-lg font-medium hover:bg-gray-700 transition-colors"
                   onClick={() =>
                     document.getElementById("chamber-file-input")?.click()
                   }
@@ -603,7 +603,7 @@ export default function ChamberPage() {
                 </button>
                 <button
                   type="button"
-                  className="bg-black text-white px-6 py-2 rounded-lg font-medium hover:bg-gray-700 transition-colors flex-1"
+                  className="bg-black text-white px-6 py-2 rounded-lg font-medium hover:bg-gray-700 transition-colors"
                   onClick={() => {
                     // Revert selected file and preview to original chamber media
                     setFile(null);
