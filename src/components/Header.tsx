@@ -16,6 +16,7 @@ const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 export default function Header({ hideNotification }: HeaderProps) {
   const navigate = useNavigate();
   const [pendingCount, setPendingCount] = useState<number>(0);
+  const [unreadNotifications, setUnreadNotifications] = useState<number>(0);
 
   const getAuthHeaders = () => {
     const token = localStorage.getItem("token");
@@ -37,16 +38,49 @@ export default function Header({ hideNotification }: HeaderProps) {
     }
   };
 
+  const fetchNotifications = async () => {
+    try {
+      const res = await axios({
+        method: "get",
+        url: `${API_BASE_URL}/getnotification`,
+        headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
+      });
+      const data = res.data?.data || [];
+      // count unread (view === 0)
+      const unread = (data || []).filter(
+        (n: any) => Number(n.view) === 0
+      ).length;
+      setUnreadNotifications(unread);
+    } catch (err) {
+      // ignore
+    }
+  };
+
   useEffect(() => {
     fetchPending();
+    fetchNotifications();
     const handler = (e: any) => {
       const cnt = e?.detail?.pendingCount;
       if (typeof cnt === "number") setPendingCount(cnt);
       else fetchPending();
     };
     window.addEventListener("contacts-updated", handler as EventListener);
-    return () =>
+    const notifHandler = (e: any) => {
+      const cnt = e?.detail?.unreadNotifications;
+      if (typeof cnt === "number") setUnreadNotifications(cnt);
+      else fetchNotifications();
+    };
+    window.addEventListener(
+      "notifications-updated",
+      notifHandler as EventListener
+    );
+    return () => {
       window.removeEventListener("contacts-updated", handler as EventListener);
+      window.removeEventListener(
+        "notifications-updated",
+        notifHandler as EventListener
+      );
+    };
   }, []);
 
   return (
@@ -79,9 +113,11 @@ export default function Header({ hideNotification }: HeaderProps) {
                 className="w-8 h-8 rounded-full border-2 border-white bg-white cursor-pointer"
                 onClick={() => navigate("/notifications")}
               />
-              {pendingCount > 0 && (
+              {pendingCount + unreadNotifications > 0 && (
                 <div className="absolute -top-1 -right-1 bg-red-600 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center">
-                  {pendingCount > 9 ? "9+" : pendingCount}
+                  {pendingCount + unreadNotifications > 9
+                    ? "9+"
+                    : pendingCount + unreadNotifications}
                 </div>
               )}
             </div>

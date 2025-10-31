@@ -2,7 +2,7 @@ import Layout from "../components/Layout";
 import { useEffect, useState } from "react";
 import axios from "axios";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faCheck, faTimes } from "@fortawesome/free-solid-svg-icons";
+import { faCheck, faTimes, faTrash } from "@fortawesome/free-solid-svg-icons";
 import { useNavigate } from "react-router-dom";
 import { useProfileStore } from "../store/profileStore";
 
@@ -15,6 +15,7 @@ export default function Notifications() {
     (profile?.membertype || "").toString().toLowerCase() !== "free";
   const [loading, setLoading] = useState(true);
   const [pendingContacts, setPendingContacts] = useState<any[]>([]);
+  const [notifications, setNotifications] = useState<any[]>([]);
   const [contactFolders, setContactFolders] = useState<any[]>([]);
   const [acceptModal, setAcceptModal] = useState<{
     open: boolean;
@@ -44,6 +45,39 @@ export default function Notifications() {
       }
     };
     fetchPendingContacts();
+    // also fetch generic notifications
+    const fetchNotifications = async () => {
+      try {
+        const token = localStorage.getItem("token");
+        const url = `${API_BASE_URL}/getnotification`;
+        const resp = await axios({
+          method: "get",
+          url,
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+        const d = resp.data?.data || [];
+        // Keep only messages that mention 'has changed' (case-insensitive)
+        const filtered = (d || []).filter(
+          (n: any) =>
+            typeof n.message === "string" && /has changed/i.test(n.message)
+        );
+        setNotifications(filtered);
+        // notify header about unread notification count
+        const unread = (filtered || []).filter(
+          (n: any) => Number(n.view) === 0
+        ).length;
+        window.dispatchEvent(
+          new CustomEvent("notifications-updated", {
+            detail: { unreadNotifications: unread },
+          })
+        );
+      } catch (e) {
+        // ignore notification fetch errors
+      }
+    };
+    fetchNotifications();
   }, []);
 
   const openAcceptModal = async (contactId: string) => {
@@ -64,6 +98,28 @@ export default function Notifications() {
       setAcceptModal((m) =>
         m ? { ...m, loading: false, error: "Failed to load folders" } : m
       );
+    }
+  };
+
+  const handleDeleteNotification = async (id: string) => {
+    if (!confirm("Delete this notification?")) return;
+    try {
+      const token = localStorage.getItem("token");
+      await axios.delete(`${API_BASE_URL}/deletenotification/${id}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      // remove locally
+      setNotifications((prev) => prev.filter((n: any) => n._id !== id));
+      const unread = (notifications || []).filter(
+        (n: any) => n._id !== id && Number(n.view) === 0
+      ).length;
+      window.dispatchEvent(
+        new CustomEvent("notifications-updated", {
+          detail: { unreadNotifications: unread },
+        })
+      );
+    } catch (err: any) {
+      alert(err?.message || "Failed to delete notification");
     }
   };
 
@@ -167,6 +223,67 @@ export default function Notifications() {
           <h2 className="text-lg font-bold mb-4 text-center">
             You have received below contact requests
           </h2>
+          {/* Notifications about changes (e.g. "has changed") */}
+          {notifications.length > 0 && (
+            <div className="w-full mb-4">
+              <h3 className="text-md font-semibold mb-2">Notifications</h3>
+              <ul className="w-full divide-y divide-blue-200 mb-3">
+                {notifications.map((n: any) => {
+                  const user = n.userDoc?.[0];
+                  const username = user?.username || n.user_id;
+                  return (
+                    <li
+                      key={n._id}
+                      className="flex items-center justify-between py-3 px-2 rounded-lg bg-white"
+                    >
+                      <div
+                        className="flex items-center gap-3 cursor-pointer"
+                        onClick={() => navigate(`/${username}`)}
+                      >
+                        <img
+                          src={
+                            user?.profile_image
+                              ? `https://admin.addmy.co/assets/${user.profile_image}`
+                              : undefined
+                          }
+                          alt="avatar"
+                          className="w-10 h-10 rounded-full bg-gray-200 object-cover"
+                          onError={(e) =>
+                            ((
+                              e.currentTarget as HTMLImageElement
+                            ).style.display = "none")
+                          }
+                        />
+                        <div className="text-sm">
+                          <div className="font-semibold text-gray-800">
+                            {user?.owner_name_english || "Unknown"}
+                          </div>
+                          <div className="text-xs text-gray-500">
+                            {n.message}
+                          </div>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <div className="text-xs text-gray-400">
+                          {n.date ? new Date(n.date).toLocaleString() : ""}
+                        </div>
+                        <button
+                          className="text-red-500 p-2"
+                          title="Delete notification"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleDeleteNotification(n._id);
+                          }}
+                        >
+                          <FontAwesomeIcon icon={faTrash} />
+                        </button>
+                      </div>
+                    </li>
+                  );
+                })}
+              </ul>
+            </div>
+          )}
           {/* Mark all as read removed per design change */}
           {pendingContacts.length > 0 && (
             <div className="w-full mb-4">
