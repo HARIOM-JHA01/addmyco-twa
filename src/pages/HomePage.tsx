@@ -28,6 +28,7 @@ import {
   faChevronLeft,
   faChevronRight,
   faGlobe,
+  faClipboard,
 } from "@fortawesome/free-solid-svg-icons";
 import { formatUrl } from "../utils/validation";
 import { callOrCopyPhone } from "../utils/phone";
@@ -109,44 +110,7 @@ export default function HomePage() {
     }
   };
 
-  const doNativeShare = async () => {
-    const origin = "https://addmy.co";
-    const username =
-      profile?.username || profile?.telegram_username || profile?.tgid || "";
-    const qrLink = username ? `${origin}/t.me/${username}` : origin;
-    const name =
-      profile?.owner_name_english ||
-      profile?.owner_name_chinese ||
-      profile?.owner_name ||
-      "";
-    const company =
-      profile?.companydata?.company_name_english ||
-      profile?.companydata?.company_name_chinese ||
-      profile?.companydata?.company_name ||
-      "";
-    const designation =
-      profile?.companydata?.companydesignation ||
-      profile?.designation ||
-      profile?.title ||
-      "";
-    const detailsText = `Name : ${name}\nCompany name : ${company}\nDesignation: ${designation}\nAddmyCo address : ${qrLink}`;
-    try {
-      if (navigator.share) {
-        await navigator.share({
-          title: `${name} - AddMy.Co`,
-          text: detailsText,
-          url: qrLink,
-        });
-        setShowShareModal(false);
-        return;
-      }
-    } catch (err) {
-      console.error("Native share failed", err);
-    }
-    // fallback to copy
-    await copyDetailsToClipboard(detailsText);
-    setShowShareModal(false);
-  };
+  // Native share removed per request
 
   const shareToTelegram = () => {
     const origin = "https://addmy.co";
@@ -221,6 +185,51 @@ export default function HomePage() {
       qrLink
     )}`;
     window.open(url, "_blank");
+    setShowShareModal(false);
+  };
+
+  const shareToInstagram = () => {
+    const origin = "https://addmy.co";
+    const username =
+      profile?.username || profile?.telegram_username || profile?.tgid || "";
+    const qrLink = username ? `${origin}/t.me/${username}` : origin;
+    if (profile?.Instagram) {
+      window.open(formatUrl(profile.Instagram), "_blank");
+    } else {
+      copyDetailsToClipboard(qrLink);
+      WebApp.showAlert("Profile link copied. Paste it in Instagram to share.");
+    }
+    setShowShareModal(false);
+  };
+
+  const shareToWeChat = () => {
+    const origin = "https://addmy.co";
+    const username =
+      profile?.username || profile?.telegram_username || profile?.tgid || "";
+    const qrLink = username ? `${origin}/t.me/${username}` : origin;
+    copyDetailsToClipboard(qrLink);
+    WebApp.showAlert("Profile link copied. Open WeChat and paste to share.");
+    setShowShareModal(false);
+  };
+
+  const shareToLine = () => {
+    const origin = "https://addmy.co";
+    const username =
+      profile?.username || profile?.telegram_username || profile?.tgid || "";
+    const qrLink = username ? `${origin}/t.me/${username}` : origin;
+    const url = `https://social-plugins.line.me/lineit/share?url=${encodeURIComponent(
+      qrLink
+    )}`;
+    window.open(url, "_blank");
+    setShowShareModal(false);
+  };
+
+  const copyProfileLink = () => {
+    const origin = "https://addmy.co";
+    const username =
+      profile?.username || profile?.telegram_username || profile?.tgid || "";
+    const qrLink = username ? `${origin}/t.me/${username}` : origin;
+    copyDetailsToClipboard(qrLink);
     setShowShareModal(false);
   };
 
@@ -311,7 +320,7 @@ export default function HomePage() {
             {companyData?.company_name_chinese || "公司名称"}
           </button>
 
-          <div className="flex flex-col items-center mb-6">
+          <div className="flex flex-col items-center mb-4">
             <div className="rounded-full mb-2 w-[180px] h-[180px] flex items-center justify-center overflow-hidden bg-white">
               {profile?.profile_image &&
               profile.profile_image.trim() !== "" &&
@@ -689,11 +698,11 @@ export default function HomePage() {
                 <div className="text-lg font-semibold mb-3">Share profile</div>
                 <div className="grid grid-cols-3 gap-3 mb-3">
                   <button
-                    onClick={doNativeShare}
+                    onClick={shareToWhatsApp}
                     className="p-2 bg-app text-white rounded flex flex-col items-center justify-center"
                   >
-                    <FontAwesomeIcon icon={faGlobe} />
-                    <div className="text-xs mt-1">Native</div>
+                    <FontAwesomeIcon icon={faWhatsapp} />
+                    <div className="text-xs mt-1">WhatsApp</div>
                   </button>
                   <button
                     onClick={shareToTelegram}
@@ -703,12 +712,13 @@ export default function HomePage() {
                     <div className="text-xs mt-1">Telegram</div>
                   </button>
                   <button
-                    onClick={shareToWhatsApp}
+                    onClick={shareToInstagram}
                     className="p-2 bg-app text-white rounded flex flex-col items-center justify-center"
                   >
-                    <FontAwesomeIcon icon={faWhatsapp} />
-                    <div className="text-xs mt-1">WhatsApp</div>
+                    <FontAwesomeIcon icon={faInstagram} />
+                    <div className="text-xs mt-1">Instagram</div>
                   </button>
+
                   <button
                     onClick={shareToFacebook}
                     className="p-2 bg-app text-white rounded flex flex-col items-center justify-center"
@@ -717,18 +727,40 @@ export default function HomePage() {
                     <div className="text-xs mt-1">Facebook</div>
                   </button>
                   <button
-                    onClick={shareToTwitter}
+                    onClick={shareToWeChat}
                     className="p-2 bg-app text-white rounded flex flex-col items-center justify-center"
                   >
-                    <FontAwesomeIcon icon={faTwitter} />
-                    <div className="text-xs mt-1">Twitter</div>
+                    <FontAwesomeIcon icon={faWeixin} />
+                    <div className="text-xs mt-1">WeChat</div>
                   </button>
+                  <button
+                    onClick={shareToLine}
+                    className="p-2 bg-app text-white rounded flex flex-col items-center justify-center"
+                  >
+                    <FontAwesomeIcon icon={faLine} />
+                    <div className="text-xs mt-1">Line</div>
+                  </button>
+
                   <button
                     onClick={shareToLinkedIn}
                     className="p-2 bg-app text-white rounded flex flex-col items-center justify-center"
                   >
                     <FontAwesomeIcon icon={faLinkedin} />
                     <div className="text-xs mt-1">LinkedIn</div>
+                  </button>
+                  <button
+                    onClick={shareToTwitter}
+                    className="p-2 bg-app text-white rounded flex flex-col items-center justify-center"
+                  >
+                    <FontAwesomeIcon icon={faTwitter} />
+                    <div className="text-xs mt-1">X</div>
+                  </button>
+                  <button
+                    onClick={copyProfileLink}
+                    className="p-2 bg-app text-white rounded flex flex-col items-center justify-center"
+                  >
+                    <FontAwesomeIcon icon={faClipboard} />
+                    <div className="text-xs mt-1">Copy</div>
                   </button>
                 </div>
                 <div className="flex justify-end gap-2">
