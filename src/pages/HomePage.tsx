@@ -239,7 +239,17 @@ export default function HomePage() {
             // Handle the scanned text
             // If it's a profile URL, navigate to it
             if (text.includes("addmy.co/")) {
-              const username = text.split("addmy.co/")[1];
+              // Extract remainder after addmy.co/
+              const idx = text.indexOf("addmy.co/");
+              let remainder = text.substring(idx + "addmy.co/".length);
+              // Trim leading slashes
+              remainder = remainder.replace(/^\/+/, "");
+              // If remainder starts with t.me/ (or telegram shortlink), strip that prefix
+              if (remainder.startsWith("t.me/")) {
+                remainder = remainder.substring("t.me/".length);
+              }
+              // Strip any trailing path, query or fragment so we only keep the username
+              const username = remainder.split(/[\/?#]/)[0];
               if (username) {
                 navigate(`/${username}`);
               }
