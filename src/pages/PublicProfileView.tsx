@@ -171,7 +171,7 @@ export default function PublicProfileView({
         console.warn("Verification of profile/company failed:", verifyErr);
       }
 
-      await axios.post(
+      const response = await axios.post(
         `${API_BASE_URL}/addtocontact`,
         { contact_id: profile._id },
         {
@@ -181,11 +181,9 @@ export default function PublicProfileView({
           },
         }
       );
-
-      WebApp.showAlert(
-        "your invitation for adding contact has been sent successfully"
-      );
-
+      if (response.data && response.data.success) {
+        WebApp.showAlert(response.data.message);
+      }
       // Force a full page reload to /profile to ensure proper route handling
       setTimeout(() => {
         try {
