@@ -81,50 +81,17 @@ export default function HomePage() {
   }, []);
 
   const handleShare = async () => {
-    const origin = "https://addmy.co";
-    const username =
-      profile?.username || profile?.telegram_username || profile?.tgid || "";
-    const qrLink = username ? `${origin}/t.me/${username}` : origin;
+    // Show share options modal instead of immediate Telegram-only share
+    setShowShareModal(true);
+  };
 
-    // Prepare profile details text
-    const name =
-      profile?.owner_name_english ||
-      profile?.owner_name_chinese ||
-      profile?.owner_name ||
-      "";
-    const company =
-      profile?.companydata?.company_name_english ||
-      profile?.companydata?.company_name_chinese ||
-      profile?.companydata?.company_name ||
-      "";
-    const designation =
-      profile?.companydata?.companydesignation ||
-      profile?.designation ||
-      profile?.title ||
-      "";
+  const [showShareModal, setShowShareModal] = useState(false);
 
-    const detailsText = `Name : ${name}\nCompany name : ${company}\nDesignation: ${designation}\nAddmyCo address : ${qrLink}`;
-
-    try {
-      // If in Telegram, use Telegram forward/share
-      if (window.Telegram && window.Telegram.WebApp) {
-        window.Telegram.WebApp.openTelegramLink(
-          `https://t.me/share/url?url=${encodeURIComponent(
-            qrLink
-          )}&text=${encodeURIComponent(detailsText)}`
-        );
-        return;
-      }
-    } catch (err) {
-      console.error("Telegram share failed:", err);
-    }
-
-    // Fallback: copy to clipboard
+  const copyDetailsToClipboard = async (detailsText: string) => {
     try {
       await navigator.clipboard.writeText(detailsText);
       WebApp.showAlert("Details copied to clipboard!");
     } catch (clipErr) {
-      // Very old browsers fallback
       try {
         const textarea = document.createElement("textarea");
         textarea.value = detailsText;
@@ -140,6 +107,121 @@ export default function HomePage() {
         WebApp.showAlert("Unable to copy details");
       }
     }
+  };
+
+  const doNativeShare = async () => {
+    const origin = "https://addmy.co";
+    const username =
+      profile?.username || profile?.telegram_username || profile?.tgid || "";
+    const qrLink = username ? `${origin}/t.me/${username}` : origin;
+    const name =
+      profile?.owner_name_english ||
+      profile?.owner_name_chinese ||
+      profile?.owner_name ||
+      "";
+    const company =
+      profile?.companydata?.company_name_english ||
+      profile?.companydata?.company_name_chinese ||
+      profile?.companydata?.company_name ||
+      "";
+    const designation =
+      profile?.companydata?.companydesignation ||
+      profile?.designation ||
+      profile?.title ||
+      "";
+    const detailsText = `Name : ${name}\nCompany name : ${company}\nDesignation: ${designation}\nAddmyCo address : ${qrLink}`;
+    try {
+      if (navigator.share) {
+        await navigator.share({
+          title: `${name} - AddMy.Co`,
+          text: detailsText,
+          url: qrLink,
+        });
+        setShowShareModal(false);
+        return;
+      }
+    } catch (err) {
+      console.error("Native share failed", err);
+    }
+    // fallback to copy
+    await copyDetailsToClipboard(detailsText);
+    setShowShareModal(false);
+  };
+
+  const shareToTelegram = () => {
+    const origin = "https://addmy.co";
+    const username =
+      profile?.username || profile?.telegram_username || profile?.tgid || "";
+    const qrLink = username ? `${origin}/t.me/${username}` : origin;
+    const name =
+      profile?.owner_name_english ||
+      profile?.owner_name_chinese ||
+      profile?.owner_name ||
+      "";
+    const company =
+      profile?.companydata?.company_name_english ||
+      profile?.companydata?.company_name_chinese ||
+      profile?.companydata?.company_name ||
+      "";
+    const designation =
+      profile?.companydata?.companydesignation ||
+      profile?.designation ||
+      profile?.title ||
+      "";
+    const detailsText = `Name : ${name}\nCompany name : ${company}\nDesignation: ${designation}\nAddmyCo address : ${qrLink}`;
+    const url = `https://t.me/share/url?url=${encodeURIComponent(
+      qrLink
+    )}&text=${encodeURIComponent(detailsText)}`;
+    window.open(url, "_blank");
+    setShowShareModal(false);
+  };
+
+  const shareToWhatsApp = () => {
+    const origin = "https://addmy.co";
+    const username =
+      profile?.username || profile?.telegram_username || profile?.tgid || "";
+    const qrLink = username ? `${origin}/t.me/${username}` : origin;
+    const text = `Check this profile: ${qrLink}`;
+    const url = `https://wa.me/?text=${encodeURIComponent(text)}`;
+    window.open(url, "_blank");
+    setShowShareModal(false);
+  };
+
+  const shareToFacebook = () => {
+    const origin = "https://addmy.co";
+    const username =
+      profile?.username || profile?.telegram_username || profile?.tgid || "";
+    const qrLink = username ? `${origin}/t.me/${username}` : origin;
+    const url = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(
+      qrLink
+    )}`;
+    window.open(url, "_blank");
+    setShowShareModal(false);
+  };
+
+  const shareToTwitter = () => {
+    const origin = "https://addmy.co";
+    const username =
+      profile?.username || profile?.telegram_username || profile?.tgid || "";
+    const qrLink = username ? `${origin}/t.me/${username}` : origin;
+    const text = `Check this profile: ${qrLink}`;
+    const url = `https://twitter.com/intent/tweet?text=${encodeURIComponent(
+      text
+    )}`;
+    window.open(url, "_blank");
+    setShowShareModal(false);
+  };
+
+  const shareToLinkedIn = () => {
+    const origin = "https://addmy.co";
+    const username =
+      profile?.username || profile?.telegram_username || profile?.tgid || "";
+    const qrLink = username ? `${origin}/t.me/${username}` : origin;
+    const url = `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(
+      qrLink
+    )}`;
+    window.open(url, "_blank");
+    setShowShareModal(false);
   };
 
   const handleScan = () => {
@@ -248,10 +330,10 @@ export default function HomePage() {
                 />
               )}
             </div>
-            <div className="rounded-full bg-app text-app text-lg font-bold py-2 mb-2 flex items-center justify-center px-6 mx-auto w-48">
+            <div className="rounded-full bg-app text-app text-lg font-bold py-2 mb-2 flex items-center justify-center px-6 mx-auto w-60">
               {profile?.owner_name_english || "User Name"}
             </div>
-            <div className="rounded-full bg-app text-app text-lg font-bold py-2 mb-4 flex items-center justify-center px-6 mx-auto w-48">
+            <div className="rounded-full bg-app text-app text-lg font-bold py-2 mb-2 flex items-center justify-center px-6 mx-auto w-60">
               {profile?.owner_name_chinese || "用户名"}
             </div>
           </div>
@@ -591,6 +673,99 @@ export default function HomePage() {
               <Camera className="w-6 h-6 text-app" />
             </button>
           </div>
+          {showShareModal && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4">
+              <div className="bg-white rounded-lg p-4 w-full max-w-sm">
+                <div className="text-lg font-semibold mb-3">Share profile</div>
+                <div className="grid grid-cols-3 gap-3 mb-3">
+                  <button
+                    onClick={doNativeShare}
+                    className="p-2 bg-app text-white rounded flex flex-col items-center justify-center"
+                  >
+                    <FontAwesomeIcon icon={faGlobe} />
+                    <div className="text-xs mt-1">Native</div>
+                  </button>
+                  <button
+                    onClick={shareToTelegram}
+                    className="p-2 bg-app text-white rounded flex flex-col items-center justify-center"
+                  >
+                    <FontAwesomeIcon icon={faTelegram} />
+                    <div className="text-xs mt-1">Telegram</div>
+                  </button>
+                  <button
+                    onClick={shareToWhatsApp}
+                    className="p-2 bg-app text-white rounded flex flex-col items-center justify-center"
+                  >
+                    <FontAwesomeIcon icon={faWhatsapp} />
+                    <div className="text-xs mt-1">WhatsApp</div>
+                  </button>
+                  <button
+                    onClick={shareToFacebook}
+                    className="p-2 bg-app text-white rounded flex flex-col items-center justify-center"
+                  >
+                    <FontAwesomeIcon icon={faFacebook} />
+                    <div className="text-xs mt-1">Facebook</div>
+                  </button>
+                  <button
+                    onClick={shareToTwitter}
+                    className="p-2 bg-app text-white rounded flex flex-col items-center justify-center"
+                  >
+                    <FontAwesomeIcon icon={faTwitter} />
+                    <div className="text-xs mt-1">Twitter</div>
+                  </button>
+                  <button
+                    onClick={shareToLinkedIn}
+                    className="p-2 bg-app text-white rounded flex flex-col items-center justify-center"
+                  >
+                    <FontAwesomeIcon icon={faLinkedin} />
+                    <div className="text-xs mt-1">LinkedIn</div>
+                  </button>
+                </div>
+                <div className="flex justify-end gap-2">
+                  <button
+                    onClick={() => setShowShareModal(false)}
+                    className="px-3 py-1 rounded bg-gray-200"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={() => {
+                      const origin = "https://addmy.co";
+                      const username =
+                        profile?.username ||
+                        profile?.telegram_username ||
+                        profile?.tgid ||
+                        "";
+                      const qrLink = username
+                        ? `${origin}/t.me/${username}`
+                        : origin;
+                      const name =
+                        profile?.owner_name_english ||
+                        profile?.owner_name_chinese ||
+                        profile?.owner_name ||
+                        "";
+                      const company =
+                        profile?.companydata?.company_name_english ||
+                        profile?.companydata?.company_name_chinese ||
+                        profile?.companydata?.company_name ||
+                        "";
+                      const designation =
+                        profile?.companydata?.companydesignation ||
+                        profile?.designation ||
+                        profile?.title ||
+                        "";
+                      const detailsText = `Name : ${name}\nCompany name : ${company}\nDesignation: ${designation}\nAddmyCo address : ${qrLink}`;
+                      copyDetailsToClipboard(detailsText);
+                      setShowShareModal(false);
+                    }}
+                    className="px-3 py-1 rounded bg-app text-white"
+                  >
+                    Copy
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       </div>
       <Footer />

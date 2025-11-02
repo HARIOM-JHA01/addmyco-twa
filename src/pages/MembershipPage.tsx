@@ -6,7 +6,7 @@ import axios from "axios";
 import WebApp from "@twa-dev/sdk";
 import i18n from "../i18n";
 
-import walletTransferImage from "../assets/wallet-transfer.jpg";
+// walletTransferImage intentionally unused after removing QR/wallet image from USDT modal
 
 const PREMIUM_FEATURES = [
   { label: "Custom Username/Url", value: "Yes" },
@@ -90,9 +90,7 @@ export default function MembershipPage() {
       setUsdtModalLoading(false);
     }
   };
-  const [telegramBtnLoading, setTelegramBtnLoading] = useState<string | null>(
-    null
-  ); // store item._id of loading button
+  // Telegram coin payment option removed; related state and handlers cleaned up
   const profile = useProfileStore((state) => state.profile);
   const [showRenewBox, setShowRenewBox] = useState(false);
   const [renewHistory, setRenewHistory] = useState<any[] | null>(null);
@@ -123,90 +121,7 @@ export default function MembershipPage() {
     }
   };
 
-  const handleTelegramCoinPayment = async (
-    membershipPeriod: number,
-    telegramCoin: number,
-    membershipId: string,
-    amount?: number
-  ) => {
-    setTelegramBtnLoading(`${membershipPeriod}-${telegramCoin}`);
-    try {
-      const token = localStorage.getItem("token");
-      const res = await axios.post(
-        `${API_BASE_URL}/telegram/payment`,
-        {
-          membership_id: membershipId, // always use _id
-          membershiperiod: membershipPeriod,
-          telegramcoin: telegramCoin,
-        },
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-        }
-      );
-      if (res.data?.invoice_link) {
-        WebApp.openInvoice(res.data.invoice_link, (status: string) => {
-          if (status === "paid") {
-            (async () => {
-              try {
-                // Use membershipId and amount from the selected item, transactionId from res.data if available
-                const membership_id =
-                  membershipId ||
-                  res.data?.membership_id ||
-                  res.data?._id ||
-                  "";
-                const amountValue = amount || res.data?.amount || telegramCoin;
-                const transactionId =
-                  res.data?.transaction_id || "TELEGRAM_TX_ID";
-                await axios.post(
-                  `${API_BASE_URL}/telegram/payment/complete`,
-                  {
-                    membership_id,
-                    amount: amountValue,
-                    transactionId,
-                  },
-                  {
-                    headers: {
-                      Authorization: `Bearer ${token}`,
-                      "Content-Type": "application/json",
-                    },
-                  }
-                );
-                WebApp.showAlert(
-                  "Payment successful! Thank you. Your membership will be updated shortly."
-                );
-              } catch (e) {
-                WebApp.showAlert(
-                  "Payment succeeded, but failed to notify server. Please contact support if your membership is not updated."
-                );
-              }
-            })();
-          } else if (status === "cancelled") {
-            WebApp.showAlert("Payment was cancelled.");
-          } else if (status === "failed") {
-            WebApp.showAlert("Payment failed. Please try again.");
-          }
-        });
-      } else {
-        WebApp.showAlert("Failed to get Telegram payment link.");
-      }
-    } catch (err) {
-      WebApp.showAlert(
-        `${
-          typeof err === "object" &&
-          err !== null &&
-          "response" in err &&
-          typeof (err as any).response === "object"
-            ? (err as any).response?.data?.message ?? "Unknown error"
-            : "Unknown error"
-        }`
-      );
-    } finally {
-      setTelegramBtnLoading(null);
-    }
-  };
+  // Telegram coin payment handler removed because TG coin option is commented out
 
   if (!profile) {
     return (
@@ -245,8 +160,8 @@ export default function MembershipPage() {
       style={{ backgroundImage: "var(--app-background-image)" }}
     >
       <Header />
-      <div className="flex flex-col items-center justify-start flex-1 pb-32">
-        <div className="w-full max-w-md mt-8 p-4 rounded-xl shadow-xl bg-white/90">
+      <div className="flex flex-col items-center px-4 justify-start flex-1 pb-32">
+        <div className="w-full max-w-md rounded-xl mt-8 shadow-xl bg-white/90">
           <h2 className="text-2xl font-bold text-center text-[#2fa8e0] mb-4">
             {isPremium
               ? i18n.t("upgrade_membership")
@@ -293,7 +208,7 @@ export default function MembershipPage() {
         {/* Payment history moved to its own page (see PaymentHistoryPage.tsx) */}
         {/* Renew Membership History Box */}
         {showRenewBox && (
-          <div className="bg-white rounded-xl shadow p-4 mt-4">
+          <div className="bg-white rounded-xl shadow p-6 mt-4">
             <div className="text-lg font-bold text-[#2fa8e0] mb-2 text-center">
               {i18n.t("membership_renewal")}
             </div>
@@ -316,9 +231,7 @@ export default function MembershipPage() {
                     <th className="py-2 px-2 text-center">
                       {i18n.t("usdt_label")}
                     </th>
-                    <th className="py-2 px-2 text-center">
-                      {i18n.t("telegram_coin")}
-                    </th>
+                    {/* Telegram Coin column removed */}
                   </tr>
                 </thead>
                 <tbody>
@@ -379,14 +292,20 @@ export default function MembershipPage() {
                             </button>
                             <div className="overflow-y-auto p-6">
                               <h3 className="text-lg font-bold text-[#2fa8e0] mb-4 text-center">
-                                {i18n.t("usdt_payment")}
+                                Upgrade to Premium
                               </h3>
                               <div className="flex flex-col items-center gap-3 mb-4">
-                                <img
-                                  src={walletTransferImage}
-                                  alt="Wallet Transfer"
-                                  className="rounded-lg max-h-32 object-contain"
-                                />
+                                <div className="w-full bg-gray-50 border border-gray-200 rounded-lg p-3 text-sm text-gray-700 mt-3">
+                                  <div className="font-semibold mb-1">
+                                    Send USDT on Telegram
+                                  </div>
+                                  <ol className="list-decimal list-inside">
+                                    Select &gt; Wallet &gt; Dollars &gt; Send
+                                    Select &gt; Telegram Contact &gt; Select
+                                    &gt; Select Contact "Bluemarketer" or send
+                                    external USDT to following address
+                                  </ol>
+                                </div>
                                 <p className="text-sm font-medium break-all bg-gray-100 p-4 rounded-lg text-center">
                                   {i18n.t("copy_wallet_address")}
                                   <br />
@@ -474,56 +393,17 @@ export default function MembershipPage() {
                                   ? i18n.t("submitting")
                                   : i18n.t("submit_payment")}
                               </button>
+
+                              <div className="h-10 w-5"></div>
                             </div>
                           </div>
                         </div>
                       )}
+                      {/* TG Coin payment option commented out per request
                       <td className="py-2 px-2 text-center">
-                        <button
-                          className="group relative flex flex-col items-center justify-center px-5 py-3 rounded-xl font-bold shadow-lg bg-gradient-to-r from-[#fbbf24] to-[#f59e1b] hover:from-[#f59e1b] hover:to-[#fbbf24] transition text-white text-base focus:outline-none focus:ring-2 focus:ring-[#fbbf24] focus:ring-offset-2 disabled:opacity-60 disabled:cursor-not-allowed"
-                          style={{ minWidth: 120 }}
-                          disabled={
-                            telegramBtnLoading ===
-                            `${item.membershiperiod}-${item.telegramcoin}`
-                          }
-                          onClick={() =>
-                            handleTelegramCoinPayment(
-                              item.membershiperiod,
-                              item.telegramcoin,
-                              item._id,
-                              item.usdt // or item.amount if that's the correct field
-                            )
-                          }
-                        >
-                          <span className="flex items-center gap-2">
-                            <svg
-                              xmlns="http://www.w3.org/2000/svg"
-                              fill="none"
-                              viewBox="0 0 24 24"
-                              strokeWidth={1.5}
-                              stroke="currentColor"
-                              className="w-6 h-6 text-white drop-shadow"
-                            >
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                d="M12 3v18m9-9H3"
-                              />
-                            </svg>
-                            <span>{item.telegramcoin ?? "NA"} TG Coin</span>
-                          </span>
-                          <span className="text-xs font-normal mt-1 opacity-80">
-                            {i18n.t("pay_with_telegram_coin")}
-                          </span>
-                          <span className="absolute -bottom-2 left-1/2 -translate-x-1/2 w-0 h-1 bg-white rounded-full group-hover:w-3/4 transition-all duration-300"></span>
-                          {telegramBtnLoading ===
-                          `${item.membershiperiod}-${item.telegramcoin}` ? (
-                            <span className="ml-2 animate-pulse">
-                              {i18n.t("processing")}
-                            </span>
-                          ) : null}
-                        </button>
+                        ... (TG Coin button removed)
                       </td>
+                      */}
                     </tr>
                   ))}
                 </tbody>
