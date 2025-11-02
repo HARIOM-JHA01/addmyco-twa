@@ -1057,7 +1057,7 @@ export default function SubCompanyPage() {
                           /^@/,
                           ""
                         );
-                        WebApp.openLink(`https://t.me/${id}`);
+                        WebApp.openLink(`${id}`);
                       }
                     },
                   },
