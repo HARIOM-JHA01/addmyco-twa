@@ -98,8 +98,10 @@ export default function ContactPage() {
       });
       if (res.data.success) {
         const data = res.data.data || [];
-        setContacts(data);
-        const accepted = (data || []).filter(
+        // Deduplicate contacts by contact_id / user_id / _id
+        const deduped = dedupeContacts(data);
+        setContacts(deduped);
+        const accepted = (deduped || []).filter(
           (c: any) => Number(c.status) === 1
         );
         setFilteredContacts(accepted);
@@ -124,8 +126,9 @@ export default function ContactPage() {
       if (res.data.success) {
         // ensure we only show accepted contacts inside folders
         const data = res.data.data || [];
+        const deduped = dedupeContacts(data);
         setFilteredContacts(
-          (data || []).filter((c: any) => Number(c.status) === 1)
+          (deduped || []).filter((c: any) => Number(c.status) === 1)
         );
       }
     } catch (error: any) {
@@ -208,9 +211,10 @@ export default function ContactPage() {
           })
           .filter(Boolean) as ContactData[];
 
-        // only show accepted contacts on the contacts page
+        // Deduplicate normalized results and only show accepted contacts
+        const deduped = dedupeContacts(normalized);
         setFilteredContacts(
-          (normalized || []).filter((c: any) => Number(c.status) === 1)
+          (deduped || []).filter((c: any) => Number(c.status) === 1)
         );
       } else {
         setFilteredContacts([]);
@@ -252,16 +256,40 @@ export default function ContactPage() {
     } catch {}
   };
 
-  // Fetch folders and contacts on mount
+  const dedupeContacts = (arr: any[] | undefined) => {
+    if (!arr || !Array.isArray(arr)) return [];
+    const map = new Map<string, ContactData>();
+    for (const item of arr) {
+      if (!item) continue;
+      const ownerNameRaw = item.userdetails?.[0]?.owner_name_english;
+      const ownerKey = ownerNameRaw
+        ? String(ownerNameRaw).trim().toLowerCase()
+        : "";
+
+      const idKey = (item.contact_id ||
+        item.user_id ||
+        item._id ||
+        "") as string;
+      const usernameKey = item.userdetails?.[0]?.username || "";
+
+      const key = ownerKey || idKey || usernameKey;
+      if (!key) continue;
+
+      if (!map.has(key)) {
+        map.set(key, item);
+      }
+    }
+    return Array.from(map.values());
+  };
+
   useEffect(() => {
     refreshFolders();
     fetchContacts();
     const handler = () => {
-      // when contacts updated elsewhere (Notifications), refresh list
       try {
         fetchContacts();
       } catch (err) {
-        /* noop */
+        console.error("Failed to refresh contacts on event:", err);
       }
     };
     window.addEventListener("contacts-updated", handler as EventListener);
