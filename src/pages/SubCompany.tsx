@@ -1006,7 +1006,7 @@ export default function SubCompanyPage() {
               </div>
 
               {/* Company Image and Description */}
-              <div className="flex flex-col items-center mb-6 w-full">
+              <div className="flex flex-col items-center mb-4 w-full">
                 {/* Image container */}
                 <div className="w-full flex justify-center mb-4">
                   {companyProfile.image?.endsWith(".mp4") ? (
