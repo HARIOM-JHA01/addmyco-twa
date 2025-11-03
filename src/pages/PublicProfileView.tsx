@@ -1,5 +1,5 @@
 import { useEffect, useState, useRef } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { QRCodeSVG } from "qrcode.react";
 import logo from "../assets/logo.png";
 import company from "../assets/company.svg";
@@ -55,11 +55,14 @@ export default function PublicProfileView({
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(false);
   const [isAddingContact, setIsAddingContact] = useState(false);
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
+
+  const [isContact, setIsContact] = useState<boolean | null>(null);
 
   const API_BASE_URL =
     import.meta.env.VITE_API_BASE_URL || "https://admin.addmy.co";
   const profileUrl = `https://addmy.co/t.me/${profile.username}`;
+
+  const location = useLocation();
 
   const handleAddToContact = async () => {
     try {
@@ -183,6 +186,8 @@ export default function PublicProfileView({
       );
       if (response.data && response.data.success) {
         WebApp.showAlert(response.data.message);
+        // mark as contact locally so button hides
+        setIsContact(true);
       }
       // Force a full page reload to /profile to ensure proper route handling
       setTimeout(() => {
@@ -220,14 +225,60 @@ export default function PublicProfileView({
     updateIconScroll();
     const onResize = () => updateIconScroll();
     window.addEventListener("resize", onResize);
-    // determine login state from localStorage token
+    // determine login state if needed (not used here)
+    // initialize isContact from navigation state if provided
     try {
-      setIsLoggedIn(!!localStorage.getItem("token"));
+      const navState: any = (location && (location as any).state) || null;
+      if (navState && typeof navState.isContact !== "undefined") {
+        setIsContact(!!navState.isContact);
+      } else {
+        setIsContact(null);
+      }
     } catch (e) {
-      setIsLoggedIn(false);
+      setIsContact(null);
     }
     return () => window.removeEventListener("resize", onResize);
   }, [profile]);
+
+  useEffect(() => {
+    // If navigation did not provide isContact, and we have a token, fetch it
+    (async () => {
+      try {
+        if (isContact === null) {
+          const token = localStorage.getItem("token");
+          if (!token) return;
+          try {
+            const res = await axios.post(
+              `${API_BASE_URL}/iscontactexist/${encodeURIComponent(
+                profile.username
+              )}`,
+              {},
+              { headers: { Authorization: `Bearer ${token}` } }
+            );
+            if (
+              res.status === 200 &&
+              typeof res.data?.isContact !== "undefined"
+            ) {
+              setIsContact(!!res.data.isContact);
+            } else {
+              setIsContact(false);
+            }
+          } catch (e: any) {
+            if (e?.response?.status === 404) {
+              setIsContact(false);
+            } else {
+              console.warn(
+                "iscontactexist check failed",
+                e?.response?.status || e
+              );
+            }
+          }
+        }
+      } catch (err) {
+        console.error(err);
+      }
+    })();
+  }, [isContact, profile.username]);
 
   const hasCompanies = companies && companies.length > 0;
   const hasChambers = chambers && chambers.length > 0;
@@ -642,7 +693,7 @@ export default function PublicProfileView({
               />
             </div>
 
-            {!isLoggedIn && (
+            {isContact === false && (
               <button
                 onClick={handleAddToContact}
                 disabled={isAddingContact}

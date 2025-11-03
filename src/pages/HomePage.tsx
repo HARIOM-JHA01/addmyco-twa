@@ -260,7 +260,49 @@ export default function HomePage() {
               // Strip any trailing path, query or fragment so we only keep the username
               const username = remainder.split(/[\/?#]/)[0];
               if (username) {
-                navigate(`/${username}`);
+                // Before navigating, check whether this user is already in our contacts
+                // so the profile page can decide whether to show the + (add) button.
+                (async () => {
+                  try {
+                    const token = localStorage.getItem("token");
+                    let isContact = false;
+                    if (token) {
+                      try {
+                        const res = await axios.post(
+                          `${API_BASE_URL}/iscontactexist/${encodeURIComponent(
+                            username
+                          )}`,
+                          {},
+                          {
+                            headers: { Authorization: `Bearer ${token}` },
+                          }
+                        );
+                        if (
+                          res.status === 200 &&
+                          res.data &&
+                          typeof res.data.isContact !== "undefined"
+                        ) {
+                          isContact = !!res.data.isContact;
+                        }
+                      } catch (e: any) {
+                        // If 404 or other error, treat as not contact but still navigate
+                        if (e?.response?.status === 404) {
+                          isContact = false;
+                        } else {
+                          console.warn(
+                            "iscontactexist check failed",
+                            e?.response?.status || e
+                          );
+                        }
+                      }
+                    }
+                    // Pass isContact via location state so the profile page can use it
+                    navigate(`/${username}`, { state: { isContact } });
+                  } catch (err) {
+                    console.error("Failed to check contact existence", err);
+                    navigate(`/${username}`);
+                  }
+                })();
               }
             } else if (
               text.startsWith("http://") ||
