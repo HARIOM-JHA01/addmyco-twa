@@ -292,25 +292,50 @@ export default function MembershipPage() {
                             </button>
                             <div className="overflow-y-auto p-6">
                               <h3 className="text-lg font-bold text-[#2fa8e0] mb-4 text-center">
-                                Upgrade to Premium
+                                Upgrade to Premium Membership
                               </h3>
-                              <div className="flex flex-col items-center gap-3 mb-4">
-                                <div className="w-full bg-gray-50 border border-gray-200 rounded-lg p-3 text-sm text-gray-700 mt-3">
-                                  <div className="font-semibold mb-1">
-                                    Send USDT on Telegram
-                                  </div>
-                                  <ol className="list-decimal list-inside">
-                                    Select &gt; Wallet &gt; Dollars &gt; Send
-                                    Select &gt; Telegram Contact &gt; Select
-                                    &gt; Select Contact "Bluemarketer" or send
-                                    external USDT to following address
-                                  </ol>
+
+                              <div className="mb-3 text-sm text-gray-700">
+                                <div className="mb-2">
+                                  <span className="font-semibold">
+                                    Period:{" "}
+                                  </span>
+                                  {usdtModalItem?.membershiperiod ?? "-"}{" "}
+                                  {i18n.t("years_label")}
                                 </div>
-                                <p className="text-sm font-medium break-all bg-gray-100 p-4 rounded-lg text-center">
-                                  {i18n.t("copy_wallet_address")}
-                                  <br />
-                                  <span
-                                    className="text-blue-600 cursor-pointer"
+                                <div>
+                                  <span className="font-semibold">USDT: </span>
+                                  {usdtModalItem?.usdt ?? "-"}
+                                </div>
+                              </div>
+
+                              <div className="w-full bg-gray-50 border border-gray-200 rounded-lg p-3 text-sm text-gray-700 mb-3">
+                                <div className="font-semibold mb-1 text-center">
+                                  Kindly send USDT Amount in telegram contact
+                                  @Bluemarketer
+                                </div>
+                                <div className="text-sm font-semibold text-green-600 mb-2 text-center">
+                                  No Fees No charges!!!
+                                </div>
+                                <div className="font-medium mb-1">Steps:</div>
+                                <ol className="list-decimal list-inside text-sm">
+                                  <li>
+                                    Select &gt; Wallet &gt; Dollars &gt; Send
+                                  </li>
+                                  <li>
+                                    Select &gt; Telegram Contact &gt; Select
+                                  </li>
+                                  <li>
+                                    Select Contact "Bluemarketer" or send
+                                    external USDT to following address
+                                  </li>
+                                </ol>
+                                <div className="mt-3 text-sm break-all bg-gray-100 p-3 rounded-lg text-center">
+                                  <div className="mb-1 text-center">
+                                    Or send external USDT to following address:
+                                  </div>
+                                  <button
+                                    className="text-blue-600 underline"
                                     onClick={async () => {
                                       try {
                                         await navigator.clipboard.writeText(
@@ -327,21 +352,8 @@ export default function MembershipPage() {
                                     }}
                                   >
                                     TK2TMn99SBCrdbZpSef7rFE3vTccvR6dCz
-                                  </span>
-                                </p>
-                              </div>
-                              <div className="mb-2 text-sm text-gray-700">
-                                <span className="font-semibold">
-                                  {i18n.t("period_label")}
-                                </span>{" "}
-                                {usdtModalItem?.membershiperiod ?? "-"}{" "}
-                                {i18n.t("years_label")}
-                              </div>
-                              <div className="mb-2 text-sm text-gray-700">
-                                <span className="font-semibold">
-                                  {i18n.t("usdt_label")}
-                                </span>{" "}
-                                {usdtModalItem?.usdt ?? "-"}
+                                  </button>
+                                </div>
                               </div>
                               <label className="block mb-2 text-sm font-medium text-gray-700">
                                 {i18n.t("transaction_id_label")}
