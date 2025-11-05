@@ -97,7 +97,7 @@ const WelcomePage: React.FC<WelcomePageProps> = ({ onLogin }) => {
         <Header hideNotification={true} />
         <main className="flex-1 flex flex-col items-center justify-start mt-6">
           <div
-            className="rounded-lg p-8 shadow-lg flex flex-col items-center w-[368px]"
+            className="relative z-20 rounded-lg p-8 shadow-lg flex flex-col items-center w-[368px]"
             style={{ backgroundColor: "rgba(0,153,204,0.75)" }}
           >
             <h1 className="text-2xl font-space-bold mb-6 text-white text-center">
@@ -154,35 +154,28 @@ const WelcomePage: React.FC<WelcomePageProps> = ({ onLogin }) => {
           {banners.length > 0 && (
             <div
               className="relative w-full flex flex-col items-center"
-              style={{ minHeight: 140 }}
+              style={{ minHeight: 380 }}
             >
               <div className="w-full flex justify-center items-center">
-                {banners.map((banner, idx) => (
+                {banners[currentBanner] && (
                   <a
-                    key={banner._id}
+                    key={banners[currentBanner]._id}
                     href={
-                      banner.Link.startsWith("http")
-                        ? banner.Link
-                        : `https://${banner.Link}`
+                      banners[currentBanner].Link.startsWith("http")
+                        ? banners[currentBanner].Link
+                        : `https://${banners[currentBanner].Link}`
                     }
                     target="_blank"
                     rel="noopener noreferrer"
-                    className={`absolute transition-all duration-700 ease-in-out ${
-                      idx === currentBanner
-                        ? "opacity-100 scale-100 z-10"
-                        : "opacity-0 scale-95 z-0"
-                    } w-full flex flex-col items-center`}
-                    style={{
-                      pointerEvents: idx === currentBanner ? "auto" : "none",
-                    }}
+                    className="transition-all duration-700 ease-in-out w-full flex flex-col items-center"
                   >
                     <img
-                      src={banner.Banner}
-                      alt={banner.Title}
-                      className="rounded-lg shadow-lg w-[368px] h-[125px] object-contain"
+                      src={banners[currentBanner].Banner}
+                      alt={banners[currentBanner].Title}
+                      className="rounded-lg shadow-lg w-60 h-60 object-cover"
                     />
                   </a>
-                ))}
+                )}
               </div>
             </div>
           )}
