@@ -378,7 +378,7 @@ export default function HomePage() {
             {companyData?.company_name_chinese || "公司名称"}
           </button>
 
-          <div className="flex flex-col items-center">
+          <div className="flex flex-col items-center w-full">
             <div className="rounded-full mb-2 w-[180px] h-[180px] flex items-center justify-center overflow-hidden bg-white">
               {profile?.profile_image &&
               profile.profile_image.trim() !== "" &&
@@ -407,12 +407,18 @@ export default function HomePage() {
                 />
               )}
             </div>
-            <div className="rounded-full bg-app text-app text-lg font-bold py-2 mb-2 flex items-center justify-center px-6 mx-auto w-60">
+            <button
+              className="w-full rounded-full bg-app text-app text-xl font-bold py-2 mb-2 flex items-center justify-center"
+              style={{ borderRadius: "2rem" }}
+            >
               {profile?.owner_name_english || "User Name"}
-            </div>
-            <div className="rounded-full bg-app text-app text-lg font-bold py-2 mb-2 flex items-center justify-center px-6 mx-auto w-60">
+            </button>
+            <button
+              className="w-full rounded-full bg-app text-app text-xl font-bold py-2 mb-2 flex items-center justify-center"
+              style={{ borderRadius: "2rem" }}
+            >
               {profile?.owner_name_chinese || "用户名"}
-            </div>
+            </button>
           </div>
 
           <div className="relative w-full mb-2">
