@@ -224,12 +224,28 @@ export default function HomePage() {
     setShowShareModal(false);
   };
 
-  const copyProfileLink = () => {
+  const copyDetails = () => {
     const origin = "https://addmy.co";
     const username =
       profile?.username || profile?.telegram_username || profile?.tgid || "";
     const qrLink = username ? `${origin}/t.me/${username}` : origin;
-    copyDetailsToClipboard(qrLink);
+    const name =
+      profile?.owner_name_english ||
+      profile?.owner_name_chinese ||
+      profile?.owner_name ||
+      "";
+    const company =
+      profile?.companydata?.company_name_english ||
+      profile?.companydata?.company_name_chinese ||
+      profile?.companydata?.company_name ||
+      "";
+    const designation =
+      profile?.companydata?.companydesignation ||
+      profile?.designation ||
+      profile?.title ||
+      "";
+    const detailsText = `Name : ${name}\nCompany name : ${company}\nDesignation: ${designation}\nAddmyCo address : ${qrLink}`;
+    copyDetailsToClipboard(detailsText);
     setShowShareModal(false);
   };
 
@@ -690,7 +706,16 @@ export default function HomePage() {
             </div>
           )}
 
-          <div className="flex justify-center mb-4">
+          <div className="flex items-center justify-center mb-4 w-full mt-2 gap-2">
+            <button
+              onClick={handleShare}
+              className="w-12 h-12 bg-app rounded-full flex items-center justify-center hover:opacity-90 transition"
+              aria-label="Share"
+              style={{ marginRight: 8 }}
+            >
+              <Share2 className="w-6 h-6 text-app" />
+            </button>
+
             <div ref={qrRef} className="p-2 bg-white">
               <QRCodeSVG
                 value={qrLink}
@@ -716,20 +741,12 @@ export default function HomePage() {
                 }}
               />
             </div>
-          </div>
 
-          <div className="flex gap-6 w-full justify-center mt-2">
-            <button
-              onClick={handleShare}
-              className="w-12 h-12 bg-app rounded-full flex items-center justify-center hover:opacity-90 transition"
-              aria-label="Share"
-            >
-              <Share2 className="w-6 h-6 text-app" />
-            </button>
             <button
               onClick={handleScan}
               className="w-12 h-12 bg-app rounded-full flex items-center justify-center hover:opacity-90 transition"
               aria-label="Scan"
+              style={{ marginLeft: 8 }}
             >
               <Camera className="w-6 h-6 text-app" />
             </button>
@@ -798,53 +815,19 @@ export default function HomePage() {
                     <div className="text-xs mt-1">X</div>
                   </button>
                   <button
-                    onClick={copyProfileLink}
+                    onClick={copyDetails}
                     className="p-2 bg-app text-white rounded flex flex-col items-center justify-center"
                   >
                     <FontAwesomeIcon icon={faClipboard} />
                     <div className="text-xs mt-1">Copy</div>
                   </button>
                 </div>
-                <div className="flex justify-end gap-2">
+                <div className="flex justify-end">
                   <button
                     onClick={() => setShowShareModal(false)}
                     className="px-3 py-1 rounded bg-gray-200"
                   >
                     Cancel
-                  </button>
-                  <button
-                    onClick={() => {
-                      const origin = "https://addmy.co";
-                      const username =
-                        profile?.username ||
-                        profile?.telegram_username ||
-                        profile?.tgid ||
-                        "";
-                      const qrLink = username
-                        ? `${origin}/t.me/${username}`
-                        : origin;
-                      const name =
-                        profile?.owner_name_english ||
-                        profile?.owner_name_chinese ||
-                        profile?.owner_name ||
-                        "";
-                      const company =
-                        profile?.companydata?.company_name_english ||
-                        profile?.companydata?.company_name_chinese ||
-                        profile?.companydata?.company_name ||
-                        "";
-                      const designation =
-                        profile?.companydata?.companydesignation ||
-                        profile?.designation ||
-                        profile?.title ||
-                        "";
-                      const detailsText = `Name : ${name}\nCompany name : ${company}\nDesignation: ${designation}\nAddmyCo address : ${qrLink}`;
-                      copyDetailsToClipboard(detailsText);
-                      setShowShareModal(false);
-                    }}
-                    className="px-3 py-1 rounded bg-app text-white"
-                  >
-                    Copy
                   </button>
                 </div>
               </div>
