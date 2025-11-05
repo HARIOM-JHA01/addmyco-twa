@@ -362,7 +362,7 @@ export default function HomePage() {
             {companyData?.company_name_chinese || "公司名称"}
           </button>
 
-          <div className="flex flex-col items-center mb-4">
+          <div className="flex flex-col items-center">
             <div className="rounded-full mb-2 w-[180px] h-[180px] flex items-center justify-center overflow-hidden bg-white">
               {profile?.profile_image &&
               profile.profile_image.trim() !== "" &&
@@ -399,7 +399,7 @@ export default function HomePage() {
             </div>
           </div>
 
-          <div className="relative w-full mb-6">
+          <div className="relative w-full mb-2">
             <button
               aria-label="Scroll left"
               className={`absolute left-0 top-1/2 -translate-y-1/2 -translate-x-1/2 z-20 p-1 bg-white/70 rounded-full ${
@@ -671,7 +671,7 @@ export default function HomePage() {
 
           {(profile?.address1 || profile?.address2 || profile?.address3) && (
             <div
-              className="w-full rounded-md bg-white p-4 mb-4 shadow text-center"
+              className="w-full rounded-md bg-white p-4 mb-2 shadow text-center"
               style={{
                 borderWidth: 2,
                 borderStyle: "solid",
