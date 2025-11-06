@@ -657,17 +657,9 @@ export default function PublicProfileView({
             <div className="text-app">{profile.address3}</div>
           </div>
 
-          {/* QR Code absolute-centered within a fixed-height area; + button to the right */}
-          <div className="w-full mb-4 relative" style={{ height: 220 }}>
-            <div
-              className="p-2 bg-white"
-              style={{
-                position: "absolute",
-                left: "50%",
-                top: "50%",
-                transform: "translate(-50%, -50%)",
-              }}
-            >
+          {/* QR Code centered with + button beside it (normal flow) */}
+          <div className="w-full mb-4 flex items-center justify-center gap-4">
+            <div className="p-2 bg-white">
               <QRCodeSVG
                 value={profileUrl}
                 size={160}
@@ -693,18 +685,15 @@ export default function PublicProfileView({
               />
             </div>
 
-            {isContact === false && (
+            {/* Show the + button when the profile is not already a contact.
+                This includes the unknown (null) state so users can tap to add and
+                trigger login flow if required. */}
+            {isContact !== true && (
               <button
                 onClick={handleAddToContact}
                 disabled={isAddingContact}
                 className="w-12 h-12 rounded-full flex items-center justify-center cursor-pointer shadow-lg hover:shadow-xl transition-shadow disabled:opacity-50 disabled:cursor-not-allowed"
-                style={{
-                  backgroundColor: "var(--app-background-color)",
-                  position: "absolute",
-                  left: `calc(50% + ${160 / 2 + 24}px)`,
-                  top: "50%",
-                  transform: "translateY(-50%)",
-                }}
+                style={{ backgroundColor: "var(--app-background-color)" }}
                 aria-label="Add to contacts"
               >
                 <FontAwesomeIcon icon={faUserPlus} size="lg" color="white" />
