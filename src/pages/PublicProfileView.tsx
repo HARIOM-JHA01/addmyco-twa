@@ -328,7 +328,7 @@ export default function PublicProfileView({
               <div className="rounded-full bg-app text-app text-lg font-bold py-2 mb-2 flex items-center justify-center px-6 mx-auto w-48">
                 {profile.owner_name_english || "No Name"}
               </div>
-              <div className="rounded-full bg-app text-app text-lg font-bold py-2 mb-4 flex items-center justify-center px-6 mx-auto w-48">
+              <div className="rounded-full bg-app text-app text-lg font-bold py-2 mb-2 flex items-center justify-center px-6 mx-auto w-48">
                 {profile.owner_name_chinese || ""}
               </div>
             </div>
@@ -645,7 +645,7 @@ export default function PublicProfileView({
             </div>
           </div>
           <div
-            className="w-full rounded-md bg-white p-4 mb-4 shadow text-center"
+            className="w-full rounded-md bg-white p-4 mb-2 shadow text-center"
             style={{
               borderWidth: 2,
               borderStyle: "solid",
@@ -658,7 +658,7 @@ export default function PublicProfileView({
           </div>
 
           {/* QR Code centered with + button beside it (normal flow) */}
-          <div className="w-full mb-4 flex items-center justify-center gap-4">
+          <div className="w-full mb-2 flex items-center justify-center gap-4">
             <div className="p-2 bg-white">
               <QRCodeSVG
                 value={profileUrl}
