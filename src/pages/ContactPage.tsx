@@ -424,7 +424,10 @@ export default function ContactPage() {
   // Contact circles are non-clickable on this page per design
   const handleContactClick = (contact: ContactData) => {
     const username = contact.userdetails?.[0]?.username || contact.contact_id;
-    if (username) navigate(`/${username}`);
+    if (username)
+      navigate(`/${username}`, {
+        state: { isContact: true, contactId: contact.contact_id },
+      });
   };
 
   return (
