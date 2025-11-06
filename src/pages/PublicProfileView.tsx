@@ -325,12 +325,18 @@ export default function PublicProfileView({
               )}
             </div>
             <div className="flex flex-col items-center w-full">
-              <div className="rounded-full bg-app text-app text-lg font-bold py-2 mb-2 flex items-center justify-center px-6 mx-auto w-48">
+              <button
+                className="w-full rounded-full bg-app text-app text-lg font-bold py-2 mb-2 flex items-center justify-center"
+                style={{ borderRadius: "2rem" }}
+              >
                 {profile.owner_name_english || "No Name"}
-              </div>
-              <div className="rounded-full bg-app text-app text-lg font-bold py-2 mb-2 flex items-center justify-center px-6 mx-auto w-48">
+              </button>
+              <button
+                className="w-full rounded-full bg-app text-app text-lg font-bold py-2 mb-4 flex items-center justify-center"
+                style={{ borderRadius: "2rem" }}
+              >
                 {profile.owner_name_chinese || ""}
-              </div>
+              </button>
             </div>
           </div>
           <div className="relative w-full mb-2">
@@ -658,7 +664,7 @@ export default function PublicProfileView({
           </div>
 
           {/* QR Code centered with + button beside it (normal flow) */}
-          <div className="w-full mb-2 flex items-center justify-center gap-4">
+          <div className="w-full mb-4 relative flex items-center justify-center">
             <div className="p-2 bg-white">
               <QRCodeSVG
                 value={profileUrl}
@@ -685,15 +691,18 @@ export default function PublicProfileView({
               />
             </div>
 
-            {/* Show the + button when the profile is not already a contact.
-                This includes the unknown (null) state so users can tap to add and
-                trigger login flow if required. */}
             {isContact !== true && (
               <button
                 onClick={handleAddToContact}
                 disabled={isAddingContact}
                 className="w-12 h-12 rounded-full flex items-center justify-center cursor-pointer shadow-lg hover:shadow-xl transition-shadow disabled:opacity-50 disabled:cursor-not-allowed"
-                style={{ backgroundColor: "var(--app-background-color)" }}
+                style={{
+                  backgroundColor: "var(--app-background-color)",
+                  position: "absolute",
+                  left: `calc(50% + ${160 / 2 + 16}px)`,
+                  top: "50%",
+                  transform: "translateY(-50%)",
+                }}
                 aria-label="Add to contacts"
               >
                 <FontAwesomeIcon icon={faUserPlus} size="lg" color="white" />
