@@ -129,12 +129,18 @@ export default function ProfilePage() {
                   )}
                 </div>
                 <div className="flex flex-col items-center w-full">
-                  <div className="rounded-full bg-app text-app text-lg font-bold py-2 mb-2 flex items-center justify-center px-6 mx-auto w-48">
+                  <button
+                    className="w-full rounded-full bg-app text-app text-lg font-bold py-2 mb-2 flex items-center justify-center"
+                    style={{ borderRadius: "2rem" }}
+                  >
                     {profile.owner_name_english || "No Name"}
-                  </div>
-                  <div className="rounded-full bg-app text-app text-lg font-bold py-2 mb-4 flex items-center justify-center px-6 mx-auto w-48">
+                  </button>
+                  <button
+                    className="w-full rounded-full bg-app text-app text-lg font-bold py-2 mb-4 flex items-center justify-center"
+                    style={{ borderRadius: "2rem" }}
+                  >
                     {profile.owner_name_chinese || ""}
-                  </div>
+                  </button>
                 </div>
               </div>
               <div className="relative w-full mb-2">
