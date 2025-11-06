@@ -229,10 +229,26 @@ export default function PublicProfileView({
     // initialize isContact from navigation state if provided
     try {
       const navState: any = (location && (location as any).state) || null;
+      const params = new URLSearchParams(location.search || "");
+      const from = params.get("from");
       if (navState && typeof navState.isContact !== "undefined") {
         setIsContact(!!navState.isContact);
+      } else if (from === "contacts") {
+        // treat links coming from the contacts list as already-in-contacts
+        setIsContact(true);
       } else {
-        setIsContact(null);
+        // fallback: check localStorage flag set by ContactPage (short-lived)
+        try {
+          const last = localStorage.getItem("lastContactNavigate");
+          if (last && profile && String(profile.username) === String(last)) {
+            setIsContact(true);
+            localStorage.removeItem("lastContactNavigate");
+          } else {
+            setIsContact(null);
+          }
+        } catch (e) {
+          setIsContact(null);
+        }
       }
     } catch (e) {
       setIsContact(null);
@@ -247,6 +263,42 @@ export default function PublicProfileView({
         if (isContact === null) {
           const token = localStorage.getItem("token");
           if (!token) return;
+
+          // First, fetch the full contact list and check for this profile
+          try {
+            const contactsRes = await axios.get(`${API_BASE_URL}/getcontact`, {
+              headers: { Authorization: `Bearer ${token}` },
+            });
+            const contacts = contactsRes?.data?.data || [];
+            let found = false;
+            for (const c of contacts) {
+              const ud = c?.userdetails?.[0];
+              if (!ud) continue;
+              // match by user _id / username / owner_name_english (case-insensitive)
+              if (
+                String(ud._id) === String(profile._id) ||
+                (ud.username &&
+                  profile.username &&
+                  ud.username === profile.username) ||
+                (ud.owner_name_english &&
+                  profile.owner_name_english &&
+                  String(ud.owner_name_english).trim().toLowerCase() ===
+                    String(profile.owner_name_english).trim().toLowerCase())
+              ) {
+                found = true;
+                break;
+              }
+            }
+            if (found) {
+              setIsContact(true);
+              return;
+            }
+          } catch (e) {
+            // ignore and fallback to individual check below
+            console.debug("getcontact fetch failed, falling back", e);
+          }
+
+          // Fallback: call iscontactexist endpoint if getcontact didn't confirm
           try {
             const res = await axios.post(
               `${API_BASE_URL}/iscontactexist/${encodeURIComponent(
