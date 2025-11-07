@@ -17,7 +17,7 @@ export default function CreateCompanyPage() {
     companydesignation: "",
     description: "",
     website: "",
-    facebook: "",
+    Facebook: "",
     image: null as File | null,
     telegramId: "",
     Instagram: "",
@@ -83,7 +83,7 @@ export default function CreateCompanyPage() {
 
     // Real-time validation for URL fields
     if (
-      ["website", "telegramId", "facebook", "Instagram", "Youtube"].includes(
+      ["website", "telegramId", "Facebook", "Instagram", "Youtube"].includes(
         name
       )
     ) {
@@ -188,7 +188,7 @@ export default function CreateCompanyPage() {
         companydesignation: "",
         description: "",
         website: "",
-        facebook: "",
+        Facebook: "",
         image: null,
         telegramId: "",
         Instagram: "",
@@ -389,19 +389,19 @@ export default function CreateCompanyPage() {
             </div>
             <div className="w-full">
               <input
-                name="facebook"
+                name="Facebook"
                 placeholder="https://Facebook"
-                value={form.facebook}
+                value={form.Facebook || ""}
                 onChange={handleChange}
                 className={`w-full rounded-full px-[12px] py-2 border ${
-                  validationErrors.facebook
+                  validationErrors.Facebook
                     ? "border-red-500"
                     : "border-blue-500"
                 } mb-2 focus:outline-none focus:ring-2 focus:ring-blue-400`}
               />
-              {validationErrors.facebook && (
+              {validationErrors.Facebook && (
                 <div className="text-red-500 text-xs mt-1 px-2 mb-2">
-                  {validationErrors.facebook}
+                  {validationErrors.Facebook}
                 </div>
               )}
             </div>
