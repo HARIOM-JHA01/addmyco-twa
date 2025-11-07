@@ -358,19 +358,35 @@ export default function PublicProfileView({
                 "公司名称"}
             </button>
             <div className="rounded-full mb-2 w-[180px] h-[180px] flex items-center justify-center overflow-hidden bg-white self-center">
-              {profile.profile_image &&
-              profile.profile_image.endsWith(".mp4") ? (
+              {profile.video ? (
                 <video
-                  src={formatImageUrl(profile.profile_image)}
+                  src={formatImageUrl(profile.video)}
                   autoPlay
                   loop
                   muted
                   playsInline
                   className="w-full h-full object-cover rounded-full"
                 />
+              ) : profile.profile_image ? (
+                profile.profile_image.endsWith(".mp4") ? (
+                  <video
+                    src={formatImageUrl(profile.profile_image)}
+                    autoPlay
+                    loop
+                    muted
+                    playsInline
+                    className="w-full h-full object-cover rounded-full"
+                  />
+                ) : (
+                  <img
+                    src={formatImageUrl(profile.profile_image) || logo}
+                    alt="Profile"
+                    className="w-full h-full object-cover rounded-full"
+                  />
+                )
               ) : (
                 <img
-                  src={formatImageUrl(profile.profile_image) || logo}
+                  src={logo}
                   alt="Profile"
                   className="w-full h-full object-cover rounded-full"
                 />
@@ -384,7 +400,7 @@ export default function PublicProfileView({
                 {profile.owner_name_english || "No Name"}
               </button>
               <button
-                className="w-full rounded-full bg-app text-app text-lg font-bold py-2 mb-4 flex items-center justify-center"
+                className="w-full rounded-full bg-app text-app text-lg font-bold py-2 mb-2 flex items-center justify-center"
                 style={{ borderRadius: "2rem" }}
               >
                 {profile.owner_name_chinese || ""}
@@ -716,7 +732,7 @@ export default function PublicProfileView({
           </div>
 
           {/* QR Code centered with + button beside it (normal flow) */}
-          <div className="w-full mb-4 relative flex items-center justify-center">
+          <div className="w-full mb-2 relative flex items-center justify-center">
             <div className="p-2 bg-white">
               <QRCodeSVG
                 value={profileUrl}
