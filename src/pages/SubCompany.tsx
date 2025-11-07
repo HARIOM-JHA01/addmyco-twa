@@ -988,18 +988,37 @@ export default function SubCompanyPage() {
               <div className="flex flex-col items-center mb-4 w-full">
                 {/* Image container */}
                 <div className="w-full flex justify-center mb-4">
-                  {companyProfile.image?.endsWith(".mp4") ? (
+                  {companyProfile.video ? (
                     <video
-                      src={formatImageUrl(companyProfile.image)}
+                      src={formatImageUrl(companyProfile.video)}
                       autoPlay
                       loop
                       muted
                       playsInline
                       className="w-full h-48 object-cover rounded-xl"
                     />
+                  ) : companyProfile.image ? (
+                    companyProfile.image.endsWith(".mp4") ? (
+                      <video
+                        src={formatImageUrl(companyProfile.image)}
+                        autoPlay
+                        loop
+                        muted
+                        playsInline
+                        className="w-full h-48 object-cover rounded-xl"
+                      />
+                    ) : (
+                      <img
+                        src={
+                          formatImageUrl(companyProfile.image) || profileIcon
+                        }
+                        alt="Company Logo"
+                        className="w-full h-48 object-cover rounded-xl"
+                      />
+                    )
                   ) : (
                     <img
-                      src={formatImageUrl(companyProfile.image) || profileIcon}
+                      src={profileIcon}
                       alt="Company Logo"
                       className="w-full h-48 object-cover rounded-xl"
                     />
