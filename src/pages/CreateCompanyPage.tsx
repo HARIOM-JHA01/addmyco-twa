@@ -3,7 +3,7 @@ import { useState, useRef, useMemo, useEffect } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import { useProfileStore } from "../store/profileStore";
-import { formatUrl, getEmailError, getUrlError } from "../utils/validation";
+import { formatUrl, getUrlError } from "../utils/validation";
 import WebApp from "@twa-dev/sdk";
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
@@ -16,8 +16,6 @@ export default function CreateCompanyPage() {
     company_name_chinese: "",
     companydesignation: "",
     description: "",
-    email: "",
-    WhatsApp: "",
     website: "",
     facebook: "",
     image: null as File | null,
@@ -83,21 +81,11 @@ export default function CreateCompanyPage() {
       setValidationErrors({ ...validationErrors, [name]: "" });
     }
 
-    // Real-time validation
-    if (name === "email") {
-      const emailError = getEmailError(value);
-      if (emailError) {
-        setValidationErrors({ ...validationErrors, email: emailError });
-      }
-    } else if (
-      [
-        "website",
-        "WhatsApp",
-        "telegramId",
-        "facebook",
-        "Instagram",
-        "Youtube",
-      ].includes(name)
+    // Real-time validation for URL fields
+    if (
+      ["website", "telegramId", "facebook", "Instagram", "Youtube"].includes(
+        name
+      )
     ) {
       const urlError = getUrlError(value, name);
       if (urlError) {
@@ -142,16 +130,9 @@ export default function CreateCompanyPage() {
     // Validate all fields before submission
     const errors: { [key: string]: string } = {};
 
-    // Validate email
-    if (form.email) {
-      const emailError = getEmailError(form.email);
-      if (emailError) errors.email = emailError;
-    }
-
     // Validate all URL fields
     const urlFields = [
       "website",
-      "WhatsApp",
       "telegramId",
       "Facebook",
       "Instagram",
@@ -206,8 +187,6 @@ export default function CreateCompanyPage() {
         company_name_chinese: "",
         companydesignation: "",
         description: "",
-        email: "",
-        WhatsApp: "",
         website: "",
         facebook: "",
         image: null,

@@ -19,12 +19,7 @@ import {
   faChevronRight,
 } from "@fortawesome/free-solid-svg-icons";
 import { callOrCopyPhone } from "../utils/phone";
-import {
-  formatUrl,
-  getUrlError,
-  getEmailError,
-  formatImageUrl,
-} from "../utils/validation";
+import { formatUrl, getUrlError, formatImageUrl } from "../utils/validation";
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
@@ -233,8 +228,6 @@ export default function SubCompanyPage() {
       company_name_chinese: companyProfile?.company_name_chinese || "",
       companydesignation: companyProfile?.companydesignation || "",
       description: companyProfile?.description || "",
-      email: companyProfile?.email || "",
-      WhatsApp: companyProfile?.WhatsApp || "",
       Instagram: companyProfile?.Instagram || "",
       Facebook: companyProfile?.Facebook || "",
       Youtube: companyProfile?.Youtube || "",
@@ -270,19 +263,10 @@ export default function SubCompanyPage() {
       setValidationErrors({ ...validationErrors, [name]: "" });
     }
 
-    // Real-time validation for email
-    if (name === "email") {
-      const emailError = getEmailError(value);
-      if (emailError) {
-        setValidationErrors({ ...validationErrors, [name]: emailError });
-      }
-    }
-
     // Real-time validation for URL fields
     const urlFields = [
       "website",
       "telegramId",
-      "WhatsApp",
       "Facebook",
       "Instagram",
       "Youtube",
@@ -340,17 +324,10 @@ export default function SubCompanyPage() {
     // Validate all fields before submission
     const errors: { [key: string]: string } = {};
 
-    // Validate email
-    if (editProfile.email) {
-      const emailError = getEmailError(editProfile.email);
-      if (emailError) errors.email = emailError;
-    }
-
     // Validate all URL fields
     const urlFields = {
       website: editProfile.website,
       telegramId: editProfile.telegramId,
-      WhatsApp: editProfile.WhatsApp,
       Facebook: editProfile.Facebook,
       Instagram: editProfile.Instagram,
       Youtube: editProfile.Youtube,
@@ -381,8 +358,6 @@ export default function SubCompanyPage() {
         company_name_chinese: editProfile.company_name_chinese || "",
         companydesignation: editProfile.companydesignation || "",
         description: editProfile.description || "",
-        email: editProfile.email || "",
-        WhatsApp: editProfile.WhatsApp || "",
         Instagram: editProfile.Instagram || "",
         Facebook: editProfile.Facebook || "",
         Youtube: editProfile.Youtube || "",
@@ -636,26 +611,7 @@ export default function SubCompanyPage() {
                 onChange={handleEditInput}
                 disabled={editLoading}
               />
-              <div className="w-full">
-                <input
-                  className={`rounded-full border-2 px-4 py-2 mb-1 w-full focus:outline-none focus:ring-2 focus:ring-blue-400 bg-white placeholder-gray-500 ${
-                    validationErrors.email
-                      ? "border-red-500"
-                      : "border-blue-200"
-                  }`}
-                  type="text"
-                  name="email"
-                  placeholder="Email"
-                  value={editProfile?.email || ""}
-                  onChange={handleEditInput}
-                  disabled={editLoading}
-                />
-                {validationErrors.email && (
-                  <div className="text-red-500 text-xs mb-2 px-2">
-                    {validationErrors.email}
-                  </div>
-                )}
-              </div>
+              {/* email removed per UI request */}
               <div className="w-full">
                 <input
                   className={`rounded-full border-2 px-4 py-2 mb-1 w-full focus:outline-none focus:ring-2 focus:ring-blue-400 bg-white placeholder-gray-500 ${
@@ -676,26 +632,7 @@ export default function SubCompanyPage() {
                   </div>
                 )}
               </div>
-              <div className="w-full">
-                <input
-                  className={`rounded-full border-2 px-4 py-2 mb-1 w-full focus:outline-none focus:ring-2 focus:ring-blue-400 bg-white placeholder-gray-500 ${
-                    validationErrors.WhatsApp
-                      ? "border-red-500"
-                      : "border-blue-200"
-                  }`}
-                  type="text"
-                  name="WhatsApp"
-                  placeholder="WhatsApp"
-                  value={editProfile?.WhatsApp || ""}
-                  onChange={handleEditInput}
-                  disabled={editLoading}
-                />
-                {validationErrors.WhatsApp && (
-                  <div className="text-red-500 text-xs mb-2 px-2">
-                    {validationErrors.WhatsApp}
-                  </div>
-                )}
-              </div>
+              {/* WhatsApp removed per UI request */}
               <div className="w-full">
                 <input
                   className={`rounded-full border-2 px-4 py-2 mb-1 w-full focus:outline-none focus:ring-2 focus:ring-blue-400 bg-white placeholder-gray-500 ${
