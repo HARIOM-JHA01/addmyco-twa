@@ -308,11 +308,9 @@ export default function SubCompanyPage() {
       setFile(selectedFile);
       setFilePreview(URL.createObjectURL(selectedFile));
 
-      const reader = new FileReader();
-      reader.onload = () => {
-        setEditProfile((prev: any) => ({ ...prev, image: reader.result }));
-      };
-      reader.readAsDataURL(selectedFile);
+      // Do NOT convert to base64. We will upload the raw File via multipart/form-data
+      // Mark editProfile.image as empty so the preview comes from `filePreview` instead
+      setEditProfile((prev: any) => ({ ...prev, image: "" }));
     }
   };
   // Save handler for both create and update
@@ -369,33 +367,48 @@ export default function SubCompanyPage() {
             : companyProfile?.company_order ?? 0,
       };
 
-      // Only include image if it's a new base64 upload (user changed the image)
-      // Don't send existing image URL as it will break the backend
-      if (editProfile.image && editProfile.image.startsWith("data:")) {
-        companyDoc.image = editProfile.image;
-      }
-
-      // Video field (if needed for premium users in future)
-      if (editProfile.video && editProfile.video.startsWith("data:")) {
-        companyDoc.video = editProfile.video;
-      }
+      // We do not send base64. If a new file was selected we'll send it as multipart/form-data below.
 
       // If we're updating an existing company, include its _id
       if (editMode === "update" && companyProfile?._id) {
         companyDoc._id = companyProfile._id;
       }
 
-      // Send as JSON with data array structure
-      await axios.post(
-        `${API_BASE_URL}/updatecompany`,
-        { data: [companyDoc] },
-        {
+      // If a file was selected (image or video), send multipart/form-data like the curl example:
+      // -F 'data=[{...}]' -F 'user_id=<USER_ID>' -F 'image=@/path' or -F 'video=@/path'
+      if (file) {
+        const formData = new FormData();
+        formData.append("data", JSON.stringify([companyDoc]));
+        // include user_id if available (some backends expect it alongside token)
+        if (profile && profile._id) {
+          formData.append("user_id", profile._id);
+        }
+        // append file under correct field name
+        if (file.type.startsWith("video/")) {
+          formData.append("video", file);
+        } else {
+          formData.append("image", file);
+        }
+
+        await axios.post(`${API_BASE_URL}/updatecompany`, formData, {
           headers: {
             Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
+            "Content-Type": "multipart/form-data",
           },
-        }
-      );
+        });
+      } else {
+        // No new file selected — send JSON only (don't include base64 image/video)
+        await axios.post(
+          `${API_BASE_URL}/updatecompany`,
+          { data: [companyDoc] },
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "Content-Type": "application/json",
+            },
+          }
+        );
+      }
 
       // Refresh company data with fresh GET call
       const res = await axios.get(`${API_BASE_URL}/getcompanyprofile`, {
