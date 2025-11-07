@@ -374,41 +374,70 @@ export default function SubCompanyPage() {
         companyDoc._id = companyProfile._id;
       }
 
-      // If a file was selected (image or video), send multipart/form-data like the curl example:
-      // -F 'data=[{...}]' -F 'user_id=<USER_ID>' -F 'image=@/path' or -F 'video=@/path'
+      // Always send multipart/form-data (API now expects form fields only)
+      const formData = new FormData();
+
+      // Append id if present
+      if (companyDoc._id) {
+        formData.append("_id", String(companyDoc._id));
+      }
+
+      // Append user id if available
+      if (profile && profile._id) {
+        formData.append("user_id", String(profile._id));
+      }
+
+      // Append simple fields
+      formData.append(
+        "company_name_english",
+        String(companyDoc.company_name_english || "")
+      );
+      formData.append(
+        "company_name_chinese",
+        String(companyDoc.company_name_chinese || "")
+      );
+      formData.append(
+        "companydesignation",
+        String(companyDoc.companydesignation || "")
+      );
+      formData.append("description", String(companyDoc.description || ""));
+      formData.append("Instagram", String(companyDoc.Instagram || ""));
+      formData.append("Facebook", String(companyDoc.Facebook || ""));
+      formData.append("Youtube", String(companyDoc.Youtube || ""));
+      formData.append("telegramId", String(companyDoc.telegramId || ""));
+      formData.append("website", String(companyDoc.website || ""));
+      formData.append(
+        "company_order",
+        String(companyDoc.company_order ?? companyDoc.order ?? 0)
+      );
+
+      // File fields: prefer the newly selected file, otherwise send existing image/video path if present
       if (file) {
-        const formData = new FormData();
-        formData.append("data", JSON.stringify([companyDoc]));
-        // include user_id if available (some backends expect it alongside token)
-        if (profile && profile._id) {
-          formData.append("user_id", profile._id);
-        }
-        // append file under correct field name
         if (file.type.startsWith("video/")) {
           formData.append("video", file);
         } else {
           formData.append("image", file);
         }
-
-        await axios.post(`${API_BASE_URL}/updatecompany`, formData, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "multipart/form-data",
-          },
-        });
       } else {
-        // No new file selected — send JSON only (don't include base64 image/video)
-        await axios.post(
-          `${API_BASE_URL}/updatecompany`,
-          { data: [companyDoc] },
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-              "Content-Type": "application/json",
-            },
-          }
-        );
+        // No new file selected — include existing values from editProfile or companyProfile if available
+        if (editProfile?.image) {
+          formData.append("image", String(editProfile.image));
+        } else if (companyProfile?.image) {
+          formData.append("image", String(companyProfile.image));
+        }
+        if (editProfile?.video) {
+          formData.append("video", String(editProfile.video));
+        } else if (companyProfile?.video) {
+          formData.append("video", String(companyProfile.video));
+        }
       }
+
+      await axios.post(`${API_BASE_URL}/updatecompany`, formData, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          // Let axios set Content-Type with proper boundary
+        },
+      });
 
       // Refresh company data with fresh GET call
       const res = await axios.get(`${API_BASE_URL}/getcompanyprofile`, {
