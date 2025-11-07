@@ -110,19 +110,24 @@ export default function ProfilePage() {
                   {profile?.companydata?.company_name_chinese || "公司名称"}
                 </button>
                 <div className="rounded-full mb-2 w-[180px] h-[180px] flex items-center justify-center overflow-hidden bg-white self-center">
-                  {profile.profile_image &&
-                  profile.profile_image.endsWith(".mp4") ? (
+                  {profile?.video ? (
                     <video
-                      src={profile.profile_image}
+                      src={profile.video}
                       autoPlay
                       loop
                       muted
                       playsInline
                       className="w-full h-full object-cover rounded-full"
                     />
+                  ) : profile?.profile_image ? (
+                    <img
+                      src={profile.profile_image}
+                      alt="Profile"
+                      className="w-full h-full object-cover rounded-full"
+                    />
                   ) : (
                     <img
-                      src={profile.profile_image || logo}
+                      src={logo}
                       alt="Profile"
                       className="w-full h-full object-cover rounded-full"
                     />
