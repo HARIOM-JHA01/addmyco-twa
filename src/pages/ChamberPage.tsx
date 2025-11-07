@@ -78,15 +78,6 @@ export default function ChamberPage() {
   const telegramLink = profile?.telegramId || profile?.tgid || null;
   const contactNumber =
     profile?.contact || profile?.Contact || profile?.phone || null;
-  // Helper to convert file to base64
-  const fileToBase64 = (file: File): Promise<string> => {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onload = () => resolve(reader.result as string);
-      reader.onerror = reject;
-      reader.readAsDataURL(file);
-    });
-  };
   // Open edit form for update
   const openEditChamber = (chamber: any) => {
     setEditMode("update");
@@ -103,6 +94,7 @@ export default function ChamberPage() {
       order: chamber.chamber_order,
       _id: chamber._id,
       image: chamber.image,
+      video: chamber.video,
       whatsapp: chamber.WhatsApp,
       wechat: chamber.WeChat,
       line: chamber.Line,
@@ -283,8 +275,9 @@ export default function ChamberPage() {
       setFile(selectedFile);
       setFilePreview(URL.createObjectURL(selectedFile));
 
-      const base64 = await fileToBase64(selectedFile);
-      setEditChamber((prev: any) => ({ ...prev, image: base64 }));
+      // Do NOT convert to base64. We'll upload the raw File via multipart/form-data on save.
+      // Clear editChamber.image/video so preview uses filePreview and server receives the file instead of a base64 string.
+      setEditChamber((prev: any) => ({ ...prev, image: "", video: "" }));
     }
   };
   // Save handler for both create and update
@@ -331,44 +324,70 @@ export default function ChamberPage() {
       const token = localStorage.getItem("token");
       if (!token) throw new Error("No token found. Please login again.");
       if (editMode === "update") {
-        // Update
-        const payload: any = {
-          data: [
-            {
-              _id: editChamber._id,
-              chamber_name_english: editChamber.enName,
-              chamber_name_chinese: editChamber.cnName,
-              chamberdesignation: editChamber.designation,
-              chamberwebsite: editChamber.website,
-              detail: editChamber.details,
-              WhatsApp: editChamber.whatsapp,
-              WeChat: editChamber.wechat,
-              Line: editChamber.line,
-              Instagram: editChamber.instagram,
-              Facebook: editChamber.facebook,
-              Twitter: editChamber.twitter,
-              Youtube: editChamber.youtube,
-              Linkedin: editChamber.linkedin,
-              SnapChat: editChamber.snapchat,
-              Skype: editChamber.skype,
-              TikTok: editChamber.tiktok,
-              tgchannel: editChamber.telegram,
-              chamberfanpage: editChamber.chamberfanpage,
-              chamber_order: editChamber.order,
-            },
-          ],
-        };
+        // Update: send multipart/form-data per new API
+        const formData = new FormData();
+        if (editChamber._id) formData.append("_id", String(editChamber._id));
+        if (profile && profile._id)
+          formData.append("user_id", String(profile._id));
 
-        // Only include image if it's a new base64 upload (user changed the image)
-        // Don't send existing image URL as it will break the backend
-        if (editChamber.image && editChamber.image.startsWith("data:")) {
-          payload.data[0].image = editChamber.image;
+        formData.append(
+          "chamber_name_english",
+          String(editChamber.enName || "")
+        );
+        formData.append(
+          "chamber_name_chinese",
+          String(editChamber.cnName || "")
+        );
+        formData.append(
+          "chamberdesignation",
+          String(editChamber.designation || "")
+        );
+        formData.append("detail", String(editChamber.details || ""));
+        formData.append("chamberwebsite", String(editChamber.website || ""));
+        formData.append("WhatsApp", String(editChamber.whatsapp || ""));
+        formData.append("WeChat", String(editChamber.wechat || ""));
+        formData.append("Line", String(editChamber.line || ""));
+        formData.append("Instagram", String(editChamber.instagram || ""));
+        formData.append("Facebook", String(editChamber.facebook || ""));
+        formData.append("Twitter", String(editChamber.twitter || ""));
+        formData.append("Youtube", String(editChamber.youtube || ""));
+        formData.append("Linkedin", String(editChamber.linkedin || ""));
+        formData.append("SnapChat", String(editChamber.snapchat || ""));
+        formData.append("Skype", String(editChamber.skype || ""));
+        formData.append("TikTok", String(editChamber.tiktok || ""));
+        formData.append("tgchannel", String(editChamber.telegram || ""));
+        formData.append(
+          "chamberfanpage",
+          String(editChamber.chamberfanpage || "")
+        );
+        formData.append("chamber_order", String(editChamber.order ?? ""));
+
+        // File fields: prefer newly selected file, otherwise include existing values
+        if (file) {
+          if (file.type.startsWith("video/")) {
+            formData.append("video", file);
+          } else {
+            formData.append("image", file);
+          }
+        } else {
+          if (editChamber?.image)
+            formData.append("image", String(editChamber.image));
+          else if (chamberData && Array.isArray(chamberData)) {
+            const current = chamberData[currentChamberIndex];
+            if (current?.image) formData.append("image", String(current.image));
+          }
+          if (editChamber?.video)
+            formData.append("video", String(editChamber.video));
+          else if (chamberData && Array.isArray(chamberData)) {
+            const current = chamberData[currentChamberIndex];
+            if (current?.video) formData.append("video", String(current.video));
+          }
         }
 
-        await axios.post(`${API_BASE_URL}/updatechamber`, payload, {
+        await axios.post(`${API_BASE_URL}/updatechamber`, formData, {
           headers: {
             Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
+            // Let axios set Content-Type with boundary
           },
         });
       } else {
