@@ -397,17 +397,59 @@ export default function MyQRPage() {
 
           {/* Scan my QR Code */}
           <p className="text-app mb-2">{i18n.t("scan_qr")}</p>
-          <div
-            className="flex items-center bg-white rounded-full px-4 py-2 mb-4 w-full max-w-xs cursor-pointer"
-            onClick={() => copyToClipboard(qrLink)}
-          >
-            <input
-              type="text"
-              value={qrLink}
-              readOnly
-              className="bg-transparent focus:outline-none text-gray-700 w-full"
-            />
-            <FontAwesomeIcon icon={faCopy} className="text-gray-500 ml-2" />
+
+          {/* Free Link (constructed from tgid) */}
+          <div className="w-full max-w-xs mb-2">
+            <div className="text-sm font-semibold text-gray-600">Free link</div>
+            <div className="flex items-center bg-white rounded-full px-4 py-2 mt-1">
+              <input
+                type="text"
+                value={freeLink}
+                readOnly
+                className="bg-transparent focus:outline-none text-gray-700 w-full"
+              />
+              <button
+                type="button"
+                onClick={() => copyToClipboard(freeLink)}
+                className="ml-2"
+                aria-label="Copy free link"
+              >
+                <FontAwesomeIcon icon={faCopy} className="text-gray-500" />
+              </button>
+            </div>
+          </div>
+
+          {/* Premium Link (constructed from username) */}
+          <div className="w-full max-w-xs mb-4">
+            <div className="text-sm font-semibold text-gray-600">
+              Premium link
+            </div>
+            <div
+              className={`flex items-center rounded-full px-4 py-2 mt-1 ${
+                isPremium ? "bg-white" : "bg-gray-100"
+              }`}
+            >
+              <input
+                type="text"
+                value={premiumLink}
+                readOnly
+                disabled={!isPremium}
+                className={`bg-transparent focus:outline-none text-gray-700 w-full ${
+                  !isPremium ? "opacity-60" : ""
+                }`}
+              />
+              <button
+                type="button"
+                onClick={() => isPremium && copyToClipboard(premiumLink)}
+                className={`ml-2 ${
+                  !isPremium ? "opacity-50 pointer-events-none" : ""
+                }`}
+                aria-label="Copy premium link"
+                disabled={!isPremium}
+              >
+                <FontAwesomeIcon icon={faCopy} className="text-gray-500" />
+              </button>
+            </div>
           </div>
 
           {/* Copy my Details Button */}
