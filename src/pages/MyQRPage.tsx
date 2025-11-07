@@ -14,6 +14,9 @@ export default function MyQRPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [qrLink, setQrLink] = useState("");
+  const [freeLink, setFreeLink] = useState("");
+  const [premiumLink, setPremiumLink] = useState("");
+  const [isPremium, setIsPremium] = useState(false);
   const qrRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -29,18 +32,24 @@ export default function MyQRPage() {
         const data = res.data?.data || res.data;
         setProfile(data || null);
 
-        // derive username field (prefer explicit username)
-        const username =
-          data?.username ||
-          data?.telegram_username ||
-          data?.tgid ||
-          data?._id ||
-          "";
-
         const origin = (window.location && window.location.origin) || "";
-        // Use /t.me/ prefix for shareable links that redirect to Telegram mini app
-        const link = username ? `${origin}/t.me/${username}` : origin;
-        setQrLink(link);
+        // free link uses tgid (or fallback)
+        const tgid = data?.tgid || data?.telegram_username || "";
+        const free = tgid ? `${origin}/t.me/${tgid}` : origin;
+
+        // premium link uses username (or fallback)
+        const uname =
+          data?.username || data?.telegram_username || data?.tgid || "";
+        const premium = uname ? `${origin}/t.me/${uname}` : origin;
+
+        setFreeLink(free);
+        setPremiumLink(premium);
+        const premiumFlag =
+          String(data?.membertype).toLowerCase() === "premium";
+        setIsPremium(premiumFlag);
+
+        // QR encodes premium link when user is premium, otherwise free link
+        setQrLink(premiumFlag && premium ? premium : free);
       } catch (err: any) {
         console.error(err);
         setError("Failed to load profile");
