@@ -252,14 +252,14 @@ export default function PublicCompanyView({
             {companyProfile.company_name_chinese || "中文公司名稱"}
           </div>
           <div
-            className="w-full rounded-full bg-app text-app text-xl font-bold py-1 mb-4 flex items-center justify-center"
+            className="w-full rounded-full bg-app text-app text-xl font-bold py-1 mb-2 flex items-center justify-center"
             style={{ borderRadius: "2rem" }}
           >
             {companyProfile.companydesignation || "Company Designation"}
           </div>
 
           {/* Company Image and Description */}
-          <div className="flex flex-col items-center mb-6 w-full">
+          <div className="flex flex-col items-center mb-2 w-full">
             <div className="w-full flex justify-center mb-4">
               {companyProfile.video ? (
                 <video
@@ -334,10 +334,10 @@ export default function PublicCompanyView({
               },
               {
                 key: "facebook",
-                enabled: !!companyProfile.facebook,
+                enabled: !!companyProfile.Facebook,
                 icon: faFacebook,
                 onClick: () =>
-                  window.open(formatUrl(companyProfile.facebook!), "_blank"),
+                  window.open(formatUrl(companyProfile.Facebook!), "_blank"),
               },
               {
                 key: "instagram",

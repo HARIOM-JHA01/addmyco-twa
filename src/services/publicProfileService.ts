@@ -55,7 +55,7 @@ export interface CompanyData {
   website?: string;
   Instagram?: string;
   Youtube?: string;
-  facebook?: string;
+  Facebook?: string;
   image?: string;
   video?: string;
   company_order?: number;
