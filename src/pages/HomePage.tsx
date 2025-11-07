@@ -380,25 +380,23 @@ export default function HomePage() {
 
           <div className="flex flex-col items-center w-full">
             <div className="rounded-full mb-2 w-[180px] h-[180px] flex items-center justify-center overflow-hidden bg-white">
-              {profile?.profile_image &&
-              profile.profile_image.trim() !== "" &&
-              !profile.profile_image.endsWith("undefined") ? (
-                profile.profile_image.endsWith(".mp4") ? (
-                  <video
-                    src={profile.profile_image}
-                    autoPlay
-                    loop
-                    muted
-                    playsInline
-                    className="w-full h-full object-cover rounded-full"
-                  />
-                ) : (
-                  <img
-                    src={profile.profile_image}
-                    alt="Profile"
-                    className="w-full h-full object-cover rounded-full"
-                  />
-                )
+              {profile?.video ? (
+                <video
+                  src={profile.video}
+                  autoPlay
+                  loop
+                  muted
+                  playsInline
+                  className="w-full h-full object-cover rounded-full"
+                />
+              ) : profile?.profile_image &&
+                profile.profile_image.trim() !== "" &&
+                !profile.profile_image.endsWith("undefined") ? (
+                <img
+                  src={profile.profile_image}
+                  alt="Profile"
+                  className="w-full h-full object-cover rounded-full"
+                />
               ) : (
                 <img
                   src={logo}
