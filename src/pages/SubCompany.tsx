@@ -307,12 +307,7 @@ export default function SubCompanyPage() {
       setEditError("");
       setFile(selectedFile);
       setFilePreview(URL.createObjectURL(selectedFile));
-
-      const reader = new FileReader();
-      reader.onload = () => {
-        setEditProfile((prev: any) => ({ ...prev, image: reader.result }));
-      };
-      reader.readAsDataURL(selectedFile);
+      // Do not convert to base64/data URL. We'll upload the File directly with FormData on save.
     }
   };
   // Save handler for both create and update
@@ -369,33 +364,40 @@ export default function SubCompanyPage() {
             : companyProfile?.company_order ?? 0,
       };
 
-      // Only include image if it's a new base64 upload (user changed the image)
-      // Don't send existing image URL as it will break the backend
-      if (editProfile.image && editProfile.image.startsWith("data:")) {
-        companyDoc.image = editProfile.image;
-      }
-
-      // Video field (if needed for premium users in future)
-      if (editProfile.video && editProfile.video.startsWith("data:")) {
-        companyDoc.video = editProfile.video;
-      }
+      // If a new file was selected, we'll upload it as multipart/form-data below.
+      // Do not include base64 data URLs in the JSON payload.
 
       // If we're updating an existing company, include its _id
       if (editMode === "update" && companyProfile?._id) {
         companyDoc._id = companyProfile._id;
       }
 
-      // Send as JSON with data array structure
-      await axios.post(
-        `${API_BASE_URL}/updatecompany`,
-        { data: [companyDoc] },
-        {
+      // If a new file is selected, send multipart/form-data so we upload the file binary
+      if (file) {
+        const formData = new FormData();
+        // Attach the JSON data as a field named `data` (backend expects the same structure)
+        formData.append("data", JSON.stringify([companyDoc]));
+        // Attach the file (use key `image` to match create flow)
+        formData.append("image", file);
+        await axios.post(`${API_BASE_URL}/updatecompany`, formData, {
           headers: {
             Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
+            // Let the browser set the Content-Type including boundary
           },
-        }
-      );
+        });
+      } else {
+        // No new file — send as JSON like before
+        await axios.post(
+          `${API_BASE_URL}/updatecompany`,
+          { data: [companyDoc] },
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "Content-Type": "application/json",
+            },
+          }
+        );
+      }
 
       // Refresh company data with fresh GET call
       const res = await axios.get(`${API_BASE_URL}/getcompanyprofile`, {
