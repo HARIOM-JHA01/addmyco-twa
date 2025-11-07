@@ -453,28 +453,31 @@ export default function MyQRPage() {
           </div>
 
           {/* Copy my Details Button */}
-          <button
-            onClick={handleCopyDetails}
-            className="flex items-center justify-between w-full gap-2 bg-white text-gray-700 rounded-full px-4 py-2 transition"
-            style={{ "--hover-bg": "var(--app-background-color)" } as any}
-            onMouseEnter={(e) => {
-              (e.currentTarget as HTMLElement).style.backgroundColor =
-                getComputedStyle(document.documentElement).getPropertyValue(
-                  "--app-background-color"
-                ) || "#007cb6";
-              (e.currentTarget as HTMLElement).style.color =
-                getComputedStyle(document.documentElement).getPropertyValue(
-                  "--app-font-color"
-                ) || "#ffffff";
-            }}
-            onMouseLeave={(e) => {
-              (e.currentTarget as HTMLElement).style.backgroundColor = "white";
-              (e.currentTarget as HTMLElement).style.color = "#374151";
-            }}
-          >
-            <span>{i18n.t("copy_details")}</span>
-            <FontAwesomeIcon icon={faCopy} />
-          </button>
+          <div className="w-full max-w-xs mb-4">
+            <button
+              onClick={handleCopyDetails}
+              className="flex items-center justify-between w-full gap-2 bg-white text-gray-700 rounded-full px-4 py-2 transition"
+              style={{ "--hover-bg": "var(--app-background-color)" } as any}
+              onMouseEnter={(e) => {
+                (e.currentTarget as HTMLElement).style.backgroundColor =
+                  getComputedStyle(document.documentElement).getPropertyValue(
+                    "--app-background-color"
+                  ) || "#007cb6";
+                (e.currentTarget as HTMLElement).style.color =
+                  getComputedStyle(document.documentElement).getPropertyValue(
+                    "--app-font-color"
+                  ) || "#ffffff";
+              }}
+              onMouseLeave={(e) => {
+                (e.currentTarget as HTMLElement).style.backgroundColor =
+                  "white";
+                (e.currentTarget as HTMLElement).style.color = "#374151";
+              }}
+            >
+              <span>{i18n.t("copy_details")}</span>
+              <FontAwesomeIcon icon={faCopy} />
+            </button>
+          </div>
         </div>
       </div>
     </Layout>
