@@ -261,7 +261,16 @@ export default function PublicCompanyView({
           {/* Company Image and Description */}
           <div className="flex flex-col items-center mb-6 w-full">
             <div className="w-full flex justify-center mb-4">
-              {companyProfile.image ? (
+              {companyProfile.video ? (
+                <video
+                  src={companyProfile.video}
+                  autoPlay
+                  loop
+                  muted
+                  playsInline
+                  className="w-full h-48 object-cover rounded-xl"
+                />
+              ) : companyProfile.image ? (
                 companyProfile.image.endsWith(".mp4") ? (
                   <video
                     src={companyProfile.image}

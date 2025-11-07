@@ -57,6 +57,7 @@ export interface CompanyData {
   Youtube?: string;
   facebook?: string;
   image?: string;
+  video?: string;
   company_order?: number;
 }
 
