@@ -422,7 +422,13 @@ export default function MyQRPage() {
           </div>
 
           {/* Premium Link (constructed from username) */}
-          <div className="w-full max-w-xs mb-4">
+          <div
+            className="w-full max-w-xs mb-4"
+            onClick={() => {
+              if (!isPremium)
+                WebApp.showAlert("Upgrade to Premium to use this link!");
+            }}
+          >
             <div className="text-sm font-semibold text-gray-600 text-center">
               Premium members can also use this link
             </div>
@@ -442,11 +448,7 @@ export default function MyQRPage() {
               />
               <button
                 type="button"
-                onClick={() =>
-                  isPremium
-                    ? copyToClipboard(premiumLink)
-                    : WebApp.showAlert("Upgrade to Premium to use this link!")
-                }
+                onClick={() => isPremium && copyToClipboard(premiumLink)}
                 className={`ml-2 ${
                   !isPremium ? "opacity-50 pointer-events-none" : ""
                 }`}
