@@ -23,6 +23,7 @@ import {
 } from "../services/publicProfileService";
 import { formatUrl } from "../utils/validation";
 import { callOrCopyPhone } from "../utils/phone";
+import WebApp from "@twa-dev/sdk";
 
 interface PublicCompanyViewProps {
   profile: PublicProfileData;
@@ -324,11 +325,7 @@ export default function PublicCompanyView({
                 icon: faTelegram,
                 onClick: () => {
                   if (companyProfile.telegramId) {
-                    const id = (companyProfile.telegramId || "").replace(
-                      /^@/,
-                      ""
-                    );
-                    window.open(`https://t.me/${id}`, "_blank");
+                    WebApp.openLink(`${companyProfile.telegramId}`);
                   }
                 },
               },

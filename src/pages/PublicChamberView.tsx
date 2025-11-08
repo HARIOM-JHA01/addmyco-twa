@@ -23,6 +23,7 @@ import {
   ChamberData,
 } from "../services/publicProfileService";
 import { formatUrl } from "../utils/validation";
+import WebApp from "@twa-dev/sdk";
 
 interface PublicChamberViewProps {
   profile: PublicProfileData;
@@ -82,7 +83,7 @@ export default function PublicChamberView({
       <div className="flex flex-col items-center justify-center flex-grow px-2 pb-8 min-h-screen mt-2">
         <div className="bg-blue-100 bg-opacity-40 rounded-3xl p-4 w-full max-w-md mx-auto flex flex-col items-center shadow-lg">
           {/* Chamber Top Icon Carousel */}
-          <div className="relative w-full mb-4">
+          <div className="relative w-full mb-2">
             <button
               aria-label="Top scroll left"
               className="absolute left-6 top-1/2 -translate-y-1/2 z-20 p-2 bg-white/10 rounded-full"
@@ -247,15 +248,15 @@ export default function PublicChamberView({
             {c.chamber_name_chinese}
           </div>
           <div
-            className="w-full rounded-full bg-app text-app text-lg font-bold py-2 mb-4 flex items-center justify-center"
+            className="w-full rounded-full bg-app text-app text-lg font-bold py-2 mb-2 flex items-center justify-center"
             style={{ borderRadius: "2rem" }}
           >
             {c.chamberdesignation}
           </div>
 
           {/* Image or video */}
-          <div className="flex flex-col items-center mb-6 w-full">
-            <div className="w-full flex justify-center mb-4">
+          <div className="flex flex-col items-center mb-2 w-full">
+            <div className="w-full flex justify-center mb-2">
               {c.video && c.video.endsWith(".mp4") ? (
                 <video
                   src={c.video}
@@ -286,7 +287,7 @@ export default function PublicChamberView({
               )}
             </div>
             <div
-              className="w-full h-48 bg-white rounded-md p-2 overflow-auto mb-4"
+              className="w-full h-48 bg-white rounded-md p-2 overflow-auto mb-2"
               style={{
                 borderWidth: 2,
                 borderStyle: "solid",
@@ -308,8 +309,7 @@ export default function PublicChamberView({
                 icon: faTelegram,
                 onClick: () => {
                   if (c.tgchannel) {
-                    const id = (c.tgchannel || "").replace(/^@/, "");
-                    window.open(`https://t.me/${id}`, "_blank");
+                    WebApp.openLink(`${c.tgchannel}`);
                   }
                 },
               },

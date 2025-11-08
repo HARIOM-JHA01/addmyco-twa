@@ -1051,11 +1051,7 @@ export default function SubCompanyPage() {
                     ),
                     onClick: () => {
                       if (companyProfile?.telegramId) {
-                        const id = (companyProfile.telegramId || "").replace(
-                          /^@/,
-                          ""
-                        );
-                        WebApp.openLink(`${id}`);
+                        WebApp.openLink(`${companyProfile.telegramId}`);
                       }
                     },
                   },
