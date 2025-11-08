@@ -723,7 +723,7 @@ export default function PublicProfileView({
             style={{
               borderWidth: 2,
               borderStyle: "solid",
-              borderColor: "var(--app-background-color)",
+              backgroundColor: "var(--app-background-color)",
             }}
           >
             <div className="text-app">{profile.address1}</div>

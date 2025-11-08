@@ -307,7 +307,7 @@ export default function PublicCompanyView({
               style={{
                 borderWidth: 2,
                 borderStyle: "solid",
-                borderColor:
+                backgroundColor:
                   profile.theme?.backgroundcolor ||
                   "var(--app-background-color)",
               }}
