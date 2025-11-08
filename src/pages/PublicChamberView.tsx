@@ -287,11 +287,11 @@ export default function PublicChamberView({
               )}
             </div>
             <div
-              className="w-full h-48 bg-white rounded-md p-2 overflow-auto mb-2"
+              className="w-full h-48 bg-white rounded-md p-2 overflow-auto"
               style={{
                 borderWidth: 2,
                 borderStyle: "solid",
-                borderColor:
+                backgroundColor:
                   profile.theme?.backgroundcolor ||
                   "var(--app-background-color)",
               }}
@@ -343,15 +343,39 @@ export default function PublicChamberView({
               .map((item) => (
                 <div
                   key={item.key}
-                  className="w-12 h-12 flex-shrink-0 cursor-pointer rounded-full flex items-center justify-center"
+                  className="w-12 h-12 flex-shrink-0 cursor-pointer"
                   onClick={item.onClick}
-                  style={{
-                    backgroundColor:
-                      profile.theme?.backgroundcolor ||
-                      "var(--app-background-color)",
-                  }}
+                  style={{ padding: 3 }}
                 >
-                  <FontAwesomeIcon icon={item.icon} size="lg" color="white" />
+                  <div
+                    style={{
+                      clipPath:
+                        "polygon(30% 0%, 70% 0%, 100% 30%, 100% 70%, 70% 100%, 30% 100%, 0% 70%, 0% 30%)",
+                      backgroundColor:
+                        profile.theme?.backgroundcolor ||
+                        "var(--app-background-color)",
+                      width: "100%",
+                      height: "100%",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                    }}
+                  >
+                    <div
+                      className="w-full h-full flex items-center justify-center"
+                      style={{
+                        clipPath:
+                          "polygon(30% 0%, 70% 0%, 100% 30%, 100% 70%, 70% 100%, 30% 100%, 0% 70%, 0% 30%)",
+                        background: "rgba(255,255,255,0.15)",
+                      }}
+                    >
+                      <FontAwesomeIcon
+                        icon={item.icon}
+                        size="lg"
+                        color="white"
+                      />
+                    </div>
+                  </div>
                 </div>
               ))}
           </div>
