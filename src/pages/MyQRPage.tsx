@@ -6,6 +6,7 @@ import logo from "../assets/logo.png";
 import i18n from "../i18n";
 import { useEffect, useState, useRef } from "react";
 import axios from "axios";
+import WebApp from "@twa-dev/sdk";
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
@@ -34,12 +35,11 @@ export default function MyQRPage() {
 
         const origin = (window.location && window.location.origin) || "";
         // free link uses tgid (or fallback)
-        const tgid = data?.tgid || data?.telegram_username || "";
+        const tgid = data?.username || "";
         const free = tgid ? `${origin}/t.me/${tgid}` : origin;
 
         // premium link uses username (or fallback)
-        const uname =
-          data?.username || data?.telegram_username || data?.tgid || "";
+        const uname = data?.tgid || "";
         const premium = uname ? `${origin}/t.me/${uname}` : origin;
 
         setFreeLink(free);
@@ -398,9 +398,11 @@ export default function MyQRPage() {
           {/* Scan my QR Code */}
           <p className="text-app mb-2">{i18n.t("scan_qr")}</p>
 
-          {/* Free Link (constructed from tgid) */}
+          {/* My Profile Link (constructed from tgid) */}
           <div className="w-full max-w-xs mb-2">
-            <div className="text-sm font-semibold text-gray-600">Free link</div>
+            <div className="text-sm font-semibold text-gray-600 text-center">
+              My Profile Link
+            </div>
             <div className="flex items-center bg-white rounded-full px-4 py-2 mt-1">
               <input
                 type="text"
@@ -421,8 +423,8 @@ export default function MyQRPage() {
 
           {/* Premium Link (constructed from username) */}
           <div className="w-full max-w-xs mb-4">
-            <div className="text-sm font-semibold text-gray-600">
-              Premium link
+            <div className="text-sm font-semibold text-gray-600 text-center">
+              Premium members can also use this link
             </div>
             <div
               className={`flex items-center rounded-full px-4 py-2 mt-1 ${
@@ -440,7 +442,11 @@ export default function MyQRPage() {
               />
               <button
                 type="button"
-                onClick={() => isPremium && copyToClipboard(premiumLink)}
+                onClick={() =>
+                  isPremium
+                    ? copyToClipboard(premiumLink)
+                    : WebApp.showAlert("Upgrade to Premium to use this link!")
+                }
                 className={`ml-2 ${
                   !isPremium ? "opacity-50 pointer-events-none" : ""
                 }`}
