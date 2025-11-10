@@ -1033,7 +1033,7 @@ export default function ChamberPage() {
                         style={{
                           borderWidth: 2,
                           borderStyle: "solid",
-                          backgroundColor: "var(--app-background-color)",
+                          color: "#000",
                         }}
                       >
                         {c.detail}

@@ -303,13 +303,11 @@ export default function PublicCompanyView({
               )}
             </div>
             <div
-              className="w-full h-48 bg-white rounded-md p-2 overflow-auto"
+              className="w-full h-48 bg-white rounded-md p-2 overflow-auto text-black"
               style={{
                 borderWidth: 2,
                 borderStyle: "solid",
-                backgroundColor:
-                  profile.theme?.backgroundcolor ||
-                  "var(--app-background-color)",
+                backgroundColor: "#fff",
               }}
             >
               {companyProfile.description || "No description available"}

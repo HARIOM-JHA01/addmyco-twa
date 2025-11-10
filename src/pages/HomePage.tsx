@@ -695,17 +695,17 @@ export default function HomePage() {
               style={{
                 borderWidth: 2,
                 borderStyle: "solid",
-                backgroundColor: "var(--app-background-color)",
+                backgroundColor: "#fff",
               }}
             >
               {profile.address1 && (
-                <div className="text-app">{profile.address1}</div>
+                <div className="text-black">{profile.address1}</div>
               )}
               {profile.address2 && (
-                <div className="text-app">{profile.address2}</div>
+                <div className="text-black">{profile.address2}</div>
               )}
               {profile.address3 && (
-                <div className="text-app">{profile.address3}</div>
+                <div className="text-black">{profile.address3}</div>
               )}
             </div>
           )}

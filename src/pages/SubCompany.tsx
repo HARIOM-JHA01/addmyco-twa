@@ -1029,7 +1029,8 @@ export default function SubCompanyPage() {
                   style={{
                     borderWidth: 2,
                     borderStyle: "solid",
-                    backgroundColor: "var(--app-background-color)",
+                    backgroundColor: "#fff",
+                    color: "#000",
                   }}
                 >
                   {companyProfile.description || "No description available"}
