@@ -35,8 +35,7 @@ export default function MyQRPage() {
 
         const origin = (window.location && window.location.origin) || "";
         // free link uses tgid (or fallback)
-        const tgid = data?.username || "";
-        const free = tgid ? `${origin}/t.me/${tgid}` : origin;
+        const free = data?.freeUsername || "";
 
         // premium link uses username (or fallback)
         const uname = data?.tgid || "";
