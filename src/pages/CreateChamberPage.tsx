@@ -16,7 +16,6 @@ export default function CreateChamberPage() {
     designation: "",
     details: "",
     website: "",
-    telegram: "",
     instagram: "",
     youtube: "",
     facebook: "",
@@ -84,7 +83,6 @@ export default function CreateChamberPage() {
     // Real-time validation for URL fields
     const urlFields = [
       "website",
-      "telegram",
       "instagram",
       "youtube",
       "facebook",
@@ -149,7 +147,6 @@ export default function CreateChamberPage() {
     const errors: { [key: string]: string } = {};
     const urlFields = [
       "website",
-      "telegram",
       "instagram",
       "youtube",
       "facebook",
@@ -253,7 +250,6 @@ export default function CreateChamberPage() {
         designation: "",
         details: "",
         website: "",
-        telegram: "",
         instagram: "",
         youtube: "",
         facebook: "",
@@ -339,7 +335,7 @@ export default function CreateChamberPage() {
               placeholder="English Name for Chamber"
               value={form.enName}
               onChange={handleChange}
-              className="w-full rounded-full px-[12px] py-2 border-2 border-blue-200 focus:outline-none focus:ring-2 focus:ring-blue-400 mb-2 bg-white placeholder-gray-500"
+              className="w-full rounded-full px-[12px] py-2 border-2 border-blue-200 focus:outline-none focus:ring-2 focus:ring-blue-400 mb-2 bg-white placeholder-gray-500 text-black"
               required
             />
             <input
@@ -347,14 +343,14 @@ export default function CreateChamberPage() {
               placeholder="Chinese Name for Chamber"
               value={form.cnName}
               onChange={handleChange}
-              className="w-full rounded-full px-[12px] py-2 border-2 border-blue-200 focus:outline-none focus:ring-2 focus:ring-blue-400 mb-2 bg-white placeholder-gray-500"
+              className="w-full rounded-full px-[12px] py-2 border-2 border-blue-200 focus:outline-none focus:ring-2 focus:ring-blue-400 mb-2 bg-white placeholder-gray-500 text-black"
             />
             <input
               name="designation"
               placeholder="Designation in Chamber"
               value={form.designation}
               onChange={handleChange}
-              className="w-full rounded-full px-[12px] py-2 border-2 border-blue-200 focus:outline-none focus:ring-2 focus:ring-blue-400 mb-2 bg-white placeholder-gray-500"
+              className="w-full rounded-full px-[12px] py-2 border-2 border-blue-200 focus:outline-none focus:ring-2 focus:ring-blue-400 mb-2 bg-white placeholder-gray-500 text-black"
             />
 
             {/* Upload area */}
@@ -437,7 +433,7 @@ export default function CreateChamberPage() {
               placeholder="Chamber details"
               value={form.details}
               onChange={handleChange}
-              className="w-full h-48 rounded-xl px-4 py-2 border border-blue-500 mb-2 focus:outline-none focus:ring-2 focus:ring-blue-400 resize-none"
+              className="w-full h-48 rounded-xl px-4 py-2 border border-blue-500 mb-2 focus:outline-none focus:ring-2 focus:ring-blue-400 resize-none text-black"
               rows={6}
             />
             <div className="w-full">
@@ -450,7 +446,7 @@ export default function CreateChamberPage() {
                   validationErrors.website
                     ? "border-red-500"
                     : "border-blue-200"
-                } mb-2 focus:outline-none focus:ring-2 focus:ring-blue-400 bg-white placeholder-gray-500`}
+                } mb-2 focus:outline-none focus:ring-2 focus:ring-blue-400 bg-white placeholder-gray-500 text-black`}
               />
               {validationErrors.website && (
                 <div className="text-red-500 text-xs px-2 mb-2">
@@ -460,15 +456,15 @@ export default function CreateChamberPage() {
             </div>
             <div className="w-full">
               <input
-                name="telegram"
-                placeholder="https://t.me/Telegram Id"
+                name="tgchannel"
+                placeholder="https://t.me/TG Channel"
                 value={form.tgchannel}
                 onChange={handleChange}
                 className={`w-full rounded-full px-[12px] py-2 border-2 ${
-                  validationErrors.telegram
+                  validationErrors.tgchannel
                     ? "border-red-500"
                     : "border-blue-200"
-                } mb-2 focus:outline-none focus:ring-2 focus:ring-blue-400 bg-white placeholder-gray-500`}
+                } mb-2 focus:outline-none focus:ring-2 focus:ring-blue-400 bg-white placeholder-gray-500 text-black`}
               />
               {validationErrors.tgchannel && (
                 <div className="text-red-500 text-xs px-2 mb-2">
@@ -486,7 +482,7 @@ export default function CreateChamberPage() {
                   validationErrors.instagram
                     ? "border-red-500"
                     : "border-blue-200"
-                } mb-2 focus:outline-none focus:ring-2 focus:ring-blue-400 bg-white placeholder-gray-500`}
+                } mb-2 focus:outline-none focus:ring-2 focus:ring-blue-400 bg-white placeholder-gray-500 text-black`}
               />
               {validationErrors.instagram && (
                 <div className="text-red-500 text-xs px-2 mb-2">
@@ -499,14 +495,14 @@ export default function CreateChamberPage() {
               placeholder="https://Youtube"
               value={form.youtube}
               onChange={handleChange}
-              className="w-full rounded-full px-[12px] py-2 border-2 border-blue-200 mb-2 focus:outline-none focus:ring-2 focus:ring-blue-400 bg-white placeholder-gray-500"
+              className="w-full rounded-full px-[12px] py-2 border-2 border-blue-200 mb-2 focus:outline-none focus:ring-2 focus:ring-blue-400 bg-white placeholder-gray-500 text-black"
             />
             <input
               name="facebook"
               placeholder="https://Facebook"
               value={form.facebook}
               onChange={handleChange}
-              className="w-full rounded-full px-[12px] py-2 border-2 border-blue-200 mb-2 focus:outline-none focus:ring-2 focus:ring-blue-400 bg-white placeholder-gray-500"
+              className="w-full rounded-full px-[12px] py-2 border-2 border-blue-200 mb-2 focus:outline-none focus:ring-2 focus:ring-blue-400 bg-white placeholder-gray-500 text-black"
             />
             <div className="w-full mb-2">
               <label className="block text-sm mb-1">Display Order</label>
@@ -514,7 +510,7 @@ export default function CreateChamberPage() {
                 name="order"
                 value={form.order}
                 onChange={(e) => setForm({ ...form, order: e.target.value })}
-                className="w-full rounded-full px-[12px] py-2 border-2 border-blue-200 mb-2 focus:outline-none focus:ring-2 focus:ring-blue-400 bg-white"
+                className="w-full rounded-full px-[12px] py-2 border-2 border-blue-200 mb-2 focus:outline-none focus:ring-2 focus:ring-blue-400 bg-white text-black"
               >
                 {Array.from({ length: 15 }, (_, i) => i + 1).map((n) => (
                   <option

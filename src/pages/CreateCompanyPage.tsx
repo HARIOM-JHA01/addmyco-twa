@@ -262,7 +262,7 @@ export default function CreateCompanyPage() {
               placeholder="Company Name in English"
               value={form.company_name_english}
               onChange={handleChange}
-              className="w-full rounded-full px-[12px] py-2 border border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-400 mb-2"
+              className="w-full rounded-full px-[12px] py-2 border border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-400 mb-2 text-black"
               required
             />
             <input
@@ -270,14 +270,14 @@ export default function CreateCompanyPage() {
               placeholder="Company Name in Chinese"
               value={form.company_name_chinese}
               onChange={handleChange}
-              className="w-full rounded-full px-[12px] py-2 border border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-400 mb-2"
+              className="w-full rounded-full px-[12px] py-2 border border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-400 mb-2 text-black"
             />
             <input
               name="companydesignation"
               placeholder="Company Designation"
               value={form.companydesignation}
               onChange={handleChange}
-              className="w-full rounded-full px-[12px] py-2 border border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-400 mb-2"
+              className="w-full rounded-full px-[12px] py-2 border border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-400 mb-2 text-black"
             />
             {/* Info box for image/video upload instructions or preview */}
             <div className="w-full flex justify-center mb-4">
@@ -348,7 +348,7 @@ export default function CreateCompanyPage() {
               placeholder="Company description"
               value={form.description}
               onChange={handleChange}
-              className="w-full h-48 rounded-xl px-4 py-2 border border-blue-500 mb-2 focus:outline-none focus:ring-2 focus:ring-blue-400 resize-none"
+              className="w-full h-48 rounded-xl px-4 py-2 border border-blue-500 mb-2 focus:outline-none focus:ring-2 focus:ring-blue-400 resize-none text-black"
               rows={6}
             />
             <div className="w-full">
@@ -361,7 +361,7 @@ export default function CreateCompanyPage() {
                   validationErrors.website
                     ? "border-red-500"
                     : "border-blue-500"
-                } mb-2 focus:outline-none focus:ring-2 focus:ring-blue-400`}
+                } mb-2 focus:outline-none focus:ring-2 focus:ring-blue-400 text-black`}
               />
               {validationErrors.website && (
                 <div className="text-red-500 text-xs mt-1 px-2 mb-2">
@@ -379,7 +379,7 @@ export default function CreateCompanyPage() {
                   validationErrors.telegramId
                     ? "border-red-500"
                     : "border-blue-500"
-                } mb-2 focus:outline-none focus:ring-2 focus:ring-blue-400`}
+                } mb-2 focus:outline-none focus:ring-2 focus:ring-blue-400 text-black`}
               />
               {validationErrors.telegramId && (
                 <div className="text-red-500 text-xs mt-1 px-2 mb-2">
@@ -397,7 +397,7 @@ export default function CreateCompanyPage() {
                   validationErrors.Facebook
                     ? "border-red-500"
                     : "border-blue-500"
-                } mb-2 focus:outline-none focus:ring-2 focus:ring-blue-400`}
+                } mb-2 focus:outline-none focus:ring-2 focus:ring-blue-400 text-black`}
               />
               {validationErrors.Facebook && (
                 <div className="text-red-500 text-xs mt-1 px-2 mb-2">
@@ -415,7 +415,7 @@ export default function CreateCompanyPage() {
                   validationErrors.Instagram
                     ? "border-red-500"
                     : "border-blue-500"
-                } mb-2 focus:outline-none focus:ring-2 focus:ring-blue-400`}
+                } mb-2 focus:outline-none focus:ring-2 focus:ring-blue-400 text-black`}
               />
               {validationErrors.Instagram && (
                 <div className="text-red-500 text-xs mt-1 px-2 mb-2">
@@ -433,7 +433,7 @@ export default function CreateCompanyPage() {
                   validationErrors.Youtube
                     ? "border-red-500"
                     : "border-blue-500"
-                } mb-2 focus:outline-none focus:ring-2 focus:ring-blue-400`}
+                } mb-2 focus:outline-none focus:ring-2 focus:ring-blue-400 text-black`}
               />
               {validationErrors.Youtube && (
                 <div className="text-red-500 text-xs mt-1 px-2 mb-2">
@@ -455,7 +455,7 @@ export default function CreateCompanyPage() {
                       company_order: "",
                     });
                 }}
-                className="w-full rounded-full px-[12px] py-2 border-2 border-blue-200 mb-2 focus:outline-none focus:ring-2 focus:ring-blue-400 bg-white"
+                className="w-full rounded-full px-[12px] py-2 border-2 border-blue-200 mb-2 focus:outline-none focus:ring-2 focus:ring-blue-400 bg-white text-black"
               >
                 {Array.from({ length: 15 }, (_, i) => i + 1).map((n) => (
                   <option
