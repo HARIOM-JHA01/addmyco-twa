@@ -695,7 +695,7 @@ export default function HomePage() {
               style={{
                 borderWidth: 2,
                 borderStyle: "solid",
-                borderColor: "var(--app-background-color)",
+                backgroundColor: "var(--app-background-color)",
               }}
             >
               {profile.address1 && (

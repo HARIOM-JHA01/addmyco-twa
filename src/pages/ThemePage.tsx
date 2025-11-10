@@ -126,7 +126,7 @@ export default function ThemePage() {
             disabled={loading}
             style={{
               backgroundColor: "var(--app-background-color)",
-              color: "var(--app-font-color)",
+              color: "#007cb6",
             }}
           >
             {loading ? i18n.t("saving") : i18n.t("save")}

@@ -513,7 +513,7 @@ export default function ChamberPage() {
             onSubmit={handleEditSave}
             className="bg-blue-100 bg-opacity-40 rounded-3xl p-6 w-full max-w-md mx-auto flex flex-col items-center shadow-lg"
           >
-            <h2 className="text-xl font-bold mb-4 text-center">
+            <h2 className="text-xl font-bold mb-2 text-center">
               {editMode === "update"
                 ? i18n.t("update_chamber")
                 : i18n.t("enter_chamber_detail")}
@@ -852,7 +852,7 @@ export default function ChamberPage() {
                 return (
                   <>
                     {/* Chamber Top Icon Carousel: company, whatsapp, telegram, phone, personal */}
-                    <div className="relative w-full mb-4">
+                    <div className="relative w-full mb-2">
                       <div
                         ref={topIconsRef}
                         onScroll={updateTopScroll}
@@ -997,14 +997,14 @@ export default function ChamberPage() {
                       {c.chamber_name_chinese}
                     </div>
                     <div
-                      className="w-full rounded-full bg-app text-app text-lg font-bold py-2 mb-4 flex items-center justify-center"
+                      className="w-full rounded-full bg-app text-app text-lg font-bold py-2 mb-2 flex items-center justify-center"
                       style={{ borderRadius: "2rem" }}
                     >
                       {c.chamberdesignation}
                     </div>
                     {/* Image or video */}
-                    <div className="flex flex-col items-center mb-6 w-full">
-                      <div className="w-full flex justify-center mb-4">
+                    <div className="flex flex-col items-center mb-2 w-full">
+                      <div className="w-full flex justify-center mb-2">
                         {c.video && c.video.endsWith(".mp4") ? (
                           <video
                             src={c.video}
@@ -1029,11 +1029,11 @@ export default function ChamberPage() {
                         )}
                       </div>
                       <div
-                        className="w-full h-48 bg-white rounded-md p-2 overflow-auto mb-4"
+                        className="w-full h-48 bg-white rounded-md p-2 overflow-auto mb-2"
                         style={{
                           borderWidth: 2,
                           borderStyle: "solid",
-                          borderColor: "var(--app-background-color)",
+                          backgroundColor: "var(--app-background-color)",
                         }}
                       >
                         {c.detail}
@@ -1054,14 +1054,7 @@ export default function ChamberPage() {
                             />
                           ),
                           onClick: () => {
-                            if (c.telegramId)
-                              WebApp.openLink(formatUrl(c.tgchannel));
-                            else if (c.tgchannel) {
-                              // if no full link, try to open as t.me/username
-                              // remove leading @ if present
-                              const id = (c.tgchannel || "").replace(/^@/, "");
-                              WebApp.openLink(`https://t.me/${id}`);
-                            }
+                            if (c.tgchannel) WebApp.openLink(c.tgchannel);
                           },
                         },
                         ...(c.Facebook
@@ -1184,7 +1177,7 @@ export default function ChamberPage() {
               })()
             ) : (
               <div className="text-center text-gray-600 py-8">
-                <p className="mb-4">{i18n.t("no_chamber_data")}</p>
+                <p className="mb-2">{i18n.t("no_chamber_data")}</p>
                 <button
                   className="p-2 px-6 text-white bg-[#009944] shadow-md rounded-full"
                   onClick={() => navigate("/create-chamber")}

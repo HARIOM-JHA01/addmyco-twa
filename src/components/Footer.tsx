@@ -56,7 +56,7 @@ export default function Footer() {
       {/* Settings Popup */}
       {showSettings && (
         <div className="fixed bottom-20 right-4 z-50">
-          <div className="bg-app bg-opacity-90 rounded-lg shadow-lg flex flex-col min-w-[160px]">
+          <div className="bg-[#007cb6] bg-opacity-90 rounded-lg shadow-lg flex flex-col min-w-[160px]">
             <button
               className="text-white font-semibold px-4 py-2 text-left hover:bg-gray-800"
               onClick={() => {
@@ -182,10 +182,7 @@ export default function Footer() {
       )}
 
       <div className="fixed bottom-0 left-0 w-full flex justify-center z-50">
-        <div
-          className="flex items-center justify-between w-full max-w-3xl shadow-lg px-2 py-2"
-          style={{ background: "var(--app-background-color, #007cb6)" }}
-        >
+        <div className="flex items-center justify-between bg-[#007cb6] w-full max-w-3xl shadow-lg px-2 py-2">
           <div className="flex gap-2">
             <button
               type="button"
