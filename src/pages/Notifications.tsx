@@ -58,10 +58,11 @@ export default function Notifications() {
           },
         });
         const d = resp.data?.data || [];
-        // Keep only messages that mention 'has changed' (case-insensitive)
+        // Keep only messages that mention 'has changed' or 'has added' (case-insensitive)
         const filtered = (d || []).filter(
           (n: any) =>
-            typeof n.message === "string" && /has changed/i.test(n.message)
+            (typeof n.message === "string" && /has changed/i.test(n.message)) ||
+            (typeof n.message === "string" && /has added/i.test(n.message))
         );
         setNotifications(filtered);
         // notify header about unread notification count
