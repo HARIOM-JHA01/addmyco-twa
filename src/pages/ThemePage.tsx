@@ -121,7 +121,7 @@ export default function ThemePage() {
             </div>
           )}
           <button
-            className="mt-4 rounded-full py-2 font-bold disabled:opacity-60"
+            className="mt-4 rounded-full py-2 font-bold disabled:opacity-60 text-[#007cb6]"
             onClick={handleSave}
             disabled={loading}
             style={{
