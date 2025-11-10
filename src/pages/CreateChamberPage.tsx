@@ -462,7 +462,7 @@ export default function CreateChamberPage() {
               <input
                 name="telegram"
                 placeholder="https://t.me/Telegram Id"
-                value={form.telegram}
+                value={form.tgchannel}
                 onChange={handleChange}
                 className={`w-full rounded-full px-[12px] py-2 border-2 ${
                   validationErrors.telegram
@@ -470,9 +470,9 @@ export default function CreateChamberPage() {
                     : "border-blue-200"
                 } mb-2 focus:outline-none focus:ring-2 focus:ring-blue-400 bg-white placeholder-gray-500`}
               />
-              {validationErrors.telegram && (
+              {validationErrors.tgchannel && (
                 <div className="text-red-500 text-xs px-2 mb-2">
-                  {validationErrors.telegram}
+                  {validationErrors.tgchannel}
                 </div>
               )}
             </div>
