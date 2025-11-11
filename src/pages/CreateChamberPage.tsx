@@ -48,7 +48,7 @@ export default function CreateChamberPage() {
     try {
       const token = localStorage.getItem("token");
       if (!token) return;
-      const res = await axios.get(`${API_BASE_URL}/getchamberprofile`, {
+      const res = await axios.get(`${API_BASE_URL}/getchamber`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       let data: any = null;

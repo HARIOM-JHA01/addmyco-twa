@@ -235,7 +235,7 @@ export default function Notifications() {
                   return (
                     <li
                       key={n._id}
-                      className="flex items-center justify-between py-3 px-2 rounded-lg bg-white"
+                      className="flex items-center justify-between py-3 px-2 rounded-lg bg-white mb-2"
                     >
                       <div
                         className="flex items-center gap-3 cursor-pointer"
