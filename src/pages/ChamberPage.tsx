@@ -135,7 +135,7 @@ export default function ChamberPage() {
 
       // After successful delete, fetch all chambers from server to refresh state
       try {
-        const res = await axios.get(`${API_BASE_URL}/getchamberprofile`, {
+        const res = await axios.get(`${API_BASE_URL}/getchamber`, {
           headers: { Authorization: `Bearer ${token}` },
         });
 
