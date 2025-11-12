@@ -505,7 +505,7 @@ export default function ChamberPage() {
 
   return (
     <Layout>
-      <div className="flex flex-col items-center justify-center flex-grow px-2 pb-32 min-h-screen mt-2">
+      <div className="flex flex-col items-center justify-start flex-grow py-4 px-2 pb-32">
         {loading ? (
           <div className="text-center text-gray-600">Loading...</div>
         ) : editMode ? (
