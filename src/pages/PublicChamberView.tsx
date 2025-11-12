@@ -80,7 +80,7 @@ export default function PublicChamberView({
 
   return (
     <PublicLayout>
-      <div className="flex flex-col items-center justify-center flex-grow px-2 pb-8 min-h-screen mt-2">
+      <div className="flex flex-col items-center justify-center flex-grow  py-4 px-2 pb-32">
         <div className="bg-blue-100 bg-opacity-40 rounded-3xl p-4 w-full max-w-md mx-auto flex flex-col items-center shadow-lg">
           {/* Chamber Top Icon Carousel */}
           <div className="relative w-full mb-2">
