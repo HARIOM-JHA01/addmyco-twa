@@ -10,6 +10,7 @@ import {
   getEmailError,
   getPhoneError,
   getUrlError,
+  validateVideo,
 } from "../utils/validation";
 
 export default function UpdateProfilePage() {
@@ -241,7 +242,7 @@ export default function UpdateProfilePage() {
   };
 
   // Handle file selection
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0] || null;
     if (!file) return;
 
@@ -264,6 +265,15 @@ export default function UpdateProfilePage() {
         if (fileInputRef.current) fileInputRef.current.value = "";
         return;
       }
+
+      // Validate video file size and duration
+      const validation = await validateVideo(file);
+      if (!validation.isValid) {
+        WebApp.showAlert(validation.error || "Invalid video file");
+        if (fileInputRef.current) fileInputRef.current.value = "";
+        return;
+      }
+
       setVideo(file);
       setProfileImage(null);
       setMediaPreview(URL.createObjectURL(file));

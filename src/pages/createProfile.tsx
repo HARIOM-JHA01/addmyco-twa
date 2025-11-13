@@ -10,6 +10,7 @@ import {
   getEmailError,
   getPhoneError,
   getUrlError,
+  validateVideo,
 } from "../utils/validation";
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
@@ -111,7 +112,7 @@ export default function CreateProfile() {
       fileInputRef.current.click();
     }
   };
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0] || null;
     if (!file) return;
 
@@ -132,6 +133,18 @@ export default function CreateProfile() {
         if (fileInputRef.current) fileInputRef.current.value = "";
         return;
       }
+
+      // Validate video file size and duration
+      const validation = await validateVideo(file);
+      if (!validation.isValid) {
+        WebApp.showAlert(validation.error || "Invalid video file");
+        setMediaPreview(null);
+        setMediaType(null);
+        setProfileImage(null);
+        if (fileInputRef.current) fileInputRef.current.value = "";
+        return;
+      }
+
       setMediaType("video");
       setMediaPreview(URL.createObjectURL(file));
       setProfileImage(file);

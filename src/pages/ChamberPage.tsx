@@ -22,7 +22,7 @@ import {
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import WebApp from "@twa-dev/sdk";
 import i18n from "../i18n";
-import { formatUrl, getUrlError } from "../utils/validation";
+import { formatUrl, getUrlError, validateVideo } from "../utils/validation";
 import { callOrCopyPhone } from "../utils/phone";
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
@@ -265,6 +265,15 @@ export default function ChamberPage() {
         }
         if (selectedFile.type !== "video/mp4") {
           setEditError("Only MP4 video files are allowed.");
+          setFile(null);
+          setFilePreview(null);
+          return;
+        }
+
+        // Validate video file size and duration
+        const validation = await validateVideo(selectedFile);
+        if (!validation.isValid) {
+          setEditError(validation.error || "Invalid video file");
           setFile(null);
           setFilePreview(null);
           return;

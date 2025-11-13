@@ -3,7 +3,7 @@ import { useState, useRef, useMemo, useEffect } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import { useProfileStore } from "../store/profileStore";
-import { formatUrl, getUrlError } from "../utils/validation";
+import { formatUrl, getUrlError, validateVideo } from "../utils/validation";
 import WebApp from "@twa-dev/sdk";
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
@@ -94,7 +94,7 @@ export default function CreateCompanyPage() {
     }
   };
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0] || null;
     if (file) {
       // If file is a video, only allow mp4 and only for premium users
@@ -109,6 +109,15 @@ export default function CreateCompanyPage() {
         }
         if (file.type !== "video/mp4") {
           setError("Only MP4 video files are allowed.");
+          setForm({ ...form, image: null });
+          if (fileInputRef.current) fileInputRef.current.value = "";
+          return;
+        }
+
+        // Validate video file size and duration
+        const validation = await validateVideo(file);
+        if (!validation.isValid) {
+          WebApp.showAlert(validation.error || "Invalid video file");
           setForm({ ...form, image: null });
           if (fileInputRef.current) fileInputRef.current.value = "";
           return;

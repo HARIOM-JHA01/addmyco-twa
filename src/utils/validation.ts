@@ -186,3 +186,79 @@ export const createTelegramMiniAppLink = (username: string): string => {
   // Using Telegram's direct Mini App opening format
   return `https://t.me/AddmyCo_bot/app?startapp=${startAppParam}`;
 };
+
+// Video validation constants
+export const MAX_VIDEO_SIZE_MB = 6;
+export const MAX_VIDEO_DURATION_SECONDS = 120;
+export const MAX_VIDEO_SIZE_BYTES = MAX_VIDEO_SIZE_MB * 1024 * 1024; // 6MB in bytes
+
+// Interface for video validation result
+export interface VideoValidationResult {
+  isValid: boolean;
+  error?: string;
+}
+
+// Validate video file size (must be less than 6MB)
+export const validateVideoSize = (file: File): VideoValidationResult => {
+  if (file.size > MAX_VIDEO_SIZE_BYTES) {
+    return {
+      isValid: false,
+      error: `Video file size must be less than ${MAX_VIDEO_SIZE_MB}MB. Current size: ${(
+        file.size /
+        (1024 * 1024)
+      ).toFixed(2)}MB`,
+    };
+  }
+  return { isValid: true };
+};
+
+// Validate video duration (must be less than 120 seconds)
+export const validateVideoDuration = (
+  file: File
+): Promise<VideoValidationResult> => {
+  return new Promise((resolve) => {
+    const video = document.createElement("video");
+    video.preload = "metadata";
+
+    video.onloadedmetadata = () => {
+      window.URL.revokeObjectURL(video.src);
+      const duration = video.duration;
+
+      if (duration > MAX_VIDEO_DURATION_SECONDS) {
+        resolve({
+          isValid: false,
+          error: `Video duration must be less than ${MAX_VIDEO_DURATION_SECONDS} seconds (2 minutes). Current duration: ${Math.floor(
+            duration
+          )} seconds`,
+        });
+      } else {
+        resolve({ isValid: true });
+      }
+    };
+
+    video.onerror = () => {
+      window.URL.revokeObjectURL(video.src);
+      resolve({
+        isValid: false,
+        error: "Failed to load video metadata. Please try another video file.",
+      });
+    };
+
+    video.src = URL.createObjectURL(file);
+  });
+};
+
+// Comprehensive video validation (checks both size and duration)
+export const validateVideo = async (
+  file: File
+): Promise<VideoValidationResult> => {
+  // First check file size
+  const sizeValidation = validateVideoSize(file);
+  if (!sizeValidation.isValid) {
+    return sizeValidation;
+  }
+
+  // Then check duration
+  const durationValidation = await validateVideoDuration(file);
+  return durationValidation;
+};

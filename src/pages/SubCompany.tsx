@@ -19,7 +19,12 @@ import {
   faChevronRight,
 } from "@fortawesome/free-solid-svg-icons";
 import { callOrCopyPhone } from "../utils/phone";
-import { formatUrl, getUrlError, formatImageUrl } from "../utils/validation";
+import {
+  formatUrl,
+  getUrlError,
+  formatImageUrl,
+  validateVideo,
+} from "../utils/validation";
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
@@ -298,6 +303,15 @@ export default function SubCompanyPage() {
         }
         if (selectedFile.type !== "video/mp4") {
           setEditError("Only MP4 video files are allowed.");
+          setFile(null);
+          setFilePreview(null);
+          return;
+        }
+
+        // Validate video file size and duration
+        const validation = await validateVideo(selectedFile);
+        if (!validation.isValid) {
+          setEditError(validation.error || "Invalid video file");
           setFile(null);
           setFilePreview(null);
           return;
