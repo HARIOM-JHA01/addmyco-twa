@@ -188,9 +188,9 @@ export const createTelegramMiniAppLink = (username: string): string => {
 };
 
 // Video validation constants
-export const MAX_VIDEO_SIZE_MB = 10;
+export const MAX_VIDEO_SIZE_MB = 5;
 export const MAX_VIDEO_DURATION_SECONDS = 120;
-export const MAX_VIDEO_SIZE_BYTES = MAX_VIDEO_SIZE_MB * 1024 * 1024; // 6MB in bytes
+export const MAX_VIDEO_SIZE_BYTES = MAX_VIDEO_SIZE_MB * 1024 * 1024; // 5MB in bytes
 
 // Interface for video validation result
 export interface VideoValidationResult {
