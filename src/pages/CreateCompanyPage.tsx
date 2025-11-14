@@ -117,9 +117,8 @@ export default function CreateCompanyPage() {
         // Validate video file size and duration
         const validation = await validateVideo(file);
         if (!validation.isValid) {
-          WebApp.showAlert(validation.error || "Invalid video file");
-          setForm({ ...form, image: null });
-          if (fileInputRef.current) fileInputRef.current.value = "";
+          setError(validation.error || "Invalid video file");
+          setForm({ ...form, image: file });
           return;
         }
       }
@@ -324,6 +323,11 @@ export default function CreateCompanyPage() {
                 </div>
               )}
             </div>
+            {error && form.image?.type.startsWith("video/") && (
+              <div className="text-red-500 text-sm mb-4 text-center">
+                {error}
+              </div>
+            )}
             {/* Hidden file input and Browse/Cancel buttons */}
             <input
               type="file"

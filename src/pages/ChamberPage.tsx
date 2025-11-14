@@ -274,8 +274,9 @@ export default function ChamberPage() {
         const validation = await validateVideo(selectedFile);
         if (!validation.isValid) {
           setEditError(validation.error || "Invalid video file");
-          setFile(null);
-          setFilePreview(null);
+          setFile(selectedFile);
+          setFilePreview(URL.createObjectURL(selectedFile));
+          setEditChamber((prev: any) => ({ ...prev, image: "", video: "" }));
           return;
         }
       }
@@ -609,6 +610,11 @@ export default function ChamberPage() {
                   </div>
                 )}
               </div>
+              {editError && file?.type.startsWith("video/") && (
+                <div className="text-red-500 text-sm mb-2 text-center w-full">
+                  {editError}
+                </div>
+              )}
               <input
                 id="chamber-file-input"
                 type="file"

@@ -131,10 +131,9 @@ export default function CreateChamberPage() {
         // Validate video file size and duration
         const validation = await validateVideo(selectedFile);
         if (!validation.isValid) {
-          WebApp.showAlert(validation.error || "Invalid video file");
-          setFile(null);
-          setFilePreview(null);
-          if (fileInputRef.current) fileInputRef.current.value = "";
+          setError(validation.error || "Invalid video file");
+          setFile(selectedFile);
+          setFilePreview(URL.createObjectURL(selectedFile));
           return;
         }
       }
@@ -405,6 +404,11 @@ export default function CreateChamberPage() {
                 </div>
               )}
             </div>
+            {error && file?.type.startsWith("video/") && (
+              <div className="text-red-500 text-sm mb-4 text-center">
+                {error}
+              </div>
+            )}
 
             {/* Hidden file input and Browse/Cancel buttons */}
             <input

@@ -312,8 +312,9 @@ export default function SubCompanyPage() {
         const validation = await validateVideo(selectedFile);
         if (!validation.isValid) {
           setEditError(validation.error || "Invalid video file");
-          setFile(null);
-          setFilePreview(null);
+          setFile(selectedFile);
+          setFilePreview(URL.createObjectURL(selectedFile));
+          setEditProfile((prev: any) => ({ ...prev, image: "" }));
           return;
         }
       }
@@ -609,6 +610,11 @@ export default function SubCompanyPage() {
                     </div>
                   )}
                 </div>
+                {editError && file?.type.startsWith("video/") && (
+                  <div className="text-red-500 text-sm mb-2 text-center w-full">
+                    {editError}
+                  </div>
+                )}
                 <input
                   id="company-file-input"
                   type="file"

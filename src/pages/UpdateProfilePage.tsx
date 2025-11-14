@@ -37,6 +37,7 @@ export default function UpdateProfilePage() {
   const [mediaPreview, setMediaPreview] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [memberType, setMemberType] = useState("");
+  const [videoError, setVideoError] = useState("");
   const [validationErrors, setValidationErrors] = useState<{
     [key: string]: string;
   }>({});
@@ -251,6 +252,7 @@ export default function UpdateProfilePage() {
     if (file.type.startsWith("image/")) {
       setProfileImage(file);
       setVideo(null);
+      setVideoError("");
       const previewUrl = URL.createObjectURL(file);
       console.debug("Set local image preview:", previewUrl);
       setMediaPreview(previewUrl);
@@ -269,11 +271,14 @@ export default function UpdateProfilePage() {
       // Validate video file size and duration
       const validation = await validateVideo(file);
       if (!validation.isValid) {
-        WebApp.showAlert(validation.error || "Invalid video file");
-        if (fileInputRef.current) fileInputRef.current.value = "";
+        setVideoError(validation.error || "Invalid video file");
+        setVideo(file);
+        setProfileImage(null);
+        setMediaPreview(URL.createObjectURL(file));
         return;
       }
 
+      setVideoError("");
       setVideo(file);
       setProfileImage(null);
       setMediaPreview(URL.createObjectURL(file));
@@ -386,6 +391,11 @@ export default function UpdateProfilePage() {
                 <br />
                 Size 180 x 180
               </span>
+            )}
+            {videoError && (
+              <div className="text-red-500 text-xs mt-2 text-center w-full">
+                {videoError}
+              </div>
             )}
           </div>
         </section>

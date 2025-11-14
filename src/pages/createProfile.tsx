@@ -137,11 +137,10 @@ export default function CreateProfile() {
       // Validate video file size and duration
       const validation = await validateVideo(file);
       if (!validation.isValid) {
-        WebApp.showAlert(validation.error || "Invalid video file");
-        setMediaPreview(null);
-        setMediaType(null);
-        setProfileImage(null);
-        if (fileInputRef.current) fileInputRef.current.value = "";
+        setError(validation.error || "Invalid video file");
+        setMediaPreview(URL.createObjectURL(file));
+        setMediaType("video");
+        setProfileImage(file);
         return;
       }
 
@@ -359,6 +358,11 @@ export default function CreateProfile() {
                   <br />
                   Size 180 x 180
                 </span>
+              )}
+              {error && mediaType === "video" && (
+                <div className="text-red-500 text-xs mt-2 text-center w-full">
+                  {error}
+                </div>
               )}
             </div>
             <div className="flex w-full gap-2 mb-2 flex-row justify-between">
@@ -587,7 +591,7 @@ export default function CreateProfile() {
                 </div>
               )}
             </div>
-            {error && (
+            {error && mediaType !== "video" && (
               <div className="text-red-500 mt-2 text-center w-full">
                 {error}
               </div>
