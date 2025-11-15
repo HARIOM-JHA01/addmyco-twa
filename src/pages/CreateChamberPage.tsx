@@ -5,6 +5,7 @@ import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import { formatUrl, getUrlError, validateVideo } from "../utils/validation";
 import WebApp from "@twa-dev/sdk";
+import VideoPlayer from "../components/VideoPlayer";
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
@@ -376,11 +377,9 @@ export default function CreateChamberPage() {
                       className="object-cover w-full h-48 rounded-xl"
                     />
                   ) : file?.type.startsWith("video/") ? (
-                    <video
-                      src={filePreview}
-                      autoPlay
+                    <VideoPlayer
+                      src={filePreview as string}
                       loop
-                      muted
                       playsInline
                       className="object-cover w-full h-48 rounded-xl"
                     />

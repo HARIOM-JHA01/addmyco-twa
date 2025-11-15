@@ -12,6 +12,7 @@ import {
   getUrlError,
   validateVideo,
 } from "../utils/validation";
+import VideoPlayer from "../components/VideoPlayer";
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 export default function CreateProfile() {
@@ -105,7 +106,7 @@ export default function CreateProfile() {
       }
     }
   };
-
+  // open file picker when profile icon is clicked
   const handleProfileIconClick = () => {
     if (fileInputRef.current) {
       fileInputRef.current.value = "";
@@ -322,11 +323,9 @@ export default function CreateProfile() {
                       className="w-[180px] h-[180px] object-cover rounded-full"
                     />
                   ) : (
-                    <video
-                      src={mediaPreview}
-                      autoPlay
+                    <VideoPlayer
+                      src={mediaPreview as string}
                       loop
-                      muted
                       className="w-[180px] h-[180px] object-cover rounded-full"
                     />
                   )

@@ -5,6 +5,7 @@ import { useNavigate } from "react-router-dom";
 import { useProfileStore } from "../store/profileStore";
 import { formatUrl, getUrlError, validateVideo } from "../utils/validation";
 import WebApp from "@twa-dev/sdk";
+import VideoPlayer from "../components/VideoPlayer";
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
@@ -298,11 +299,9 @@ export default function CreateCompanyPage() {
                       className="object-cover w-full h-48 rounded-xl"
                     />
                   ) : form.image.type.startsWith("video/") ? (
-                    <video
+                    <VideoPlayer
                       src={previewUrl || undefined}
-                      autoPlay
                       loop
-                      muted
                       playsInline
                       className="object-cover w-full h-48 rounded-xl"
                     />

@@ -24,6 +24,7 @@ import WebApp from "@twa-dev/sdk";
 import i18n from "../i18n";
 import { formatUrl, getUrlError, validateVideo } from "../utils/validation";
 import { callOrCopyPhone } from "../utils/phone";
+import VideoPlayer from "../components/VideoPlayer";
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
@@ -565,11 +566,9 @@ export default function ChamberPage() {
               >
                 {filePreview ? (
                   file?.type.startsWith("video/") ? (
-                    <video
-                      src={filePreview}
-                      autoPlay
+                    <VideoPlayer
+                      src={filePreview as string}
                       loop
-                      muted
                       playsInline
                       className="w-full h-48 object-cover rounded-xl"
                     />
@@ -588,11 +587,9 @@ export default function ChamberPage() {
                     className="w-full h-48 object-cover rounded-xl"
                   />
                 ) : editChamber?.image && editChamber.image.endsWith(".mp4") ? (
-                  <video
+                  <VideoPlayer
                     src={editChamber.image}
-                    autoPlay
                     loop
-                    muted
                     playsInline
                     className="w-full h-48 object-cover rounded-xl"
                   />
@@ -1021,11 +1018,9 @@ export default function ChamberPage() {
                     <div className="flex flex-col items-center mb-2 w-full">
                       <div className="w-full flex justify-center mb-2">
                         {c.video && c.video.endsWith(".mp4") ? (
-                          <video
+                          <VideoPlayer
                             src={c.video}
-                            autoPlay
                             loop
-                            muted
                             playsInline
                             className="w-full h-48 object-cover rounded-xl"
                           />

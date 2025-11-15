@@ -12,6 +12,7 @@ import {
   getUrlError,
   validateVideo,
 } from "../utils/validation";
+import VideoPlayer from "../components/VideoPlayer";
 
 export default function UpdateProfilePage() {
   const navigate = useNavigate();
@@ -350,11 +351,9 @@ export default function UpdateProfilePage() {
                 video ||
                 (typeof mediaPreview === "string" &&
                   mediaPreview.endsWith(".mp4")) ? (
-                  <video
-                    src={mediaPreview}
-                    autoPlay
+                  <VideoPlayer
+                    src={mediaPreview as string}
                     loop
-                    muted
                     playsInline
                     className="w-[180px] h-[180px] object-cover rounded-full"
                   />

@@ -25,6 +25,7 @@ import {
   formatImageUrl,
   validateVideo,
 } from "../utils/validation";
+import VideoPlayer from "../components/VideoPlayer";
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
@@ -564,11 +565,9 @@ export default function SubCompanyPage() {
                 >
                   {filePreview ? (
                     file?.type.startsWith("video/") ? (
-                      <video
-                        src={filePreview}
-                        autoPlay
+                      <VideoPlayer
+                        src={filePreview as string}
                         loop
-                        muted
                         playsInline
                         className="w-full h-48 object-cover rounded-xl"
                       />
@@ -588,11 +587,9 @@ export default function SubCompanyPage() {
                     />
                   ) : editProfile?.image &&
                     editProfile.image.endsWith(".mp4") ? (
-                    <video
+                    <VideoPlayer
                       src={editProfile.image}
-                      autoPlay
                       loop
-                      muted
                       playsInline
                       className="w-full h-48 object-cover rounded-xl"
                     />
@@ -1009,21 +1006,17 @@ export default function SubCompanyPage() {
                 {/* Image container */}
                 <div className="w-full flex justify-center mb-4">
                   {companyProfile.video ? (
-                    <video
+                    <VideoPlayer
                       src={formatImageUrl(companyProfile.video)}
-                      autoPlay
                       loop
-                      muted
                       playsInline
                       className="w-full h-48 object-cover rounded-xl"
                     />
                   ) : companyProfile.image ? (
                     companyProfile.image.endsWith(".mp4") ? (
-                      <video
+                      <VideoPlayer
                         src={formatImageUrl(companyProfile.image)}
-                        autoPlay
                         loop
-                        muted
                         playsInline
                         className="w-full h-48 object-cover rounded-xl"
                       />

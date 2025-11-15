@@ -6,6 +6,7 @@ import { Share2, Camera } from "lucide-react";
 import { QRCodeSVG } from "qrcode.react";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
+import VideoPlayer from "../components/VideoPlayer";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -381,11 +382,9 @@ export default function HomePage() {
           <div className="flex flex-col items-center w-full">
             <div className="rounded-full mb-2 w-[180px] h-[180px] flex items-center justify-center overflow-hidden bg-white">
               {profile?.video ? (
-                <video
+                <VideoPlayer
                   src={profile.video}
-                  autoPlay
                   loop
-                  muted
                   playsInline
                   className="w-full h-full object-cover rounded-full"
                 />

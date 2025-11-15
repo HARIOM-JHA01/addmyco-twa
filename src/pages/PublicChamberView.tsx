@@ -17,6 +17,7 @@ import {
 import { faGlobe, faPhone } from "@fortawesome/free-solid-svg-icons";
 import { callOrCopyPhone } from "../utils/phone";
 import PublicLayout from "../components/PublicLayout";
+import VideoPlayer from "../components/VideoPlayer";
 import {
   PublicProfileData,
   CompanyData,
@@ -258,11 +259,9 @@ export default function PublicChamberView({
           <div className="flex flex-col items-center mb-2 w-full">
             <div className="w-full flex justify-center mb-2">
               {c.video && c.video.endsWith(".mp4") ? (
-                <video
+                <VideoPlayer
                   src={c.video}
-                  autoPlay
                   loop
-                  muted
                   playsInline
                   className="w-full h-48 object-cover rounded-xl"
                 />

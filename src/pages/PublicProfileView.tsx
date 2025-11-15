@@ -2,6 +2,7 @@ import { useEffect, useState, useRef } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { QRCodeSVG } from "qrcode.react";
 import logo from "../assets/logo.png";
+import VideoPlayer from "../components/VideoPlayer";
 import company from "../assets/company.svg";
 import chamber from "../assets/chamber.svg";
 import {
@@ -359,21 +360,17 @@ export default function PublicProfileView({
             </button>
             <div className="rounded-full mb-2 w-[180px] h-[180px] flex items-center justify-center overflow-hidden bg-white self-center">
               {profile.video ? (
-                <video
+                <VideoPlayer
                   src={formatImageUrl(profile.video)}
-                  autoPlay
                   loop
-                  muted
                   playsInline
                   className="w-full h-full object-cover rounded-full"
                 />
               ) : profile.profile_image ? (
                 profile.profile_image.endsWith(".mp4") ? (
-                  <video
+                  <VideoPlayer
                     src={formatImageUrl(profile.profile_image)}
-                    autoPlay
                     loop
-                    muted
                     playsInline
                     className="w-full h-full object-cover rounded-full"
                   />

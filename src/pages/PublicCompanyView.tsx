@@ -16,6 +16,7 @@ import {
 } from "@fortawesome/free-brands-svg-icons";
 import { faPhone, faGlobe } from "@fortawesome/free-solid-svg-icons";
 import PublicLayout from "../components/PublicLayout";
+import VideoPlayer from "../components/VideoPlayer";
 import {
   PublicProfileData,
   CompanyData,
@@ -263,21 +264,17 @@ export default function PublicCompanyView({
           <div className="flex flex-col items-center mb-2 w-full">
             <div className="w-full flex justify-center mb-4">
               {companyProfile.video ? (
-                <video
+                <VideoPlayer
                   src={companyProfile.video}
-                  autoPlay
                   loop
-                  muted
                   playsInline
                   className="w-full h-48 object-cover rounded-xl"
                 />
               ) : companyProfile.image ? (
                 companyProfile.image.endsWith(".mp4") ? (
-                  <video
+                  <VideoPlayer
                     src={companyProfile.image}
-                    autoPlay
                     loop
-                    muted
                     playsInline
                     className="w-full h-48 object-cover rounded-xl"
                   />

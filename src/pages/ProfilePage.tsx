@@ -29,6 +29,7 @@ import Layout from "../components/Layout";
 import { useNavigate } from "react-router-dom";
 import i18n from "../i18n";
 import WebApp from "@twa-dev/sdk";
+import VideoPlayer from "../components/VideoPlayer";
 import { formatUrl } from "../utils/validation";
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
@@ -111,11 +112,9 @@ export default function ProfilePage() {
                 </button>
                 <div className="rounded-full mb-2 w-[180px] h-[180px] flex items-center justify-center overflow-hidden bg-white self-center">
                   {profile?.video ? (
-                    <video
+                    <VideoPlayer
                       src={profile.video}
-                      autoPlay
                       loop
-                      muted
                       playsInline
                       className="w-full h-full object-cover rounded-full"
                     />
