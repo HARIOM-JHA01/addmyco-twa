@@ -73,13 +73,17 @@ const VideoPlayer: React.FC<Props> = ({
 
   if (!src) return null;
 
+  // Detect if the className contains 'rounded-full' to apply circular styling to unmute button
+  const isCircular = className?.includes('rounded-full');
+
   return (
-    <div className="relative">
+    <div className={`relative ${className || ''}`}>
       <video
         ref={ref}
         src={src}
         poster={poster}
-        className={className}
+        className="w-full h-full"
+        style={{ objectFit: 'cover' }}
         loop={loop}
         controls={controls}
         playsInline={playsInline}
@@ -87,7 +91,7 @@ const VideoPlayer: React.FC<Props> = ({
       {showUnmute && (
         <button
           onClick={handleUnmute}
-          className="absolute inset-0 m-auto flex items-center justify-center bg-black/40 text-white rounded-xl"
+          className={`absolute inset-0 m-auto flex items-center justify-center bg-black/40 text-white ${isCircular ? 'rounded-full' : 'rounded-xl'}`}
           aria-label="Unmute video"
         >
           Unmute
