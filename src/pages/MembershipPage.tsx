@@ -162,7 +162,7 @@ export default function MembershipPage() {
       <Header />
       <div className="flex flex-col items-center px-4 justify-start flex-1 pb-32">
         <div className="w-full max-w-md rounded-xl mt-8 shadow-xl bg-white/90">
-          <h2 className="text-2xl font-bold justify-center items-center text-center text-[#2fa8e0] mb-4">
+          <h2 className="text-2xl font-bold justify-center text-center text-[#2fa8e0] my-2">
             {isPremium
               ? i18n.t("upgrade_membership")
               : i18n.t("your_membership")}
@@ -194,7 +194,7 @@ export default function MembershipPage() {
               {i18n.t("renew_membership")}
             </button>
           </div>
-          <div className="text-center justify-center items-center mt-4 text-lg font-semibold text-pink-700">
+          <div className="text-center justify-center mt-2 text-lg font-semibold text-pink-700">
             {isPremium ? (
               <>
                 {i18n.t("premium_expiring")}{" "}
