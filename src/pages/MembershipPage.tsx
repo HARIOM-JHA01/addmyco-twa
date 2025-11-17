@@ -175,7 +175,7 @@ export default function MembershipPage() {
                 ? i18n.t("premium_membership")
                 : i18n.t("basic_membership")}
             </div>
-            <table className="w-full text-sm mb-2">
+            <table className="w-full text-sm mb-2 text-black">
               <tbody>
                 {features.map((f) => (
                   <tr key={f.label} className="border-b last:border-b-0">
@@ -198,7 +198,7 @@ export default function MembershipPage() {
             {isPremium ? (
               <>
                 {i18n.t("premium_expiring")}{" "}
-                <span className="font-bold">{formattedExpiry}</span>
+                <span className="font-bold text-black">{formattedExpiry}</span>
               </>
             ) : (
               <>{i18n.t("upgrade_to_premium")}</>
