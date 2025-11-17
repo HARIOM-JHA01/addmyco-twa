@@ -198,10 +198,14 @@ export default function MembershipPage() {
             {isPremium ? (
               <>
                 {i18n.t("premium_expiring")}{" "}
-                <span className="font-bold text-black">{formattedExpiry}</span>
+                <span className="font-bold text-black mb-2">
+                  {formattedExpiry}
+                </span>
               </>
             ) : (
-              <>{i18n.t("upgrade_to_premium")}</>
+              <span className="font-bold text-black- mb-2">
+                {i18n.t("upgrade_to_premium")}
+              </span>
             )}
           </div>
         </div>
