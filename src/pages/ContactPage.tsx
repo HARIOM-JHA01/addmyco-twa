@@ -261,10 +261,7 @@ export default function ContactPage() {
     const map = new Map<string, ContactData>();
     for (const item of arr) {
       if (!item) continue;
-      const ownerNameRaw = item.userdetails?.[0]?.owner_name_english;
-      const ownerKey = ownerNameRaw
-        ? String(ownerNameRaw).trim().toLowerCase()
-        : "";
+      const tgidKey = item.tgid ? String(item.tgid).trim() : "";
 
       const idKey = (item.contact_id ||
         item.user_id ||
@@ -272,7 +269,7 @@ export default function ContactPage() {
         "") as string;
       const usernameKey = item.userdetails?.[0]?.username || "";
 
-      const key = ownerKey || idKey || usernameKey;
+      const key = tgidKey || idKey || usernameKey;
       if (!key) continue;
 
       if (!map.has(key)) {
