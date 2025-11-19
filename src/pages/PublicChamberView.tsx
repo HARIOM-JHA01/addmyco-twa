@@ -86,7 +86,7 @@ export default function PublicChamberView({
           <div className="relative w-full mb-2">
             <button
               aria-label="Top scroll left"
-              className="absolute left-6 top-1/2 -translate-y-1/2 z-20 p-2 bg-white/10 rounded-full"
+              className="absolute -left-4 top-1/2 -translate-y-1/2 z-20 p-2 bg-white/10 rounded-full"
               style={{
                 display: showTopArrows && canTopLeft ? "block" : "none",
               }}
@@ -194,7 +194,7 @@ export default function PublicChamberView({
             </div>
             <button
               aria-label="Top scroll right"
-              className="absolute right-6 top-1/2 -translate-y-1/2 z-20 p-2 bg-white/10 rounded-full"
+              className="absolute -right-4 top-1/2 -translate-y-1/2 z-20 p-2 bg-white/10 rounded-full"
               style={{
                 display: showTopArrows && canTopRight ? "block" : "none",
               }}
@@ -223,7 +223,7 @@ export default function PublicChamberView({
             </div>
             <button
               aria-label="Prev chamber"
-              className="absolute left-0 -translate-x-1/2 p-1 rounded-full"
+              className="absolute -left-4 -translate-x-1/2 p-1 rounded-full"
               style={{
                 top: "calc(50% + 2px)",
                 display: currentChamberIndex > 0 ? "block" : "none",
@@ -238,7 +238,7 @@ export default function PublicChamberView({
             </button>
             <button
               aria-label="Next chamber"
-              className="absolute right-0 translate-x-1/2 p-1 rounded-full"
+              className="absolute -right-4 translate-x-1/2 p-1 rounded-full"
               style={{
                 top: "calc(50% + 2px)",
                 display:
