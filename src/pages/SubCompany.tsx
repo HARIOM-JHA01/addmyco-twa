@@ -12,12 +12,9 @@ import {
   faInstagram,
   faYoutube,
 } from "@fortawesome/free-brands-svg-icons";
-import {
-  faPhone,
-  faGlobe,
-  faChevronLeft,
-  faChevronRight,
-} from "@fortawesome/free-solid-svg-icons";
+import { faPhone, faGlobe } from "@fortawesome/free-solid-svg-icons";
+import leftArrow from "../assets/left-arrow.png";
+import rightArrow from "../assets/right-arrow.png";
 import { callOrCopyPhone } from "../utils/phone";
 import {
   formatUrl,
@@ -967,7 +964,11 @@ export default function SubCompanyPage() {
                     setCurrentCompanyIndex((i) => Math.max(i - 1, 0))
                   }
                 >
-                  <FontAwesomeIcon icon={faChevronLeft} color="red" />
+                  <img
+                    src={leftArrow}
+                    alt="Prev company"
+                    className="w-6 h-6 object-contain"
+                  />
                 </button>
                 <button
                   aria-label="Next company"
@@ -985,7 +986,11 @@ export default function SubCompanyPage() {
                     )
                   }
                 >
-                  <FontAwesomeIcon icon={faChevronRight} color="red" />
+                  <img
+                    src={rightArrow}
+                    alt="Next company"
+                    className="w-6 h-6 object-contain"
+                  />
                 </button>
               </div>
               <div

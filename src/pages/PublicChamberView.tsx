@@ -2,10 +2,7 @@ import { useEffect, useState, useRef } from "react";
 import ProfileIcon from "../assets/profileIcon.png";
 import CompanyLogo from "../assets/company.svg";
 import logo from "../assets/logo.png";
-import {
-  faChevronLeft,
-  faChevronRight,
-} from "@fortawesome/free-solid-svg-icons";
+
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faWhatsapp,
@@ -17,6 +14,8 @@ import {
 import { faGlobe, faPhone } from "@fortawesome/free-solid-svg-icons";
 import { callOrCopyPhone } from "../utils/phone";
 import PublicLayout from "../components/PublicLayout";
+import leftArrow from "../assets/left-arrow.png";
+import rightArrow from "../assets/right-arrow.png";
 import VideoPlayer from "../components/VideoPlayer";
 import {
   PublicProfileData,
@@ -101,7 +100,11 @@ export default function PublicChamberView({
                 setTimeout(updateTopScroll, 300);
               }}
             >
-              <FontAwesomeIcon icon={faChevronLeft} color="red" />
+              <img
+                src={leftArrow}
+                alt="Scroll left"
+                className="w-6 h-6 object-contain"
+              />
             </button>
             <div
               ref={topIconsRef}
@@ -202,7 +205,11 @@ export default function PublicChamberView({
                 setTimeout(updateTopScroll, 300);
               }}
             >
-              <FontAwesomeIcon icon={faChevronRight} color="red" />
+              <img
+                src={rightArrow}
+                alt="Scroll right"
+                className="w-6 h-6 object-contain"
+              />
             </button>
           </div>
 
@@ -223,7 +230,11 @@ export default function PublicChamberView({
               }}
               onClick={() => setCurrentChamberIndex((i) => Math.max(i - 1, 0))}
             >
-              <FontAwesomeIcon icon={faChevronLeft} color="red" />
+              <img
+                src={leftArrow}
+                alt="Prev chamber"
+                className="w-6 h-6 object-contain"
+              />
             </button>
             <button
               aria-label="Next chamber"
@@ -239,7 +250,11 @@ export default function PublicChamberView({
                 )
               }
             >
-              <FontAwesomeIcon icon={faChevronRight} color="red" />
+              <img
+                src={rightArrow}
+                alt="Next chamber"
+                className="w-6 h-6 object-contain"
+              />
             </button>
           </div>
           <div

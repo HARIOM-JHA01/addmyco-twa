@@ -13,12 +13,9 @@ import {
   faInstagram,
   faFacebook,
 } from "@fortawesome/free-brands-svg-icons";
-import {
-  faGlobe,
-  faPhone,
-  faChevronLeft,
-  faChevronRight,
-} from "@fortawesome/free-solid-svg-icons";
+import { faGlobe, faPhone } from "@fortawesome/free-solid-svg-icons";
+import leftArrow from "../assets/left-arrow.png";
+import rightArrow from "../assets/right-arrow.png";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import WebApp from "@twa-dev/sdk";
 import i18n from "../i18n";
@@ -239,7 +236,6 @@ export default function ChamberPage() {
       "tgchannel",
       "chamberfanpage",
     ];
-
     if (urlFields.includes(name)) {
       const urlError = getUrlError(value, name);
       if (urlError) {
@@ -256,7 +252,6 @@ export default function ChamberPage() {
 
       const isPremium = profile?.membertype === "premium";
 
-      // Check if file is a video
       if (selectedFile.type.startsWith("video/")) {
         if (!isPremium) {
           setEditError("Video upload is only available for premium members.");
@@ -977,7 +972,11 @@ export default function ChamberPage() {
                           setCurrentChamberIndex((i) => Math.max(i - 1, 0))
                         }
                       >
-                        <FontAwesomeIcon icon={faChevronLeft} color="red" />
+                        <img
+                          src={leftArrow}
+                          alt="Prev chamber"
+                          className="w-6 h-6 object-contain"
+                        />
                       </button>
                       <button
                         aria-label="Next chamber"
@@ -995,10 +994,10 @@ export default function ChamberPage() {
                           )
                         }
                       >
-                        <FontAwesomeIcon
-                          icon={faChevronRight}
-                          color="red"
-                          className="pt-2"
+                        <img
+                          src={rightArrow}
+                          alt="Next chamber"
+                          className="w-6 h-6 object-contain"
                         />
                       </button>
                     </div>
