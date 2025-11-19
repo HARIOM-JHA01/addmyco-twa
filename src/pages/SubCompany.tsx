@@ -967,7 +967,7 @@ export default function SubCompanyPage() {
                   <img
                     src={leftArrow}
                     alt="Prev company"
-                    className="w-6 h-6 object-contain"
+                    className="w-12 h-12 object-contain"
                   />
                 </button>
                 <button
@@ -989,7 +989,7 @@ export default function SubCompanyPage() {
                   <img
                     src={rightArrow}
                     alt="Next company"
-                    className="w-6 h-6 object-contain"
+                    className="w-12 h-12 object-contain"
                   />
                 </button>
               </div>

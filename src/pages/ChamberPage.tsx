@@ -975,7 +975,7 @@ export default function ChamberPage() {
                         <img
                           src={leftArrow}
                           alt="Prev chamber"
-                          className="w-6 h-6 object-contain"
+                          className="w-12 h-12 object-contain"
                         />
                       </button>
                       <button
@@ -997,7 +997,7 @@ export default function ChamberPage() {
                         <img
                           src={rightArrow}
                           alt="Next chamber"
-                          className="w-6 h-6 object-contain"
+                          className="w-12 h-12 object-contain"
                         />
                       </button>
                     </div>

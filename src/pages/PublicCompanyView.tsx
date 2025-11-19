@@ -98,7 +98,7 @@ export default function PublicCompanyView({
               <img
                 src={leftArrow}
                 alt="Scroll left"
-                className="w-6 h-6 object-contain"
+                className="w-12 h-12 object-contain"
               />
             </button>
             <div
@@ -212,7 +212,7 @@ export default function PublicCompanyView({
               <img
                 src={rightArrow}
                 alt="Scroll right"
-                className="w-6 h-6 object-contain"
+                className="w-12 h-12 object-contain"
               />
             </button>
           </div>
@@ -237,7 +237,7 @@ export default function PublicCompanyView({
               <img
                 src={leftArrow}
                 alt="Prev company"
-                className="w-6 h-6 object-contain"
+                className="w-12 h-12 object-contain"
               />
             </button>
             <button
@@ -257,7 +257,7 @@ export default function PublicCompanyView({
               <img
                 src={rightArrow}
                 alt="Next company"
-                className="w-6 h-6 object-contain"
+                className="w-12 h-12 object-contain"
               />
             </button>
           </div>
