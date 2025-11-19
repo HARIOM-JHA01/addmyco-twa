@@ -955,7 +955,7 @@ export default function SubCompanyPage() {
                 </div>
                 <button
                   aria-label="Prev company"
-                  className="absolute -left-4 -translate-x-1/2 p-1 rounded-full"
+                  className="absolute -left-2 -translate-x-1/2 p-1 rounded-full"
                   style={{
                     top: "calc(50% + 2px)",
                     display: currentCompanyIndex > 0 ? "block" : "none",
@@ -972,7 +972,7 @@ export default function SubCompanyPage() {
                 </button>
                 <button
                   aria-label="Next company"
-                  className="absolute -right-4 translate-x-1/2 p-1 rounded-full"
+                  className="absolute -right-2 translate-x-1/2 p-1 rounded-full"
                   style={{
                     top: "calc(50% + 2px)",
                     display:

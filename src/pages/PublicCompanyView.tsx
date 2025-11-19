@@ -81,7 +81,7 @@ export default function PublicCompanyView({
           <div className="relative w-full mb-4">
             <button
               aria-label="Top scroll left"
-              className="absolute -left-4 top-1/2 -translate-y-1/2 -translate-x-1/2 z-20 p-1 bg-white/10 rounded-full"
+              className="absolute -left-2 top-1/2 -translate-y-1/2 -translate-x-1/2 z-20 p-1 bg-white/10 rounded-full"
               style={{
                 display: showTopArrows && canTopLeft ? "block" : "none",
               }}
@@ -198,7 +198,7 @@ export default function PublicCompanyView({
             </div>
             <button
               aria-label="Top scroll right"
-              className="absolute -right-4 top-1/2 -translate-y-1/2 translate-x-1/2 z-20 p-1 bg-white/10 rounded-full"
+              className="absolute -right-2 top-1/2 -translate-y-1/2 translate-x-1/2 z-20 p-1 bg-white/10 rounded-full"
               style={{
                 display: showTopArrows && canTopRight ? "block" : "none",
               }}
@@ -227,7 +227,7 @@ export default function PublicCompanyView({
             </div>
             <button
               aria-label="Prev company"
-              className="absolute -left-4 -translate-x-1/2 p-1 rounded-full"
+              className="absolute -left-2 -translate-x-1/2 p-1 rounded-full"
               style={{
                 top: "calc(50% + 2px)",
                 display: currentCompanyIndex > 0 ? "block" : "none",
@@ -242,7 +242,7 @@ export default function PublicCompanyView({
             </button>
             <button
               aria-label="Next company"
-              className="absolute -right-4 translate-x-1/2 p-1 rounded-full"
+              className="absolute -right-2 translate-x-1/2 p-1 rounded-full"
               style={{
                 top: "calc(50% + 2px)",
                 display:
