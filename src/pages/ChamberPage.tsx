@@ -953,13 +953,21 @@ export default function ChamberPage() {
                         </div>
                       </div>
                     </div>
-                    {/* Chamber names and designation with navigation arrows */}
-                    <div className="relative w-full mb-2">
+                    {/* Chamber names */}
+                    <div className="w-full mb-2">
                       <div
                         className="w-full rounded-full bg-app text-app text-xl font-bold py-2 flex items-center justify-center"
                         style={{ borderRadius: "2rem" }}
                       >
                         {c.chamber_name_english}
+                      </div>
+                    </div>
+                    <div className="relative w-full mb-2">
+                      <div
+                        className="w-full rounded-full bg-app text-app text-xl font-bold py-2 mb-2 flex items-center justify-center"
+                        style={{ borderRadius: "2rem" }}
+                      >
+                        {c.chamber_name_chinese}
                       </div>
                       <button
                         aria-label="Prev chamber"
@@ -1000,12 +1008,6 @@ export default function ChamberPage() {
                           className="w-12 h-12 object-contain"
                         />
                       </button>
-                    </div>
-                    <div
-                      className="w-full rounded-full bg-app text-app text-xl font-bold py-2 mb-2 flex items-center justify-center"
-                      style={{ borderRadius: "2rem" }}
-                    >
-                      {c.chamber_name_chinese}
                     </div>
                     <div
                       className="w-full rounded-full bg-app text-app text-lg font-bold py-2 mb-2 flex items-center justify-center"

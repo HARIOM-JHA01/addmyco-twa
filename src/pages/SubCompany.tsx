@@ -944,14 +944,22 @@ export default function SubCompanyPage() {
                 </div>
               </div>
 
-              {/* Company Names with navigation arrows */}
-              <div className="relative w-full mb-2">
+              {/* Company Names */}
+              <div className="w-full mb-2">
                 <div
                   className="w-full rounded-full bg-app text-app text-xl font-bold py-1 flex items-center justify-center"
                   style={{ borderRadius: "2rem" }}
                 >
                   {companyProfile.company_name_english ||
                     "English Company Name"}
+                </div>
+              </div>
+              <div className="relative w-full mb-2">
+                <div
+                  className="w-full rounded-full bg-app text-app text-xl font-bold py-1 mb-2 flex items-center justify-center"
+                  style={{ borderRadius: "2rem" }}
+                >
+                  {companyProfile.company_name_chinese || "中文公司名稱"}
                 </div>
                 <button
                   aria-label="Prev company"
@@ -992,12 +1000,6 @@ export default function SubCompanyPage() {
                     className="w-12 h-12 object-contain"
                   />
                 </button>
-              </div>
-              <div
-                className="w-full rounded-full bg-app text-app text-xl font-bold py-1 mb-2 flex items-center justify-center"
-                style={{ borderRadius: "2rem" }}
-              >
-                {companyProfile.company_name_chinese || "中文公司名稱"}
               </div>
               <div
                 className="w-full rounded-full bg-app text-app text-xl font-bold py-1 mb-4 flex items-center justify-center"
