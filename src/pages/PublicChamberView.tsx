@@ -231,9 +231,8 @@ export default function PublicChamberView({
             </div>
             <button
               aria-label="Prev chamber"
-              className="absolute -left-2 -translate-x-1/2 p-1 rounded-full"
+              className="absolute -left-2 top-1/2 -translate-y-1/2 -translate-x-1/2 p-1 rounded-full"
               style={{
-                top: "calc(50% + 2px)",
                 display: currentChamberIndex > 0 ? "block" : "none",
               }}
               onClick={() => setCurrentChamberIndex((i) => Math.max(i - 1, 0))}
@@ -246,9 +245,8 @@ export default function PublicChamberView({
             </button>
             <button
               aria-label="Next chamber"
-              className="absolute -right-2 translate-x-1/2 p-1 rounded-full"
+              className="absolute -right-2 top-1/2 -translate-y-1/2 translate-x-1/2 p-1 rounded-full"
               style={{
-                top: "calc(50% + 2px)",
                 display:
                   currentChamberIndex < chambers.length - 1 ? "block" : "none",
               }}

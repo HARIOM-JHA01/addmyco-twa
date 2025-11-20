@@ -956,16 +956,15 @@ export default function SubCompanyPage() {
               </div>
               <div className="relative w-full mb-2">
                 <div
-                  className="w-full rounded-full bg-app text-app text-xl font-bold py-1 mb-2 flex items-center justify-center"
+                  className="w-full rounded-full bg-app text-app text-xl font-bold py-2 mb-2 flex items-center justify-center"
                   style={{ borderRadius: "2rem" }}
                 >
                   {companyProfile.company_name_chinese || "中文公司名稱"}
                 </div>
                 <button
                   aria-label="Prev company"
-                  className="absolute -left-2 -translate-x-1/2 p-1 rounded-full"
+                  className="absolute -left-2 top-1/2 -translate-y-1/2 -translate-x-1/2 p-1 rounded-full"
                   style={{
-                    top: "calc(50% + 2px)",
                     display: currentCompanyIndex > 0 ? "block" : "none",
                   }}
                   onClick={() =>
@@ -980,9 +979,8 @@ export default function SubCompanyPage() {
                 </button>
                 <button
                   aria-label="Next company"
-                  className="absolute -right-2 translate-x-1/2 p-1 rounded-full"
+                  className="absolute -right-2 top-1/2 -translate-y-1/2 translate-x-1/2 p-1 rounded-full"
                   style={{
-                    top: "calc(50% + 2px)",
                     display:
                       currentCompanyIndex < companies.length - 1
                         ? "block"
