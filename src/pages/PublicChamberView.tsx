@@ -224,14 +224,14 @@ export default function PublicChamberView({
           </div>
           <div className="relative w-full mb-2">
             <div
-              className="w-full rounded-full bg-app text-app text-xl font-bold py-2 mb-2 flex items-center justify-center"
+              className="w-full rounded-full bg-app text-app text-xl font-bold h-12 mb-2 flex items-center justify-center"
               style={{ borderRadius: "2rem" }}
             >
               {c.chamber_name_chinese}
             </div>
             <button
               aria-label="Prev chamber"
-              className="absolute -left-2 top-1/2 -translate-y-1/2 -translate-x-1/2 p-1 rounded-full"
+              className="absolute -left-2 top-1/2 -translate-y-1/2 -translate-x-1/2 w-12 h-12 rounded-full flex items-center justify-center"
               style={{
                 display: currentChamberIndex > 0 ? "block" : "none",
               }}
@@ -245,7 +245,7 @@ export default function PublicChamberView({
             </button>
             <button
               aria-label="Next chamber"
-              className="absolute -right-2 top-1/2 -translate-y-1/2 translate-x-1/2 p-1 rounded-full"
+              className="absolute -right-2 top-1/2 -translate-y-1/2 translate-x-1/2 w-12 h-12 rounded-full flex items-center justify-center"
               style={{
                 display:
                   currentChamberIndex < chambers.length - 1 ? "block" : "none",
