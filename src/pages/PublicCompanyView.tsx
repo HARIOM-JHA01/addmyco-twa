@@ -236,7 +236,10 @@ export default function PublicCompanyView({
             <button
               aria-label="Prev company"
               className="absolute -left-2 top-1/2 -translate-y-1/2 -translate-x-1/2 w-12 h-10 rounded-full flex items-center justify-center pr-1"
-              style={{ display: currentCompanyIndex > 0 ? "block" : "none" }}
+              style={{
+                display: currentCompanyIndex > 0 ? "block" : "none",
+                top: "calc(50% - 2px)",
+              }}
               onClick={() => setCurrentCompanyIndex((i) => Math.max(i - 1, 0))}
             >
               <img
@@ -251,6 +254,7 @@ export default function PublicCompanyView({
               style={{
                 display:
                   currentCompanyIndex < companies.length - 1 ? "block" : "none",
+                top: "calc(50% - 2px)",
               }}
               onClick={() =>
                 setCurrentCompanyIndex((i) =>
