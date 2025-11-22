@@ -971,7 +971,7 @@ export default function ChamberPage() {
                       </div>
                       <button
                         aria-label="Prev chamber"
-                        className="absolute -left-2 top-1/2 -translate-y-1/2 -translate-x-1/2 w-12 h-12 rounded-full flex items-center justify-center"
+                        className="absolute -left-2 top-1/2 -translate-y-1/2 -translate-x-1/2 w-12 h-10 rounded-full flex items-center justify-center pr-1"
                         style={{
                           display: currentChamberIndex > 0 ? "block" : "none",
                         }}
@@ -982,12 +982,12 @@ export default function ChamberPage() {
                         <img
                           src={leftArrow}
                           alt="Prev chamber"
-                          className="w-12 h-12 object-contain"
+                          className="w-12 h-10 object-contain"
                         />
                       </button>
                       <button
                         aria-label="Next chamber"
-                        className="absolute -right-2 top-1/2 -translate-y-1/2 translate-x-1/2 w-12 h-12 rounded-full flex items-center justify-center"
+                        className="absolute -right-2 top-1/2 -translate-y-1/2 translate-x-1/2 w-12 h-10 rounded-full flex items-center justify-center pl-1"
                         style={{
                           display:
                             currentChamberIndex < chambers.length - 1
@@ -1003,7 +1003,7 @@ export default function ChamberPage() {
                         <img
                           src={rightArrow}
                           alt="Next chamber"
-                          className="w-12 h-12 object-contain"
+                          className="w-12 h-10 object-contain"
                         />
                       </button>
                     </div>

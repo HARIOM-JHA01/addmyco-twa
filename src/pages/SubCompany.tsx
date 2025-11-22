@@ -963,7 +963,7 @@ export default function SubCompanyPage() {
                 </div>
                 <button
                   aria-label="Prev company"
-                  className="absolute -left-2 top-1/2 -translate-y-1/2 -translate-x-1/2 w-12 h-12 rounded-full flex items-center justify-center"
+                  className="absolute -left-2 top-1/2 -translate-y-1/2 -translate-x-1/2 w-12 h-10 rounded-full flex items-center justify-center pr-1"
                   style={{
                     display: currentCompanyIndex > 0 ? "block" : "none",
                   }}
@@ -974,12 +974,12 @@ export default function SubCompanyPage() {
                   <img
                     src={leftArrow}
                     alt="Prev company"
-                    className="w-12 h-12 object-contain"
+                    className="w-12 h-10 object-contain"
                   />
                 </button>
                 <button
                   aria-label="Next company"
-                  className="absolute -right-2 top-1/2 -translate-y-1/2 translate-x-1/2 w-12 h-12 rounded-full flex items-center justify-center"
+                  className="absolute -right-2 top-1/2 -translate-y-1/2 translate-x-1/2 w-12 h-10 rounded-full flex items-center justify-center pl-1"
                   style={{
                     display:
                       currentCompanyIndex < companies.length - 1
@@ -995,7 +995,7 @@ export default function SubCompanyPage() {
                   <img
                     src={rightArrow}
                     alt="Next company"
-                    className="w-12 h-12 object-contain"
+                    className="w-12 h-10 object-contain"
                   />
                 </button>
               </div>
