@@ -234,7 +234,7 @@ export default function PublicChamberView({
               className="absolute -left-2 top-1/2 -translate-y-1/2 -translate-x-1/2 w-12 h-10 rounded-full flex items-center justify-center pr-1"
               style={{
                 display: currentChamberIndex > 0 ? "block" : "none",
-                top: "calc(50% - 2px)",
+                top: "calc(50% - 3px)",
               }}
               onClick={() => setCurrentChamberIndex((i) => Math.max(i - 1, 0))}
             >
@@ -250,7 +250,7 @@ export default function PublicChamberView({
               style={{
                 display:
                   currentChamberIndex < chambers.length - 1 ? "block" : "none",
-                top: "calc(50% - 2px)",
+                top: "calc(50% - 3px)",
               }}
               onClick={() =>
                 setCurrentChamberIndex((i) =>

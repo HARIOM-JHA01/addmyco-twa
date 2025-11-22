@@ -38,10 +38,10 @@ export default function PublicCompanyView({
   onViewChange,
 }: PublicCompanyViewProps) {
   const [currentCompanyIndex, setCurrentCompanyIndex] = useState(0);
-  const topIconsRef = useRef<HTMLDivElement | null>(null);
   const [showTopArrows, setShowTopArrows] = useState(false);
   const [canTopLeft, setCanTopLeft] = useState(false);
   const [canTopRight, setCanTopRight] = useState(false);
+  const topIconsRef = useRef<HTMLDivElement | null>(null);
 
   const companyProfile = companies[currentCompanyIndex] || null;
 
@@ -60,7 +60,6 @@ export default function PublicCompanyView({
     window.addEventListener("resize", onResize);
     return () => window.removeEventListener("resize", onResize);
   }, [companyProfile]);
-
   if (companies.length === 0) {
     return (
       <PublicLayout>
@@ -238,7 +237,7 @@ export default function PublicCompanyView({
               className="absolute -left-2 top-1/2 -translate-y-1/2 -translate-x-1/2 w-12 h-10 rounded-full flex items-center justify-center pr-1"
               style={{
                 display: currentCompanyIndex > 0 ? "block" : "none",
-                top: "calc(50% - 2px)",
+                top: "calc(50% - 3px)",
               }}
               onClick={() => setCurrentCompanyIndex((i) => Math.max(i - 1, 0))}
             >
@@ -254,7 +253,7 @@ export default function PublicCompanyView({
               style={{
                 display:
                   currentCompanyIndex < companies.length - 1 ? "block" : "none",
-                top: "calc(50% - 2px)",
+                top: "calc(50% - 3px)",
               }}
               onClick={() =>
                 setCurrentCompanyIndex((i) =>
