@@ -27,6 +27,8 @@ import HomePage from "./pages/HomePage";
 import PublicProfileContainer from "./pages/PublicProfileContainer";
 import { fetchBackgroundByUsername as fetchBgByUsername } from "./utils/theme";
 import WelcomePopup from "./components/WelcomePopup";
+import PartnerCodePopup from "./components/PartnerCodePopup";
+import { fetchUserProfile } from "./services/publicProfileService";
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
@@ -35,6 +37,10 @@ function AppRoutes() {
   const location = useLocation();
   const [showWelcome, setShowWelcome] = useState(true);
   const [showWelcomePopup, setShowWelcomePopup] = useState(false);
+  const [showPartnerPopup, setShowPartnerPopup] = useState(false);
+  const [partnerPopupResolver, setPartnerPopupResolver] = useState<
+    ((code: string | null) => void) | null
+  >(null);
   const [profile, setProfile] = useState<any>(null);
   const [profileLoading, setProfileLoading] = useState(true);
 
@@ -216,6 +222,24 @@ function AppRoutes() {
     setShowWelcomePopup(false);
   };
 
+  const handlePartnerSubmit = (code: string | null) => {
+    try {
+      if (partnerPopupResolver) partnerPopupResolver(code);
+    } finally {
+      setShowPartnerPopup(false);
+      setPartnerPopupResolver(null);
+    }
+  };
+
+  const handlePartnerCancel = () => {
+    try {
+      if (partnerPopupResolver) partnerPopupResolver(null);
+    } finally {
+      setShowPartnerPopup(false);
+      setPartnerPopupResolver(null);
+    }
+  };
+
   // fromWelcome: when true indicates login was triggered from WelcomePage
   const handleLogin = async (fromWelcome?: boolean) => {
     try {
@@ -282,6 +306,38 @@ function AppRoutes() {
           return;
         }
       }
+      // Before we call telegram-login, check if the user profile already exists
+      // If it doesn't, show the partner code popup and wait for user input.
+      // pendingPartnerCode will hold a string or null and will be added to
+      // payload if supplied by the user via popup.
+      let pendingPartnerCode: string | null = null;
+      try {
+        if (username) {
+          try {
+            await fetchUserProfile(username);
+            // Profile exists; not a first-time user: skip partner popup
+          } catch (err: any) {
+            // fetchUserProfile throws when not found -> show popup
+            try {
+              const partnerCode = await new Promise<string | null>((res) => {
+                setShowPartnerPopup(true);
+                setPartnerPopupResolver(() => res);
+              });
+              // partnerCode will either be a string or null
+              console.debug("Partner code received:", partnerCode);
+              pendingPartnerCode = partnerCode || null;
+            } catch (err) {
+              console.debug("Partner popup flow cancelled or failed", err);
+            } finally {
+              setShowPartnerPopup(false);
+              setPartnerPopupResolver(null);
+            }
+          }
+        }
+      } catch (err) {
+        console.debug("Partner code popup detection failed", err);
+      }
+
       let country = "";
       let countryCode = "";
       try {
@@ -295,11 +351,19 @@ function AppRoutes() {
         WebApp.showAlert("Configuration error: API_BASE_URL not set.");
         return;
       }
-      const response = await axios.post(`${API_BASE_URL}/telegram-login`, {
+      const payload: any = {
         telegram_username: username,
         country: country || "India",
         countryCode: countryCode || "IN",
-      });
+      };
+      // if partner code was provided by the popup, include it
+      if (pendingPartnerCode) {
+        payload.partnercode = pendingPartnerCode;
+      }
+      const response = await axios.post(
+        `${API_BASE_URL}/telegram-login`,
+        payload
+      );
       const { data } = response;
       if (data && data.success) {
         localStorage.setItem("token", data.data.token);
@@ -414,66 +478,67 @@ function AppRoutes() {
     }
   };
 
-  if (isPublicPath) {
-    return (
-      <Routes>
-        <Route path="/:username" element={<PublicProfileContainer />} />
-        <Route path="/:username/:view" element={<PublicProfileContainer />} />
-        <Route path="*" element={<div>404 Not Found</div>} />
-      </Routes>
-    );
-  }
-
-  if (showWelcome) {
-    return <WelcomePage onLogin={handleLogin} />;
-  }
-
-  if (profileLoading) {
-    return <div>Loading...</div>;
-  }
-
-  if (!profile) {
-    const path = location.pathname || "/";
-    if (path === "/create-company" || path === "/create-profile") {
-      return (
-        <Routes>
-          <Route path="/create-company" element={<CreateCompanyPage />} />
-          <Route path="/create-profile" element={<CreateProfile />} />
-          <Route path="*" element={<CreateProfile />} />
-        </Routes>
-      );
-    }
-    return <CreateProfile />;
-  }
-
   return (
     <>
-      <Routes>
-        <Route path="/:username" element={<PublicProfileContainer />} />
-        <Route path="/:username/:view" element={<PublicProfileContainer />} />
-        <Route path="/" element={<HomePage />} />
-        <Route path="/profile" element={<ProfilePage />} />
-        <Route path="/update-profile" element={<UpdateProfilePage />} />
-        <Route path="/notifications" element={<Notifications />} />
-        <Route path="/sub-company" element={<SubCompanyPage />} />
-        <Route path="/chamber" element={<ChamberPage />} />
-        <Route path="/create-chamber" element={<CreateChamberPage />} />
-        <Route path="/search" element={<ContactPage />} />
-        <Route path="/my-qr" element={<MyQRPage />} />
-        <Route path="/create-profile" element={<CreateProfile />} />
-        <Route path="/create-company" element={<CreateCompanyPage />} />
-        <Route path="/theme" element={<ThemePage />} />
-        <Route path="/membership" element={<MembershipPage />} />
-        <Route path="/payment-history" element={<PaymentHistoryPage />} />
-        <Route path="/background" element={<BackgroundPage />} />
-        <Route path="*" element={<div>404 Not Found</div>} />
-      </Routes>
+      {isPublicPath ? (
+        <Routes>
+          <Route path="/:username" element={<PublicProfileContainer />} />
+          <Route path="/:username/:view" element={<PublicProfileContainer />} />
+          <Route path="*" element={<div>404 Not Found</div>} />
+        </Routes>
+      ) : showWelcome ? (
+        <WelcomePage onLogin={handleLogin} />
+      ) : profileLoading ? (
+        <div>Loading...</div>
+      ) : !profile ? (
+        (() => {
+          const path = location.pathname || "/";
+          if (path === "/create-company" || path === "/create-profile") {
+            return (
+              <Routes>
+                <Route path="/create-company" element={<CreateCompanyPage />} />
+                <Route path="/create-profile" element={<CreateProfile />} />
+                <Route path="*" element={<CreateProfile />} />
+              </Routes>
+            );
+          }
+          return <CreateProfile />;
+        })()
+      ) : (
+        <Routes>
+          <Route path="/:username" element={<PublicProfileContainer />} />
+          <Route path="/:username/:view" element={<PublicProfileContainer />} />
+          <Route path="/" element={<HomePage />} />
+          <Route path="/profile" element={<ProfilePage />} />
+          <Route path="/update-profile" element={<UpdateProfilePage />} />
+          <Route path="/notifications" element={<Notifications />} />
+          <Route path="/sub-company" element={<SubCompanyPage />} />
+          <Route path="/chamber" element={<ChamberPage />} />
+          <Route path="/create-chamber" element={<CreateChamberPage />} />
+          <Route path="/search" element={<ContactPage />} />
+          <Route path="/my-qr" element={<MyQRPage />} />
+          <Route path="/create-profile" element={<CreateProfile />} />
+          <Route path="/create-company" element={<CreateCompanyPage />} />
+          <Route path="/theme" element={<ThemePage />} />
+          <Route path="/membership" element={<MembershipPage />} />
+          <Route path="/payment-history" element={<PaymentHistoryPage />} />
+          <Route path="/background" element={<BackgroundPage />} />
+          <Route path="*" element={<div>404 Not Found</div>} />
+        </Routes>
+      )}
       {showWelcomePopup && (
         <WelcomePopup
           title="Welcome to AddMyCo!"
           message="You have been logged in Successfully&#10;&#10;Subscribe and Contact @DynamicNameCard to get one year premium membership absolutely Free"
           onClose={handleClosePopup}
           onJoinChannel={handleJoinChannel}
+        />
+      )}
+      {showPartnerPopup && (
+        <PartnerCodePopup
+          open={showPartnerPopup}
+          onClose={handlePartnerCancel}
+          onSubmit={handlePartnerSubmit}
         />
       )}
     </>
