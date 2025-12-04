@@ -43,8 +43,10 @@ function AppRoutes() {
   >(null);
   const [profile, setProfile] = useState<any>(null);
   const [profileLoading, setProfileLoading] = useState(true);
+  const [deepLinkPartnerCode, setDeepLinkPartnerCode] = useState<string | null>(
+    null
+  );
 
-  // use shared theme helper to fetch/apply background by username
   const fetchBackgroundByUsername = fetchBgByUsername;
 
   useEffect(() => {
@@ -53,9 +55,6 @@ function AppRoutes() {
       const hasToken = !!localStorage.getItem("token");
       const path = location.pathname || "/";
 
-      // Only auto-navigate to deep-linked public profile when user is not authenticated
-      // and we're effectively at the app root. Prevents bouncing back to public profile
-      // after login when navigating to /profile or other private routes.
       const atAppRoot = path === "/" || path === "/start" || path === "";
       const alreadyHandled =
         sessionStorage.getItem("start_param_handled") === "1";
@@ -72,19 +71,35 @@ function AppRoutes() {
   useEffect(() => {
     const path = location.pathname;
     if (path.startsWith("/t.me/")) {
-      const userId = decodeURIComponent(path.replace("/t.me/", ""));
-      if (!userId) return;
+      const param = decodeURIComponent(path.replace("/t.me/", ""));
+      if (!param) return;
+
+      // Check if it's a partner code (starts with "ref-")
+      if (param.startsWith("ref-")) {
+        const partnerCode = param.replace("ref-", "");
+        console.log("Partner code detected:", partnerCode);
+
+        // Store the partner code for use during login
+        setDeepLinkPartnerCode(partnerCode);
+
+        // Navigate to welcome page (root) so user can login with partner code
+        navigate("/", { replace: true });
+        return;
+      }
+
+      // Otherwise, it's a username - handle as public profile
       try {
         if (window.Telegram && window.Telegram.WebApp) {
-          navigate(`/${userId}`);
+          navigate(`/${param}`);
           return;
         }
       } catch (e) {
         console.debug("Telegram WebApp check failed", e);
       }
+
       try {
         window.location.href = `https://t.me/AddmyCo_bot/app?startapp=${encodeURIComponent(
-          userId
+          param
         )}`;
       } catch (e) {
         console.error("Failed to redirect to Telegram deep link", e);
@@ -127,7 +142,6 @@ function AppRoutes() {
   })();
 
   useEffect(() => {
-    // apply any saved values immediately so UI doesn't flash
     const savedBgColor = localStorage.getItem("app-background-color");
     const savedFontColor = localStorage.getItem("app-font-color");
 
@@ -158,7 +172,6 @@ function AppRoutes() {
         });
         const profileData = res.data.data || null;
         setProfile(profileData);
-        // after we have a username, attempt to fetch user-specific background
         try {
           const username =
             profileData?.username ||
@@ -176,7 +189,6 @@ function AppRoutes() {
     };
 
     const onBackgroundUpdated = () => {
-      // refresh profile & user background when background-updated event triggers
       fetchProfile();
     };
 
@@ -240,7 +252,6 @@ function AppRoutes() {
     }
   };
 
-  // fromWelcome: when true indicates login was triggered from WelcomePage
   const handleLogin = async (fromWelcome?: boolean) => {
     try {
       let shownFreePopup = false;
@@ -306,36 +317,42 @@ function AppRoutes() {
           return;
         }
       }
-      // Before we call telegram-login, check if the user profile already exists
-      // If it doesn't, show the partner code popup and wait for user input.
-      // pendingPartnerCode will hold a string or null and will be added to
-      // payload if supplied by the user via popup.
-      let pendingPartnerCode: string | null = null;
-      try {
-        if (username) {
-          try {
-            await fetchUserProfile(username);
-            // Profile exists; not a first-time user: skip partner popup
-          } catch (err: any) {
-            // fetchUserProfile throws when not found -> show popup
+
+      // Check if we have a deep link partner code from the URL
+      let pendingPartnerCode: string | null = deepLinkPartnerCode;
+
+      // If no deep link partner code, check if user profile exists
+      // and show partner popup for first-time users
+      if (!pendingPartnerCode) {
+        try {
+          if (username) {
             try {
-              const partnerCode = await new Promise<string | null>((res) => {
-                setShowPartnerPopup(true);
-                setPartnerPopupResolver(() => res);
-              });
-              // partnerCode will either be a string or null
-              console.debug("Partner code received:", partnerCode);
-              pendingPartnerCode = partnerCode || null;
-            } catch (err) {
-              console.debug("Partner popup flow cancelled or failed", err);
-            } finally {
-              setShowPartnerPopup(false);
-              setPartnerPopupResolver(null);
+              await fetchUserProfile(username);
+              // Profile exists; not a first-time user: skip partner popup
+            } catch (err: any) {
+              // fetchUserProfile throws when not found -> show popup
+              try {
+                const partnerCode = await new Promise<string | null>((res) => {
+                  setShowPartnerPopup(true);
+                  setPartnerPopupResolver(() => res);
+                });
+                console.debug("Partner code received:", partnerCode);
+                pendingPartnerCode = partnerCode || null;
+              } catch (err) {
+                console.debug("Partner popup flow cancelled or failed", err);
+              } finally {
+                setShowPartnerPopup(false);
+                setPartnerPopupResolver(null);
+              }
             }
           }
+        } catch (err) {
+          console.debug("Partner code popup detection failed", err);
         }
-      } catch (err) {
-        console.debug("Partner code popup detection failed", err);
+      } else {
+        console.log("Using deep link partner code:", pendingPartnerCode);
+        // Clear the deep link partner code after using it
+        setDeepLinkPartnerCode(null);
       }
 
       let country = "";
@@ -356,7 +373,6 @@ function AppRoutes() {
         country: country || "India",
         countryCode: countryCode || "IN",
       };
-      // if partner code was provided by the popup, include it
       if (pendingPartnerCode) {
         payload.partnercode = pendingPartnerCode;
       }
@@ -387,7 +403,6 @@ function AppRoutes() {
               "Welcome! You have been registered as a free user."
             )
           ) {
-            // Show custom popup for free users
             setShowWelcomePopup(true);
             shownFreePopup = true;
           }
@@ -424,10 +439,6 @@ function AppRoutes() {
             console.debug("fetchBackgroundByUsername after login failed", err);
           }
 
-          // New requirement: if this login was initiated from the Welcome
-          // page, show the free-user signup popup for free users every time
-          // they login via the WelcomePage. Avoid showing duplicate popup if
-          // it was already shown above (e.g., on first-time registration).
           try {
             const isPremium = profileData?.membertype === "premium";
             if (fromWelcome && !shownFreePopup && !isPremium) {
@@ -487,7 +498,7 @@ function AppRoutes() {
           <Route path="*" element={<div>404 Not Found</div>} />
         </Routes>
       ) : showWelcome ? (
-        <WelcomePage onLogin={handleLogin} />
+        <WelcomePage onLogin={handleLogin} partnerCode={deepLinkPartnerCode} />
       ) : profileLoading ? (
         <div>Loading...</div>
       ) : !profile ? (

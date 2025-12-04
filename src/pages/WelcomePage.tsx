@@ -5,13 +5,11 @@ import backgroundImg from "../assets/background.jpg";
 import WebApp from "@twa-dev/sdk";
 
 interface WelcomePageProps {
-  // onLogin accepts an optional boolean which indicates the login was
-  // initiated from the WelcomePage. This lets the app show welcome-specific
-  // UI (like the free-user popup) when appropriate.
   onLogin: (fromWelcome?: boolean) => void | Promise<void>;
+  partnerCode?: string | null;
 }
 
-const WelcomePage: React.FC<WelcomePageProps> = ({ onLogin }) => {
+const WelcomePage: React.FC<WelcomePageProps> = ({ onLogin, partnerCode }) => {
   const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
   const [banners, setBanners] = useState<any[]>([]);
   const [bannerLoading, setBannerLoading] = useState(false);
@@ -76,9 +74,6 @@ const WelcomePage: React.FC<WelcomePageProps> = ({ onLogin }) => {
   const handleLogin = async () => {
     setLoginLoading(true);
     try {
-      // pass `true` to indicate this login was triggered from the Welcome
-      // page so the app can show the free-user signup popup every time a
-      // free user logs in via this page.
       await onLogin(true);
     } finally {
       setLoginLoading(false);
@@ -103,6 +98,18 @@ const WelcomePage: React.FC<WelcomePageProps> = ({ onLogin }) => {
             <h1 className="text-2xl font-space-bold mb-6 text-white text-center">
               Dynamic Namecard.. Connecting World !!
             </h1>
+
+            {partnerCode && (
+              <div className="mb-4 px-4 py-2 bg-green-500/80 rounded-lg">
+                <p className="text-white text-sm text-center">
+                  Partner Code: <span className="font-bold">{partnerCode}</span>
+                </p>
+                <p className="text-white text-xs text-center mt-1">
+                  This code will be applied when you sign up
+                </p>
+              </div>
+            )}
+
             {!isInTelegram ? (
               <div className="text-center">
                 <p className="text-white mb-4">
