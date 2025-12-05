@@ -418,7 +418,7 @@ export default function BackgroundPage() {
                     return (
                       <button
                         key={img.uniqueKey || img.id || img._id || idx}
-                        className="relative w-full pt-[60%] rounded-lg overflow-hidden shadow-md bg-white/70"
+                        className="relative w-full pt-[150%] rounded-lg overflow-hidden shadow-md bg-white/70"
                         onClick={() => {
                           setModalImage(img);
                           setModalError(null);
