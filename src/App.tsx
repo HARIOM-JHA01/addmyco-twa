@@ -70,6 +70,7 @@ function AppRoutes() {
 
   useEffect(() => {
     const path = location.pathname;
+    console.log("App: checking deep link path:", path);
     if (path.startsWith("/t.me/")) {
       const param = decodeURIComponent(path.replace("/t.me/", ""));
       if (!param) return;
@@ -89,6 +90,7 @@ function AppRoutes() {
 
       // Otherwise, it's a username - handle as public profile
       try {
+        console.log("Checking for Telegram WebApp to navigate internally");
         if (window.Telegram && window.Telegram.WebApp) {
           navigate(`/${param}`);
           return;
@@ -98,6 +100,7 @@ function AppRoutes() {
       }
 
       try {
+        console.log("Redirecting to Telegram deep link");
         window.location.href = `https://t.me/AddmyCo_bot/app?startapp=${encodeURIComponent(
           param
         )}`;
