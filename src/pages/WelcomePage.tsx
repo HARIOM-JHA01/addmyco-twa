@@ -101,11 +101,11 @@ const WelcomePage: React.FC<WelcomePageProps> = ({ onLogin, partnerCode }) => {
 
             {partnerCode && (
               <div className="mb-4 px-4 py-2 bg-green-500/80 rounded-lg">
+                <p className="text-white text-sm text-center mb-1">
+                  You are signing up with our partner having reference code :
+                </p>
                 <p className="text-white text-sm text-center">
                   Partner Code: <span className="font-bold">{partnerCode}</span>
-                </p>
-                <p className="text-white text-xs text-center mt-1">
-                  This code will be applied when you sign up
                 </p>
               </div>
             )}
