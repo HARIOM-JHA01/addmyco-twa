@@ -105,7 +105,7 @@ const WelcomePage: React.FC<WelcomePageProps> = ({ onLogin, partnerCode }) => {
                   You are signing up with our partner having reference code :
                 </p>
                 <p className="text-white text-sm text-center">
-                  Partner Code: <span className="font-bold">{partnerCode}</span>
+                  <span className="font-bold">{partnerCode}</span>
                 </p>
               </div>
             )}
