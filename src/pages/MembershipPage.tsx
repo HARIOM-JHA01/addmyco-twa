@@ -1,7 +1,7 @@
 import { useProfileStore } from "../store/profileStore";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import axios from "axios";
 import WebApp from "@twa-dev/sdk";
 import i18n from "../i18n";
@@ -92,12 +92,32 @@ export default function MembershipPage() {
   };
   // Telegram coin payment option removed; related state and handlers cleaned up
   const profile = useProfileStore((state) => state.profile);
+  const setProfile = useProfileStore((state) => state.setProfile);
   const [showRenewBox, setShowRenewBox] = useState(false);
   const [renewHistory, setRenewHistory] = useState<any[] | null>(null);
   const [renewLoading, setRenewLoading] = useState(false);
   const [renewError, setRenewError] = useState<string | null>(null);
 
   const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+
+  useEffect(() => {
+    const fetchProfile = async () => {
+      try {
+        const token = localStorage.getItem("token");
+        if (!token) return;
+        const res = await axios.get(`${API_BASE_URL}/getProfile`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        const profileData = res.data.data;
+        if (profileData) {
+          setProfile(profileData);
+        }
+      } catch (error) {
+        console.error("Failed to fetch profile:", error);
+      }
+    };
+    fetchProfile();
+  }, [API_BASE_URL, setProfile]);
 
   const handleRenewClick = async () => {
     setShowRenewBox((v) => !v);
