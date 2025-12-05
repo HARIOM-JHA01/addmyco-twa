@@ -49,11 +49,21 @@ function AppRoutes() {
 
   const fetchBackgroundByUsername = fetchBgByUsername;
 
+  // Handle Telegram startParam (when app is opened via Telegram deep link)
   useEffect(() => {
     try {
       const startParam = WebApp.initDataUnsafe?.start_param;
       const hasToken = !!localStorage.getItem("token");
       const path = location.pathname || "/";
+
+      console.log(
+        "Checking startParam:",
+        startParam,
+        "hasToken:",
+        hasToken,
+        "path:",
+        path
+      );
 
       const atAppRoot = path === "/" || path === "/start" || path === "";
       const alreadyHandled =
@@ -61,24 +71,42 @@ function AppRoutes() {
 
       if (startParam && !hasToken && atAppRoot && !alreadyHandled) {
         sessionStorage.setItem("start_param_handled", "1");
-        navigate(`/${startParam}`, { replace: true });
+
+        const decodedParam = decodeURIComponent(startParam);
+        console.log("Decoded startParam:", decodedParam);
+
+        // Check if it's a partner code (starts with "ref-")
+        if (decodedParam.startsWith("ref-")) {
+          const partnerCode = decodedParam.replace("ref-", "");
+          console.log("Partner code detected from startParam:", partnerCode);
+          setDeepLinkPartnerCode(partnerCode);
+          // Stay on welcome page by not navigating
+          return;
+        }
+
+        // Otherwise navigate to the path (username or other)
+        navigate(`/${decodedParam}`, { replace: true });
       }
     } catch (e) {
       console.error("Failed to read start_param", e);
     }
   }, [navigate, location.pathname]);
 
+  // Handle /t.me/ URLs (direct browser access)
   useEffect(() => {
     const path = location.pathname;
     console.log("App: checking deep link path:", path);
+
     if (path.startsWith("/t.me/")) {
       const param = decodeURIComponent(path.replace("/t.me/", ""));
       if (!param) return;
 
+      console.log("Handling /t.me/ path with param:", param);
+
       // Check if it's a partner code (starts with "ref-")
       if (param.startsWith("ref-")) {
         const partnerCode = param.replace("ref-", "");
-        console.log("Partner code detected:", partnerCode);
+        console.log("Partner code detected from /t.me/ path:", partnerCode);
 
         // Store the partner code for use during login
         setDeepLinkPartnerCode(partnerCode);
@@ -113,8 +141,12 @@ function AppRoutes() {
   const isPublicPath = (() => {
     const path = location.pathname || "/";
     const segments = path.split("/").filter(Boolean);
+
+    console.log("Checking isPublicPath for:", path, "segments:", segments);
+
     if (segments.length === 0) return false;
     const first = segments[0];
+
     const reserved = new Set([
       "profile",
       "update-profile",
@@ -132,9 +164,18 @@ function AppRoutes() {
       "background",
       "assets",
       "favicon.ico",
+      "t.me", // Add this to reserved so /t.me/ paths aren't treated as public profiles
       "",
     ]);
+
     if (reserved.has(first)) return false;
+
+    // Check if it's a partner code path
+    if (first.startsWith("ref-")) {
+      console.log("Detected ref- path, not treating as public");
+      return false;
+    }
+
     if (segments.length === 1) return true;
     if (
       segments.length === 2 &&
@@ -268,8 +309,12 @@ function AppRoutes() {
       try {
         const startParam = WebApp.initDataUnsafe?.start_param;
         if (startParam) {
-          deepLinkPath = `/${decodeURIComponent(startParam)}`;
-          console.log("Deep link detected:", deepLinkPath);
+          const decodedParam = decodeURIComponent(startParam);
+          // Don't set deepLinkPath if it's a partner code
+          if (!decodedParam.startsWith("ref-")) {
+            deepLinkPath = `/${decodedParam}`;
+            console.log("Deep link path for navigation:", deepLinkPath);
+          }
         }
       } catch (e) {
         console.debug("Failed to read start_param", e);
@@ -339,7 +384,7 @@ function AppRoutes() {
                   setShowPartnerPopup(true);
                   setPartnerPopupResolver(() => res);
                 });
-                console.debug("Partner code received:", partnerCode);
+                console.debug("Partner code received from popup:", partnerCode);
                 pendingPartnerCode = partnerCode || null;
               } catch (err) {
                 console.debug("Partner popup flow cancelled or failed", err);
@@ -378,6 +423,7 @@ function AppRoutes() {
       };
       if (pendingPartnerCode) {
         payload.partnercode = pendingPartnerCode;
+        console.log("Sending partner code in payload:", pendingPartnerCode);
       }
       const response = await axios.post(
         `${API_BASE_URL}/telegram-login`,
@@ -491,6 +537,14 @@ function AppRoutes() {
       WebApp.showAlert("Login failed. Please try again.");
     }
   };
+
+  console.log("Rendering with:", {
+    isPublicPath,
+    showWelcome,
+    profileLoading,
+    hasProfile: !!profile,
+    deepLinkPartnerCode,
+  });
 
   return (
     <>
