@@ -534,6 +534,43 @@ function AppRoutes() {
         WebApp.showAlert("Login failed. Please try again.");
       }
     } catch (err) {
+      const e: any = err;
+      // If backend returned 422 for partner credits, show a helpful message
+      if (
+        e &&
+        e.response &&
+        e.response.status === 422 &&
+        typeof e.response.data?.message === "string" &&
+        e.response.data.message.includes(
+          "Partner has no remaining user credits"
+        )
+      ) {
+        // Show a friendly popup when partner has no credits
+        try {
+          WebApp.showPopup(
+            {
+              title: "Partner Code Error",
+              message:
+                "The referal link of this partner is inactive kindly contact your partner and try again",
+              buttons: [{ type: "ok", id: "ok" }],
+            },
+            () => {
+              try {
+                WebApp.close();
+              } catch (_) {}
+            }
+          );
+        } catch (popupErr) {
+          // Fallback to alert if popup fails
+          try {
+            WebApp.showAlert(
+              "The referal link of this partner is inactive kindly contact your partner and try again"
+            );
+          } catch (_) {}
+        }
+        return;
+      }
+
       WebApp.showAlert("Login failed. Please try again.");
     }
   };
