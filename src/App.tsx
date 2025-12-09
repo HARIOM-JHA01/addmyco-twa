@@ -381,7 +381,7 @@ function AppRoutes() {
               // fetchUserProfile throws when not found -> show popup
               try {
                 const partnerCode = await new Promise<string | null>((res) => {
-                  setShowPartnerPopup(true);
+                  setShowPartnerPopup(false);
                   setPartnerPopupResolver(() => res);
                 });
                 console.debug("Partner code received from popup:", partnerCode);
