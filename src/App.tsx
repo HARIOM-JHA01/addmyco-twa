@@ -371,38 +371,38 @@ function AppRoutes() {
 
       // If no deep link partner code, check if user profile exists
       // and show partner popup for first-time users
-      if (!pendingPartnerCode) {
-        try {
-          if (username) {
-            try {
-              await fetchUserProfile(username);
-              // Profile exists; not a first-time user: skip partner popup
-            } catch (err: any) {
-              // fetchUserProfile throws when not found -> show popup
-              try {
-                const partnerCode = await new Promise<string | null>((res) => {
-                  console.debug(res);
-                  setShowPartnerPopup(false);
-                  setPartnerPopupResolver(null);
-                });
-                console.debug("Partner code received from popup:", partnerCode);
-                pendingPartnerCode = partnerCode || null;
-              } catch (err) {
-                console.debug("Partner popup flow cancelled or failed", err);
-              } finally {
-                setShowPartnerPopup(false);
-                setPartnerPopupResolver(null);
-              }
-            }
-          }
-        } catch (err) {
-          console.debug("Partner code popup detection failed", err);
-        }
-      } else {
-        console.log("Using deep link partner code:", pendingPartnerCode);
-        // Clear the deep link partner code after using it
-        setDeepLinkPartnerCode(null);
-      }
+      // if (!pendingPartnerCode) {
+      //   try {
+      //     if (username) {
+      //       try {
+      //         await fetchUserProfile(username);
+      //         // Profile exists; not a first-time user: skip partner popup
+      //       } catch (err: any) {
+      //         // fetchUserProfile throws when not found -> show popup
+      //         try {
+      //           const partnerCode = await new Promise<string | null>((res) => {
+      //             console.debug(res);
+      //             setShowPartnerPopup(false);
+      //             setPartnerPopupResolver(null);
+      //           });
+      //           console.debug("Partner code received from popup:", partnerCode);
+      //           pendingPartnerCode = partnerCode || null;
+      //         } catch (err) {
+      //           console.debug("Partner popup flow cancelled or failed", err);
+      //         } finally {
+      //           setShowPartnerPopup(false);
+      //           setPartnerPopupResolver(null);
+      //         }
+      //       }
+      //     }
+      //   } catch (err) {
+      //     console.debug("Partner code popup detection failed", err);
+      //   }
+      // } else {
+      //   console.log("Using deep link partner code:", pendingPartnerCode);
+      //   // Clear the deep link partner code after using it
+      //   setDeepLinkPartnerCode(null);
+      // }
 
       let country = "";
       let countryCode = "";
