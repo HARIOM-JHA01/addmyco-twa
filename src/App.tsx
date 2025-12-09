@@ -28,7 +28,7 @@ import PublicProfileContainer from "./pages/PublicProfileContainer";
 import { fetchBackgroundByUsername as fetchBgByUsername } from "./utils/theme";
 import WelcomePopup from "./components/WelcomePopup";
 import PartnerCodePopup from "./components/PartnerCodePopup";
-import { fetchUserProfile } from "./services/publicProfileService";
+// import { fetchUserProfile } from "./services/publicProfileService";
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
