@@ -382,7 +382,7 @@ function AppRoutes() {
               try {
                 const partnerCode = await new Promise<string | null>((res) => {
                   setShowPartnerPopup(false);
-                  setPartnerPopupResolver(() => res);
+                  setPartnerPopupResolver(null);
                 });
                 console.debug("Partner code received from popup:", partnerCode);
                 pendingPartnerCode = partnerCode || null;
