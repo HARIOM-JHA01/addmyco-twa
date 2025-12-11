@@ -173,6 +173,7 @@ export default function MembershipPage() {
 
   const isPremium = profile?.membertype === "premium";
   const features = isPremium ? PREMIUM_FEATURES : BASIC_FEATURES;
+  const partnerReferralCode = (profile as any)?.partner?.referralCode || null;
 
   return (
     <div
@@ -187,6 +188,14 @@ export default function MembershipPage() {
               ? i18n.t("upgrade_membership")
               : i18n.t("your_membership")}
           </h2>
+          {partnerReferralCode && (
+            <div className="px-4 mb-3">
+              <div className="bg-green-50 border border-green-200 rounded px-3 py-2 text-sm text-green-800">
+                {i18n.t("renewed_by_partner")}{" "}
+                <span className="font-bold">{partnerReferralCode}</span>
+              </div>
+            </div>
+          )}
           <div className="bg-white rounded-xl shadow p-4 mb-4">
             <div
               className={`bg-[#2fa8e0] text-white text-lg font-bold rounded-t-lg py-2 text-center mb-2`}

@@ -53,6 +53,8 @@ const translations: Record<Lang, Record<string, string>> = {
     telegram_placeholder: "https://t.me/Telegram Id",
     upgrade_membership: "Upgrade your membership",
     your_membership: "Your Membership",
+    renewed_by_partner:
+      "Your membership was renewed by our partner you are associated with :",
     premium_membership: "Premium Membership",
     basic_membership: "Basic Membership",
     renew_membership: "Renew your membership",
@@ -156,6 +158,7 @@ const translations: Record<Lang, Record<string, string>> = {
     telegram_placeholder: "https://t.me/Telegram Id",
     upgrade_membership: "升級您的會員資格",
     your_membership: "您的會員資格",
+    renewed_by_partner: "您的會員資格由我們的合作夥伴續訂，合作夥伴代碼：",
     premium_membership: "尊貴會員",
     basic_membership: "基本會員",
     renew_membership: "續訂會員資格",
