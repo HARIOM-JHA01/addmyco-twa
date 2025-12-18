@@ -2,6 +2,8 @@ import Header from "../components/Header";
 import Footer from "../components/Footer";
 import { useEffect, useState } from "react";
 import axios from "axios";
+import WebApp from "@twa-dev/sdk";
+import { useProfileStore } from "../store/profileStore";
 import i18n from "../i18n";
 
 export default function PaymentHistoryPage() {
@@ -30,6 +32,9 @@ export default function PaymentHistoryPage() {
     fetchHistory();
   }, []);
 
+  const profile = useProfileStore((state) => state.profile);
+  const partnerUserName = (profile as any)?.partner?.username || null;
+
   return (
     <div
       className="bg-cover px-2 bg-center min-h-screen w-full overflow-x-hidden flex flex-col"
@@ -41,6 +46,22 @@ export default function PaymentHistoryPage() {
           <div className="text-lg font-bold text-[#2fa8e0] mb-2 text-center">
             {i18n.t("payment_history")}
           </div>
+          {partnerUserName && (
+            <div className="px-2 mb-3">
+              <div className="bg-green-50 border border-green-200 rounded px-3 py-2 text-sm text-green-800">
+                {i18n.t("renewed_by_partner")}{" "}
+                <span
+                  className="font-bold"
+                  onClick={() => {
+                    WebApp.openLink(`https://t.me/${partnerUserName}`);
+                  }}
+                >
+                  {partnerUserName}
+                </span>
+              </div>
+            </div>
+          )}
+
           {historyLoading ? (
             <div className="text-center text-gray-500">
               {i18n.t("loading_history")}
