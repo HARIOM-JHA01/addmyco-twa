@@ -40,8 +40,12 @@ export default function SubCompanyPage() {
   const [editProfile, setEditProfile] = useState<any>(null);
   const [editLoading, setEditLoading] = useState(false);
   const [editError, setEditError] = useState("");
-  const [file, setFile] = useState<File | null>(null);
-  const [filePreview, setFilePreview] = useState<string | null>(null);
+  const [file1, setFile1] = useState<File | null>(null);
+  const [file2, setFile2] = useState<File | null>(null);
+  const [file3, setFile3] = useState<File | null>(null);
+  const [filePreview1, setFilePreview1] = useState<string | null>(null);
+  const [filePreview2, setFilePreview2] = useState<string | null>(null);
+  const [filePreview3, setFilePreview3] = useState<string | null>(null);
   const [validationErrors, setValidationErrors] = useState<{
     [key: string]: string;
   }>({});
@@ -203,8 +207,12 @@ export default function SubCompanyPage() {
       setSuccessMessage("Company deleted successfully.");
       setEditMode(null);
       setEditProfile(null);
-      setFile(null);
-      setFilePreview(null);
+      setFile1(null);
+      setFile2(null);
+      setFile3(null);
+      setFilePreview1(null);
+      setFilePreview2(null);
+      setFilePreview3(null);
       setValidationErrors({});
       setShowDeleteConfirm(false);
 
@@ -237,17 +245,18 @@ export default function SubCompanyPage() {
       telegramId: companyProfile?.telegramId || "",
       website: companyProfile?.website || "",
       order: companyProfile?.company_order ?? companyProfile?.order ?? "",
-      image: companyProfile?.image || companyProfile?.video || "",
-      video: companyProfile?.video || "",
+      file1_url: companyProfile?.file1 || companyProfile?.image || "",
+      file2_url: companyProfile?.file2 || "",
+      file3_url: companyProfile?.file3 || "",
     };
     setEditProfile(mapped);
-    // If there's an image URL, show it as the preview (no local file selected)
-    if (mapped.image) {
-      setFile(null);
-      setFilePreview(formatImageUrl(mapped.image));
-    } else {
-      setFilePreview(null);
-    }
+    // Show existing file previews
+    setFile1(null);
+    setFile2(null);
+    setFile3(null);
+    setFilePreview1(mapped.file1_url ? formatImageUrl(mapped.file1_url) : null);
+    setFilePreview2(mapped.file2_url ? formatImageUrl(mapped.file2_url) : null);
+    setFilePreview3(mapped.file3_url ? formatImageUrl(mapped.file3_url) : null);
     setEditError("");
   };
   // Open edit form for create
@@ -284,8 +293,11 @@ export default function SubCompanyPage() {
 
     setEditProfile({ ...editProfile, [name]: value });
   };
-  // Handle edit form file
-  const handleEditFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  // Handle edit form file for each of the 3 files
+  const handleEditFile = async (
+    fileNumber: 1 | 2 | 3,
+    e: React.ChangeEvent<HTMLInputElement>
+  ) => {
     if (e.target.files && e.target.files[0]) {
       const selectedFile = e.target.files[0];
 
@@ -295,14 +307,10 @@ export default function SubCompanyPage() {
       if (selectedFile.type.startsWith("video/")) {
         if (!isPremium) {
           setEditError("Video upload is only available for premium members.");
-          setFile(null);
-          setFilePreview(null);
           return;
         }
         if (selectedFile.type !== "video/mp4") {
           setEditError("Only MP4 video files are allowed.");
-          setFile(null);
-          setFilePreview(null);
           return;
         }
 
@@ -310,20 +318,23 @@ export default function SubCompanyPage() {
         const validation = await validateVideo(selectedFile);
         if (!validation.isValid) {
           setEditError(validation.error || "Invalid video file");
-          setFile(selectedFile);
-          setFilePreview(URL.createObjectURL(selectedFile));
-          setEditProfile((prev: any) => ({ ...prev, image: "" }));
           return;
         }
       }
 
       setEditError("");
-      setFile(selectedFile);
-      setFilePreview(URL.createObjectURL(selectedFile));
 
-      // Do NOT convert to base64. We will upload the raw File via multipart/form-data
-      // Mark editProfile.image as empty so the preview comes from `filePreview` instead
-      setEditProfile((prev: any) => ({ ...prev, image: "" }));
+      // Set file and preview based on file number
+      if (fileNumber === 1) {
+        setFile1(selectedFile);
+        setFilePreview1(URL.createObjectURL(selectedFile));
+      } else if (fileNumber === 2) {
+        setFile2(selectedFile);
+        setFilePreview2(URL.createObjectURL(selectedFile));
+      } else {
+        setFile3(selectedFile);
+        setFilePreview3(URL.createObjectURL(selectedFile));
+      }
     }
   };
   // Save handler for both create and update
@@ -424,25 +435,23 @@ export default function SubCompanyPage() {
         String(companyDoc.company_order ?? companyDoc.order ?? 0)
       );
 
-      // File fields: prefer the newly selected file, otherwise send existing image/video path if present
-      if (file) {
-        if (file.type.startsWith("video/")) {
-          formData.append("video", file);
-        } else {
-          formData.append("image", file);
-        }
-      } else {
-        // No new file selected — include existing values from editProfile or companyProfile if available
-        if (editProfile?.image) {
-          formData.append("image", String(editProfile.image));
-        } else if (companyProfile?.image) {
-          formData.append("image", String(companyProfile.image));
-        }
-        if (editProfile?.video) {
-          formData.append("video", String(editProfile.video));
-        } else if (companyProfile?.video) {
-          formData.append("video", String(companyProfile.video));
-        }
+      // File fields: send file1, file2, file3
+      if (file1) {
+        formData.append("file1", file1);
+      } else if (editProfile?.file1_url) {
+        formData.append("file1", String(editProfile.file1_url));
+      }
+
+      if (file2) {
+        formData.append("file2", file2);
+      } else if (editProfile?.file2_url) {
+        formData.append("file2", String(editProfile.file2_url));
+      }
+
+      if (file3) {
+        formData.append("file3", file3);
+      } else if (editProfile?.file3_url) {
+        formData.append("file3", String(editProfile.file3_url));
       }
 
       await axios.post(`${API_BASE_URL}/updatecompany`, formData, {
@@ -490,8 +499,12 @@ export default function SubCompanyPage() {
 
       setEditMode(null);
       setEditProfile(null);
-      setFile(null);
-      setFilePreview(null);
+      setFile1(null);
+      setFile2(null);
+      setFile3(null);
+      setFilePreview1(null);
+      setFilePreview2(null);
+      setFilePreview3(null);
       setValidationErrors({});
     } catch (err: any) {
       setEditError(
@@ -552,113 +565,287 @@ export default function SubCompanyPage() {
                 onChange={handleEditInput}
                 disabled={editLoading}
               />
-              {/* Image/Video Preview and Upload */}
-              <div className="flex flex-col items-center mb-4 w-full">
-                <div
-                  className="w-full rounded-xl flex items-center justify-center mb-4 cursor-pointer h-48"
-                  onClick={() =>
-                    document.getElementById("company-file-input")?.click()
-                  }
-                >
-                  {filePreview ? (
-                    file?.type.startsWith("video/") ? (
-                      <VideoPlayer
-                        src={filePreview as string}
-                        loop
-                        playsInline
-                        className="w-full h-48 object-cover rounded-xl"
-                      />
+              {/* File Upload Section for 3 files */}
+              <div className="w-full mb-4">
+                {/* File 1 */}
+                <div className="mb-4">
+                  <label className="block text-sm font-semibold mb-2 text-gray-700">
+                    File 1
+                  </label>
+                  <div
+                    className="w-full rounded-xl flex items-center justify-center mb-2 cursor-pointer h-48"
+                    onClick={() =>
+                      document.getElementById("company-file-input-1")?.click()
+                    }
+                  >
+                    {filePreview1 ? (
+                      file1?.type.startsWith("video/") ? (
+                        <VideoPlayer
+                          src={filePreview1 as string}
+                          loop
+                          playsInline
+                          className="w-full h-48 object-cover rounded-xl"
+                        />
+                      ) : (
+                        <img
+                          src={filePreview1}
+                          alt="Preview 1"
+                          className="w-full h-48 object-cover rounded-xl"
+                        />
+                      )
+                    ) : editProfile?.file1_url ? (
+                      editProfile.file1_url.endsWith(".mp4") ? (
+                        <VideoPlayer
+                          src={editProfile.file1_url}
+                          loop
+                          playsInline
+                          className="w-full h-48 object-cover rounded-xl"
+                        />
+                      ) : (
+                        <img
+                          src={editProfile.file1_url}
+                          alt="company file 1"
+                          className="w-full h-48 object-cover rounded-xl"
+                        />
+                      )
                     ) : (
-                      <img
-                        src={filePreview}
-                        alt="Preview"
-                        className="w-full h-48 object-cover rounded-xl"
-                      />
-                    )
-                  ) : editProfile?.image &&
-                    editProfile.image.startsWith("data:image") ? (
-                    <img
-                      src={editProfile.image}
-                      alt="company"
-                      className="w-full h-48 object-cover rounded-xl"
-                    />
-                  ) : editProfile?.image &&
-                    editProfile.image.endsWith(".mp4") ? (
-                    <VideoPlayer
-                      src={editProfile.image}
-                      loop
-                      playsInline
-                      className="w-full h-48 object-cover rounded-xl"
-                    />
-                  ) : editProfile?.image ? (
-                    <img
-                      src={editProfile.image}
-                      alt="company"
-                      className="w-full h-48 object-cover rounded-xl"
-                    />
-                  ) : (
-                    <div className="w-full h-48 bg-blue-400 rounded-xl flex items-center justify-center">
-                      <div className="text-white text-center text-sm font-semibold whitespace-pre-line px-4">
-                        {i18n.t("please_upload")}
+                      <div className="w-full h-48 bg-gray-300 rounded-xl flex items-center justify-center">
+                        <div className="text-gray-600 text-center text-sm font-semibold">
+                          File 1
+                        </div>
                       </div>
-                    </div>
-                  )}
+                    )}
+                  </div>
+                  <input
+                    id="company-file-input-1"
+                    type="file"
+                    accept="image/*,video/*"
+                    onChange={(e) => handleEditFile(1, e)}
+                    disabled={editLoading}
+                    className="hidden"
+                  />
+                  <div className="flex gap-4">
+                    <button
+                      type="button"
+                      className="bg-black text-white px-6 py-2 rounded-lg font-medium hover:bg-gray-700 transition-colors"
+                      onClick={() =>
+                        document.getElementById("company-file-input-1")?.click()
+                      }
+                      disabled={editLoading}
+                    >
+                      Browse
+                    </button>
+                    <button
+                      type="button"
+                      className="bg-black text-white px-6 py-2 rounded-lg font-medium hover:bg-gray-700 transition-colors"
+                      onClick={() => {
+                        setFile1(null);
+                        setFilePreview1(
+                          companyProfile?.file1 || companyProfile?.image
+                            ? formatImageUrl(
+                                companyProfile.file1 || companyProfile.image
+                              )
+                            : null
+                        );
+                        const el = document.getElementById(
+                          "company-file-input-1"
+                        ) as HTMLInputElement | null;
+                        if (el) el.value = "";
+                      }}
+                      disabled={editLoading}
+                    >
+                      Cancel
+                    </button>
+                  </div>
                 </div>
-                {editError && file?.type.startsWith("video/") && (
+
+                {/* File 2 */}
+                <div className="mb-4">
+                  <label className="block text-sm font-semibold mb-2 text-gray-700">
+                    File 2 (Optional)
+                  </label>
+                  <div
+                    className="w-full rounded-xl flex items-center justify-center mb-2 cursor-pointer h-48"
+                    onClick={() =>
+                      document.getElementById("company-file-input-2")?.click()
+                    }
+                  >
+                    {filePreview2 ? (
+                      file2?.type.startsWith("video/") ? (
+                        <VideoPlayer
+                          src={filePreview2 as string}
+                          loop
+                          playsInline
+                          className="w-full h-48 object-cover rounded-xl"
+                        />
+                      ) : (
+                        <img
+                          src={filePreview2}
+                          alt="Preview 2"
+                          className="w-full h-48 object-cover rounded-xl"
+                        />
+                      )
+                    ) : editProfile?.file2_url ? (
+                      editProfile.file2_url.endsWith(".mp4") ? (
+                        <VideoPlayer
+                          src={editProfile.file2_url}
+                          loop
+                          playsInline
+                          className="w-full h-48 object-cover rounded-xl"
+                        />
+                      ) : (
+                        <img
+                          src={editProfile.file2_url}
+                          alt="company file 2"
+                          className="w-full h-48 object-cover rounded-xl"
+                        />
+                      )
+                    ) : (
+                      <div className="w-full h-48 bg-gray-300 rounded-xl flex items-center justify-center">
+                        <div className="text-gray-600 text-center text-sm font-semibold">
+                          File 2 (Optional)
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                  <input
+                    id="company-file-input-2"
+                    type="file"
+                    accept="image/*,video/*"
+                    onChange={(e) => handleEditFile(2, e)}
+                    disabled={editLoading}
+                    className="hidden"
+                  />
+                  <div className="flex gap-4">
+                    <button
+                      type="button"
+                      className="bg-black text-white px-6 py-2 rounded-lg font-medium hover:bg-gray-700 transition-colors"
+                      onClick={() =>
+                        document.getElementById("company-file-input-2")?.click()
+                      }
+                      disabled={editLoading}
+                    >
+                      Browse
+                    </button>
+                    <button
+                      type="button"
+                      className="bg-black text-white px-6 py-2 rounded-lg font-medium hover:bg-gray-700 transition-colors"
+                      onClick={() => {
+                        setFile2(null);
+                        setFilePreview2(
+                          companyProfile?.file2
+                            ? formatImageUrl(companyProfile.file2)
+                            : null
+                        );
+                        const el = document.getElementById(
+                          "company-file-input-2"
+                        ) as HTMLInputElement | null;
+                        if (el) el.value = "";
+                      }}
+                      disabled={editLoading}
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+
+                {/* File 3 */}
+                <div className="mb-4">
+                  <label className="block text-sm font-semibold mb-2 text-gray-700">
+                    File 3 (Optional)
+                  </label>
+                  <div
+                    className="w-full rounded-xl flex items-center justify-center mb-2 cursor-pointer h-48"
+                    onClick={() =>
+                      document.getElementById("company-file-input-3")?.click()
+                    }
+                  >
+                    {filePreview3 ? (
+                      file3?.type.startsWith("video/") ? (
+                        <VideoPlayer
+                          src={filePreview3 as string}
+                          loop
+                          playsInline
+                          className="w-full h-48 object-cover rounded-xl"
+                        />
+                      ) : (
+                        <img
+                          src={filePreview3}
+                          alt="Preview 3"
+                          className="w-full h-48 object-cover rounded-xl"
+                        />
+                      )
+                    ) : editProfile?.file3_url ? (
+                      editProfile.file3_url.endsWith(".mp4") ? (
+                        <VideoPlayer
+                          src={editProfile.file3_url}
+                          loop
+                          playsInline
+                          className="w-full h-48 object-cover rounded-xl"
+                        />
+                      ) : (
+                        <img
+                          src={editProfile.file3_url}
+                          alt="company file 3"
+                          className="w-full h-48 object-cover rounded-xl"
+                        />
+                      )
+                    ) : (
+                      <div className="w-full h-48 bg-gray-300 rounded-xl flex items-center justify-center">
+                        <div className="text-gray-600 text-center text-sm font-semibold">
+                          File 3 (Optional)
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                  <input
+                    id="company-file-input-3"
+                    type="file"
+                    accept="image/*,video/*"
+                    onChange={(e) => handleEditFile(3, e)}
+                    disabled={editLoading}
+                    className="hidden"
+                  />
+                  <div className="flex gap-4">
+                    <button
+                      type="button"
+                      className="bg-black text-white px-6 py-2 rounded-lg font-medium hover:bg-gray-700 transition-colors"
+                      onClick={() =>
+                        document.getElementById("company-file-input-3")?.click()
+                      }
+                      disabled={editLoading}
+                    >
+                      Browse
+                    </button>
+                    <button
+                      type="button"
+                      className="bg-black text-white px-6 py-2 rounded-lg font-medium hover:bg-gray-700 transition-colors"
+                      onClick={() => {
+                        setFile3(null);
+                        setFilePreview3(
+                          companyProfile?.file3
+                            ? formatImageUrl(companyProfile.file3)
+                            : null
+                        );
+                        const el = document.getElementById(
+                          "company-file-input-3"
+                        ) as HTMLInputElement | null;
+                        if (el) el.value = "";
+                      }}
+                      disabled={editLoading}
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+
+                {editError && (
                   <div className="text-red-500 text-sm mb-2 text-center w-full">
                     {editError}
                   </div>
                 )}
-                <input
-                  id="company-file-input"
-                  type="file"
-                  accept="image/*,video/*"
-                  onChange={handleEditFile}
-                  disabled={editLoading}
-                  className="hidden"
-                />
-                {/* Browse / Cancel buttons to match CreateCompanyPage UX */}
-                <div className="flex gap-4 mb-4">
-                  <button
-                    type="button"
-                    className="bg-black text-white px-6 py-2 rounded-lg font-medium hover:bg-gray-700 transition-colors"
-                    onClick={() =>
-                      document.getElementById("company-file-input")?.click()
-                    }
-                    disabled={editLoading}
-                  >
-                    Browse
-                  </button>
-                  <button
-                    type="button"
-                    className="bg-black text-white px-6 py-2 rounded-lg font-medium hover:bg-gray-700 transition-colors"
-                    onClick={() => {
-                      // Revert selection to original company media (if any)
-                      setFile(null);
-                      // restore preview to original company image/video URL when available
-                      setFilePreview(
-                        companyProfile?.image
-                          ? formatImageUrl(companyProfile.image)
-                          : companyProfile?.video
-                          ? companyProfile.video
-                          : null
-                      );
-                      setEditProfile((prev: any) => ({
-                        ...prev,
-                        image:
-                          companyProfile?.image || companyProfile?.video || "",
-                      }));
-                      const el = document.getElementById(
-                        "company-file-input"
-                      ) as HTMLInputElement | null;
-                      if (el) el.value = "";
-                    }}
-                    disabled={editLoading}
-                  >
-                    Cancel
-                  </button>
-                </div>
               </div>
+
               <textarea
                 className="rounded-xl border-2 border-blue-200 px-4 py-2 mb-3 w-full h-48 focus:outline-none focus:ring-2 focus:ring-blue-400 bg-white placeholder-gray-500 resize-none"
                 name="description"
