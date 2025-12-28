@@ -19,7 +19,9 @@ export default function CreateCompanyPage() {
     description: "",
     website: "",
     Facebook: "",
-    image: null as File | null,
+    file1: null as File | null,
+    file2: null as File | null,
+    file3: null as File | null,
     telegramId: "",
     Instagram: "",
     Youtube: "",
@@ -32,18 +34,36 @@ export default function CreateCompanyPage() {
     [key: string]: string;
   }>({});
   const [occupiedOrders, setOccupiedOrders] = useState<number[]>([]);
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  const fileInputRef1 = useRef<HTMLInputElement>(null);
+  const fileInputRef2 = useRef<HTMLInputElement>(null);
+  const fileInputRef3 = useRef<HTMLInputElement>(null);
   const profile = useProfileStore((state) => state.profile);
   const isPremium = profile?.membertype === "premium";
 
-  // Memoize preview URL so it doesn't reload on description change
-  const previewUrl = useMemo(() => {
-    if (form.image) {
-      return URL.createObjectURL(form.image);
+  // Memoize preview URLs so they don't reload on description change
+  const previewUrl1 = useMemo(() => {
+    if (form.file1) {
+      return URL.createObjectURL(form.file1);
     }
     return null;
     // eslint-disable-next-line
-  }, [form.image]);
+  }, [form.file1]);
+
+  const previewUrl2 = useMemo(() => {
+    if (form.file2) {
+      return URL.createObjectURL(form.file2);
+    }
+    return null;
+    // eslint-disable-next-line
+  }, [form.file2]);
+
+  const previewUrl3 = useMemo(() => {
+    if (form.file3) {
+      return URL.createObjectURL(form.file3);
+    }
+    return null;
+    // eslint-disable-next-line
+  }, [form.file3]);
 
   // Fetch existing companies to determine occupied display orders (1..15)
   const fetchCompanies = async () => {
@@ -95,8 +115,19 @@ export default function CreateCompanyPage() {
     }
   };
 
-  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = async (
+    fileNumber: 1 | 2 | 3,
+    e: React.ChangeEvent<HTMLInputElement>
+  ) => {
     const file = e.target.files?.[0] || null;
+    const fileKey = `file${fileNumber}` as "file1" | "file2" | "file3";
+    const fileInputRef =
+      fileNumber === 1
+        ? fileInputRef1
+        : fileNumber === 2
+        ? fileInputRef2
+        : fileInputRef3;
+
     if (file) {
       // If file is a video, only allow mp4 and only for premium users
       if (file.type.startsWith("video/")) {
@@ -104,13 +135,13 @@ export default function CreateCompanyPage() {
           WebApp.showAlert(
             "Video uploads are available for premium users only."
           );
-          setForm({ ...form, image: null });
+          setForm({ ...form, [fileKey]: null });
           if (fileInputRef.current) fileInputRef.current.value = "";
           return;
         }
         if (file.type !== "video/mp4") {
           setError("Only MP4 video files are allowed.");
-          setForm({ ...form, image: null });
+          setForm({ ...form, [fileKey]: null });
           if (fileInputRef.current) fileInputRef.current.value = "";
           return;
         }
@@ -119,14 +150,14 @@ export default function CreateCompanyPage() {
         const validation = await validateVideo(file);
         if (!validation.isValid) {
           setError(validation.error || "Invalid video file");
-          setForm({ ...form, image: file });
+          setForm({ ...form, [fileKey]: file });
           return;
         }
       }
       setError("");
-      setForm({ ...form, image: file });
+      setForm({ ...form, [fileKey]: file });
     } else {
-      setForm({ ...form, image: null });
+      setForm({ ...form, [fileKey]: null });
     }
   };
 
@@ -138,6 +169,11 @@ export default function CreateCompanyPage() {
 
     // Validate all fields before submission
     const errors: { [key: string]: string } = {};
+
+    // Validate file1 is mandatory
+    if (!form.file1) {
+      errors.file1 = "First file is mandatory";
+    }
 
     // Validate all URL fields
     const urlFields = [
@@ -178,9 +214,13 @@ export default function CreateCompanyPage() {
 
       const formData = new FormData();
       Object.entries(formattedForm).forEach(([key, value]) => {
-        if (key === "image" && value) {
-          formData.append("image", value as File);
-        } else {
+        if (key === "file1" && value) {
+          formData.append("file1", value as File);
+        } else if (key === "file2" && value) {
+          formData.append("file2", value as File);
+        } else if (key === "file3" && value) {
+          formData.append("file3", value as File);
+        } else if (key !== "file1" && key !== "file2" && key !== "file3") {
           formData.append(key, value as string);
         }
       });
@@ -198,7 +238,9 @@ export default function CreateCompanyPage() {
         description: "",
         website: "",
         Facebook: "",
-        image: null,
+        file1: null,
+        file2: null,
+        file3: null,
         telegramId: "",
         Instagram: "",
         Youtube: "",
@@ -288,73 +330,200 @@ export default function CreateCompanyPage() {
               onChange={handleChange}
               className="w-full rounded-full px-[12px] py-2 border border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-400 mb-2 text-black"
             />
-            {/* Info box for image/video upload instructions or preview */}
-            <div className="w-full flex justify-center mb-4">
-              {form.image ? (
-                <div className="flex items-center justify-center rounded-xl w-full h-48 overflow-hidden bg-[#01a2e9]">
-                  {form.image.type.startsWith("image/") ? (
-                    <img
-                      src={previewUrl || undefined}
-                      alt="Preview"
-                      className="object-cover w-full h-48 rounded-xl"
-                    />
-                  ) : form.image.type.startsWith("video/") ? (
-                    <VideoPlayer
-                      src={previewUrl || undefined}
-                      loop
-                      playsInline
-                      className="object-cover w-full h-48 rounded-xl"
-                    />
-                  ) : null}
-                </div>
-              ) : (
-                <div className="bg-[#01a2e9] text-center text-white font-bold py-6 mb-4 relative flex flex-col items-center justify-center w-full h-48 rounded-xl">
-                  <div className="text-lg">
-                    Please upload
-                    <br />
-                    640 width by 360 high Image
-                    <br />
-                    or
+            {/* File Upload Section 1 (Mandatory) */}
+            <div className="w-full mb-4">
+              <label className="block text-sm font-semibold mb-2 text-red-600">
+                File 1 (Mandatory) *
+              </label>
+              <div className="w-full flex justify-center mb-2">
+                {form.file1 ? (
+                  <div className="flex items-center justify-center rounded-xl w-full h-48 overflow-hidden bg-[#01a2e9]">
+                    {form.file1.type.startsWith("image/") ? (
+                      <img
+                        src={previewUrl1 || undefined}
+                        alt="Preview 1"
+                        className="object-cover w-full h-48 rounded-xl"
+                      />
+                    ) : form.file1.type.startsWith("video/") ? (
+                      <VideoPlayer
+                        src={previewUrl1 || undefined}
+                        loop
+                        playsInline
+                        className="object-cover w-full h-48 rounded-xl"
+                      />
+                    ) : null}
                   </div>
-                  <div className="text-yellow-300 font-bold mt-2">
-                    Premium Member Upload 1 Minute Video
+                ) : (
+                  <div className="bg-[#01a2e9] text-center text-white font-bold py-6 relative flex flex-col items-center justify-center w-full h-48 rounded-xl">
+                    <div className="text-lg">
+                      Please upload
+                      <br />
+                      640 width by 360 high Image
+                      <br />
+                      or
+                    </div>
+                    <div className="text-yellow-300 font-bold mt-2">
+                      Premium Member Upload 1 Minute Video
+                    </div>
                   </div>
+                )}
+              </div>
+              <input
+                type="file"
+                accept={
+                  isPremium
+                    ? "image/png,image/jpeg,image/jpg,image/gif,image/webp,video/mp4"
+                    : "image/png,image/jpeg,image/jpg,image/gif,image/webp"
+                }
+                ref={fileInputRef1}
+                style={{ display: "none" }}
+                onChange={(e) => handleFileChange(1, e)}
+              />
+              <div className="flex gap-4">
+                <button
+                  type="button"
+                  className="bg-black text-white px-6 py-2 rounded-lg font-medium hover:bg-gray-700 transition-colors"
+                  onClick={() => fileInputRef1.current?.click()}
+                >
+                  Browse
+                </button>
+                <button
+                  type="button"
+                  className="bg-black text-white px-6 py-2 rounded-lg font-medium hover:bg-gray-700 transition-colors"
+                  onClick={() => setForm({ ...form, file1: null })}
+                >
+                  Cancel
+                </button>
+              </div>
+              {validationErrors.file1 && (
+                <div className="text-red-500 text-sm mt-2">
+                  {validationErrors.file1}
                 </div>
               )}
             </div>
-            {error && form.image?.type.startsWith("video/") && (
+
+            {/* File Upload Section 2 (Optional) */}
+            <div className="w-full mb-4">
+              <label className="block text-sm font-semibold mb-2 text-gray-600">
+                File 2 (Optional)
+              </label>
+              <div className="w-full flex justify-center mb-2">
+                {form.file2 ? (
+                  <div className="flex items-center justify-center rounded-xl w-full h-48 overflow-hidden bg-[#01a2e9]">
+                    {form.file2.type.startsWith("image/") ? (
+                      <img
+                        src={previewUrl2 || undefined}
+                        alt="Preview 2"
+                        className="object-cover w-full h-48 rounded-xl"
+                      />
+                    ) : form.file2.type.startsWith("video/") ? (
+                      <VideoPlayer
+                        src={previewUrl2 || undefined}
+                        loop
+                        playsInline
+                        className="object-cover w-full h-48 rounded-xl"
+                      />
+                    ) : null}
+                  </div>
+                ) : (
+                  <div className="bg-gray-300 text-center text-gray-600 font-semibold py-6 relative flex flex-col items-center justify-center w-full h-48 rounded-xl">
+                    <div className="text-sm">Optional file 2</div>
+                  </div>
+                )}
+              </div>
+              <input
+                type="file"
+                accept={
+                  isPremium
+                    ? "image/png,image/jpeg,image/jpg,image/gif,image/webp,video/mp4"
+                    : "image/png,image/jpeg,image/jpg,image/gif,image/webp"
+                }
+                ref={fileInputRef2}
+                style={{ display: "none" }}
+                onChange={(e) => handleFileChange(2, e)}
+              />
+              <div className="flex gap-4">
+                <button
+                  type="button"
+                  className="bg-black text-white px-6 py-2 rounded-lg font-medium hover:bg-gray-700 transition-colors"
+                  onClick={() => fileInputRef2.current?.click()}
+                >
+                  Browse
+                </button>
+                <button
+                  type="button"
+                  className="bg-black text-white px-6 py-2 rounded-lg font-medium hover:bg-gray-700 transition-colors"
+                  onClick={() => setForm({ ...form, file2: null })}
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+
+            {/* File Upload Section 3 (Optional) */}
+            <div className="w-full mb-4">
+              <label className="block text-sm font-semibold mb-2 text-gray-600">
+                File 3 (Optional)
+              </label>
+              <div className="w-full flex justify-center mb-2">
+                {form.file3 ? (
+                  <div className="flex items-center justify-center rounded-xl w-full h-48 overflow-hidden bg-[#01a2e9]">
+                    {form.file3.type.startsWith("image/") ? (
+                      <img
+                        src={previewUrl3 || undefined}
+                        alt="Preview 3"
+                        className="object-cover w-full h-48 rounded-xl"
+                      />
+                    ) : form.file3.type.startsWith("video/") ? (
+                      <VideoPlayer
+                        src={previewUrl3 || undefined}
+                        loop
+                        playsInline
+                        className="object-cover w-full h-48 rounded-xl"
+                      />
+                    ) : null}
+                  </div>
+                ) : (
+                  <div className="bg-gray-300 text-center text-gray-600 font-semibold py-6 relative flex flex-col items-center justify-center w-full h-48 rounded-xl">
+                    <div className="text-sm">Optional file 3</div>
+                  </div>
+                )}
+              </div>
+              <input
+                type="file"
+                accept={
+                  isPremium
+                    ? "image/png,image/jpeg,image/jpg,image/gif,image/webp,video/mp4"
+                    : "image/png,image/jpeg,image/jpg,image/gif,image/webp"
+                }
+                ref={fileInputRef3}
+                style={{ display: "none" }}
+                onChange={(e) => handleFileChange(3, e)}
+              />
+              <div className="flex gap-4 mb-4">
+                <button
+                  type="button"
+                  className="bg-black text-white px-6 py-2 rounded-lg font-medium hover:bg-gray-700 transition-colors"
+                  onClick={() => fileInputRef3.current?.click()}
+                >
+                  Browse
+                </button>
+                <button
+                  type="button"
+                  className="bg-black text-white px-6 py-2 rounded-lg font-medium hover:bg-gray-700 transition-colors"
+                  onClick={() => setForm({ ...form, file3: null })}
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+
+            {error && (
               <div className="text-red-500 text-sm mb-4 text-center">
                 {error}
               </div>
             )}
-            {/* Hidden file input and Browse/Cancel buttons */}
-            <input
-              type="file"
-              accept={
-                isPremium
-                  ? "image/png,image/jpeg,image/jpg,image/gif,image/webp,video/mp4"
-                  : "image/png,image/jpeg,image/jpg,image/gif,image/webp"
-              }
-              ref={fileInputRef}
-              style={{ display: "none" }}
-              onChange={handleFileChange}
-            />
-            <div className="flex gap-4 mb-4">
-              <button
-                type="button"
-                className="bg-black text-white px-6 py-2 rounded-lg font-medium hover:bg-gray-700 transition-colors"
-                onClick={() => fileInputRef.current?.click()}
-              >
-                Browse
-              </button>
-              <button
-                type="button"
-                className="bg-black text-white px-6 py-2 rounded-lg font-medium hover:bg-gray-700 transition-colors"
-                onClick={() => setForm({ ...form, image: null })}
-              >
-                Cancel
-              </button>
-            </div>
+
             <textarea
               name="description"
               placeholder="Company description"
