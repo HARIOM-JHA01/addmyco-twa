@@ -65,6 +65,8 @@ export default function CreateCompanyPage() {
     // eslint-disable-next-line
   }, [form.file3]);
 
+  const [activeFileTab, setActiveFileTab] = useState<number>(1);
+
   // Fetch existing companies to determine occupied display orders (1..15)
   const fetchCompanies = async () => {
     try {
@@ -332,189 +334,224 @@ export default function CreateCompanyPage() {
             />
             {/* File Upload Section 1 (Mandatory) */}
             <div className="w-full mb-4">
-              <label className="block text-sm font-semibold mb-2 text-red-600">
-                File 1 (Mandatory) *
-              </label>
-              <div className="w-full flex justify-center mb-2">
-                {form.file1 ? (
-                  <div className="flex items-center justify-center rounded-xl w-full h-48 overflow-hidden bg-[#01a2e9]">
-                    {form.file1.type.startsWith("image/") ? (
-                      <img
-                        src={previewUrl1 || undefined}
-                        alt="Preview 1"
-                        className="object-cover w-full h-48 rounded-xl"
-                      />
-                    ) : form.file1.type.startsWith("video/") ? (
-                      <VideoPlayer
-                        src={previewUrl1 || undefined}
-                        loop
-                        playsInline
-                        className="object-cover w-full h-48 rounded-xl"
-                      />
-                    ) : null}
-                  </div>
-                ) : (
-                  <div className="bg-[#01a2e9] text-center text-white font-bold py-6 relative flex flex-col items-center justify-center w-full h-48 rounded-xl">
-                    <div className="text-lg">
-                      Please upload
-                      <br />
-                      640 width by 360 high Image
-                      <br />
-                      or
-                    </div>
-                    <div className="text-yellow-300 font-bold mt-2">
-                      Premium Member Upload 1 Minute Video
-                    </div>
-                  </div>
-                )}
+              {/* Top numeric tabs */}
+              <div className="flex justify-center gap-3 mb-4">
+                {[1, 2, 3].map((i) => (
+                  <button
+                    key={i}
+                    type="button"
+                    aria-pressed={activeFileTab === i}
+                    onClick={() => setActiveFileTab(i)}
+                    className={`w-10 h-10 rounded-full border-2 flex items-center justify-center font-semibold transition-colors ${
+                      activeFileTab === i
+                        ? "bg-black text-white border-black"
+                        : "bg-white text-black border-gray-300"
+                    }`}
+                  >
+                    {i}
+                  </button>
+                ))}
               </div>
-              <input
-                type="file"
-                accept={
-                  isPremium
-                    ? "image/png,image/jpeg,image/jpg,image/gif,image/webp,video/mp4"
-                    : "image/png,image/jpeg,image/jpg,image/gif,image/webp"
-                }
-                ref={fileInputRef1}
-                style={{ display: "none" }}
-                onChange={(e) => handleFileChange(1, e)}
-              />
-              <div className="flex gap-4">
-                <button
-                  type="button"
-                  className="bg-black text-white px-6 py-2 rounded-lg font-medium hover:bg-gray-700 transition-colors"
-                  onClick={() => fileInputRef1.current?.click()}
+
+              <div className="flex flex-col md:flex-row gap-4">
+                <div
+                  className={`md:w-1/3 ${
+                    activeFileTab !== 1 ? "hidden md:block opacity-60" : "block"
+                  }`}
                 >
-                  Browse
-                </button>
-                <button
-                  type="button"
-                  className="bg-black text-white px-6 py-2 rounded-lg font-medium hover:bg-gray-700 transition-colors"
-                  onClick={() => setForm({ ...form, file1: null })}
-                >
-                  Cancel
-                </button>
-              </div>
-              {validationErrors.file1 && (
-                <div className="text-red-500 text-sm mt-2">
-                  {validationErrors.file1}
+                  <label className="block text-sm font-semibold mb-2 text-red-600 text-center">
+                    File 1 (Mandatory) *
+                  </label>
+                  <div className="w-full flex justify-center mb-2">
+                    {form.file1 ? (
+                      <div className="flex items-center justify-center rounded-xl w-full h-48 overflow-hidden bg-[#01a2e9]">
+                        {form.file1.type.startsWith("image/") ? (
+                          <img
+                            src={previewUrl1 || undefined}
+                            alt="Preview 1"
+                            className="object-cover w-full h-48 rounded-xl"
+                          />
+                        ) : form.file1.type.startsWith("video/") ? (
+                          <VideoPlayer
+                            src={previewUrl1 || undefined}
+                            loop
+                            playsInline
+                            className="object-cover w-full h-48 rounded-xl"
+                          />
+                        ) : null}
+                      </div>
+                    ) : (
+                      <div className="bg-[#01a2e9] text-center text-white font-bold py-6 relative flex flex-col items-center justify-center w-full h-48 rounded-xl">
+                        <div className="text-lg">
+                          Please upload
+                          <br />
+                          640 width by 360 high Image
+                          <br />
+                          or
+                        </div>
+                        <div className="text-yellow-300 font-bold mt-2">
+                          Premium Member Upload 1 Minute Video
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                  <input
+                    type="file"
+                    accept={
+                      isPremium
+                        ? "image/png,image/jpeg,image/jpg,image/gif,image/webp,video/mp4"
+                        : "image/png,image/jpeg,image/jpg,image/gif,image/webp"
+                    }
+                    ref={fileInputRef1}
+                    style={{ display: "none" }}
+                    onChange={(e) => handleFileChange(1, e)}
+                  />
+                  <div className="flex gap-4 justify-center">
+                    <button
+                      type="button"
+                      className="bg-black text-white px-6 py-2 rounded-lg font-medium hover:bg-gray-700 transition-colors"
+                      onClick={() => fileInputRef1.current?.click()}
+                    >
+                      Browse
+                    </button>
+                    <button
+                      type="button"
+                      className="bg-black text-white px-6 py-2 rounded-lg font-medium hover:bg-gray-700 transition-colors"
+                      onClick={() => setForm({ ...form, file1: null })}
+                    >
+                      Cancel
+                    </button>
+                  </div>
                 </div>
-              )}
-            </div>
-
-            {/* File Upload Section 2 (Optional) */}
-            <div className="w-full mb-4">
-              <label className="block text-sm font-semibold mb-2 text-gray-600">
-                File 2 (Optional)
-              </label>
-              <div className="w-full flex justify-center mb-2">
-                {form.file2 ? (
-                  <div className="flex items-center justify-center rounded-xl w-full h-48 overflow-hidden bg-[#01a2e9]">
-                    {form.file2.type.startsWith("image/") ? (
-                      <img
-                        src={previewUrl2 || undefined}
-                        alt="Preview 2"
-                        className="object-cover w-full h-48 rounded-xl"
-                      />
-                    ) : form.file2.type.startsWith("video/") ? (
-                      <VideoPlayer
-                        src={previewUrl2 || undefined}
-                        loop
-                        playsInline
-                        className="object-cover w-full h-48 rounded-xl"
-                      />
-                    ) : null}
-                  </div>
-                ) : (
-                  <div className="bg-gray-300 text-center text-gray-600 font-semibold py-6 relative flex flex-col items-center justify-center w-full h-48 rounded-xl">
-                    <div className="text-sm">Optional file 2</div>
+                {validationErrors.file1 && (
+                  <div className="text-red-500 text-sm mt-2">
+                    {validationErrors.file1}
                   </div>
                 )}
               </div>
-              <input
-                type="file"
-                accept={
-                  isPremium
-                    ? "image/png,image/jpeg,image/jpg,image/gif,image/webp,video/mp4"
-                    : "image/png,image/jpeg,image/jpg,image/gif,image/webp"
-                }
-                ref={fileInputRef2}
-                style={{ display: "none" }}
-                onChange={(e) => handleFileChange(2, e)}
-              />
-              <div className="flex gap-4">
-                <button
-                  type="button"
-                  className="bg-black text-white px-6 py-2 rounded-lg font-medium hover:bg-gray-700 transition-colors"
-                  onClick={() => fileInputRef2.current?.click()}
-                >
-                  Browse
-                </button>
-                <button
-                  type="button"
-                  className="bg-black text-white px-6 py-2 rounded-lg font-medium hover:bg-gray-700 transition-colors"
-                  onClick={() => setForm({ ...form, file2: null })}
-                >
-                  Cancel
-                </button>
-              </div>
-            </div>
 
-            {/* File Upload Section 3 (Optional) */}
-            <div className="w-full mb-4">
-              <label className="block text-sm font-semibold mb-2 text-gray-600">
-                File 3 (Optional)
-              </label>
-              <div className="w-full flex justify-center mb-2">
-                {form.file3 ? (
-                  <div className="flex items-center justify-center rounded-xl w-full h-48 overflow-hidden bg-[#01a2e9]">
-                    {form.file3.type.startsWith("image/") ? (
-                      <img
-                        src={previewUrl3 || undefined}
-                        alt="Preview 3"
-                        className="object-cover w-full h-48 rounded-xl"
-                      />
-                    ) : form.file3.type.startsWith("video/") ? (
-                      <VideoPlayer
-                        src={previewUrl3 || undefined}
-                        loop
-                        playsInline
-                        className="object-cover w-full h-48 rounded-xl"
-                      />
-                    ) : null}
-                  </div>
-                ) : (
-                  <div className="bg-gray-300 text-center text-gray-600 font-semibold py-6 relative flex flex-col items-center justify-center w-full h-48 rounded-xl">
-                    <div className="text-sm">Optional file 3</div>
-                  </div>
-                )}
+              {/* File Upload Section 2 (Optional) */}
+              <div
+                className={`md:w-1/3 ${
+                  activeFileTab !== 2 ? "hidden md:block opacity-60" : "block"
+                }`}
+              >
+                <label className="block text-sm font-semibold mb-2 text-gray-600 text-center">
+                  File 2 (Optional)
+                </label>
+                <div className="w-full flex justify-center mb-2">
+                  {form.file2 ? (
+                    <div className="flex items-center justify-center rounded-xl w-full h-48 overflow-hidden bg-[#01a2e9]">
+                      {form.file2.type.startsWith("image/") ? (
+                        <img
+                          src={previewUrl2 || undefined}
+                          alt="Preview 2"
+                          className="object-cover w-full h-48 rounded-xl"
+                        />
+                      ) : form.file2.type.startsWith("video/") ? (
+                        <VideoPlayer
+                          src={previewUrl2 || undefined}
+                          loop
+                          playsInline
+                          className="object-cover w-full h-48 rounded-xl"
+                        />
+                      ) : null}
+                    </div>
+                  ) : (
+                    <div className="bg-gray-300 text-center text-gray-600 font-semibold py-6 relative flex flex-col items-center justify-center w-full h-48 rounded-xl">
+                      <div className="text-sm">Optional file 2</div>
+                    </div>
+                  )}
+                </div>
+                <input
+                  type="file"
+                  accept={
+                    isPremium
+                      ? "image/png,image/jpeg,image/jpg,image/gif,image/webp,video/mp4"
+                      : "image/png,image/jpeg,image/jpg,image/gif,image/webp"
+                  }
+                  ref={fileInputRef2}
+                  style={{ display: "none" }}
+                  onChange={(e) => handleFileChange(2, e)}
+                />
+                <div className="flex gap-4 justify-center">
+                  <button
+                    type="button"
+                    className="bg-black text-white px-6 py-2 rounded-lg font-medium hover:bg-gray-700 transition-colors"
+                    onClick={() => fileInputRef2.current?.click()}
+                  >
+                    Browse
+                  </button>
+                  <button
+                    type="button"
+                    className="bg-black text-white px-6 py-2 rounded-lg font-medium hover:bg-gray-700 transition-colors"
+                    onClick={() => setForm({ ...form, file2: null })}
+                  >
+                    Cancel
+                  </button>
+                </div>
               </div>
-              <input
-                type="file"
-                accept={
-                  isPremium
-                    ? "image/png,image/jpeg,image/jpg,image/gif,image/webp,video/mp4"
-                    : "image/png,image/jpeg,image/jpg,image/gif,image/webp"
-                }
-                ref={fileInputRef3}
-                style={{ display: "none" }}
-                onChange={(e) => handleFileChange(3, e)}
-              />
-              <div className="flex gap-4 mb-4">
-                <button
-                  type="button"
-                  className="bg-black text-white px-6 py-2 rounded-lg font-medium hover:bg-gray-700 transition-colors"
-                  onClick={() => fileInputRef3.current?.click()}
-                >
-                  Browse
-                </button>
-                <button
-                  type="button"
-                  className="bg-black text-white px-6 py-2 rounded-lg font-medium hover:bg-gray-700 transition-colors"
-                  onClick={() => setForm({ ...form, file3: null })}
-                >
-                  Cancel
-                </button>
+
+              {/* File Upload Section 3 (Optional) */}
+              <div
+                className={`md:w-1/3 ${
+                  activeFileTab !== 3 ? "hidden md:block opacity-60" : "block"
+                }`}
+              >
+                <label className="block text-sm font-semibold mb-2 text-gray-600 text-center">
+                  File 3 (Optional)
+                </label>
+                <div className="w-full flex justify-center mb-2">
+                  {form.file3 ? (
+                    <div className="flex items-center justify-center rounded-xl w-full h-48 overflow-hidden bg-[#01a2e9]">
+                      {form.file3.type.startsWith("image/") ? (
+                        <img
+                          src={previewUrl3 || undefined}
+                          alt="Preview 3"
+                          className="object-cover w-full h-48 rounded-xl"
+                        />
+                      ) : form.file3.type.startsWith("video/") ? (
+                        <VideoPlayer
+                          src={previewUrl3 || undefined}
+                          loop
+                          playsInline
+                          className="object-cover w-full h-48 rounded-xl"
+                        />
+                      ) : null}
+                    </div>
+                  ) : (
+                    <div className="bg-gray-300 text-center text-gray-600 font-semibold py-6 relative flex flex-col items-center justify-center w-full h-48 rounded-xl">
+                      <div className="text-sm">Optional file 3</div>
+                    </div>
+                  )}
+                </div>
+                <input
+                  type="file"
+                  accept={
+                    isPremium
+                      ? "image/png,image/jpeg,image/jpg,image/gif,image/webp,video/mp4"
+                      : "image/png,image/jpeg,image/jpg,image/gif,image/webp"
+                  }
+                  ref={fileInputRef3}
+                  style={{ display: "none" }}
+                  onChange={(e) => handleFileChange(3, e)}
+                />
+                <div className="flex gap-4 justify-center mb-4">
+                  <button
+                    type="button"
+                    className="bg-black text-white px-6 py-2 rounded-lg font-medium hover:bg-gray-700 transition-colors"
+                    onClick={() => fileInputRef3.current?.click()}
+                  >
+                    Browse
+                  </button>
+                  <button
+                    type="button"
+                    className="bg-black text-white px-6 py-2 rounded-lg font-medium hover:bg-gray-700 transition-colors"
+                    onClick={() => setForm({ ...form, file3: null })}
+                  >
+                    Cancel
+                  </button>
+                </div>
               </div>
             </div>
 

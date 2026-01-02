@@ -46,6 +46,8 @@ export default function SubCompanyPage() {
   const [filePreview1, setFilePreview1] = useState<string | null>(null);
   const [filePreview2, setFilePreview2] = useState<string | null>(null);
   const [filePreview3, setFilePreview3] = useState<string | null>(null);
+  const [activeFileTab, setActiveFileTab] = useState<number>(1);
+  const [carouselIndex1, setCarouselIndex1] = useState<number>(0);
   const [validationErrors, setValidationErrors] = useState<{
     [key: string]: string;
   }>({});
@@ -133,6 +135,20 @@ export default function SubCompanyPage() {
     };
     fetchProfile();
   }, []);
+
+  // Auto-rotate carousel for file sections
+  useEffect(() => {
+    const images = companyProfile?.images || [];
+    const videos = companyProfile?.videos || [];
+    const allMedia = [...images, ...videos];
+    if (allMedia.length <= 1) return;
+
+    const interval = setInterval(() => {
+      setCarouselIndex1((prev) => (prev + 1) % allMedia.length);
+    }, 4000);
+
+    return () => clearInterval(interval);
+  }, [companyProfile?.images, companyProfile?.videos]);
 
   // Delete company profile
   const [deleteLoading, setDeleteLoading] = useState(false);
@@ -567,275 +583,320 @@ export default function SubCompanyPage() {
               />
               {/* File Upload Section for 3 files */}
               <div className="w-full mb-4">
-                {/* File 1 */}
-                <div className="mb-4">
-                  <label className="block text-sm font-semibold mb-2 text-gray-700">
-                    File 1
-                  </label>
-                  <div
-                    className="w-full rounded-xl flex items-center justify-center mb-2 cursor-pointer h-48"
-                    onClick={() =>
-                      document.getElementById("company-file-input-1")?.click()
-                    }
-                  >
-                    {filePreview1 ? (
-                      file1?.type.startsWith("video/") ? (
-                        <VideoPlayer
-                          src={filePreview1 as string}
-                          loop
-                          playsInline
-                          className="w-full h-48 object-cover rounded-xl"
-                        />
-                      ) : (
-                        <img
-                          src={filePreview1}
-                          alt="Preview 1"
-                          className="w-full h-48 object-cover rounded-xl"
-                        />
-                      )
-                    ) : editProfile?.file1_url ? (
-                      editProfile.file1_url.endsWith(".mp4") ? (
-                        <VideoPlayer
-                          src={editProfile.file1_url}
-                          loop
-                          playsInline
-                          className="w-full h-48 object-cover rounded-xl"
-                        />
-                      ) : (
-                        <img
-                          src={editProfile.file1_url}
-                          alt="company file 1"
-                          className="w-full h-48 object-cover rounded-xl"
-                        />
-                      )
-                    ) : (
-                      <div className="w-full h-48 bg-gray-300 rounded-xl flex items-center justify-center">
-                        <div className="text-gray-600 text-center text-sm font-semibold">
-                          File 1
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                  <input
-                    id="company-file-input-1"
-                    type="file"
-                    accept="image/*,video/*"
-                    onChange={(e) => handleEditFile(1, e)}
-                    disabled={editLoading}
-                    className="hidden"
-                  />
-                  <div className="flex gap-4">
+                {/* Top numeric tabs */}
+                <div className="flex justify-center gap-3 mb-4">
+                  {[1, 2, 3].map((i) => (
                     <button
+                      key={i}
                       type="button"
-                      className="bg-black text-white px-6 py-2 rounded-lg font-medium hover:bg-gray-700 transition-colors"
+                      aria-pressed={activeFileTab === i}
+                      onClick={() => setActiveFileTab(i)}
+                      className={`w-10 h-10 rounded-full border-2 flex items-center justify-center font-semibold transition-colors ${
+                        activeFileTab === i
+                          ? "bg-black text-white border-black"
+                          : "bg-white text-black border-gray-300"
+                      }`}
+                    >
+                      {i}
+                    </button>
+                  ))}
+                </div>
+
+                <div className="flex flex-col md:flex-row gap-4">
+                  {/* File 1 */}
+                  <div
+                    className={`md:w-1/3 ${
+                      activeFileTab !== 1
+                        ? "hidden md:block opacity-60"
+                        : "block"
+                    }`}
+                  >
+                    <label className="block text-sm font-semibold mb-2 text-gray-700">
+                      File 1
+                    </label>
+                    <div
+                      className="w-full rounded-xl flex items-center justify-center mb-2 cursor-pointer h-48"
                       onClick={() =>
                         document.getElementById("company-file-input-1")?.click()
                       }
-                      disabled={editLoading}
                     >
-                      Browse
-                    </button>
-                    <button
-                      type="button"
-                      className="bg-black text-white px-6 py-2 rounded-lg font-medium hover:bg-gray-700 transition-colors"
-                      onClick={() => {
-                        setFile1(null);
-                        setFilePreview1(
-                          companyProfile?.file1 || companyProfile?.image
-                            ? formatImageUrl(
-                                companyProfile.file1 || companyProfile.image
-                              )
-                            : null
-                        );
-                        const el = document.getElementById(
-                          "company-file-input-1"
-                        ) as HTMLInputElement | null;
-                        if (el) el.value = "";
-                      }}
-                      disabled={editLoading}
-                    >
-                      Cancel
-                    </button>
-                  </div>
-                </div>
-
-                {/* File 2 */}
-                <div className="mb-4">
-                  <label className="block text-sm font-semibold mb-2 text-gray-700">
-                    File 2 (Optional)
-                  </label>
-                  <div
-                    className="w-full rounded-xl flex items-center justify-center mb-2 cursor-pointer h-48"
-                    onClick={() =>
-                      document.getElementById("company-file-input-2")?.click()
-                    }
-                  >
-                    {filePreview2 ? (
-                      file2?.type.startsWith("video/") ? (
-                        <VideoPlayer
-                          src={filePreview2 as string}
-                          loop
-                          playsInline
-                          className="w-full h-48 object-cover rounded-xl"
-                        />
+                      {filePreview1 ? (
+                        file1?.type.startsWith("video/") ? (
+                          <VideoPlayer
+                            src={filePreview1 as string}
+                            loop
+                            playsInline
+                            className="w-full h-48 object-cover rounded-xl"
+                          />
+                        ) : (
+                          <img
+                            src={filePreview1}
+                            alt="Preview 1"
+                            className="w-full h-48 object-cover rounded-xl"
+                          />
+                        )
+                      ) : editProfile?.file1_url ? (
+                        editProfile.file1_url.endsWith(".mp4") ? (
+                          <VideoPlayer
+                            src={editProfile.file1_url}
+                            loop
+                            playsInline
+                            className="w-full h-48 object-cover rounded-xl"
+                          />
+                        ) : (
+                          <img
+                            src={editProfile.file1_url}
+                            alt="company file 1"
+                            className="w-full h-48 object-cover rounded-xl"
+                          />
+                        )
                       ) : (
-                        <img
-                          src={filePreview2}
-                          alt="Preview 2"
-                          className="w-full h-48 object-cover rounded-xl"
-                        />
-                      )
-                    ) : editProfile?.file2_url ? (
-                      editProfile.file2_url.endsWith(".mp4") ? (
-                        <VideoPlayer
-                          src={editProfile.file2_url}
-                          loop
-                          playsInline
-                          className="w-full h-48 object-cover rounded-xl"
-                        />
-                      ) : (
-                        <img
-                          src={editProfile.file2_url}
-                          alt="company file 2"
-                          className="w-full h-48 object-cover rounded-xl"
-                        />
-                      )
-                    ) : (
-                      <div className="w-full h-48 bg-gray-300 rounded-xl flex items-center justify-center">
-                        <div className="text-gray-600 text-center text-sm font-semibold">
-                          File 2 (Optional)
+                        <div className="w-full h-48 bg-gray-300 rounded-xl flex items-center justify-center">
+                          <div className="text-gray-600 text-center text-sm font-semibold">
+                            File 1
+                          </div>
                         </div>
-                      </div>
-                    )}
+                      )}
+                    </div>
+                    <input
+                      id="company-file-input-1"
+                      type="file"
+                      accept="image/*,video/*"
+                      onChange={(e) => handleEditFile(1, e)}
+                      disabled={editLoading}
+                      className="hidden"
+                    />
+                    <div className="flex gap-4 justify-center">
+                      <button
+                        type="button"
+                        className="bg-black text-white px-6 py-2 rounded-lg font-medium hover:bg-gray-700 transition-colors"
+                        onClick={() =>
+                          document
+                            .getElementById("company-file-input-1")
+                            ?.click()
+                        }
+                        disabled={editLoading}
+                      >
+                        Browse
+                      </button>
+                      <button
+                        type="button"
+                        className="bg-black text-white px-6 py-2 rounded-lg font-medium hover:bg-gray-700 transition-colors"
+                        onClick={() => {
+                          setFile1(null);
+                          setFilePreview1(
+                            companyProfile?.file1 || companyProfile?.image
+                              ? formatImageUrl(
+                                  companyProfile.file1 || companyProfile.image
+                                )
+                              : null
+                          );
+                          const el = document.getElementById(
+                            "company-file-input-1"
+                          ) as HTMLInputElement | null;
+                          if (el) el.value = "";
+                        }}
+                        disabled={editLoading}
+                      >
+                        Cancel
+                      </button>
+                    </div>
                   </div>
-                  <input
-                    id="company-file-input-2"
-                    type="file"
-                    accept="image/*,video/*"
-                    onChange={(e) => handleEditFile(2, e)}
-                    disabled={editLoading}
-                    className="hidden"
-                  />
-                  <div className="flex gap-4">
-                    <button
-                      type="button"
-                      className="bg-black text-white px-6 py-2 rounded-lg font-medium hover:bg-gray-700 transition-colors"
+
+                  {/* File 2 */}
+                  <div
+                    className={`md:w-1/3 ${
+                      activeFileTab !== 2
+                        ? "hidden md:block opacity-60"
+                        : "block"
+                    }`}
+                  >
+                    <label className="block text-sm font-semibold mb-2 text-gray-700">
+                      File 2 (Optional)
+                    </label>
+                    <div
+                      className="w-full rounded-xl flex items-center justify-center mb-2 cursor-pointer h-48"
                       onClick={() =>
                         document.getElementById("company-file-input-2")?.click()
                       }
-                      disabled={editLoading}
                     >
-                      Browse
-                    </button>
-                    <button
-                      type="button"
-                      className="bg-black text-white px-6 py-2 rounded-lg font-medium hover:bg-gray-700 transition-colors"
-                      onClick={() => {
-                        setFile2(null);
-                        setFilePreview2(
-                          companyProfile?.file2
-                            ? formatImageUrl(companyProfile.file2)
-                            : null
-                        );
-                        const el = document.getElementById(
-                          "company-file-input-2"
-                        ) as HTMLInputElement | null;
-                        if (el) el.value = "";
-                      }}
-                      disabled={editLoading}
-                    >
-                      Cancel
-                    </button>
-                  </div>
-                </div>
-
-                {/* File 3 */}
-                <div className="mb-4">
-                  <label className="block text-sm font-semibold mb-2 text-gray-700">
-                    File 3 (Optional)
-                  </label>
-                  <div
-                    className="w-full rounded-xl flex items-center justify-center mb-2 cursor-pointer h-48"
-                    onClick={() =>
-                      document.getElementById("company-file-input-3")?.click()
-                    }
-                  >
-                    {filePreview3 ? (
-                      file3?.type.startsWith("video/") ? (
-                        <VideoPlayer
-                          src={filePreview3 as string}
-                          loop
-                          playsInline
-                          className="w-full h-48 object-cover rounded-xl"
-                        />
+                      {filePreview2 ? (
+                        file2?.type.startsWith("video/") ? (
+                          <VideoPlayer
+                            src={filePreview2 as string}
+                            loop
+                            playsInline
+                            className="w-full h-48 object-cover rounded-xl"
+                          />
+                        ) : (
+                          <img
+                            src={filePreview2}
+                            alt="Preview 2"
+                            className="w-full h-48 object-cover rounded-xl"
+                          />
+                        )
+                      ) : editProfile?.file2_url ? (
+                        editProfile.file2_url.endsWith(".mp4") ? (
+                          <VideoPlayer
+                            src={editProfile.file2_url}
+                            loop
+                            playsInline
+                            className="w-full h-48 object-cover rounded-xl"
+                          />
+                        ) : (
+                          <img
+                            src={editProfile.file2_url}
+                            alt="company file 2"
+                            className="w-full h-48 object-cover rounded-xl"
+                          />
+                        )
                       ) : (
-                        <img
-                          src={filePreview3}
-                          alt="Preview 3"
-                          className="w-full h-48 object-cover rounded-xl"
-                        />
-                      )
-                    ) : editProfile?.file3_url ? (
-                      editProfile.file3_url.endsWith(".mp4") ? (
-                        <VideoPlayer
-                          src={editProfile.file3_url}
-                          loop
-                          playsInline
-                          className="w-full h-48 object-cover rounded-xl"
-                        />
-                      ) : (
-                        <img
-                          src={editProfile.file3_url}
-                          alt="company file 3"
-                          className="w-full h-48 object-cover rounded-xl"
-                        />
-                      )
-                    ) : (
-                      <div className="w-full h-48 bg-gray-300 rounded-xl flex items-center justify-center">
-                        <div className="text-gray-600 text-center text-sm font-semibold">
-                          File 3 (Optional)
+                        <div className="w-full h-48 bg-gray-300 rounded-xl flex items-center justify-center">
+                          <div className="text-gray-600 text-center text-sm font-semibold">
+                            File 2 (Optional)
+                          </div>
                         </div>
-                      </div>
-                    )}
+                      )}
+                    </div>
+                    <input
+                      id="company-file-input-2"
+                      type="file"
+                      accept="image/*,video/*"
+                      onChange={(e) => handleEditFile(2, e)}
+                      disabled={editLoading}
+                      className="hidden"
+                    />
+                    <div className="flex gap-4 justify-center">
+                      <button
+                        type="button"
+                        className="bg-black text-white px-6 py-2 rounded-lg font-medium hover:bg-gray-700 transition-colors"
+                        onClick={() =>
+                          document
+                            .getElementById("company-file-input-2")
+                            ?.click()
+                        }
+                        disabled={editLoading}
+                      >
+                        Browse
+                      </button>
+                      <button
+                        type="button"
+                        className="bg-black text-white px-6 py-2 rounded-lg font-medium hover:bg-gray-700 transition-colors"
+                        onClick={() => {
+                          setFile2(null);
+                          setFilePreview2(
+                            companyProfile?.file2
+                              ? formatImageUrl(companyProfile.file2)
+                              : null
+                          );
+                          const el = document.getElementById(
+                            "company-file-input-2"
+                          ) as HTMLInputElement | null;
+                          if (el) el.value = "";
+                        }}
+                        disabled={editLoading}
+                      >
+                        Cancel
+                      </button>
+                    </div>
                   </div>
-                  <input
-                    id="company-file-input-3"
-                    type="file"
-                    accept="image/*,video/*"
-                    onChange={(e) => handleEditFile(3, e)}
-                    disabled={editLoading}
-                    className="hidden"
-                  />
-                  <div className="flex gap-4">
-                    <button
-                      type="button"
-                      className="bg-black text-white px-6 py-2 rounded-lg font-medium hover:bg-gray-700 transition-colors"
+
+                  {/* File 3 */}
+                  <div
+                    className={`md:w-1/3 ${
+                      activeFileTab !== 3
+                        ? "hidden md:block opacity-60"
+                        : "block"
+                    }`}
+                  >
+                    <label className="block text-sm font-semibold mb-2 text-gray-700">
+                      File 3 (Optional)
+                    </label>
+                    <div
+                      className="w-full rounded-xl flex items-center justify-center mb-2 cursor-pointer h-48"
                       onClick={() =>
                         document.getElementById("company-file-input-3")?.click()
                       }
-                      disabled={editLoading}
                     >
-                      Browse
-                    </button>
-                    <button
-                      type="button"
-                      className="bg-black text-white px-6 py-2 rounded-lg font-medium hover:bg-gray-700 transition-colors"
-                      onClick={() => {
-                        setFile3(null);
-                        setFilePreview3(
-                          companyProfile?.file3
-                            ? formatImageUrl(companyProfile.file3)
-                            : null
-                        );
-                        const el = document.getElementById(
-                          "company-file-input-3"
-                        ) as HTMLInputElement | null;
-                        if (el) el.value = "";
-                      }}
+                      {filePreview3 ? (
+                        file3?.type.startsWith("video/") ? (
+                          <VideoPlayer
+                            src={filePreview3 as string}
+                            loop
+                            playsInline
+                            className="w-full h-48 object-cover rounded-xl"
+                          />
+                        ) : (
+                          <img
+                            src={filePreview3}
+                            alt="Preview 3"
+                            className="w-full h-48 object-cover rounded-xl"
+                          />
+                        )
+                      ) : editProfile?.file3_url ? (
+                        editProfile.file3_url.endsWith(".mp4") ? (
+                          <VideoPlayer
+                            src={editProfile.file3_url}
+                            loop
+                            playsInline
+                            className="w-full h-48 object-cover rounded-xl"
+                          />
+                        ) : (
+                          <img
+                            src={editProfile.file3_url}
+                            alt="company file 3"
+                            className="w-full h-48 object-cover rounded-xl"
+                          />
+                        )
+                      ) : (
+                        <div className="w-full h-48 bg-gray-300 rounded-xl flex items-center justify-center">
+                          <div className="text-gray-600 text-center text-sm font-semibold">
+                            File 3 (Optional)
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                    <input
+                      id="company-file-input-3"
+                      type="file"
+                      accept="image/*,video/*"
+                      onChange={(e) => handleEditFile(3, e)}
                       disabled={editLoading}
-                    >
-                      Cancel
-                    </button>
+                      className="hidden"
+                    />
+                    <div className="flex gap-4 justify-center">
+                      <button
+                        type="button"
+                        className="bg-black text-white px-6 py-2 rounded-lg font-medium hover:bg-gray-700 transition-colors"
+                        onClick={() =>
+                          document
+                            .getElementById("company-file-input-3")
+                            ?.click()
+                        }
+                        disabled={editLoading}
+                      >
+                        Browse
+                      </button>
+                      <button
+                        type="button"
+                        className="bg-black text-white px-6 py-2 rounded-lg font-medium hover:bg-gray-700 transition-colors"
+                        onClick={() => {
+                          setFile3(null);
+                          setFilePreview3(
+                            companyProfile?.file3
+                              ? formatImageUrl(companyProfile.file3)
+                              : null
+                          );
+                          const el = document.getElementById(
+                            "company-file-input-3"
+                          ) as HTMLInputElement | null;
+                          if (el) el.value = "";
+                        }}
+                        disabled={editLoading}
+                      >
+                        Cancel
+                      </button>
+                    </div>
                   </div>
                 </div>
 
@@ -1197,39 +1258,75 @@ export default function SubCompanyPage() {
 
               {/* Company Image and Description */}
               <div className="flex flex-col items-center mb-4 w-full">
-                {/* Image container */}
-                <div className="w-full flex justify-center mb-4">
-                  {companyProfile.video ? (
-                    <VideoPlayer
-                      src={formatImageUrl(companyProfile.video)}
-                      loop
-                      playsInline
-                      className="w-full h-48 object-cover rounded-xl"
-                    />
-                  ) : companyProfile.image ? (
-                    companyProfile.image.endsWith(".mp4") ? (
+                {/* Image/Video Carousel container */}
+                <div className="w-full flex justify-center mb-4 relative">
+                  {(() => {
+                    const allMedia = [
+                      ...(companyProfile?.images || []),
+                      ...(companyProfile?.videos || []),
+                    ];
+                    const currentMedia =
+                      allMedia.length > 0
+                        ? allMedia[carouselIndex1 % allMedia.length]
+                        : companyProfile?.image || companyProfile?.video;
+
+                    if (!currentMedia) {
+                      return (
+                        <img
+                          src={profileIcon}
+                          alt="Company Logo"
+                          className="w-full h-48 object-cover rounded-xl"
+                        />
+                      );
+                    }
+
+                    const isVideo =
+                      currentMedia.endsWith?.(".mp4") ||
+                      companyProfile?.videos?.includes(currentMedia);
+
+                    return isVideo ? (
                       <VideoPlayer
-                        src={formatImageUrl(companyProfile.image)}
+                        src={formatImageUrl(currentMedia)}
                         loop
                         playsInline
                         className="w-full h-48 object-cover rounded-xl"
                       />
                     ) : (
                       <img
-                        src={
-                          formatImageUrl(companyProfile.image) || profileIcon
-                        }
-                        alt="Company Logo"
+                        src={formatImageUrl(currentMedia) || profileIcon}
+                        alt="Company Image"
                         className="w-full h-48 object-cover rounded-xl"
                       />
-                    )
-                  ) : (
-                    <img
-                      src={profileIcon}
-                      alt="Company Logo"
-                      className="w-full h-48 object-cover rounded-xl"
-                    />
-                  )}
+                    );
+                  })()}
+
+                  {/* Carousel indicators and navigation */}
+                  {(() => {
+                    const allMedia = [
+                      ...(companyProfile?.images || []),
+                      ...(companyProfile?.videos || []),
+                    ];
+                    if (allMedia.length <= 1) return null;
+
+                    return (
+                      <>
+                        {/* Indicators */}
+                        <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-2">
+                          {allMedia.map((_, idx) => (
+                            <button
+                              key={idx}
+                              onClick={() => setCarouselIndex1(idx)}
+                              className={`w-2 h-2 rounded-full transition ${
+                                idx === carouselIndex1 % allMedia.length
+                                  ? "bg-white"
+                                  : "bg-white bg-opacity-50"
+                              }`}
+                            />
+                          ))}
+                        </div>
+                      </>
+                    );
+                  })()}
                 </div>
                 <div
                   className="w-full h-48 bg-white rounded-md p-2 overflow-auto"
