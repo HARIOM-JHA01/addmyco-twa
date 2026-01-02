@@ -32,18 +32,25 @@ export default function CreateChamberPage() {
     chamberfanpage: "",
     order: "1",
   });
-  const [file, setFile] = useState<File | null>(null);
-  const [filePreview, setFilePreview] = useState<string | null>(null);
+  const [file1, setFile1] = useState<File | null>(null);
+  const [file2, setFile2] = useState<File | null>(null);
+  const [file3, setFile3] = useState<File | null>(null);
+  const [filePreview1, setFilePreview1] = useState<string | null>(null);
+  const [filePreview2, setFilePreview2] = useState<string | null>(null);
+  const [filePreview3, setFilePreview3] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [validationErrors, setValidationErrors] = useState<{
     [key: string]: string;
   }>({});
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  const fileInputRef1 = useRef<HTMLInputElement>(null);
+  const fileInputRef2 = useRef<HTMLInputElement>(null);
+  const fileInputRef3 = useRef<HTMLInputElement>(null);
   const profile = useProfileStore((state) => state.profile);
   const isPremium = profile?.membertype === "premium";
   const [occupiedOrders, setOccupiedOrders] = useState<number[]>([]);
+  const [activeFileTab, setActiveFileTab] = useState<number>(1);
 
   const fetchChambers = async () => {
     try {
@@ -107,8 +114,18 @@ export default function CreateChamberPage() {
     }
   };
 
-  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = async (
+    fileNumber: 1 | 2 | 3,
+    e: React.ChangeEvent<HTMLInputElement>
+  ) => {
     const selectedFile = e.target.files?.[0] || null;
+    const fileInputRef =
+      fileNumber === 1
+        ? fileInputRef1
+        : fileNumber === 2
+        ? fileInputRef2
+        : fileInputRef3;
+
     if (selectedFile) {
       // If file is a video, only allow mp4 and only for premium users
       if (selectedFile.type.startsWith("video/")) {
@@ -116,15 +133,31 @@ export default function CreateChamberPage() {
           WebApp.showAlert(
             "Video uploads are available for premium users only."
           );
-          setFile(null);
-          setFilePreview(null);
+          if (fileNumber === 1) {
+            setFile1(null);
+            setFilePreview1(null);
+          } else if (fileNumber === 2) {
+            setFile2(null);
+            setFilePreview2(null);
+          } else {
+            setFile3(null);
+            setFilePreview3(null);
+          }
           if (fileInputRef.current) fileInputRef.current.value = "";
           return;
         }
         if (selectedFile.type !== "video/mp4") {
           setError("Only MP4 video files are allowed.");
-          setFile(null);
-          setFilePreview(null);
+          if (fileNumber === 1) {
+            setFile1(null);
+            setFilePreview1(null);
+          } else if (fileNumber === 2) {
+            setFile2(null);
+            setFilePreview2(null);
+          } else {
+            setFile3(null);
+            setFilePreview3(null);
+          }
           if (fileInputRef.current) fileInputRef.current.value = "";
           return;
         }
@@ -133,17 +166,41 @@ export default function CreateChamberPage() {
         const validation = await validateVideo(selectedFile);
         if (!validation.isValid) {
           setError(validation.error || "Invalid video file");
-          setFile(selectedFile);
-          setFilePreview(URL.createObjectURL(selectedFile));
+          if (fileNumber === 1) {
+            setFile1(selectedFile);
+            setFilePreview1(URL.createObjectURL(selectedFile));
+          } else if (fileNumber === 2) {
+            setFile2(selectedFile);
+            setFilePreview2(URL.createObjectURL(selectedFile));
+          } else {
+            setFile3(selectedFile);
+            setFilePreview3(URL.createObjectURL(selectedFile));
+          }
           return;
         }
       }
       setError("");
-      setFile(selectedFile);
-      setFilePreview(URL.createObjectURL(selectedFile));
+      if (fileNumber === 1) {
+        setFile1(selectedFile);
+        setFilePreview1(URL.createObjectURL(selectedFile));
+      } else if (fileNumber === 2) {
+        setFile2(selectedFile);
+        setFilePreview2(URL.createObjectURL(selectedFile));
+      } else {
+        setFile3(selectedFile);
+        setFilePreview3(URL.createObjectURL(selectedFile));
+      }
     } else {
-      setFile(null);
-      setFilePreview(null);
+      if (fileNumber === 1) {
+        setFile1(null);
+        setFilePreview1(null);
+      } else if (fileNumber === 2) {
+        setFile2(null);
+        setFilePreview2(null);
+      } else {
+        setFile3(null);
+        setFilePreview3(null);
+      }
     }
   };
 
@@ -238,12 +295,16 @@ export default function CreateChamberPage() {
       );
       formData.append("order", form.order);
 
-      if (file) {
-        if (file.type.startsWith("image/")) {
-          formData.append("image", file);
-        } else if (file.type.startsWith("video/")) {
-          formData.append("video", file);
-        }
+      if (file1) {
+        formData.append("file1", file1);
+      }
+
+      if (file2) {
+        formData.append("file2", file2);
+      }
+
+      if (file3) {
+        formData.append("file3", file3);
       }
 
       await axios.post(`${API_BASE_URL}/chamber`, formData, {
@@ -275,8 +336,12 @@ export default function CreateChamberPage() {
         chamberfanpage: "",
         order: "1",
       });
-      setFile(null);
-      setFilePreview(null);
+      setFile1(null);
+      setFilePreview1(null);
+      setFile2(null);
+      setFilePreview2(null);
+      setFile3(null);
+      setFilePreview3(null);
 
       // Re-fetch profile so global store is up-to-date
       try {
@@ -363,83 +428,265 @@ export default function CreateChamberPage() {
               className="w-full rounded-full px-[12px] py-2 border-2 border-blue-200 focus:outline-none focus:ring-2 focus:ring-blue-400 mb-2 bg-white placeholder-gray-500 text-black"
             />
 
-            {/* Upload area */}
-            <div className="w-full flex justify-center mb-4">
-              {filePreview ? (
-                <div
-                  className="flex items-center justify-center rounded-xl w-full h-48 overflow-hidden"
-                  style={{ backgroundColor: "var(--app-background-color)" }}
+            {/* File Tab Navigation */}
+            <div className="w-full flex justify-center gap-4 mb-6">
+              {[1, 2, 3].map((tab) => (
+                <button
+                  key={tab}
+                  type="button"
+                  onClick={() => setActiveFileTab(tab)}
+                  className={`w-10 h-10 rounded-full font-semibold transition-all ${
+                    activeFileTab === tab
+                      ? "bg-blue-500 text-white scale-110"
+                      : "bg-gray-300 text-black hover:bg-gray-400"
+                  }`}
                 >
-                  {file?.type.startsWith("image/") ? (
-                    <img
-                      src={filePreview}
-                      alt="Preview"
-                      className="object-cover w-full h-48 rounded-xl"
+                  {tab}
+                </button>
+              ))}
+            </div>
+
+            {/* File Upload Sections in a Row */}
+            <div className="w-full flex flex-col md:flex-row gap-4 mb-6">
+              {/* File 1 */}
+              <div className="flex-1 flex flex-col items-center">
+                {activeFileTab === 1 && (
+                  <div className="w-full">
+                    <div className="w-full flex justify-center mb-2">
+                      {filePreview1 ? (
+                        <div
+                          className="flex items-center justify-center rounded-xl w-full h-40 overflow-hidden"
+                          style={{
+                            backgroundColor: "var(--app-background-color)",
+                          }}
+                        >
+                          {file1?.type.startsWith("image/") ? (
+                            <img
+                              src={filePreview1}
+                              alt="Preview 1"
+                              className="object-cover w-full h-40 rounded-xl"
+                            />
+                          ) : file1?.type.startsWith("video/") ? (
+                            <VideoPlayer
+                              src={filePreview1}
+                              loop
+                              playsInline
+                              className="object-cover w-full h-40 rounded-xl"
+                            />
+                          ) : null}
+                        </div>
+                      ) : (
+                        <div
+                          className="text-center text-white text-sm font-bold py-6 relative flex flex-col items-center justify-center w-full h-40 rounded-xl"
+                          style={{
+                            backgroundColor: "var(--app-background-color)",
+                          }}
+                        >
+                          <div>File 1</div>
+                        </div>
+                      )}
+                    </div>
+                    <div className="text-center mb-2">
+                      <label className="block text-sm font-semibold mb-2">
+                        File 1
+                      </label>
+                    </div>
+                    <input
+                      type="file"
+                      accept={
+                        isPremium
+                          ? "image/png,image/jpeg,image/jpg,image/gif,image/webp,video/mp4"
+                          : "image/png,image/jpeg,image/jpg,image/gif,image/webp"
+                      }
+                      ref={fileInputRef1}
+                      style={{ display: "none" }}
+                      onChange={(e) => handleFileChange(1, e)}
                     />
-                  ) : file?.type.startsWith("video/") ? (
-                    <VideoPlayer
-                      src={filePreview as string}
-                      loop
-                      playsInline
-                      className="object-cover w-full h-48 rounded-xl"
+                    <div className="flex justify-center gap-2">
+                      <button
+                        type="button"
+                        className="bg-black text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-700 transition-colors"
+                        onClick={() => fileInputRef1.current?.click()}
+                      >
+                        Browse
+                      </button>
+                      <button
+                        type="button"
+                        className="bg-black text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-700 transition-colors"
+                        onClick={() => {
+                          setFile1(null);
+                          setFilePreview1(null);
+                        }}
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* File 2 */}
+              <div className="flex-1 flex flex-col items-center">
+                {activeFileTab === 2 && (
+                  <div className="w-full">
+                    <div className="w-full flex justify-center mb-2">
+                      {filePreview2 ? (
+                        <div
+                          className="flex items-center justify-center rounded-xl w-full h-40 overflow-hidden"
+                          style={{
+                            backgroundColor: "var(--app-background-color)",
+                          }}
+                        >
+                          {file2?.type.startsWith("image/") ? (
+                            <img
+                              src={filePreview2}
+                              alt="Preview 2"
+                              className="object-cover w-full h-40 rounded-xl"
+                            />
+                          ) : file2?.type.startsWith("video/") ? (
+                            <VideoPlayer
+                              src={filePreview2}
+                              loop
+                              playsInline
+                              className="object-cover w-full h-40 rounded-xl"
+                            />
+                          ) : null}
+                        </div>
+                      ) : (
+                        <div
+                          className="text-center text-white text-sm font-bold py-6 relative flex flex-col items-center justify-center w-full h-40 rounded-xl"
+                          style={{
+                            backgroundColor: "var(--app-background-color)",
+                          }}
+                        >
+                          <div>File 2</div>
+                        </div>
+                      )}
+                    </div>
+                    <div className="text-center mb-2">
+                      <label className="block text-sm font-semibold mb-2">
+                        File 2
+                      </label>
+                    </div>
+                    <input
+                      type="file"
+                      accept={
+                        isPremium
+                          ? "image/png,image/jpeg,image/jpg,image/gif,image/webp,video/mp4"
+                          : "image/png,image/jpeg,image/jpg,image/gif,image/webp"
+                      }
+                      ref={fileInputRef2}
+                      style={{ display: "none" }}
+                      onChange={(e) => handleFileChange(2, e)}
                     />
-                  ) : null}
-                </div>
-              ) : (
-                <div
-                  className="text-center text-white font-bold py-6 mb-4 relative flex flex-col items-center justify-center w-full h-48 rounded-xl"
-                  style={{ backgroundColor: "var(--app-background-color)" }}
-                >
-                  <div className="text-lg">
-                    Please upload
-                    <br />
-                    640 width by 360 high Image
-                    <br />
-                    or
+                    <div className="flex justify-center gap-2">
+                      <button
+                        type="button"
+                        className="bg-black text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-700 transition-colors"
+                        onClick={() => fileInputRef2.current?.click()}
+                      >
+                        Browse
+                      </button>
+                      <button
+                        type="button"
+                        className="bg-black text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-700 transition-colors"
+                        onClick={() => {
+                          setFile2(null);
+                          setFilePreview2(null);
+                        }}
+                      >
+                        Cancel
+                      </button>
+                    </div>
                   </div>
-                  <div className="text-yellow-300 font-bold mt-2">
-                    Premium Member Upload 1 Minute Video
+                )}
+              </div>
+
+              {/* File 3 */}
+              <div className="flex-1 flex flex-col items-center">
+                {activeFileTab === 3 && (
+                  <div className="w-full">
+                    <div className="w-full flex justify-center mb-2">
+                      {filePreview3 ? (
+                        <div
+                          className="flex items-center justify-center rounded-xl w-full h-40 overflow-hidden"
+                          style={{
+                            backgroundColor: "var(--app-background-color)",
+                          }}
+                        >
+                          {file3?.type.startsWith("image/") ? (
+                            <img
+                              src={filePreview3}
+                              alt="Preview 3"
+                              className="object-cover w-full h-40 rounded-xl"
+                            />
+                          ) : file3?.type.startsWith("video/") ? (
+                            <VideoPlayer
+                              src={filePreview3}
+                              loop
+                              playsInline
+                              className="object-cover w-full h-40 rounded-xl"
+                            />
+                          ) : null}
+                        </div>
+                      ) : (
+                        <div
+                          className="text-center text-white text-sm font-bold py-6 relative flex flex-col items-center justify-center w-full h-40 rounded-xl"
+                          style={{
+                            backgroundColor: "var(--app-background-color)",
+                          }}
+                        >
+                          <div>File 3</div>
+                        </div>
+                      )}
+                    </div>
+                    <div className="text-center mb-2">
+                      <label className="block text-sm font-semibold mb-2">
+                        File 3
+                      </label>
+                    </div>
+                    <input
+                      type="file"
+                      accept={
+                        isPremium
+                          ? "image/png,image/jpeg,image/jpg,image/gif,image/webp,video/mp4"
+                          : "image/png,image/jpeg,image/jpg,image/gif,image/webp"
+                      }
+                      ref={fileInputRef3}
+                      style={{ display: "none" }}
+                      onChange={(e) => handleFileChange(3, e)}
+                    />
+                    <div className="flex justify-center gap-2">
+                      <button
+                        type="button"
+                        className="bg-black text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-700 transition-colors"
+                        onClick={() => fileInputRef3.current?.click()}
+                      >
+                        Browse
+                      </button>
+                      <button
+                        type="button"
+                        className="bg-black text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-700 transition-colors"
+                        onClick={() => {
+                          setFile3(null);
+                          setFilePreview3(null);
+                        }}
+                      >
+                        Cancel
+                      </button>
+                    </div>
                   </div>
+                )}
+              </div>
+            </div>
+            {error &&
+              (file1?.type.startsWith("video/") ||
+                file2?.type.startsWith("video/") ||
+                file3?.type.startsWith("video/")) && (
+                <div className="text-red-500 text-sm mb-4 text-center">
+                  {error}
                 </div>
               )}
-            </div>
-            {error && file?.type.startsWith("video/") && (
-              <div className="text-red-500 text-sm mb-4 text-center">
-                {error}
-              </div>
-            )}
-
-            {/* Hidden file input and Browse/Cancel buttons */}
-            <input
-              type="file"
-              accept={
-                isPremium
-                  ? "image/png,image/jpeg,image/jpg,image/gif,image/webp,video/mp4"
-                  : "image/png,image/jpeg,image/jpg,image/gif,image/webp"
-              }
-              ref={fileInputRef}
-              style={{ display: "none" }}
-              onChange={handleFileChange}
-            />
-            <div className="flex gap-4 mb-4">
-              <button
-                type="button"
-                className="bg-black text-white px-6 py-2 rounded-lg font-medium hover:bg-gray-700 transition-colors"
-                onClick={() => fileInputRef.current?.click()}
-              >
-                Browse
-              </button>
-              <button
-                type="button"
-                className="bg-black text-white px-6 py-2 rounded-lg font-medium hover:bg-gray-700 transition-colors"
-                onClick={() => {
-                  setFile(null);
-                  setFilePreview(null);
-                }}
-              >
-                Cancel
-              </button>
-            </div>
 
             <textarea
               name="details"

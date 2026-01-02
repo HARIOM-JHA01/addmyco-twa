@@ -28,8 +28,12 @@ const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 export default function ChamberPage() {
   const navigate = useNavigate();
   const [currentChamberIndex, setCurrentChamberIndex] = useState(0);
-  const [file, setFile] = useState<File | null>(null);
-  const [filePreview, setFilePreview] = useState<string | null>(null);
+  const [file1, setFile1] = useState<File | null>(null);
+  const [filePreview1, setFilePreview1] = useState<string | null>(null);
+  const [file2, setFile2] = useState<File | null>(null);
+  const [filePreview2, setFilePreview2] = useState<string | null>(null);
+  const [file3, setFile3] = useState<File | null>(null);
+  const [filePreview3, setFilePreview3] = useState<string | null>(null);
   const [chamberData, setChamberData] = useState<any>(null);
   const [profile, setProfile] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -45,10 +49,15 @@ export default function ChamberPage() {
   const [deleteLoading, setDeleteLoading] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const [carouselIndex, setCarouselIndex] = useState<number>(0);
+  const [activeFileTab, setActiveFileTab] = useState<number>(1);
 
   // Icon carousel refs & state for chamber page
   const topIconsRef = useRef<HTMLDivElement | null>(null);
   const bottomIconsRef = useRef<HTMLDivElement | null>(null);
+  const fileInputRef1 = useRef<HTMLInputElement>(null);
+  const fileInputRef2 = useRef<HTMLInputElement>(null);
+  const fileInputRef3 = useRef<HTMLInputElement>(null);
 
   const updateTopScroll = () => {
     const el = topIconsRef.current;
@@ -104,7 +113,6 @@ export default function ChamberPage() {
       tgchannel: chamber.tgchannel,
       chamberfanpage: chamber.chamberfanpage,
     });
-    setFile(null);
     setEditError("");
   };
 
@@ -173,8 +181,6 @@ export default function ChamberPage() {
       setSuccessMessage("Chamber deleted successfully.");
       setEditMode(null);
       setEditChamber(null);
-      setFile(null);
-      setFilePreview(null);
       setValidationErrors({});
       setShowDeleteConfirm(false);
 
@@ -245,24 +251,50 @@ export default function ChamberPage() {
 
     setEditChamber({ ...editChamber, [name]: value });
   };
-  // Handle edit form file
-  const handleEditFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  // Handle edit form file for multiple files
+  const handleEditFile = async (
+    fileNumber: 1 | 2 | 3,
+    e: React.ChangeEvent<HTMLInputElement>
+  ) => {
     if (e.target.files && e.target.files[0]) {
       const selectedFile = e.target.files[0];
-
       const isPremium = profile?.membertype === "premium";
+      const fileInputRef =
+        fileNumber === 1
+          ? fileInputRef1
+          : fileNumber === 2
+          ? fileInputRef2
+          : fileInputRef3;
 
       if (selectedFile.type.startsWith("video/")) {
         if (!isPremium) {
           setEditError("Video upload is only available for premium members.");
-          setFile(null);
-          setFilePreview(null);
+          if (fileNumber === 1) {
+            setFile1(null);
+            setFilePreview1(null);
+          } else if (fileNumber === 2) {
+            setFile2(null);
+            setFilePreview2(null);
+          } else {
+            setFile3(null);
+            setFilePreview3(null);
+          }
+          if (fileInputRef.current) fileInputRef.current.value = "";
           return;
         }
         if (selectedFile.type !== "video/mp4") {
           setEditError("Only MP4 video files are allowed.");
-          setFile(null);
-          setFilePreview(null);
+          if (fileNumber === 1) {
+            setFile1(null);
+            setFilePreview1(null);
+          } else if (fileNumber === 2) {
+            setFile2(null);
+            setFilePreview2(null);
+          } else {
+            setFile3(null);
+            setFilePreview3(null);
+          }
+          if (fileInputRef.current) fileInputRef.current.value = "";
           return;
         }
 
@@ -270,20 +302,31 @@ export default function ChamberPage() {
         const validation = await validateVideo(selectedFile);
         if (!validation.isValid) {
           setEditError(validation.error || "Invalid video file");
-          setFile(selectedFile);
-          setFilePreview(URL.createObjectURL(selectedFile));
-          setEditChamber((prev: any) => ({ ...prev, image: "", video: "" }));
+          if (fileNumber === 1) {
+            setFile1(selectedFile);
+            setFilePreview1(URL.createObjectURL(selectedFile));
+          } else if (fileNumber === 2) {
+            setFile2(selectedFile);
+            setFilePreview2(URL.createObjectURL(selectedFile));
+          } else {
+            setFile3(selectedFile);
+            setFilePreview3(URL.createObjectURL(selectedFile));
+          }
           return;
         }
       }
 
       setEditError("");
-      setFile(selectedFile);
-      setFilePreview(URL.createObjectURL(selectedFile));
-
-      // Do NOT convert to base64. We'll upload the raw File via multipart/form-data on save.
-      // Clear editChamber.image/video so preview uses filePreview and server receives the file instead of a base64 string.
-      setEditChamber((prev: any) => ({ ...prev, image: "", video: "" }));
+      if (fileNumber === 1) {
+        setFile1(selectedFile);
+        setFilePreview1(URL.createObjectURL(selectedFile));
+      } else if (fileNumber === 2) {
+        setFile2(selectedFile);
+        setFilePreview2(URL.createObjectURL(selectedFile));
+      } else {
+        setFile3(selectedFile);
+        setFilePreview3(URL.createObjectURL(selectedFile));
+      }
     }
   };
   // Save handler for both create and update
@@ -368,26 +411,18 @@ export default function ChamberPage() {
         );
         formData.append("chamber_order", String(editChamber.order ?? ""));
 
-        // File fields: prefer newly selected file, otherwise include existing values
-        if (file) {
-          if (file.type.startsWith("video/")) {
-            formData.append("video", file);
-          } else {
-            formData.append("image", file);
-          }
-        } else {
-          if (editChamber?.image)
-            formData.append("image", String(editChamber.image));
-          else if (chamberData && Array.isArray(chamberData)) {
-            const current = chamberData[currentChamberIndex];
-            if (current?.image) formData.append("image", String(current.image));
-          }
-          if (editChamber?.video)
-            formData.append("video", String(editChamber.video));
-          else if (chamberData && Array.isArray(chamberData)) {
-            const current = chamberData[currentChamberIndex];
-            if (current?.video) formData.append("video", String(current.video));
-          }
+        // File fields: Only append newly selected files (File objects)
+        // Don't append existing URLs - the API will keep them if not replaced
+        if (file1 instanceof File) {
+          formData.append("file1", file1);
+        }
+
+        if (file2 instanceof File) {
+          formData.append("file2", file2);
+        }
+
+        if (file3 instanceof File) {
+          formData.append("file3", file3);
         }
 
         await axios.post(`${API_BASE_URL}/updatechamber`, formData, {
@@ -418,13 +453,17 @@ export default function ChamberPage() {
         formData.append("tgchannel", editChamber.tgchannel);
         formData.append("chamberfanpage", editChamber.chamberfanpage);
         formData.append("order", editChamber.order);
-        if (file) {
-          if (file.type.startsWith("image/")) {
-            formData.append("image", file);
-          } else if (file.type.startsWith("video/")) {
-            formData.append("video", file);
-          }
+
+        if (file1) {
+          formData.append("file1", file1);
         }
+        if (file2) {
+          formData.append("file2", file2);
+        }
+        if (file3) {
+          formData.append("file3", file3);
+        }
+
         await axios.post(`${API_BASE_URL}/chamber`, formData, {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -452,8 +491,12 @@ export default function ChamberPage() {
       }
       setEditMode(null);
       setEditChamber(null);
-      setFile(null);
-      setFilePreview(null);
+      setFile1(null);
+      setFilePreview1(null);
+      setFile2(null);
+      setFilePreview2(null);
+      setFile3(null);
+      setFilePreview3(null);
       setValidationErrors({});
     } catch (err: any) {
       setEditError(
@@ -509,6 +552,25 @@ export default function ChamberPage() {
     fetchChamber();
   }, []);
 
+  // Auto-rotate carousel for chamber images/videos
+  useEffect(() => {
+    const currentChamber = Array.isArray(chamberData)
+      ? chamberData[currentChamberIndex]
+      : chamberData;
+
+    const images = currentChamber?.images || [];
+    const videos = currentChamber?.videos || [];
+    const allMedia = [...images, ...videos];
+
+    if (allMedia.length <= 1) return;
+
+    const interval = setInterval(() => {
+      setCarouselIndex((prev) => (prev + 1) % allMedia.length);
+    }, 4000);
+
+    return () => clearInterval(interval);
+  }, [chamberData, currentChamberIndex]);
+
   return (
     <Layout>
       <div className="flex flex-col items-center justify-start flex-grow py-4 px-2 pb-32">
@@ -551,108 +613,275 @@ export default function ChamberPage() {
               onChange={handleEditInput}
               disabled={editLoading}
             />
-            {/* Image/Video Preview and Upload */}
-            <div className="flex flex-col items-center mb-4 w-full">
-              <div
-                className="w-full rounded-xl flex items-center justify-center mb-4 cursor-pointer h-48"
-                onClick={() =>
-                  document.getElementById("chamber-file-input")?.click()
-                }
-              >
-                {filePreview ? (
-                  file?.type.startsWith("video/") ? (
-                    <VideoPlayer
-                      src={filePreview as string}
-                      loop
-                      playsInline
-                      className="w-full h-48 object-cover rounded-xl"
+            {/* File Tab Navigation */}
+            <div className="w-full flex justify-center gap-4 mb-6">
+              {[1, 2, 3].map((tab) => (
+                <button
+                  key={tab}
+                  type="button"
+                  onClick={() => setActiveFileTab(tab)}
+                  className={`w-10 h-10 rounded-full font-semibold transition-all ${
+                    activeFileTab === tab
+                      ? "bg-blue-500 text-white scale-110"
+                      : "bg-gray-300 text-black hover:bg-gray-400"
+                  }`}
+                  disabled={editLoading}
+                >
+                  {tab}
+                </button>
+              ))}
+            </div>
+
+            {/* File Upload Sections in a Row */}
+            <div className="w-full flex flex-col md:flex-row gap-4 mb-6">
+              {/* File 1 */}
+              <div className="flex-1 flex flex-col items-center">
+                {activeFileTab === 1 && (
+                  <div className="w-full">
+                    <div className="w-full flex justify-center mb-2">
+                      {filePreview1 ? (
+                        <div
+                          className="flex items-center justify-center rounded-xl w-full h-40 overflow-hidden"
+                          style={{
+                            backgroundColor: "var(--app-background-color)",
+                          }}
+                        >
+                          {file1?.type.startsWith("image/") ? (
+                            <img
+                              src={filePreview1}
+                              alt="Preview 1"
+                              className="object-cover w-full h-40 rounded-xl"
+                            />
+                          ) : file1?.type.startsWith("video/") ? (
+                            <VideoPlayer
+                              src={filePreview1}
+                              loop
+                              playsInline
+                              className="object-cover w-full h-40 rounded-xl"
+                            />
+                          ) : null}
+                        </div>
+                      ) : (
+                        <div
+                          className="text-center text-white text-sm font-bold py-6 relative flex flex-col items-center justify-center w-full h-40 rounded-xl"
+                          style={{
+                            backgroundColor: "var(--app-background-color)",
+                          }}
+                        >
+                          <div>File 1</div>
+                        </div>
+                      )}
+                    </div>
+                    <div className="text-center mb-2">
+                      <label className="block text-sm font-semibold mb-2">
+                        File 1
+                      </label>
+                    </div>
+                    <input
+                      type="file"
+                      accept={
+                        profile?.membertype === "premium"
+                          ? "image/png,image/jpeg,image/jpg,image/gif,image/webp,video/mp4"
+                          : "image/png,image/jpeg,image/jpg,image/gif,image/webp"
+                      }
+                      ref={fileInputRef1}
+                      style={{ display: "none" }}
+                      onChange={(e) => handleEditFile(1, e)}
+                      disabled={editLoading}
                     />
-                  ) : (
-                    <img
-                      src={filePreview}
-                      alt="Preview"
-                      className="w-full h-48 object-cover rounded-xl"
-                    />
-                  )
-                ) : editChamber?.image &&
-                  editChamber.image.startsWith("data:image") ? (
-                  <img
-                    src={editChamber.image}
-                    alt="chamber"
-                    className="w-full h-48 object-cover rounded-xl"
-                  />
-                ) : editChamber?.image && editChamber.image.endsWith(".mp4") ? (
-                  <VideoPlayer
-                    src={editChamber.image}
-                    loop
-                    playsInline
-                    className="w-full h-48 object-cover rounded-xl"
-                  />
-                ) : editChamber?.image ? (
-                  <img
-                    src={editChamber.image}
-                    alt="chamber"
-                    className="w-full h-48 object-cover rounded-xl"
-                  />
-                ) : (
-                  <div className="w-full h-48 bg-blue-400 rounded-xl flex items-center justify-center">
-                    <div className="text-white text-center text-sm font-semibold whitespace-pre-line px-4">
-                      {i18n.t("please_upload")}
+                    <div className="flex justify-center gap-2">
+                      <button
+                        type="button"
+                        className="bg-black text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-700 transition-colors disabled:opacity-50"
+                        onClick={() => fileInputRef1.current?.click()}
+                        disabled={editLoading}
+                      >
+                        Browse
+                      </button>
+                      <button
+                        type="button"
+                        className="bg-black text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-700 transition-colors disabled:opacity-50"
+                        onClick={() => {
+                          setFile1(null);
+                          setFilePreview1(null);
+                        }}
+                        disabled={editLoading}
+                      >
+                        Cancel
+                      </button>
                     </div>
                   </div>
                 )}
               </div>
-              {editError && file?.type.startsWith("video/") && (
-                <div className="text-red-500 text-sm mb-2 text-center w-full">
+
+              {/* File 2 */}
+              <div className="flex-1 flex flex-col items-center">
+                {activeFileTab === 2 && (
+                  <div className="w-full">
+                    <div className="w-full flex justify-center mb-2">
+                      {filePreview2 ? (
+                        <div
+                          className="flex items-center justify-center rounded-xl w-full h-40 overflow-hidden"
+                          style={{
+                            backgroundColor: "var(--app-background-color)",
+                          }}
+                        >
+                          {file2?.type.startsWith("image/") ? (
+                            <img
+                              src={filePreview2}
+                              alt="Preview 2"
+                              className="object-cover w-full h-40 rounded-xl"
+                            />
+                          ) : file2?.type.startsWith("video/") ? (
+                            <VideoPlayer
+                              src={filePreview2}
+                              loop
+                              playsInline
+                              className="object-cover w-full h-40 rounded-xl"
+                            />
+                          ) : null}
+                        </div>
+                      ) : (
+                        <div
+                          className="text-center text-white text-sm font-bold py-6 relative flex flex-col items-center justify-center w-full h-40 rounded-xl"
+                          style={{
+                            backgroundColor: "var(--app-background-color)",
+                          }}
+                        >
+                          <div>File 2</div>
+                        </div>
+                      )}
+                    </div>
+                    <div className="text-center mb-2">
+                      <label className="block text-sm font-semibold mb-2">
+                        File 2
+                      </label>
+                    </div>
+                    <input
+                      type="file"
+                      accept={
+                        profile?.membertype === "premium"
+                          ? "image/png,image/jpeg,image/jpg,image/gif,image/webp,video/mp4"
+                          : "image/png,image/jpeg,image/jpg,image/gif,image/webp"
+                      }
+                      ref={fileInputRef2}
+                      style={{ display: "none" }}
+                      onChange={(e) => handleEditFile(2, e)}
+                      disabled={editLoading}
+                    />
+                    <div className="flex justify-center gap-2">
+                      <button
+                        type="button"
+                        className="bg-black text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-700 transition-colors disabled:opacity-50"
+                        onClick={() => fileInputRef2.current?.click()}
+                        disabled={editLoading}
+                      >
+                        Browse
+                      </button>
+                      <button
+                        type="button"
+                        className="bg-black text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-700 transition-colors disabled:opacity-50"
+                        onClick={() => {
+                          setFile2(null);
+                          setFilePreview2(null);
+                        }}
+                        disabled={editLoading}
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* File 3 */}
+              <div className="flex-1 flex flex-col items-center">
+                {activeFileTab === 3 && (
+                  <div className="w-full">
+                    <div className="w-full flex justify-center mb-2">
+                      {filePreview3 ? (
+                        <div
+                          className="flex items-center justify-center rounded-xl w-full h-40 overflow-hidden"
+                          style={{
+                            backgroundColor: "var(--app-background-color)",
+                          }}
+                        >
+                          {file3?.type.startsWith("image/") ? (
+                            <img
+                              src={filePreview3}
+                              alt="Preview 3"
+                              className="object-cover w-full h-40 rounded-xl"
+                            />
+                          ) : file3?.type.startsWith("video/") ? (
+                            <VideoPlayer
+                              src={filePreview3}
+                              loop
+                              playsInline
+                              className="object-cover w-full h-40 rounded-xl"
+                            />
+                          ) : null}
+                        </div>
+                      ) : (
+                        <div
+                          className="text-center text-white text-sm font-bold py-6 relative flex flex-col items-center justify-center w-full h-40 rounded-xl"
+                          style={{
+                            backgroundColor: "var(--app-background-color)",
+                          }}
+                        >
+                          <div>File 3</div>
+                        </div>
+                      )}
+                    </div>
+                    <div className="text-center mb-2">
+                      <label className="block text-sm font-semibold mb-2">
+                        File 3
+                      </label>
+                    </div>
+                    <input
+                      type="file"
+                      accept={
+                        profile?.membertype === "premium"
+                          ? "image/png,image/jpeg,image/jpg,image/gif,image/webp,video/mp4"
+                          : "image/png,image/jpeg,image/jpg,image/gif,image/webp"
+                      }
+                      ref={fileInputRef3}
+                      style={{ display: "none" }}
+                      onChange={(e) => handleEditFile(3, e)}
+                      disabled={editLoading}
+                    />
+                    <div className="flex justify-center gap-2">
+                      <button
+                        type="button"
+                        className="bg-black text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-700 transition-colors disabled:opacity-50"
+                        onClick={() => fileInputRef3.current?.click()}
+                        disabled={editLoading}
+                      >
+                        Browse
+                      </button>
+                      <button
+                        type="button"
+                        className="bg-black text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-700 transition-colors disabled:opacity-50"
+                        onClick={() => {
+                          setFile3(null);
+                          setFilePreview3(null);
+                        }}
+                        disabled={editLoading}
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+            {editError &&
+              (file1?.type.startsWith("video/") ||
+                file2?.type.startsWith("video/") ||
+                file3?.type.startsWith("video/")) && (
+                <div className="text-red-500 text-sm mb-4 text-center">
                   {editError}
                 </div>
               )}
-              <input
-                id="chamber-file-input"
-                type="file"
-                accept="image/*,video/*"
-                onChange={handleEditFile}
-                disabled={editLoading}
-                className="hidden"
-              />
-              {/* Browse / Cancel buttons to improve discoverability (matches company UI) */}
-              <div className="flex gap-4 mb-4">
-                <button
-                  type="button"
-                  className="bg-black text-white px-6 py-2 rounded-lg font-medium hover:bg-gray-700 transition-colors"
-                  onClick={() =>
-                    document.getElementById("chamber-file-input")?.click()
-                  }
-                  disabled={editLoading}
-                >
-                  Browse
-                </button>
-                <button
-                  type="button"
-                  className="bg-black text-white px-6 py-2 rounded-lg font-medium hover:bg-gray-700 transition-colors"
-                  onClick={() => {
-                    // Revert selected file and preview to original chamber media
-                    setFile(null);
-                    setFilePreview(null);
-                    const original = Array.isArray(chamberData)
-                      ? chamberData[currentChamberIndex]
-                      : chamberData;
-                    setEditChamber((prev: any) => ({
-                      ...prev,
-                      image: original?.image || original?.video || "",
-                    }));
-                    // clear underlying file input value if present
-                    const el = document.getElementById(
-                      "chamber-file-input"
-                    ) as HTMLInputElement | null;
-                    if (el) el.value = "";
-                  }}
-                  disabled={editLoading}
-                >
-                  Cancel
-                </button>
-              </div>
-            </div>
             <textarea
               className="rounded-xl border-2 border-blue-200 px-4 py-2 mb-3 w-full h-48 focus:outline-none focus:ring-2 focus:ring-blue-400 bg-white placeholder-gray-500 resize-none"
               name="details"
@@ -1015,29 +1244,73 @@ export default function ChamberPage() {
                     >
                       {c.chamberdesignation}
                     </div>
-                    {/* Image or video */}
+                    {/* Image or video carousel */}
                     <div className="flex flex-col items-center mb-2 w-full">
-                      <div className="w-full flex justify-center mb-2">
-                        {c.video && c.video.endsWith(".mp4") ? (
-                          <VideoPlayer
-                            src={c.video}
-                            loop
-                            playsInline
-                            className="w-full h-48 object-cover rounded-xl"
-                          />
-                        ) : c.image ? (
-                          <img
-                            src={c.image}
-                            alt="chamber"
-                            className="w-full h-48 object-cover rounded-xl"
-                          />
-                        ) : (
-                          <img
-                            src={logo}
-                            alt="No chamber"
-                            className="w-full h-48 object-cover rounded-xl bg-white"
-                          />
-                        )}
+                      <div className="w-full flex justify-center mb-2 relative">
+                        {(() => {
+                          const allMedia = [
+                            ...(c?.images || []),
+                            ...(c?.videos || []),
+                          ];
+                          const currentMedia =
+                            allMedia.length > 0
+                              ? allMedia[carouselIndex % allMedia.length]
+                              : c?.image || c?.video;
+
+                          if (!currentMedia) {
+                            return (
+                              <img
+                                src={logo}
+                                alt="No chamber"
+                                className="w-full h-48 object-cover rounded-xl bg-white"
+                              />
+                            );
+                          }
+
+                          const isVideo =
+                            currentMedia.endsWith?.(".mp4") ||
+                            c?.videos?.includes(currentMedia);
+
+                          return isVideo ? (
+                            <VideoPlayer
+                              src={currentMedia}
+                              loop
+                              playsInline
+                              className="w-full h-48 object-cover rounded-xl"
+                            />
+                          ) : (
+                            <img
+                              src={currentMedia}
+                              alt="Chamber Image"
+                              className="w-full h-48 object-cover rounded-xl"
+                            />
+                          );
+                        })()}
+
+                        {/* Carousel indicators */}
+                        {(() => {
+                          const allMedia = [
+                            ...(c?.images || []),
+                            ...(c?.videos || []),
+                          ];
+                          if (allMedia.length <= 1) return null;
+
+                          return (
+                            <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-2">
+                              {allMedia.map((_, idx) => (
+                                <button
+                                  key={idx}
+                                  onClick={() => setCarouselIndex(idx)}
+                                  className={`w-2 h-2 rounded-full transition ${
+                                    idx === carouselIndex % allMedia.length
+                                      ? "bg-white"
+                                      : "bg-white bg-opacity-50"
+                                  }`}
+                                />
+                              ))}
+                            </div>
+                          );
+                        })()}
                       </div>
                       <div
                         className="w-full h-48 bg-white rounded-md p-2 overflow-auto mb-2"
