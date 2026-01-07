@@ -583,25 +583,6 @@ export default function SubCompanyPage() {
               />
               {/* File Upload Section for 3 files */}
               <div className="w-full mb-4">
-                {/* Top numeric tabs */}
-                <div className="flex justify-center gap-3 mb-4">
-                  {[1, 2, 3].map((i) => (
-                    <button
-                      key={i}
-                      type="button"
-                      aria-pressed={activeFileTab === i}
-                      onClick={() => setActiveFileTab(i)}
-                      className={`w-10 h-10 rounded-full border-2 flex items-center justify-center font-semibold transition-colors ${
-                        activeFileTab === i
-                          ? "bg-black text-white border-black"
-                          : "bg-white text-black border-gray-300"
-                      }`}
-                    >
-                      {i}
-                    </button>
-                  ))}
-                </div>
-
                 <div className="flex flex-col md:flex-row gap-4">
                   {/* File 1 */}
                   <div
@@ -611,9 +592,6 @@ export default function SubCompanyPage() {
                         : "block"
                     }`}
                   >
-                    <label className="block text-sm font-semibold mb-2 text-gray-700">
-                      File 1
-                    </label>
                     <div
                       className="w-full rounded-xl flex items-center justify-center mb-2 cursor-pointer h-48"
                       onClick={() =>
@@ -657,6 +635,24 @@ export default function SubCompanyPage() {
                           </div>
                         </div>
                       )}
+                    </div>
+                    {/* Numeric tabs */}
+                    <div className="flex justify-center gap-3 my-3">
+                      {[1, 2, 3].map((i) => (
+                        <button
+                          key={i}
+                          type="button"
+                          aria-pressed={activeFileTab === i}
+                          onClick={() => setActiveFileTab(i)}
+                          className={`w-10 h-10 rounded-full border-2 flex items-center justify-center font-semibold transition-colors ${
+                            activeFileTab === i
+                              ? "bg-black text-white border-black"
+                              : "bg-white text-black border-gray-300"
+                          }`}
+                        >
+                          {i}
+                        </button>
+                      ))}
                     </div>
                     <input
                       id="company-file-input-1"
@@ -711,9 +707,6 @@ export default function SubCompanyPage() {
                         : "block"
                     }`}
                   >
-                    <label className="block text-sm font-semibold mb-2 text-gray-700">
-                      File 2 (Optional)
-                    </label>
                     <div
                       className="w-full rounded-xl flex items-center justify-center mb-2 cursor-pointer h-48"
                       onClick={() =>
@@ -753,10 +746,28 @@ export default function SubCompanyPage() {
                       ) : (
                         <div className="w-full h-48 bg-gray-300 rounded-xl flex items-center justify-center">
                           <div className="text-gray-600 text-center text-sm font-semibold">
-                            File 2 (Optional)
+                            File 2
                           </div>
                         </div>
                       )}
+                    </div>
+                    {/* Numeric tabs */}
+                    <div className="flex justify-center gap-3 my-3">
+                      {[1, 2, 3].map((i) => (
+                        <button
+                          key={i}
+                          type="button"
+                          aria-pressed={activeFileTab === i}
+                          onClick={() => setActiveFileTab(i)}
+                          className={`w-10 h-10 rounded-full border-2 flex items-center justify-center font-semibold transition-colors ${
+                            activeFileTab === i
+                              ? "bg-black text-white border-black"
+                              : "bg-white text-black border-gray-300"
+                          }`}
+                        >
+                          {i}
+                        </button>
+                      ))}
                     </div>
                     <input
                       id="company-file-input-2"
@@ -809,9 +820,6 @@ export default function SubCompanyPage() {
                         : "block"
                     }`}
                   >
-                    <label className="block text-sm font-semibold mb-2 text-gray-700">
-                      File 3 (Optional)
-                    </label>
                     <div
                       className="w-full rounded-xl flex items-center justify-center mb-2 cursor-pointer h-48"
                       onClick={() =>
@@ -851,10 +859,28 @@ export default function SubCompanyPage() {
                       ) : (
                         <div className="w-full h-48 bg-gray-300 rounded-xl flex items-center justify-center">
                           <div className="text-gray-600 text-center text-sm font-semibold">
-                            File 3 (Optional)
+                            File 3
                           </div>
                         </div>
                       )}
+                    </div>
+                    {/* Numeric tabs */}
+                    <div className="flex justify-center gap-3 my-3">
+                      {[1, 2, 3].map((i) => (
+                        <button
+                          key={i}
+                          type="button"
+                          aria-pressed={activeFileTab === i}
+                          onClick={() => setActiveFileTab(i)}
+                          className={`w-10 h-10 rounded-full border-2 flex items-center justify-center font-semibold transition-colors ${
+                            activeFileTab === i
+                              ? "bg-black text-white border-black"
+                              : "bg-white text-black border-gray-300"
+                          }`}
+                        >
+                          {i}
+                        </button>
+                      ))}
                     </div>
                     <input
                       id="company-file-input-3"

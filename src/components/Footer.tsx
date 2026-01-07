@@ -70,6 +70,15 @@ export default function Footer() {
               className="text-white font-semibold px-4 py-2 text-left hover:bg-gray-800"
               onClick={() => {
                 setShowSettings(false);
+                router("/advertisements");
+              }}
+            >
+              {i18n.t("advertisement")}
+            </button>
+            <button
+              className="text-white font-semibold px-4 py-2 text-left hover:bg-gray-800"
+              onClick={() => {
+                setShowSettings(false);
                 router("/payment-history");
               }}
             >

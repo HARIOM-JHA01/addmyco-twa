@@ -19,6 +19,7 @@ import ThemePage from "./pages/ThemePage";
 import WelcomePage from "./pages/WelcomePage";
 import MembershipPage from "./pages/MembershipPage";
 import PaymentHistoryPage from "./pages/PaymentHistoryPage";
+import AdvertisementPage from "./pages/AdvertisementPage";
 import axios from "axios";
 import WebApp from "@twa-dev/sdk";
 import CreateCompanyPage from "./pages/CreateCompanyPage";
@@ -161,6 +162,7 @@ function AppRoutes() {
       "membership",
       "payment-history",
       "background",
+      "advertisements",
       "assets",
       "favicon.ico",
       "t.me", // Add this to reserved so /t.me/ paths aren't treated as public profiles
@@ -598,6 +600,7 @@ function AppRoutes() {
           <Route path="/create-company" element={<CreateCompanyPage />} />
           <Route path="/theme" element={<ThemePage />} />
           <Route path="/membership" element={<MembershipPage />} />
+          <Route path="/advertisements" element={<AdvertisementPage />} />
           <Route path="/payment-history" element={<PaymentHistoryPage />} />
           <Route path="/background" element={<BackgroundPage />} />
           <Route path="*" element={<div>404 Not Found</div>} />

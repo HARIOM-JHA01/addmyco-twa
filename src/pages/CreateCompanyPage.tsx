@@ -334,34 +334,12 @@ export default function CreateCompanyPage() {
             />
             {/* File Upload Section 1 (Mandatory) */}
             <div className="w-full mb-4">
-              {/* Top numeric tabs */}
-              <div className="flex justify-center gap-3 mb-4">
-                {[1, 2, 3].map((i) => (
-                  <button
-                    key={i}
-                    type="button"
-                    aria-pressed={activeFileTab === i}
-                    onClick={() => setActiveFileTab(i)}
-                    className={`w-10 h-10 rounded-full border-2 flex items-center justify-center font-semibold transition-colors ${
-                      activeFileTab === i
-                        ? "bg-black text-white border-black"
-                        : "bg-white text-black border-gray-300"
-                    }`}
-                  >
-                    {i}
-                  </button>
-                ))}
-              </div>
-
               <div className="flex flex-col md:flex-row gap-4">
                 <div
                   className={`md:w-1/3 ${
                     activeFileTab !== 1 ? "hidden md:block opacity-60" : "block"
                   }`}
                 >
-                  <label className="block text-sm font-semibold mb-2 text-red-600 text-center">
-                    File 1 (Mandatory) *
-                  </label>
                   <div className="w-full flex justify-center mb-2">
                     {form.file1 ? (
                       <div className="flex items-center justify-center rounded-xl w-full h-48 overflow-hidden bg-[#01a2e9]">
@@ -394,6 +372,24 @@ export default function CreateCompanyPage() {
                         </div>
                       </div>
                     )}
+                  </div>
+                  {/* Numeric tabs */}
+                  <div className="flex justify-center gap-3 my-3">
+                    {[1, 2, 3].map((i) => (
+                      <button
+                        key={i}
+                        type="button"
+                        aria-pressed={activeFileTab === i}
+                        onClick={() => setActiveFileTab(i)}
+                        className={`w-10 h-10 rounded-full border-2 flex items-center justify-center font-semibold transition-colors ${
+                          activeFileTab === i
+                            ? "bg-black text-white border-black"
+                            : "bg-white text-black border-gray-300"
+                        }`}
+                      >
+                        {i}
+                      </button>
+                    ))}
                   </div>
                   <input
                     type="file"
@@ -436,9 +432,6 @@ export default function CreateCompanyPage() {
                   activeFileTab !== 2 ? "hidden md:block opacity-60" : "block"
                 }`}
               >
-                <label className="block text-sm font-semibold mb-2 text-gray-600 text-center">
-                  File 2 (Optional)
-                </label>
                 <div className="w-full flex justify-center mb-2">
                   {form.file2 ? (
                     <div className="flex items-center justify-center rounded-xl w-full h-48 overflow-hidden bg-[#01a2e9]">
@@ -458,9 +451,7 @@ export default function CreateCompanyPage() {
                       ) : null}
                     </div>
                   ) : (
-                    <div className="bg-gray-300 text-center text-gray-600 font-semibold py-6 relative flex flex-col items-center justify-center w-full h-48 rounded-xl">
-                      <div className="text-sm">Optional file 2</div>
-                    </div>
+                    <div className="bg-gray-300 text-center text-gray-600 font-semibold py-6 relative flex flex-col items-center justify-center w-full h-48 rounded-xl"></div>
                   )}
                 </div>
                 <input
@@ -498,9 +489,6 @@ export default function CreateCompanyPage() {
                   activeFileTab !== 3 ? "hidden md:block opacity-60" : "block"
                 }`}
               >
-                <label className="block text-sm font-semibold mb-2 text-gray-600 text-center">
-                  File 3 (Optional)
-                </label>
                 <div className="w-full flex justify-center mb-2">
                   {form.file3 ? (
                     <div className="flex items-center justify-center rounded-xl w-full h-48 overflow-hidden bg-[#01a2e9]">
@@ -520,9 +508,7 @@ export default function CreateCompanyPage() {
                       ) : null}
                     </div>
                   ) : (
-                    <div className="bg-gray-300 text-center text-gray-600 font-semibold py-6 relative flex flex-col items-center justify-center w-full h-48 rounded-xl">
-                      <div className="text-sm">Optional file 3</div>
-                    </div>
+                    <div className="bg-gray-300 text-center text-gray-600 font-semibold py-6 relative flex flex-col items-center justify-center w-full h-48 rounded-xl"></div>
                   )}
                 </div>
                 <input

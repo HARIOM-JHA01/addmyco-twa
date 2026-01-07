@@ -614,25 +614,6 @@ export default function ChamberPage() {
               disabled={editLoading}
             />
             {/* File Tab Navigation */}
-            <div className="w-full flex justify-center gap-4 mb-6">
-              {[1, 2, 3].map((tab) => (
-                <button
-                  key={tab}
-                  type="button"
-                  onClick={() => setActiveFileTab(tab)}
-                  className={`w-10 h-10 rounded-full font-semibold transition-all ${
-                    activeFileTab === tab
-                      ? "bg-blue-500 text-white scale-110"
-                      : "bg-gray-300 text-black hover:bg-gray-400"
-                  }`}
-                  disabled={editLoading}
-                >
-                  {tab}
-                </button>
-              ))}
-            </div>
-
-            {/* File Upload Sections in a Row */}
             <div className="w-full flex flex-col md:flex-row gap-4 mb-6">
               {/* File 1 */}
               <div className="flex-1 flex flex-col items-center">
@@ -672,10 +653,23 @@ export default function ChamberPage() {
                         </div>
                       )}
                     </div>
-                    <div className="text-center mb-2">
-                      <label className="block text-sm font-semibold mb-2">
-                        File 1
-                      </label>
+                    {/* Numeric tabs */}
+                    <div className="flex justify-center gap-4 my-3">
+                      {[1, 2, 3].map((tab) => (
+                        <button
+                          key={tab}
+                          type="button"
+                          onClick={() => setActiveFileTab(tab)}
+                          className={`w-10 h-10 rounded-full font-semibold transition-all ${
+                            activeFileTab === tab
+                              ? "bg-blue-500 text-white scale-110"
+                              : "bg-gray-300 text-black hover:bg-gray-400"
+                          }`}
+                          disabled={editLoading}
+                        >
+                          {tab}
+                        </button>
+                      ))}
                     </div>
                     <input
                       type="file"
@@ -752,10 +746,23 @@ export default function ChamberPage() {
                         </div>
                       )}
                     </div>
-                    <div className="text-center mb-2">
-                      <label className="block text-sm font-semibold mb-2">
-                        File 2
-                      </label>
+                    {/* Numeric tabs */}
+                    <div className="flex justify-center gap-4 my-3">
+                      {[1, 2, 3].map((tab) => (
+                        <button
+                          key={tab}
+                          type="button"
+                          onClick={() => setActiveFileTab(tab)}
+                          className={`w-10 h-10 rounded-full font-semibold transition-all ${
+                            activeFileTab === tab
+                              ? "bg-blue-500 text-white scale-110"
+                              : "bg-gray-300 text-black hover:bg-gray-400"
+                          }`}
+                          disabled={editLoading}
+                        >
+                          {tab}
+                        </button>
+                      ))}
                     </div>
                     <input
                       type="file"
@@ -832,10 +839,23 @@ export default function ChamberPage() {
                         </div>
                       )}
                     </div>
-                    <div className="text-center mb-2">
-                      <label className="block text-sm font-semibold mb-2">
-                        File 3
-                      </label>
+                    {/* Numeric tabs */}
+                    <div className="flex justify-center gap-4 my-3">
+                      {[1, 2, 3].map((tab) => (
+                        <button
+                          key={tab}
+                          type="button"
+                          onClick={() => setActiveFileTab(tab)}
+                          className={`w-10 h-10 rounded-full font-semibold transition-all ${
+                            activeFileTab === tab
+                              ? "bg-blue-500 text-white scale-110"
+                              : "bg-gray-300 text-black hover:bg-gray-400"
+                          }`}
+                          disabled={editLoading}
+                        >
+                          {tab}
+                        </button>
+                      ))}
                     </div>
                     <input
                       type="file"
