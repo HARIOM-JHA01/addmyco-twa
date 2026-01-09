@@ -18,6 +18,8 @@ const WelcomePage: React.FC<WelcomePageProps> = ({ onLogin, partnerCode }) => {
   const [loginLoading, setLoginLoading] = useState(false);
   const [isInTelegram, setIsInTelegram] = useState(true);
   const carouselInterval = useRef<NodeJS.Timeout | null>(null);
+  const buttonRef = useRef<HTMLButtonElement | null>(null);
+  const [buttonWidth, setButtonWidth] = useState<number | null>(null);
 
   useEffect(() => {
     try {
@@ -80,6 +82,21 @@ const WelcomePage: React.FC<WelcomePageProps> = ({ onLogin, partnerCode }) => {
     }
   };
 
+  useEffect(() => {
+    const btn = buttonRef.current;
+    if (!btn) return;
+    const update = () =>
+      setButtonWidth(Math.round(btn.getBoundingClientRect().width));
+    update();
+    const ro = new ResizeObserver(() => update());
+    ro.observe(btn);
+    window.addEventListener("resize", update);
+    return () => {
+      ro.disconnect();
+      window.removeEventListener("resize", update);
+    };
+  }, [isInTelegram, loginLoading]);
+
   return (
     <div
       className="relative flex flex-col min-h-screen bg-cover bg-center"
@@ -118,6 +135,7 @@ const WelcomePage: React.FC<WelcomePageProps> = ({ onLogin, partnerCode }) => {
               </div>
             ) : (
               <button
+                ref={buttonRef}
                 className="px-6 py-3 bg-green-600 text-white text-2xl rounded-lg shadow hover:bg-green-700 transition flex items-center justify-center min-w-[180px]"
                 onClick={handleLogin}
                 disabled={loginLoading}
@@ -179,7 +197,12 @@ const WelcomePage: React.FC<WelcomePageProps> = ({ onLogin, partnerCode }) => {
                     <img
                       src={banners[currentBanner].Banner}
                       alt={banners[currentBanner].Title}
-                      className="rounded-lg shadow-lg w-60 h-60 object-cover"
+                      className="rounded-lg shadow-lg object-fill"
+                      style={{
+                        width: buttonWidth ? `${buttonWidth}px` : undefined,
+                        height: buttonWidth ? `${buttonWidth}px` : undefined,
+                        maxWidth: "100%",
+                      }}
                     />
                   </a>
                 )}
