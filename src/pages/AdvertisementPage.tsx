@@ -451,16 +451,20 @@ export default function AdvertisementPage() {
   return (
     <div
       className="bg-cover bg-center min-h-screen w-full overflow-x-hidden flex flex-col"
-      style={{ backgroundImage: "var(--app-background-image)" }}
+      // style={{ backgroundImage: "var(--app-background-image)" }}
     >
       <Header />
       <main className="flex-1 flex justify-center w-full">
         <div className="w-full max-w-md pb-24 px-4">
           {/* Page Title */}
-          <div className="mt-6 mb-6 text-center">
-            <h1 className="text-3xl font-bold text-[#007cb6]">
-              {i18n.t("advertisement")}
-            </h1>
+          <div className="bg-[#005f8e] border border-gray-200 rounded-lg shadow-md p-4 mb-6 mt-2">
+            <div className="flex items-center justify-center">
+              <div>
+                <h1 className="text-2xl font-bold text-white text-center">
+                  {i18n.t("advertisement")}
+                </h1>
+              </div>
+            </div>
           </div>
 
           {/* Credit Balance Card */}
