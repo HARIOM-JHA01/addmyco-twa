@@ -197,7 +197,7 @@ const WelcomePage: React.FC<WelcomePageProps> = ({ onLogin, partnerCode }) => {
                     <img
                       src={banners[currentBanner].Banner}
                       alt={banners[currentBanner].Title}
-                      className="rounded-lg shadow-lg object-fill"
+                      className="rounded-lg shadow-lg object-cover"
                       style={{
                         width: buttonWidth ? `${buttonWidth}px` : undefined,
                         height: buttonWidth ? `${buttonWidth}px` : undefined,

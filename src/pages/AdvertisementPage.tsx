@@ -77,6 +77,7 @@ export default function AdvertisementPage() {
   const [credits, setCredits] = useState<CreditBalance | null>(null);
   const [ads, setAds] = useState<Advertisement[]>([]);
   const [paymentHistory, setPaymentHistory] = useState<PaymentHistory[]>([]);
+  const [openPaymentId, setOpenPaymentId] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -101,10 +102,33 @@ export default function AdvertisementPage() {
     redirectUrl: "",
     image: null as File | null,
   });
+  const [isPublicLink, setIsPublicLink] = useState<boolean>(false);
 
   const getAuthHeaders = () => {
     const token = localStorage.getItem("token");
     return { Authorization: `Bearer ${token}` };
+  };
+
+  // Validate whether a Telegram URL is a public channel link
+  const isTelegramPublicLink = (url: string) => {
+    try {
+      const parsed = new URL(url);
+      if (parsed.hostname !== "t.me") return false;
+      const path = parsed.pathname.replace(/^\/+|\/+$/g, "");
+      if (!path) return false;
+      // Disallow invite or private links (start with +, joinchat, or c)
+      if (
+        path.startsWith("+") ||
+        path.startsWith("joinchat") ||
+        path.startsWith("c")
+      )
+        return false;
+      const username = path.split("/")[0];
+      // Telegram usernames: 5-32 chars, letters, numbers, underscores
+      return /^[A-Za-z0-9_]{5,32}$/.test(username);
+    } catch (e) {
+      return false;
+    }
   };
 
   // Fetch packages and credits
@@ -204,9 +228,12 @@ export default function AdvertisementPage() {
       const fetchAds = async () => {
         setLoading(true);
         try {
-          const res = await axios.get(`${API_BASE_URL}/advertisement/my-ads`, {
-            headers: getAuthHeaders(),
-          });
+          const res = await axios.get(
+            `${API_BASE_URL}/api/v1/advertisement/my-ads`,
+            {
+              headers: getAuthHeaders(),
+            }
+          );
           setAds(res.data?.data || []);
         } catch (err: any) {
           const errorMessage =
@@ -230,7 +257,7 @@ export default function AdvertisementPage() {
         setLoading(true);
         try {
           const res = await axios.get(
-            `${API_BASE_URL}/advertisement/payment-history`,
+            `${API_BASE_URL}/api/v1/advertisement/payment-history`,
             {
               headers: getAuthHeaders(),
             }
@@ -265,7 +292,7 @@ export default function AdvertisementPage() {
     setUsdtModalError(null);
     try {
       const res = await axios.post(
-        `${API_BASE_URL}/advertisement/buy-credits`,
+        `${API_BASE_URL}/api/v1/advertisement/buy-credits`,
         {
           packageId: selectedPackage._id,
           transactionId: transactionId,
@@ -303,8 +330,10 @@ export default function AdvertisementPage() {
       setCreateAdError("Please select an image");
       return;
     }
-    if (!adForm.redirectUrl.startsWith("https://t.me/")) {
-      setCreateAdError("Telegram URL must start with https://t.me/");
+    if (!isPublicLink) {
+      setCreateAdError(
+        "Telegram URL must be a public channel link (e.g., https://t.me/your_channel)"
+      );
       return;
     }
 
@@ -378,9 +407,12 @@ export default function AdvertisementPage() {
       if (res.data?.success) {
         WebApp.showAlert("Advertisement paused successfully!");
         // Refresh ads list
-        const adsRes = await axios.get(`${API_BASE_URL}/advertisement/my-ads`, {
-          headers: getAuthHeaders(),
-        });
+        const adsRes = await axios.get(
+          `${API_BASE_URL}/api/v1/advertisement/my-ads`,
+          {
+            headers: getAuthHeaders(),
+          }
+        );
         setAds(adsRes.data?.data || []);
       }
     } catch (err: any) {
@@ -556,21 +588,19 @@ export default function AdvertisementPage() {
                   key={pkg._id}
                   className={`border-2 rounded-lg p-4 cursor-pointer transition ${
                     selectedPackage?._id === pkg._id
-                      ? "border-[#007cb6] bg-blue-50"
+                      ? "bg-[#007cb6] text-white"
                       : "border-gray-200 hover:border-[#007cb6]"
                   }`}
                   onClick={() => setSelectedPackage(pkg)}
                 >
                   <div className="flex justify-between items-start mb-2">
-                    <h3 className="font-bold text-[#007cb6]">{pkg.name}</h3>
+                    <h3 className="font-bold text-white">{pkg.name}</h3>
                     <span className="bg-[#007cb6] text-white px-2 py-1 rounded text-xs font-bold">
                       ${pkg.priceUSDT}
                     </span>
                   </div>
-                  <p className="text-sm text-gray-600 mb-2">
-                    {pkg.description}
-                  </p>
-                  <div className="text-xs text-gray-500 space-y-1">
+                  <p className="text-sm text-white mb-2">{pkg.description}</p>
+                  <div className="text-xs text-white space-y-1">
                     <p>💳 Credits: {pkg.displayCredits}</p>
                     <p>📍 Positions: {pkg.positions.join(", ")}</p>
                   </div>
@@ -666,11 +696,25 @@ export default function AdvertisementPage() {
                   type="text"
                   placeholder="https://t.me/channel_name"
                   value={adForm.redirectUrl}
-                  onChange={(e) =>
-                    setAdForm({ ...adForm, redirectUrl: e.target.value })
-                  }
+                  onChange={(e) => {
+                    const v = e.target.value.trim();
+                    setAdForm({ ...adForm, redirectUrl: v });
+                    setIsPublicLink(isTelegramPublicLink(v));
+                    if (createAdError) setCreateAdError(null);
+                  }}
                   className="w-full border border-gray-300 rounded-lg px-3 py-2"
                 />
+                {adForm.redirectUrl && (
+                  <p
+                    className={`text-xs mt-1 ${
+                      isPublicLink ? "text-green-600" : "text-red-500"
+                    }`}
+                  >
+                    {isPublicLink
+                      ? "Public Telegram channel link detected ✅"
+                      : "Please enter a public Telegram channel link (no invite/private links)"}
+                  </p>
+                )}
               </div>
 
               <div>
@@ -697,13 +741,18 @@ export default function AdvertisementPage() {
 
               <button
                 type="submit"
-                disabled={createAdLoading}
-                className="w-full bg-[#007cb6] text-white py-3 rounded-lg font-bold hover:bg-[#005f8e] transition disabled:opacity-50"
+                disabled={createAdLoading || !isPublicLink}
+                className="w-full bg-[#007cb6] text-white py-3 rounded-lg font-bold hover:bg-[#005f8e] transition disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {createAdLoading
                   ? i18n.t("submitting")
                   : "Create Advertisement"}
               </button>
+              {!isPublicLink && (
+                <p className="text-xs text-red-500 mt-2">
+                  Create disabled: Telegram link must be a public channel link.
+                </p>
+              )}
             </form>
           )}
 
@@ -834,17 +883,14 @@ export default function AdvertisementPage() {
                     0: {
                       label: "Pending",
                       color: "bg-yellow-100 text-yellow-800",
-                      icon: "⏳",
                     },
                     1: {
                       label: "Approved",
                       color: "bg-green-100 text-green-800",
-                      icon: "✅",
                     },
                     2: {
                       label: "Rejected",
                       color: "bg-red-100 text-red-800",
-                      icon: "❌",
                     },
                   };
                   const config =
@@ -853,70 +899,102 @@ export default function AdvertisementPage() {
                   return (
                     <div
                       key={payment._id}
-                      className="border border-gray-200 rounded-lg p-4"
+                      className="border border-gray-200 rounded-lg overflow-hidden"
                     >
-                      <div className="flex justify-between items-start mb-3">
-                        <div>
-                          <h3 className="font-bold text-[#007cb6]">
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setOpenPaymentId(
+                            openPaymentId === payment._id ? null : payment._id
+                          )
+                        }
+                        className="w-full flex items-center justify-between p-4 bg-white hover:bg-gray-50 focus:outline-none"
+                      >
+                        <div className="text-left">
+                          <h3 className="font-semibold text-gray-800">
                             {payment.package.name}
                           </h3>
                           <p className="text-xs text-gray-500">
                             {new Date(payment.createdAt).toLocaleString()}
                           </p>
                         </div>
-                        <span
-                          className={`px-2 py-1 rounded text-xs font-bold ${config.color}`}
-                        >
-                          {config.icon} {config.label}
-                        </span>
-                      </div>
+                        <div className="flex items-center gap-3">
+                          <span
+                            className={`px-2 py-1 rounded text-xs font-bold ${config.color}`}
+                          >
+                            {config.label}
+                          </span>
+                          <svg
+                            className={`h-4 w-4 text-gray-500 transform transition-transform ${
+                              openPaymentId === payment._id ? "rotate-180" : ""
+                            }`}
+                            viewBox="0 0 20 20"
+                            fill="none"
+                            xmlns="http://www.w3.org/2000/svg"
+                          >
+                            <path
+                              d="M6 8l4 4 4-4"
+                              stroke="currentColor"
+                              strokeWidth="2"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                            />
+                          </svg>
+                        </div>
+                      </button>
 
-                      <div className="space-y-2 mb-3">
-                        <div className="bg-gray-50 p-2 rounded">
-                          <p className="text-xs text-gray-600">Amount</p>
-                          <p className="font-bold">${payment.amount} USDT</p>
-                        </div>
-                        <div className="bg-gray-50 p-2 rounded">
-                          <p className="text-xs text-gray-600">Credits</p>
-                          <p className="font-bold">{payment.credits}</p>
-                        </div>
-                        <div className="bg-gray-50 p-2 rounded">
-                          <p className="text-xs text-gray-600">
-                            Transaction ID
-                          </p>
-                          <p className="text-xs font-mono break-all">
-                            {payment.transactionId}
-                          </p>
-                        </div>
-                        <div className="bg-gray-50 p-2 rounded">
-                          <p className="text-xs text-gray-600">
-                            Wallet Address
-                          </p>
-                          <p className="text-xs font-mono break-all">
-                            {payment.walletAddress}
-                          </p>
-                        </div>
-                      </div>
+                      {openPaymentId === payment._id && (
+                        <div className="p-4 bg-gray-50 space-y-3">
+                          <div className="grid grid-cols-2 gap-3">
+                            <div className="bg-white p-2 rounded shadow-sm">
+                              <p className="text-xs text-gray-600">Amount</p>
+                              <p className="font-bold">
+                                ${payment.amount} USDT
+                              </p>
+                            </div>
+                            <div className="bg-white p-2 rounded shadow-sm">
+                              <p className="text-xs text-gray-600">Credits</p>
+                              <p className="font-bold">{payment.credits}</p>
+                            </div>
+                            <div className="col-span-2 bg-white p-2 rounded shadow-sm">
+                              <p className="text-xs text-gray-600">
+                                Transaction ID
+                              </p>
+                              <p className="text-xs font-mono break-all">
+                                {payment.transactionId}
+                              </p>
+                            </div>
+                            <div className="col-span-2 bg-white p-2 rounded shadow-sm">
+                              <p className="text-xs text-gray-600">
+                                Wallet Address
+                              </p>
+                              <p className="text-xs font-mono break-all">
+                                {payment.walletAddress}
+                              </p>
+                            </div>
+                          </div>
 
-                      {payment.status === 1 && payment.approvalNotes && (
-                        <div className="bg-green-50 p-2 rounded">
-                          <p className="text-xs text-green-600 font-semibold">
-                            Admin Notes:
-                          </p>
-                          <p className="text-xs text-green-800">
-                            {payment.approvalNotes}
-                          </p>
-                        </div>
-                      )}
+                          {payment.status === 1 && payment.approvalNotes && (
+                            <div className="bg-green-50 p-2 rounded">
+                              <p className="text-xs text-green-600 font-semibold">
+                                Admin Notes:
+                              </p>
+                              <p className="text-xs text-green-800">
+                                {payment.approvalNotes}
+                              </p>
+                            </div>
+                          )}
 
-                      {payment.status === 2 && payment.rejectionReason && (
-                        <div className="bg-red-50 p-2 rounded">
-                          <p className="text-xs text-red-600 font-semibold">
-                            Rejection Reason:
-                          </p>
-                          <p className="text-xs text-red-800">
-                            {payment.rejectionReason}
-                          </p>
+                          {payment.status === 2 && payment.rejectionReason && (
+                            <div className="bg-red-50 p-2 rounded">
+                              <p className="text-xs text-red-600 font-semibold">
+                                Rejection Reason:
+                              </p>
+                              <p className="text-xs text-red-800">
+                                {payment.rejectionReason}
+                              </p>
+                            </div>
+                          )}
                         </div>
                       )}
                     </div>
