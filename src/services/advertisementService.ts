@@ -1,0 +1,105 @@
+import axios from "axios";
+
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+
+export interface Advertisement {
+  _id: string;
+  title?: string;
+  description?: string;
+  position?: string;
+  country?: string;
+  imageUrl?: string;
+  Banner?: string;
+  targetUrl?: string;
+  redirectUrl?: string;
+  Link?: string;
+  displayCount?: number;
+  displayUsed?: number;
+  displayRemaining?: number;
+  status?: string;
+  approvalStatus?: string;
+  viewCount?: number;
+  clickCount?: number;
+  ctrPercentage?: number;
+  impressions?: number;
+  clicks?: number;
+  credits?: number;
+  createdAt?: string;
+}
+
+/**
+ * Fetch active advertisements from the public API
+ * Falls back to system banners if no active ads are found
+ * Defaults to HOME_BANNER position if not specified
+ */
+export const fetchAdvertisements = async (
+  position: string = "HOME_BANNER",
+  country?: string
+): Promise<Advertisement[]> => {
+  try {
+    // Try to fetch active advertisements from the new API
+    const params = new URLSearchParams();
+    params.append("position", position);
+    if (country) params.append("country", country);
+    params.append("limit", "100");
+
+    const res = await axios.get(
+      `${API_BASE_URL}/api/v1/advertisement/active?${params.toString()}`,
+      { timeout: 5000 }
+    );
+
+    const ads = res.data?.data || [];
+    if (ads.length > 0) {
+      console.log("Loaded advertisements from public API:", ads.length);
+      return ads;
+    }
+  } catch (err) {
+    console.warn("Failed to fetch active advertisements, using fallback:", err);
+  }
+
+  // Fallback: fetch system banners from the old API
+  try {
+    const bannerRes = await axios.get(`${API_BASE_URL}/banner`, {
+      timeout: 5000,
+    });
+    const banners = bannerRes.data?.data || [];
+    if (banners.length > 0) {
+      console.log("Loaded system banners as fallback:", banners.length);
+      return banners;
+    }
+  } catch (fallbackErr) {
+    console.error("Failed to fetch fallback banners:", fallbackErr);
+  }
+
+  return [];
+};
+
+/**
+ * Track advertisement display/impression
+ */
+export const trackAdDisplay = async (adId: string): Promise<void> => {
+  try {
+    await axios.post(
+      `${API_BASE_URL}/api/v1/advertisement/${adId}/track-display`,
+      {},
+      { timeout: 3000 }
+    );
+  } catch (err) {
+    console.warn(`Failed to track display for ad ${adId}:`, err);
+  }
+};
+
+/**
+ * Track advertisement click
+ */
+export const trackAdClick = async (adId: string): Promise<void> => {
+  try {
+    await axios.post(
+      `${API_BASE_URL}/api/v1/advertisement/${adId}/track-click`,
+      {},
+      { timeout: 3000 }
+    );
+  } catch (err) {
+    console.warn(`Failed to track click for ad ${adId}:`, err);
+  }
+};

@@ -98,7 +98,7 @@ const WelcomePage: React.FC<WelcomePageProps> = ({ onLogin, partnerCode }) => {
       ro.disconnect();
       window.removeEventListener("resize", update);
     };
-  }, [isInTelegram, loginLoading]);
+  }, [isInTelegram]);
 
   return (
     <div

@@ -5,6 +5,7 @@ import axios from "axios";
 import WebApp from "@twa-dev/sdk";
 import { useProfileStore } from "../store/profileStore";
 import i18n from "../i18n";
+import backgroundImg from "../assets/background.jpg";
 
 export default function PaymentHistoryPage() {
   const [history, setHistory] = useState<any[] | null>(null);
@@ -38,7 +39,7 @@ export default function PaymentHistoryPage() {
   return (
     <div
       className="bg-cover px-2 bg-center min-h-screen w-full overflow-x-hidden flex flex-col"
-      style={{ backgroundImage: "var(--app-background-image)" }}
+      style={{ backgroundImage: `url(${backgroundImg})` }}
     >
       <Header />
       <div className="flex flex-col items-center justify-start flex-1 pb-32">

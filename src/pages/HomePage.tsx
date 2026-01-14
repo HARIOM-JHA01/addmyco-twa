@@ -34,6 +34,7 @@ import {
 import { formatUrl } from "../utils/validation";
 import { callOrCopyPhone } from "../utils/phone";
 import WebApp from "@twa-dev/sdk";
+import backgroundImg from "../assets/background.jpg";
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
@@ -345,7 +346,7 @@ export default function HomePage() {
     return (
       <div
         className="bg-cover bg-center min-h-screen w-full overflow-x-hidden flex items-center justify-center"
-        style={{ backgroundImage: "var(--app-background-image)" }}
+        style={{ backgroundImage: `url(${backgroundImg})` }}
       >
         <div className="text-white text-xl">Loading...</div>
       </div>
@@ -361,7 +362,7 @@ export default function HomePage() {
   return (
     <div
       className="bg-cover bg-center min-h-screen w-full overflow-x-hidden"
-      style={{ backgroundImage: "var(--app-background-image)" }}
+      style={{ backgroundImage: `url(${backgroundImg})` }}
     >
       <Header />
       <div className="flex flex-col items-center justify-center flex-grow py-4 px-2 pb-32">

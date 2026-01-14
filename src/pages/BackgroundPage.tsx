@@ -3,6 +3,7 @@ import axios from "axios";
 import { useProfileStore } from "../store/profileStore";
 import Layout from "../components/Layout";
 import i18n from "../i18n";
+import backgroundImg from "../assets/background.jpg";
 // Removed unused search icon after refactor
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
@@ -289,7 +290,7 @@ export default function BackgroundPage() {
     <Layout>
       <div
         className="bg-cover bg-center min-h-screen w-full overflow-x-hidden flex flex-col"
-        style={{ backgroundImage: "var(--app-background-image)" }}
+        style={{ backgroundImage: `url(${backgroundImg})` }}
       >
         <div className="px-2 pt-3 pb-28 flex-1 flex justify-center">
           <div className="w-full max-w-[880px] bg-white/20 backdrop-blur-sm rounded-2xl p-4 shadow-md">

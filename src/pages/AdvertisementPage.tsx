@@ -72,17 +72,19 @@ interface PaymentHistory {
 type TabType = "buy-credits" | "create-ad" | "my-ads" | "payment-history";
 
 export default function AdvertisementPage() {
-  const [activeTab, setActiveTab] = useState<TabType>("buy-credits");
+  const [activeTab, setActiveTab] = useState<TabType>("create-ad");
   const [packages, setPackages] = useState<Package[]>([]);
   const [credits, setCredits] = useState<CreditBalance | null>(null);
   const [ads, setAds] = useState<Advertisement[]>([]);
   const [paymentHistory, setPaymentHistory] = useState<PaymentHistory[]>([]);
   const [openPaymentId, setOpenPaymentId] = useState<string | null>(null);
+  const [menuOpen, setMenuOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   // Buy credits state
   const [selectedPackage, setSelectedPackage] = useState<Package | null>(null);
+  const [buyTab, setBuyTab] = useState<"start" | "circle">("start");
   const [usdtModalOpen, setUsdtModalOpen] = useState(false);
   const [transactionId, setTransactionId] = useState("");
   const [walletAddress, setWalletAddress] = useState("");
@@ -131,7 +133,13 @@ export default function AdvertisementPage() {
     }
   };
 
-  // Fetch packages and credits
+  // Country options (fetched) and related state
+  const [countryOptions, setCountryOptions] = useState<
+    { code: string; name: string }[]
+  >([{ code: "GLOBAL", name: "Global" }]);
+  const [countriesLoading, setCountriesLoading] = useState(false);
+
+  // Fetch packages, credits and available country configs
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true);
@@ -207,6 +215,47 @@ export default function AdvertisementPage() {
           console.error("Failed to fetch credits:", creditErr);
           // Set default zero credits
           setCredits({ totalCredits: 0, usedCredits: 0, balanceCredits: 0 });
+        }
+
+        // Fetch country configs (active only)
+        try {
+          setCountriesLoading(true);
+          const countriesRes = await axios.get(
+            `${API_BASE_URL}/api/v1/advertisement/country-configs?active=true`,
+            { headers: getAuthHeaders() }
+          );
+          // Attempt to parse response shape flexibly
+          const list = countriesRes.data?.data || countriesRes.data || [];
+          const parsed = list
+            .map((it: any) => {
+              // prefer explicit code/name fields, try other fallbacks
+              const code =
+                it.country ||
+                it.code ||
+                it.iso ||
+                (it._id ? it._id : undefined);
+              const name = it.name || it.displayName || it.countryName || code;
+              return code ? { code: String(code), name: String(name) } : null;
+            })
+            .filter(Boolean);
+
+          // Always include Global option at the top
+          setCountryOptions([{ code: "GLOBAL", name: "Global" }, ...parsed]);
+        } catch (countriesErr: any) {
+          console.error("Failed to fetch country configs:", countriesErr);
+          // fallback: keep default GLOBAL (maybe extend to common countries)
+          setCountryOptions([
+            { code: "GLOBAL", name: "Global" },
+            { code: "US", name: "United States" },
+            { code: "IN", name: "India" },
+            { code: "GB", name: "United Kingdom" },
+            { code: "CN", name: "China" },
+            { code: "JP", name: "Japan" },
+            { code: "AU", name: "Australia" },
+            { code: "CA", name: "Canada" },
+          ]);
+        } finally {
+          setCountriesLoading(false);
         }
       } catch (err: any) {
         const errorMessage =
@@ -303,7 +352,7 @@ export default function AdvertisementPage() {
 
       if (res.data?.success) {
         WebApp.showAlert(
-          `Payment submitted successfully! Your payment request is pending admin approval. You will be notified once approved.`
+          `Payment details submitted successfully! Please wait for admin approval.`
         );
 
         setUsdtModalOpen(false);
@@ -353,12 +402,16 @@ export default function AdvertisementPage() {
       formData.append("description", `Advertisement for ${adForm.country}`);
       formData.append("position", adForm.position);
       formData.append("country", adForm.country);
+      formData.append("displayCount", String(adForm.displayCount));
       formData.append("credits", String(requiredCredits));
+      // backend expects redirectUrl; include it explicitly
+      formData.append("redirectUrl", adForm.redirectUrl);
+      // keep targetUrl too in case some endpoints accept it
       formData.append("targetUrl", adForm.redirectUrl);
       formData.append("image", adForm.image);
 
       const res = await axios.post(
-        `${API_BASE_URL}/advertisement/create`,
+        `${API_BASE_URL}/api/v1/advertisement/create`,
         formData,
         {
           headers: {
@@ -381,7 +434,7 @@ export default function AdvertisementPage() {
         });
         // Refresh credits and ads
         const creditsRes = await axios.get(
-          `${API_BASE_URL}/advertisement/my-credits`,
+          `${API_BASE_URL}/api/v1/advertisement/my-credits`,
           { headers: getAuthHeaders() }
         );
         setCredits(creditsRes.data?.data || null);
@@ -459,16 +512,22 @@ export default function AdvertisementPage() {
 
     setActionLoading(adId);
     try {
-      const res = await axios.delete(`${API_BASE_URL}/advertisement/${adId}`, {
-        headers: getAuthHeaders(),
-      });
+      const res = await axios.delete(
+        `${API_BASE_URL}/api/v1/advertisement/${adId}`,
+        {
+          headers: getAuthHeaders(),
+        }
+      );
 
       if (res.data?.success) {
         WebApp.showAlert("Advertisement deleted successfully!");
         // Refresh ads list
-        const adsRes = await axios.get(`${API_BASE_URL}/advertisement/my-ads`, {
-          headers: getAuthHeaders(),
-        });
+        const adsRes = await axios.get(
+          `${API_BASE_URL}/api/v1/advertisement/my-ads`,
+          {
+            headers: getAuthHeaders(),
+          }
+        );
         setAds(adsRes.data?.data || []);
       }
     } catch (err: any) {
@@ -481,22 +540,78 @@ export default function AdvertisementPage() {
   };
 
   return (
-    <div
-      className="bg-cover bg-center min-h-screen w-full overflow-x-hidden flex flex-col"
-      // style={{ backgroundImage: "var(--app-background-image)" }}
-    >
+    <div className="min-h-screen w-full overflow-x-hidden flex flex-col bg-gray-300">
       <Header />
       <main className="flex-1 flex justify-center w-full">
         <div className="w-full max-w-md pb-24 px-4">
-          {/* Page Title */}
-          <div className="bg-[#005f8e] border border-gray-200 rounded-lg shadow-md p-4 mb-6 mt-2">
-            <div className="flex items-center justify-center">
-              <div>
-                <h1 className="text-2xl font-bold text-white text-center">
-                  {i18n.t("advertisement")}
-                </h1>
-              </div>
+          {/* Page Title with Hamburger Menu */}
+          <div className="bg-[#005f8e] border border-gray-200 rounded-lg shadow-md p-4 mb-6 mt-2 relative">
+            <div className="flex items-center justify-between">
+              <h1 className="text-2xl font-bold text-white text-center flex-1">
+                {i18n.t("advertisement")}
+              </h1>
+              <button
+                className="text-white hover:bg-[#004570] p-2 rounded transition"
+                onClick={() => setMenuOpen(!menuOpen)}
+                aria-label="Menu"
+              >
+                <svg
+                  className="w-6 h-6"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M4 6h16M4 12h16M4 18h16"
+                  />
+                </svg>
+              </button>
             </div>
+
+            {/* Hamburger Menu Dropdown */}
+            {menuOpen && (
+              <div className="absolute top-full right-0 mt-2 bg-white rounded-lg shadow-lg z-50 min-w-max">
+                <button
+                  onClick={() => {
+                    setActiveTab("create-ad");
+                    setMenuOpen(false);
+                  }}
+                  className="block w-full text-left px-4 py-2 text-gray-800 hover:bg-blue-100 transition first:rounded-t-lg"
+                >
+                  Create Ad
+                </button>
+                <button
+                  onClick={() => {
+                    setActiveTab("my-ads");
+                    setMenuOpen(false);
+                  }}
+                  className="block w-full text-left px-4 py-2 text-gray-800 hover:bg-blue-100 transition"
+                >
+                  My Ads
+                </button>
+                <button
+                  onClick={() => {
+                    setActiveTab("buy-credits");
+                    setMenuOpen(false);
+                  }}
+                  className="block w-full text-left px-4 py-2 text-gray-800 hover:bg-blue-100 transition"
+                >
+                  Buy Credits
+                </button>
+                <button
+                  onClick={() => {
+                    setActiveTab("payment-history");
+                    setMenuOpen(false);
+                  }}
+                  className="block w-full text-left px-4 py-2 text-gray-800 hover:bg-blue-100 transition last:rounded-b-lg"
+                >
+                  Payments
+                </button>
+              </div>
+            )}
           </div>
 
           {/* Credit Balance Card */}
@@ -522,47 +637,18 @@ export default function AdvertisementPage() {
           )}
 
           {/* Tab Navigation */}
-          <div className="flex gap-2 mb-6 bg-gray-100 p-1 rounded-lg overflow-x-auto">
-            <button
-              onClick={() => setActiveTab("buy-credits")}
-              className={`flex-1 py-2 px-3 rounded text-xs font-semibold transition whitespace-nowrap ${
-                activeTab === "buy-credits"
-                  ? "bg-[#007cb6] text-white"
-                  : "bg-transparent text-gray-700"
-              }`}
-            >
-              Buy Credits
-            </button>
-            <button
-              onClick={() => setActiveTab("create-ad")}
-              className={`flex-1 py-2 px-3 rounded text-xs font-semibold transition whitespace-nowrap ${
-                activeTab === "create-ad"
-                  ? "bg-[#007cb6] text-white"
-                  : "bg-transparent text-gray-700"
-              }`}
-            >
-              Create Ad
-            </button>
-            <button
-              onClick={() => setActiveTab("my-ads")}
-              className={`flex-1 py-2 px-3 rounded text-xs font-semibold transition whitespace-nowrap ${
-                activeTab === "my-ads"
-                  ? "bg-[#007cb6] text-white"
-                  : "bg-transparent text-gray-700"
-              }`}
-            >
-              My Ads
-            </button>
-            <button
-              onClick={() => setActiveTab("payment-history")}
-              className={`flex-1 py-2 px-3 rounded text-xs font-semibold transition whitespace-nowrap ${
-                activeTab === "payment-history"
-                  ? "bg-[#007cb6] text-white"
-                  : "bg-transparent text-gray-700"
-              }`}
-            >
-              Payments
-            </button>
+
+          {/* Section Title */}
+          <div className="mb-6">
+            <h2 className="text-xl text-center font-bold text-gray-800">
+              {activeTab === "create-ad"
+                ? "Create Advertisement"
+                : activeTab === "my-ads"
+                ? "My Advertisements"
+                : activeTab === "buy-credits"
+                ? "Buy Credits"
+                : "Payment History"}
+            </h2>
           </div>
 
           {error && (
@@ -580,37 +666,90 @@ export default function AdvertisementPage() {
           {/* Buy Credits Tab */}
           {activeTab === "buy-credits" && !loading && (
             <div className="space-y-4">
-              <p className="text-sm text-white mb-4">
+              <p className="text-sm text-black mb-4">
                 Select a package to purchase advertisement credits
               </p>
-              {packages.map((pkg) => (
-                <div
-                  key={pkg._id}
-                  className={`border-2 rounded-lg p-4 cursor-pointer transition ${
-                    selectedPackage?._id === pkg._id
+
+              {/* Sub-tabs for Start Page / Circle */}
+              <div className="flex gap-2 mb-3">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setBuyTab("start");
+                    setSelectedPackage(null);
+                  }}
+                  className={`flex-1 py-2 rounded font-semibold ${
+                    buyTab === "start"
                       ? "bg-[#007cb6] text-white"
-                      : "border-gray-200 hover:border-[#007cb6]"
+                      : "bg-white border border-gray-200 text-gray-700"
                   }`}
-                  onClick={() => setSelectedPackage(pkg)}
                 >
-                  <div className="flex justify-between items-start mb-2">
-                    <h3 className="font-bold text-white">{pkg.name}</h3>
-                    <span className="bg-[#007cb6] text-white px-2 py-1 rounded text-xs font-bold">
-                      ${pkg.priceUSDT}
-                    </span>
-                  </div>
-                  <p className="text-sm text-white mb-2">{pkg.description}</p>
-                  <div className="text-xs text-white space-y-1">
-                    <p>💳 Credits: {pkg.displayCredits}</p>
-                    <p>📍 Positions: {pkg.positions.join(", ")}</p>
-                  </div>
+                  Start Page
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setBuyTab("circle");
+                    setSelectedPackage(null);
+                  }}
+                  className={`flex-1 py-2 rounded font-semibold ${
+                    buyTab === "circle"
+                      ? "bg-[#007cb6] text-white"
+                      : "bg-white border border-gray-200 text-gray-700"
+                  }`}
+                >
+                  Circle
+                </button>
+              </div>
+
+              {/* Packages list filtered by selected sub-tab */}
+              {packages.filter((pkg) =>
+                buyTab === "start"
+                  ? pkg.positions.includes("HOME_BANNER")
+                  : pkg.positions.includes("BOTTOM_CIRCLE")
+              ).length === 0 ? (
+                <div className="text-center py-6 text-gray-600">
+                  No packages available for this section.
                 </div>
-              ))}
+              ) : (
+                packages
+                  .filter((pkg) =>
+                    buyTab === "start"
+                      ? pkg.positions.includes("HOME_BANNER")
+                      : pkg.positions.includes("BOTTOM_CIRCLE")
+                  )
+                  .map((pkg) => (
+                    <div
+                      key={pkg._id}
+                      className={`border-2 rounded-lg p-4 cursor-pointer transition ${
+                        selectedPackage?._id === pkg._id
+                          ? "bg-[#007cb6] text-black"
+                          : "border-gray-200 hover:border-[#007cb6]"
+                      }`}
+                      onClick={() => setSelectedPackage(pkg)}
+                    >
+                      <div className="flex justify-between items-start mb-2">
+                        <h3 className="font-bold text-black">{pkg.name}</h3>
+                        <span className="bg-[#007cb6] text-black px-2 py-1 rounded text-base font-bold">
+                          ${pkg.priceUSDT}
+                        </span>
+                      </div>
+                      <p className="text-sm text-black mb-2">
+                        {pkg.description}
+                      </p>
+                      <div className="text-base text-black space-y-1">
+                        <p>💳 Credits: {pkg.displayCredits}</p>
+                        {/* TODO : Add no of display */}
+                        <p>📍 Positions: {pkg.positions.join(", ")}</p>
+                      </div>
+                    </div>
+                  ))
+              )}
 
               {selectedPackage && (
                 <button
                   onClick={() => setUsdtModalOpen(true)}
-                  className="w-full bg-[#007cb6] text-white py-3 rounded-lg font-bold hover:bg-[#005f8e] transition"
+                  className="w-full bg-[#007cb6] text-black py-3 rounded-lg font-bold hover:bg-[#005f8e] transition"
                 >
                   Pay with USDT
                 </button>
@@ -620,142 +759,201 @@ export default function AdvertisementPage() {
 
           {/* Create Ad Tab */}
           {activeTab === "create-ad" && !loading && (
-            <form onSubmit={handleCreateAd} className="space-y-4">
-              {createAdError && (
-                <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
-                  {createAdError}
+            <>
+              {(credits?.availableCredits || credits?.balanceCredits || 0) ===
+              0 ? (
+                <div className="bg-yellow-50 border border-yellow-400 text-red-500 px-4 py-3 rounded mb-4">
+                  <p className="font-semibold text-center">
+                    No Available Credits
+                  </p>
+                  <p className="text-sm mt-1">
+                    You do not have any available credit in your account please
+                    buy credit before creating advertisements
+                  </p>
                 </div>
-              )}
+              ) : null}
+              <form onSubmit={handleCreateAd} className="space-y-4">
+                {createAdError && (
+                  <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
+                    {createAdError}
+                  </div>
+                )}
 
-              <div>
-                <label className="block text-sm font-bold mb-2 text-gray-700">
-                  Position *
-                </label>
-                <select
-                  value={adForm.position}
-                  onChange={(e) =>
-                    setAdForm({ ...adForm, position: e.target.value })
-                  }
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2"
-                >
-                  <option value="HOME_BANNER">Home Page Banner (1:1)</option>
-                  <option value="BOTTOM_CIRCLE">
-                    Bottom Navigation Circle (1:1)
-                  </option>
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-sm font-bold mb-2 text-gray-700">
-                  Country/Global *
-                </label>
-                <select
-                  value={adForm.country}
-                  onChange={(e) =>
-                    setAdForm({ ...adForm, country: e.target.value })
-                  }
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2"
-                >
-                  <option value="GLOBAL">Global</option>
-                  <option value="US">United States</option>
-                  <option value="CN">China</option>
-                  <option value="GB">United Kingdom</option>
-                  <option value="IN">India</option>
-                  <option value="JP">Japan</option>
-                  <option value="AU">Australia</option>
-                  <option value="CA">Canada</option>
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-sm font-bold mb-2 text-gray-700">
-                  Number of Displays *
-                </label>
-                <input
-                  type="number"
-                  min="100"
-                  value={adForm.displayCount}
-                  onChange={(e) =>
-                    setAdForm({
-                      ...adForm,
-                      displayCount: parseInt(e.target.value) || 1000,
-                    })
-                  }
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2"
-                />
-                <p className="text-xs text-gray-500 mt-1">
-                  Requires {Math.ceil(adForm.displayCount / 1000)} credit(s)
-                </p>
-              </div>
-
-              <div>
-                <label className="block text-sm font-bold mb-2 text-gray-700">
-                  Telegram URL *
-                </label>
-                <input
-                  type="text"
-                  placeholder="https://t.me/channel_name"
-                  value={adForm.redirectUrl}
-                  onChange={(e) => {
-                    const v = e.target.value.trim();
-                    setAdForm({ ...adForm, redirectUrl: v });
-                    setIsPublicLink(isTelegramPublicLink(v));
-                    if (createAdError) setCreateAdError(null);
-                  }}
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2"
-                />
-                {adForm.redirectUrl && (
-                  <p
-                    className={`text-xs mt-1 ${
-                      isPublicLink ? "text-green-600" : "text-red-500"
-                    }`}
+                <div>
+                  <label className="block text-sm font-bold mb-2 text-gray-700">
+                    Select your add Position *
+                  </label>
+                  <select
+                    value={adForm.position}
+                    onChange={(e) =>
+                      setAdForm({ ...adForm, position: e.target.value })
+                    }
+                    className="w-full border border-gray-300 rounded-lg px-3 py-2"
                   >
-                    {isPublicLink
-                      ? "Public Telegram channel link detected ✅"
-                      : "Please enter a public Telegram channel link (no invite/private links)"}
-                  </p>
-                )}
-              </div>
+                    <option value="HOME_BANNER">Start Page Banner (1:1)</option>
+                    <option value="BOTTOM_CIRCLE">
+                      Bottom Navigation Circle (1:1)
+                    </option>
+                  </select>
+                </div>
 
-              <div>
-                <label className="block text-sm font-bold mb-2 text-gray-700">
-                  Upload Image (PNG/JPG) *
-                </label>
-                <input
-                  type="file"
-                  accept="image/png,image/jpeg,image/webp"
-                  onChange={(e) =>
-                    setAdForm({
-                      ...adForm,
-                      image: e.target.files?.[0] || null,
-                    })
-                  }
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2"
-                />
-                {adForm.image && (
-                  <p className="text-xs text-green-600 mt-1">
-                    ✓ {adForm.image.name}
-                  </p>
-                )}
-              </div>
+                <div>
+                  <label className="block text-sm font-bold mb-2 text-gray-700">
+                    Select Country/Global *
+                  </label>
+                  <select
+                    value={adForm.country}
+                    onChange={(e) =>
+                      setAdForm({ ...adForm, country: e.target.value })
+                    }
+                    className="w-full border border-gray-300 rounded-lg px-3 py-2"
+                  >
+                    {countryOptions.map((c) => (
+                      <option key={c.code} value={c.code}>
+                        {c.name}
+                      </option>
+                    ))}
+                  </select>
+                  {countriesLoading && (
+                    <p className="text-xs text-gray-500 mt-1">
+                      Loading countries...
+                    </p>
+                  )}
+                </div>
 
-              <button
-                type="submit"
-                disabled={createAdLoading || !isPublicLink}
-                className="w-full bg-[#007cb6] text-white py-3 rounded-lg font-bold hover:bg-[#005f8e] transition disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {createAdLoading
-                  ? i18n.t("submitting")
-                  : "Create Advertisement"}
-              </button>
-              {!isPublicLink && (
-                <p className="text-xs text-red-500 mt-2">
-                  Create disabled: Telegram link must be a public channel link.
-                </p>
-              )}
-            </form>
+                <div>
+                  <label className="block text-sm font-bold mb-2 text-gray-700">
+                    Number of Displays *
+                  </label>
+                  <input
+                    type="number"
+                    min="100"
+                    value={adForm.displayCount}
+                    onChange={(e) =>
+                      setAdForm({
+                        ...adForm,
+                        displayCount: parseInt(e.target.value) || 1000,
+                      })
+                    }
+                    className="w-full border border-gray-300 rounded-lg px-3 py-2"
+                  />
+                  <p className="text-xs text-gray-500 mt-1">
+                    Requires {Math.ceil(adForm.displayCount / 1000)} credit(s)
+                  </p>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-bold mb-2 text-gray-700">
+                    Telegram URL ( Only Public Channer/Groups) *
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="https://t.me/channel_name"
+                    value={adForm.redirectUrl}
+                    onChange={(e) => {
+                      const v = e.target.value.trim();
+                      setAdForm({ ...adForm, redirectUrl: v });
+                      setIsPublicLink(isTelegramPublicLink(v));
+                      if (createAdError) setCreateAdError(null);
+                    }}
+                    className="w-full border border-gray-300 rounded-lg px-3 py-2"
+                  />
+                  {adForm.redirectUrl && (
+                    <p
+                      className={`text-xs mt-1 ${
+                        isPublicLink ? "text-green-600" : "text-red-500"
+                      }`}
+                    >
+                      {isPublicLink
+                        ? "Public Telegram channel link detected ✅"
+                        : "Please enter a public Telegram channel link (no invite/private links)"}
+                    </p>
+                  )}
+                </div>
+
+                <div>
+                  <label className="block text-sm font-bold mb-2 text-gray-700">
+                    Upload Image (PNG/JPG) *
+                  </label>
+                  <div className="relative">
+                    <input
+                      type="file"
+                      accept="image/png,image/jpeg,image/webp"
+                      onChange={(e) =>
+                        setAdForm({
+                          ...adForm,
+                          image: e.target.files?.[0] || null,
+                        })
+                      }
+                      className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                      id="image-upload"
+                    />
+                    <label
+                      htmlFor="image-upload"
+                      className="flex items-center justify-center w-full h-16 border-2 border-dashed border-gray-300 rounded-lg bg-gray-50 hover:bg-gray-100 transition-colors cursor-pointer"
+                    >
+                      <div className="text-center">
+                        <svg
+                          className="mx-auto h-8 w-8 text-gray-400 mb-1"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                          xmlns="http://www.w3.org/2000/svg"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
+                          />
+                        </svg>
+                        <p className="text-sm text-gray-600">
+                          {adForm.image
+                            ? "Change Image"
+                            : "Click to Upload Image"}
+                        </p>
+                      </div>
+                    </label>
+                  </div>
+                  {adForm.image && (
+                    <div className="mt-2 flex items-center text-green-600">
+                      <svg
+                        className="h-4 w-4 mr-1"
+                        fill="currentColor"
+                        viewBox="0 0 20 20"
+                      >
+                        <path
+                          fillRule="evenodd"
+                          d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                          clipRule="evenodd"
+                        />
+                      </svg>
+                      <p className="text-xs">✓ {adForm.image.name}</p>
+                    </div>
+                  )}
+                  <p className="text-base text-green-600 mt-2 font-medium">
+                    Image aspect ratio should be 1:1 for best display.
+                  </p>
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={createAdLoading || !isPublicLink}
+                  className="w-full bg-[#007cb6] text-white py-3 rounded-lg font-bold hover:bg-[#005f8e] transition disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {createAdLoading
+                    ? i18n.t("submitting")
+                    : "Create Advertisement"}
+                </button>
+                {/* {!isPublicLink && (
+                  <p className="text-xs text-red-500 mt-2">
+                    Create disabled: Telegram link must be a public channel
+                    link.
+                  </p>
+                )} */}
+              </form>
+            </>
           )}
-
           {/* My Ads Tab */}
           {activeTab === "my-ads" && !loading && (
             <div className="space-y-4">
@@ -1026,7 +1224,7 @@ export default function AdvertisementPage() {
                     Purchase Advertisement Credits
                   </h3>
 
-                  <div className="mb-3 text-sm text-gray-700">
+                  <div className="mb-3 text-sm text-white bg-[#005f8e] p-3 rounded-lg">
                     <div className="mb-2">
                       <span className="font-semibold">Package: </span>
                       {selectedPackage?.name ?? "-"}
@@ -1039,6 +1237,7 @@ export default function AdvertisementPage() {
                       <span className="font-semibold">Credits: </span>
                       {selectedPackage?.displayCredits ?? "-"}
                     </div>
+                    {/* TODO : Add no of display */}
                   </div>
 
                   <div className="w-full bg-gray-50 border border-gray-200 rounded-lg p-3 text-sm text-gray-700 mb-3">

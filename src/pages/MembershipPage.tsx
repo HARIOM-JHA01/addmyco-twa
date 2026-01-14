@@ -5,6 +5,7 @@ import { useState, useEffect } from "react";
 import axios from "axios";
 import WebApp from "@twa-dev/sdk";
 import i18n from "../i18n";
+import backgroundImg from "../assets/background.jpg";
 
 // walletTransferImage intentionally unused after removing QR/wallet image from USDT modal
 
@@ -147,7 +148,7 @@ export default function MembershipPage() {
     return (
       <div
         className="bg-cover bg-center min-h-screen w-full overflow-x-hidden flex justify-center items-center"
-        style={{ backgroundImage: "var(--app-background-image)" }}
+        style={{ backgroundImage: `url(${backgroundImg})` }}
       >
         <Header />
         <div className="flex-1 flex justify-center items-center text-red-500">
@@ -178,7 +179,7 @@ export default function MembershipPage() {
   return (
     <div
       className="bg-cover bg-center min-h-screen w-full overflow-x-hidden flex flex-col"
-      style={{ backgroundImage: "var(--app-background-image)" }}
+      style={{ backgroundImage: `url(${backgroundImg})` }}
     >
       <Header />
       <div className="flex flex-col items-center px-4 justify-start flex-1 pb-32">
