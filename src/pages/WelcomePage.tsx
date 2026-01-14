@@ -1,8 +1,12 @@
 import React, { useEffect, useState, useRef } from "react";
 import Header from "../components/Header";
-import axios from "axios";
 import backgroundImg from "../assets/background.jpg";
 import WebApp from "@twa-dev/sdk";
+import {
+  fetchAdvertisements,
+  trackAdDisplay,
+  trackAdClick,
+} from "../services/advertisementService";
 
 interface WelcomePageProps {
   onLogin: (fromWelcome?: boolean) => void | Promise<void>;
@@ -10,7 +14,6 @@ interface WelcomePageProps {
 }
 
 const WelcomePage: React.FC<WelcomePageProps> = ({ onLogin, partnerCode }) => {
-  const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
   const [banners, setBanners] = useState<any[]>([]);
   const [bannerLoading, setBannerLoading] = useState(false);
   const [bannerError, setBannerError] = useState<string | null>(null);
@@ -41,8 +44,8 @@ const WelcomePage: React.FC<WelcomePageProps> = ({ onLogin, partnerCode }) => {
       setBannerLoading(true);
       setBannerError(null);
       try {
-        const res = await axios.get(`${API_BASE_URL}/banner`);
-        setBanners(res.data.data || []);
+        const ads = await fetchAdvertisements();
+        setBanners(ads);
       } catch (err: any) {
         setBannerError("Failed to load banners");
       } finally {
@@ -50,7 +53,7 @@ const WelcomePage: React.FC<WelcomePageProps> = ({ onLogin, partnerCode }) => {
       }
     };
     fetchBanners();
-  }, [API_BASE_URL]);
+  }, []);
 
   useEffect(() => {
     if (banners.length === 0) return;
@@ -165,7 +168,7 @@ const WelcomePage: React.FC<WelcomePageProps> = ({ onLogin, partnerCode }) => {
                     Loading...
                   </span>
                 ) : (
-                  "Get in to Smart MiniApp"
+                  "Log in to Smart MiniApp"
                 )}
               </button>
             )}
@@ -186,22 +189,53 @@ const WelcomePage: React.FC<WelcomePageProps> = ({ onLogin, partnerCode }) => {
                   <a
                     key={banners[currentBanner]._id}
                     href={
-                      banners[currentBanner].Link.startsWith("http")
-                        ? banners[currentBanner].Link
-                        : `https://${banners[currentBanner].Link}`
+                      (
+                        banners[currentBanner].redirectUrl ||
+                        banners[currentBanner].Link ||
+                        ""
+                      ).startsWith("http")
+                        ? banners[currentBanner].redirectUrl ||
+                          banners[currentBanner].Link
+                        : `https://${
+                            banners[currentBanner].redirectUrl ||
+                            banners[currentBanner].Link
+                          }`
                     }
                     target="_blank"
                     rel="noopener noreferrer"
                     className="transition-all duration-700 ease-in-out w-full flex flex-col items-center"
+                    onClick={() => {
+                      // Track click event
+                      if (banners[currentBanner]._id) {
+                        trackAdClick(banners[currentBanner]._id).catch(
+                          () => {}
+                        );
+                      }
+                    }}
                   >
                     <img
-                      src={banners[currentBanner].Banner}
-                      alt={banners[currentBanner].Title}
+                      src={
+                        banners[currentBanner].imageUrl ||
+                        banners[currentBanner].Banner
+                      }
+                      alt={
+                        banners[currentBanner].title ||
+                        banners[currentBanner].Title
+                      }
                       className="rounded-lg shadow-lg object-cover"
                       style={{
                         width: buttonWidth ? `${buttonWidth}px` : undefined,
                         height: buttonWidth ? `${buttonWidth}px` : undefined,
                         maxWidth: "100%",
+                        objectFit: "cover",
+                      }}
+                      onLoad={() => {
+                        // Track display/impression event
+                        if (banners[currentBanner]._id) {
+                          trackAdDisplay(banners[currentBanner]._id).catch(
+                            () => {}
+                          );
+                        }
                       }}
                     />
                   </a>
