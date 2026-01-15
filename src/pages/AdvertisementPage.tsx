@@ -69,10 +69,15 @@ interface PaymentHistory {
   createdAt: string;
 }
 
-type TabType = "buy-credits" | "create-ad" | "my-ads" | "payment-history";
+type TabType =
+  | "dashboard"
+  | "buy-credits"
+  | "create-ad"
+  | "my-ads"
+  | "payment-history";
 
 export default function AdvertisementPage() {
-  const [activeTab, setActiveTab] = useState<TabType>("create-ad");
+  const [activeTab, setActiveTab] = useState<TabType>("dashboard");
   const [packages, setPackages] = useState<Package[]>([]);
   const [credits, setCredits] = useState<CreditBalance | null>(null);
   const [ads, setAds] = useState<Advertisement[]>([]);
@@ -81,6 +86,11 @@ export default function AdvertisementPage() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Dashboard state
+  const [dashboardData, setDashboardData] = useState<any>(null);
+  const [dashboardLoading, setDashboardLoading] = useState(false);
+  const [dashboardError, setDashboardError] = useState<string | null>(null);
 
   // Buy credits state
   const [selectedPackage, setSelectedPackage] = useState<Package | null>(null);
@@ -323,6 +333,37 @@ export default function AdvertisementPage() {
         }
       };
       fetchPaymentHistory();
+    }
+  }, [activeTab]);
+
+  // Fetch dashboard stats
+  useEffect(() => {
+    if (activeTab === "dashboard") {
+      const fetchDashboard = async () => {
+        setDashboardLoading(true);
+        setDashboardError(null);
+        try {
+          const res = await axios.get(
+            `${API_BASE_URL}/api/v1/advertisement/my-stats`,
+            {
+              headers: getAuthHeaders(),
+            }
+          );
+          if (res.data?.success) {
+            setDashboardData(res.data?.data);
+          } else {
+            setDashboardError("Failed to load dashboard data");
+          }
+        } catch (err: any) {
+          const errorMessage =
+            err?.response?.data?.message || "Failed to load dashboard stats";
+          setDashboardError(errorMessage);
+          console.error("Error fetching dashboard stats:", err);
+        } finally {
+          setDashboardLoading(false);
+        }
+      };
+      fetchDashboard();
     }
   }, [activeTab]);
 
@@ -576,10 +617,19 @@ export default function AdvertisementPage() {
               <div className="absolute top-full right-0 mt-2 bg-white rounded-lg shadow-lg z-50 min-w-max">
                 <button
                   onClick={() => {
-                    setActiveTab("create-ad");
+                    setActiveTab("dashboard");
                     setMenuOpen(false);
                   }}
                   className="block w-full text-left px-4 py-2 text-gray-800 hover:bg-blue-100 transition first:rounded-t-lg"
+                >
+                  Dashboard
+                </button>
+                <button
+                  onClick={() => {
+                    setActiveTab("create-ad");
+                    setMenuOpen(false);
+                  }}
+                  className="block w-full text-left px-4 py-2 text-gray-800 hover:bg-blue-100 transition"
                 >
                   Create Ad
                 </button>
@@ -614,34 +664,16 @@ export default function AdvertisementPage() {
             )}
           </div>
 
-          {/* Credit Balance Card */}
-          {credits && (
-            <div className="bg-gradient-to-r from-[#007cb6] to-[#005f8e] text-white rounded-lg p-4 mb-6 shadow-md">
-              <div className="grid grid-cols-3 gap-2 text-center">
-                <div>
-                  <p className="text-xs opacity-80">Total Credits</p>
-                  <p className="text-lg font-bold">{credits.totalCredits}</p>
-                </div>
-                <div>
-                  <p className="text-xs opacity-80">Used</p>
-                  <p className="text-lg font-bold">{credits.usedCredits}</p>
-                </div>
-                <div>
-                  <p className="text-xs opacity-80">Available</p>
-                  <p className="text-lg font-bold">
-                    {credits.availableCredits || credits.balanceCredits}
-                  </p>
-                </div>
-              </div>
-            </div>
-          )}
+          {/* Credit Balance Card - REMOVED as it's now shown in dashboard */}
 
           {/* Tab Navigation */}
 
           {/* Section Title */}
           <div className="mb-6">
             <h2 className="text-xl text-center font-bold text-gray-800">
-              {activeTab === "create-ad"
+              {activeTab === "dashboard"
+                ? "Advertisement Dashboard"
+                : activeTab === "create-ad"
                 ? "Create Advertisement"
                 : activeTab === "my-ads"
                 ? "My Advertisements"
@@ -661,6 +693,434 @@ export default function AdvertisementPage() {
             <div className="text-center py-8">
               <p className="text-gray-600">{i18n.t("loading")}</p>
             </div>
+          )}
+
+          {/* Dashboard Tab */}
+          {activeTab === "dashboard" && (
+            <>
+              {dashboardError && (
+                <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
+                  {dashboardError}
+                </div>
+              )}
+
+              {dashboardLoading ? (
+                <div className="text-center py-8">
+                  <p className="text-gray-600">{i18n.t("loading")}</p>
+                </div>
+              ) : dashboardData ? (
+                <div className="space-y-6">
+                  {/* Credits Section */}
+                  {dashboardData.credits && (
+                    <div className="bg-white rounded-lg shadow-md p-6">
+                      <h3 className="text-lg font-bold text-gray-800 mb-4">
+                        Credits Overview
+                      </h3>
+                      <div className="grid grid-cols-3 gap-4">
+                        <div className="bg-gradient-to-br from-blue-50 to-blue-100 p-4 rounded-lg border border-blue-200">
+                          <p className="text-xs text-gray-600 mb-1">
+                            Total Credits
+                          </p>
+                          <p className="text-2xl font-bold text-blue-600">
+                            {dashboardData.credits.total}
+                          </p>
+                        </div>
+                        <div className="bg-gradient-to-br from-orange-50 to-orange-100 p-4 rounded-lg border border-orange-200">
+                          <p className="text-xs text-gray-600 mb-1">Used</p>
+                          <p className="text-2xl font-bold text-orange-600">
+                            {dashboardData.credits.used}
+                          </p>
+                        </div>
+                        <div className="bg-gradient-to-br from-green-50 to-green-100 p-4 rounded-lg border border-green-200">
+                          <p className="text-xs text-gray-600 mb-1">Balance</p>
+                          <p className="text-2xl font-bold text-green-600">
+                            {dashboardData.credits.balance}
+                          </p>
+                        </div>
+                      </div>
+
+                      {/* Credit Rates */}
+                      {dashboardData.rates && (
+                        <div className="mt-4 pt-4 border-t">
+                          <p className="text-sm font-semibold text-gray-700 mb-2">
+                            Credit Rates
+                          </p>
+                          <div className="grid grid-cols-2 gap-2 text-sm">
+                            <div className="bg-gray-50 p-2 rounded">
+                              <span className="text-gray-600">
+                                Home Banner:
+                              </span>
+                              <span className="font-bold text-gray-800 ml-2">
+                                1 credit = {dashboardData.rates.HOME_BANNER}{" "}
+                                displays
+                              </span>
+                            </div>
+                            <div className="bg-gray-50 p-2 rounded">
+                              <span className="text-gray-600">
+                                Bottom Circle:
+                              </span>
+                              <span className="font-bold text-gray-800 ml-2">
+                                1 credit = {dashboardData.rates.BOTTOM_CIRCLE}{" "}
+                                displays
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Transaction History */}
+                      {dashboardData.credits.transactions &&
+                        dashboardData.credits.transactions.length > 0 && (
+                          <div className="mt-4 pt-4 border-t">
+                            <p className="text-sm font-semibold text-gray-700 mb-3">
+                              Recent Transactions
+                            </p>
+                            <div className="space-y-2 max-h-40 overflow-y-auto">
+                              {dashboardData.credits.transactions.map(
+                                (tx: any, idx: number) => (
+                                  <div
+                                    key={idx}
+                                    className="bg-gray-50 p-3 rounded text-xs border border-gray-200"
+                                  >
+                                    <div className="flex justify-between mb-1">
+                                      <span className="font-semibold text-gray-800">
+                                        +{tx.creditsAdded} Credits
+                                      </span>
+                                      <span className="text-green-600 font-bold">
+                                        {tx.status}
+                                      </span>
+                                    </div>
+                                    <div className="flex justify-between text-gray-600">
+                                      <span>ID: {tx.transactionId}</span>
+                                      <span>${tx.amountUSDT} USDT</span>
+                                    </div>
+                                    <div className="text-gray-500 mt-1">
+                                      {new Date(
+                                        tx.transactionDate
+                                      ).toLocaleDateString()}
+                                    </div>
+                                  </div>
+                                )
+                              )}
+                            </div>
+                          </div>
+                        )}
+                    </div>
+                  )}
+
+                  {/* Display Positions Section */}
+                  {dashboardData.positions && (
+                    <div className="bg-white rounded-lg shadow-md p-6">
+                      <h3 className="text-lg font-bold text-gray-800 mb-4">
+                        Ad Positions Performance
+                      </h3>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        {/* Start Page */}
+                        {dashboardData.positions.startPage && (
+                          <div className="border border-gray-200 rounded-lg p-4 bg-gradient-to-br from-gray-50 to-white">
+                            <h4 className="font-semibold text-gray-800 mb-3 flex items-center gap-2">
+                              <span className="text-lg">📱</span> Home Banner
+                              (Start Page)
+                            </h4>
+                            <div className="space-y-2 text-sm">
+                              <div className="flex justify-between">
+                                <span className="text-gray-600">
+                                  Credits Allocated:
+                                </span>
+                                <span className="font-semibold">
+                                  {
+                                    dashboardData.positions.startPage
+                                      .creditAllocated
+                                  }
+                                </span>
+                              </div>
+                              <div className="flex justify-between">
+                                <span className="text-gray-600">
+                                  Credits Used:
+                                </span>
+                                <span className="font-semibold text-orange-600">
+                                  {dashboardData.positions.startPage.creditUsed}
+                                </span>
+                              </div>
+                              {dashboardData.positions.startPage
+                                .creditAllocated > 0 && (
+                                <div className="w-full bg-gray-200 rounded-full h-2">
+                                  <div
+                                    className="bg-orange-500 h-2 rounded-full"
+                                    style={{
+                                      width: `${
+                                        (dashboardData.positions.startPage
+                                          .creditUsed /
+                                          dashboardData.positions.startPage
+                                            .creditAllocated) *
+                                        100
+                                      }%`,
+                                    }}
+                                  ></div>
+                                </div>
+                              )}
+
+                              <div className="flex justify-between pt-2">
+                                <span className="text-gray-600">
+                                  Display Capacity:
+                                </span>
+                                <span className="font-semibold">
+                                  {dashboardData.positions.startPage
+                                    .displayCapacity
+                                    ? dashboardData.positions.startPage.displayCapacity.toLocaleString()
+                                    : 0}
+                                </span>
+                              </div>
+                              <div className="flex justify-between">
+                                <span className="text-gray-600">
+                                  Displays Purchased:
+                                </span>
+                                <span className="font-semibold">
+                                  {dashboardData.positions.startPage
+                                    .displayTotal
+                                    ? dashboardData.positions.startPage.displayTotal.toLocaleString()
+                                    : 0}
+                                </span>
+                              </div>
+                              <div className="flex justify-between">
+                                <span className="text-gray-600">
+                                  Displays Used:
+                                </span>
+                                <span className="font-semibold text-green-600">
+                                  {dashboardData.positions.startPage.displayUsed
+                                    ? dashboardData.positions.startPage.displayUsed.toLocaleString()
+                                    : 0}
+                                </span>
+                              </div>
+                              {dashboardData.positions.startPage.displayTotal >
+                                0 && (
+                                <div className="w-full bg-gray-200 rounded-full h-2">
+                                  <div
+                                    className="bg-green-500 h-2 rounded-full"
+                                    style={{
+                                      width: `${
+                                        (dashboardData.positions.startPage
+                                          .displayUsed /
+                                          dashboardData.positions.startPage
+                                            .displayTotal) *
+                                        100
+                                      }%`,
+                                    }}
+                                  ></div>
+                                </div>
+                              )}
+
+                              <div className="pt-3 border-t mt-3">
+                                <div className="flex justify-between text-xs mb-1">
+                                  <span className="text-gray-600">
+                                    Active Ads:
+                                  </span>
+                                  <span className="font-bold text-blue-600">
+                                    {
+                                      dashboardData.positions.startPage
+                                        .activeAds
+                                    }
+                                  </span>
+                                </div>
+                                <div className="flex justify-between text-xs">
+                                  <span className="text-gray-600">
+                                    Total Ads:
+                                  </span>
+                                  <span className="font-bold">
+                                    {dashboardData.positions.startPage.totalAds}
+                                  </span>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Bottom Circle */}
+                        {dashboardData.positions.bottomCircle && (
+                          <div className="border border-gray-200 rounded-lg p-4 bg-gradient-to-br from-gray-50 to-white">
+                            <h4 className="font-semibold text-gray-800 mb-3 flex items-center gap-2">
+                              <span className="text-lg">⭕</span> Bottom Circle
+                            </h4>
+                            <div className="space-y-2 text-sm">
+                              <div className="flex justify-between">
+                                <span className="text-gray-600">
+                                  Credits Allocated:
+                                </span>
+                                <span className="font-semibold">
+                                  {
+                                    dashboardData.positions.bottomCircle
+                                      .creditAllocated
+                                  }
+                                </span>
+                              </div>
+                              <div className="flex justify-between">
+                                <span className="text-gray-600">
+                                  Credits Used:
+                                </span>
+                                <span className="font-semibold text-orange-600">
+                                  {
+                                    dashboardData.positions.bottomCircle
+                                      .creditUsed
+                                  }
+                                </span>
+                              </div>
+                              {dashboardData.positions.bottomCircle
+                                .creditAllocated > 0 && (
+                                <div className="w-full bg-gray-200 rounded-full h-2">
+                                  <div
+                                    className="bg-orange-500 h-2 rounded-full"
+                                    style={{
+                                      width: `${
+                                        (dashboardData.positions.bottomCircle
+                                          .creditUsed /
+                                          dashboardData.positions.bottomCircle
+                                            .creditAllocated) *
+                                        100
+                                      }%`,
+                                    }}
+                                  ></div>
+                                </div>
+                              )}
+
+                              <div className="flex justify-between pt-2">
+                                <span className="text-gray-600">
+                                  Display Capacity:
+                                </span>
+                                <span className="font-semibold">
+                                  {dashboardData.positions.bottomCircle
+                                    .displayCapacity
+                                    ? dashboardData.positions.bottomCircle.displayCapacity.toLocaleString()
+                                    : 0}
+                                </span>
+                              </div>
+                              <div className="flex justify-between">
+                                <span className="text-gray-600">
+                                  Displays Purchased:
+                                </span>
+                                <span className="font-semibold">
+                                  {dashboardData.positions.bottomCircle
+                                    .displayTotal
+                                    ? dashboardData.positions.bottomCircle.displayTotal.toLocaleString()
+                                    : 0}
+                                </span>
+                              </div>
+                              <div className="flex justify-between">
+                                <span className="text-gray-600">
+                                  Displays Used:
+                                </span>
+                                <span className="font-semibold text-green-600">
+                                  {dashboardData.positions.bottomCircle
+                                    .displayUsed
+                                    ? dashboardData.positions.bottomCircle.displayUsed.toLocaleString()
+                                    : 0}
+                                </span>
+                              </div>
+                              {dashboardData.positions.bottomCircle
+                                .displayTotal > 0 && (
+                                <div className="w-full bg-gray-200 rounded-full h-2">
+                                  <div
+                                    className="bg-green-500 h-2 rounded-full"
+                                    style={{
+                                      width: `${
+                                        (dashboardData.positions.bottomCircle
+                                          .displayUsed /
+                                          dashboardData.positions.bottomCircle
+                                            .displayTotal) *
+                                        100
+                                      }%`,
+                                    }}
+                                  ></div>
+                                </div>
+                              )}
+
+                              <div className="pt-3 border-t mt-3">
+                                <div className="flex justify-between text-xs mb-1">
+                                  <span className="text-gray-600">
+                                    Active Ads:
+                                  </span>
+                                  <span className="font-bold text-blue-600">
+                                    {
+                                      dashboardData.positions.bottomCircle
+                                        .activeAds
+                                    }
+                                  </span>
+                                </div>
+                                <div className="flex justify-between text-xs">
+                                  <span className="text-gray-600">
+                                    Total Ads:
+                                  </span>
+                                  <span className="font-bold">
+                                    {
+                                      dashboardData.positions.bottomCircle
+                                        .totalAds
+                                    }
+                                  </span>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Summary Section */}
+                  {dashboardData.summary && (
+                    <div className="bg-white rounded-lg shadow-md p-6">
+                      <h3 className="text-lg font-bold text-gray-800 mb-4">
+                        Overall Summary
+                      </h3>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
+                          <p className="text-xs text-gray-600 mb-1">
+                            Total Display Capacity
+                          </p>
+                          <p className="text-2xl font-bold text-blue-600">
+                            {dashboardData.summary.totalDisplaysCapacity
+                              ? dashboardData.summary.totalDisplaysCapacity.toLocaleString()
+                              : 0}
+                          </p>
+                        </div>
+                        <div className="bg-purple-50 p-4 rounded-lg border border-purple-200">
+                          <p className="text-xs text-gray-600 mb-1">
+                            Total Displays Purchased
+                          </p>
+                          <p className="text-2xl font-bold text-purple-600">
+                            {dashboardData.summary.totalDisplaysPurchased
+                              ? dashboardData.summary.totalDisplaysPurchased.toLocaleString()
+                              : 0}
+                          </p>
+                        </div>
+                        <div className="bg-orange-50 p-4 rounded-lg border border-orange-200">
+                          <p className="text-xs text-gray-600 mb-1">
+                            Total Displays Used
+                          </p>
+                          <p className="text-2xl font-bold text-orange-600">
+                            {dashboardData.summary.totalDisplaysUsed
+                              ? dashboardData.summary.totalDisplaysUsed.toLocaleString()
+                              : 0}
+                          </p>
+                        </div>
+                        <div className="bg-green-50 p-4 rounded-lg border border-green-200">
+                          <p className="text-xs text-gray-600 mb-1">
+                            Displays Remaining
+                          </p>
+                          <p className="text-2xl font-bold text-green-600">
+                            {dashboardData.summary.totalDisplaysRemaining
+                              ? dashboardData.summary.totalDisplaysRemaining.toLocaleString()
+                              : 0}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <div className="text-center py-8">
+                  <p className="text-gray-600">No dashboard data available</p>
+                </div>
+              )}
+            </>
           )}
 
           {/* Buy Credits Tab */}
