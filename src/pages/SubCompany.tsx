@@ -581,417 +581,501 @@ export default function SubCompanyPage() {
                 onChange={handleEditInput}
                 disabled={editLoading}
               />
-              {/* File Upload Section for 3 files */}
-              <div className="w-full mb-4">
-                <div className="flex flex-col md:flex-row gap-4">
-                  {/* File 1 */}
-                  <div
-                    className={`md:w-1/3 ${
-                      activeFileTab !== 1
-                        ? "hidden md:block opacity-60"
-                        : "block"
-                    }`}
-                  >
-                    <div className="w-full rounded-xl flex items-center justify-center mb-2 h-48 relative">
-                      {filePreview1 || editProfile?.file1_url ? (
-                        <>
-                          <div
-                            className="w-full h-48 cursor-pointer"
-                            onClick={() =>
-                              document
-                                .getElementById("company-file-input-1")
-                                ?.click()
-                            }
-                          >
-                            {file1?.type.startsWith("video/") ||
-                            filePreview1?.endsWith(".mp4") ||
-                            editProfile?.file1_url?.endsWith(".mp4") ? (
-                              <VideoPlayer
-                                src={
-                                  (filePreview1 ||
-                                    editProfile.file1_url) as string
-                                }
-                                loop
-                                playsInline
-                                className="w-full h-48 object-cover rounded-xl"
-                              />
-                            ) : (
-                              <img
-                                src={filePreview1 || editProfile.file1_url}
-                                alt="Preview 1"
-                                className="w-full h-48 object-cover rounded-xl"
-                              />
-                            )}
-                          </div>
-                          <button
-                            type="button"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setFile1(null);
-                              setFilePreview1(null);
-                              setEditProfile({ ...editProfile, file1_url: "" });
-                              const el = document.getElementById(
-                                "company-file-input-1"
-                              ) as HTMLInputElement | null;
-                              if (el) el.value = "";
-                            }}
-                            className="absolute top-2 right-2 bg-red-500 text-white rounded-full w-8 h-8 flex items-center justify-center hover:bg-red-600 transition-colors shadow-lg"
-                            title="Delete image"
-                          >
-                            ✕
-                          </button>
-                        </>
-                      ) : (
+              {/* File Upload Section */}
+              {profile?.membertype === "premium" ? (
+                /* Premium User: Single Video Upload */
+                <div className="w-full mb-4">
+                  <div className="w-full rounded-xl flex items-center justify-center mb-2 h-48 relative">
+                    {filePreview1 || editProfile?.file1_url ? (
+                      <>
                         <div
-                          className="w-full h-48 bg-gray-300 rounded-xl flex items-center justify-center cursor-pointer"
+                          className="w-full h-48 cursor-pointer"
                           onClick={() =>
                             document
                               .getElementById("company-file-input-1")
                               ?.click()
                           }
                         >
-                          <div className="text-gray-600 text-center text-sm font-semibold">
-                            File 1
-                          </div>
+                          {file1?.type.startsWith("video/") ||
+                          filePreview1?.endsWith(".mp4") ||
+                          editProfile?.file1_url?.endsWith(".mp4") ? (
+                            <VideoPlayer
+                              src={
+                                (filePreview1 ||
+                                  editProfile.file1_url) as string
+                              }
+                              loop
+                              playsInline
+                              className="w-full h-48 object-cover rounded-xl"
+                            />
+                          ) : (
+                            <div className="w-full h-48 flex items-center justify-center bg-gray-300 rounded-xl text-gray-600 text-center p-4">
+                              Premium members can only upload videos
+                            </div>
+                          )}
                         </div>
-                      )}
-                    </div>
-                    {/* Numeric tabs */}
-                    <div className="flex justify-center gap-3 my-3">
-                      {[1, 2, 3].map((i) => (
                         <button
-                          key={i}
                           type="button"
-                          aria-pressed={activeFileTab === i}
-                          onClick={() => setActiveFileTab(i)}
-                          className={`w-10 h-10 rounded-full border-2 flex items-center justify-center font-semibold transition-colors ${
-                            activeFileTab === i
-                              ? "bg-black text-white border-black"
-                              : "bg-white text-black border-gray-300"
-                          }`}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setFile1(null);
+                            setFilePreview1(null);
+                            setEditProfile({ ...editProfile, file1_url: "" });
+                            const el = document.getElementById(
+                              "company-file-input-1"
+                            ) as HTMLInputElement | null;
+                            if (el) el.value = "";
+                          }}
+                          className="absolute top-2 right-2 bg-red-500 text-white rounded-full w-8 h-8 flex items-center justify-center hover:bg-red-600 transition-colors shadow-lg"
+                          title="Delete video"
                         >
-                          {i}
+                          ✕
                         </button>
-                      ))}
-                    </div>
-                    <input
-                      id="company-file-input-1"
-                      type="file"
-                      accept="image/*,video/*"
-                      onChange={(e) => handleEditFile(1, e)}
-                      disabled={editLoading}
-                      className="hidden"
-                    />
-                    <div className="flex gap-4 justify-center">
-                      <button
-                        type="button"
-                        className="bg-black text-white px-6 py-2 rounded-lg font-medium hover:bg-gray-700 transition-colors"
+                      </>
+                    ) : (
+                      <div
+                        className="w-full h-48 bg-[#01a2e9] rounded-xl flex items-center justify-center cursor-pointer"
                         onClick={() =>
                           document
                             .getElementById("company-file-input-1")
                             ?.click()
                         }
-                        disabled={editLoading}
                       >
-                        Browse
-                      </button>
-                      <button
-                        type="button"
-                        className="bg-black text-white px-6 py-2 rounded-lg font-medium hover:bg-gray-700 transition-colors"
-                        onClick={() => {
-                          setFile1(null);
-                          setFilePreview1(
-                            companyProfile?.file1 || companyProfile?.image
-                              ? formatImageUrl(
-                                  companyProfile.file1 || companyProfile.image
-                                )
-                              : null
-                          );
-                          const el = document.getElementById(
-                            "company-file-input-1"
-                          ) as HTMLInputElement | null;
-                          if (el) el.value = "";
-                        }}
-                        disabled={editLoading}
-                      >
-                        Cancel
-                      </button>
-                    </div>
+                        <div className="text-white text-center font-bold">
+                          <div className="text-lg">
+                            Premium Member
+                            <br />
+                            Upload 1 Minute Video
+                          </div>
+                          <div className="text-yellow-300 mt-2">
+                            Video Only (MP4)
+                          </div>
+                        </div>
+                      </div>
+                    )}
                   </div>
-
-                  {/* File 2 */}
-                  <div
-                    className={`md:w-1/3 ${
-                      activeFileTab !== 2
-                        ? "hidden md:block opacity-60"
-                        : "block"
-                    }`}
-                  >
-                    <div className="w-full rounded-xl flex items-center justify-center mb-2 h-48 relative">
-                      {filePreview2 || editProfile?.file2_url ? (
-                        <>
+                  <input
+                    id="company-file-input-1"
+                    type="file"
+                    accept="video/mp4"
+                    onChange={(e) => handleEditFile(1, e)}
+                    disabled={editLoading}
+                    className="hidden"
+                  />
+                  <div className="flex gap-4 justify-center">
+                    <button
+                      type="button"
+                      className="bg-black text-white px-6 py-2 rounded-lg font-medium hover:bg-gray-700 transition-colors"
+                      onClick={() =>
+                        document.getElementById("company-file-input-1")?.click()
+                      }
+                      disabled={editLoading}
+                    >
+                      Browse Video
+                    </button>
+                    <button
+                      type="button"
+                      className="bg-black text-white px-6 py-2 rounded-lg font-medium hover:bg-gray-700 transition-colors"
+                      onClick={() => {
+                        setFile1(null);
+                        setFilePreview1(
+                          companyProfile?.file1 || companyProfile?.image
+                            ? formatImageUrl(
+                                companyProfile.file1 || companyProfile.image
+                              )
+                            : null
+                        );
+                        const el = document.getElementById(
+                          "company-file-input-1"
+                        ) as HTMLInputElement | null;
+                        if (el) el.value = "";
+                      }}
+                      disabled={editLoading}
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                /* Non-Premium User: Three Image Uploads */
+                <div className="w-full mb-4">
+                  <div className="flex flex-col md:flex-row gap-4">
+                    {/* File 1 */}
+                    <div
+                      className={`md:w-1/3 ${
+                        activeFileTab !== 1
+                          ? "hidden md:block opacity-60"
+                          : "block"
+                      }`}
+                    >
+                      <div className="w-full rounded-xl flex items-center justify-center mb-2 h-48 relative">
+                        {filePreview1 || editProfile?.file1_url ? (
+                          <>
+                            <div
+                              className="w-full h-48 cursor-pointer"
+                              onClick={() =>
+                                document
+                                  .getElementById("company-file-input-1")
+                                  ?.click()
+                              }
+                            >
+                              <img
+                                src={filePreview1 || editProfile.file1_url}
+                                alt="Preview 1"
+                                className="w-full h-48 object-cover rounded-xl"
+                              />
+                            </div>
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setFile1(null);
+                                setFilePreview1(null);
+                                setEditProfile({
+                                  ...editProfile,
+                                  file1_url: "",
+                                });
+                                const el = document.getElementById(
+                                  "company-file-input-1"
+                                ) as HTMLInputElement | null;
+                                if (el) el.value = "";
+                              }}
+                              className="absolute top-2 right-2 bg-red-500 text-white rounded-full w-8 h-8 flex items-center justify-center hover:bg-red-600 transition-colors shadow-lg"
+                              title="Delete image"
+                            >
+                              ✕
+                            </button>
+                          </>
+                        ) : (
                           <div
-                            className="w-full h-48 cursor-pointer"
+                            className="w-full h-48 bg-gray-300 rounded-xl flex items-center justify-center cursor-pointer"
+                            onClick={() =>
+                              document
+                                .getElementById("company-file-input-1")
+                                ?.click()
+                            }
+                          >
+                            <div className="text-gray-600 text-center text-sm font-semibold">
+                              File 1
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                      {/* Numeric tabs */}
+                      <div className="flex justify-center gap-3 my-3">
+                        {[1, 2, 3].map((i) => (
+                          <button
+                            key={i}
+                            type="button"
+                            aria-pressed={activeFileTab === i}
+                            onClick={() => setActiveFileTab(i)}
+                            className={`w-10 h-10 rounded-full border-2 flex items-center justify-center font-semibold transition-colors ${
+                              activeFileTab === i
+                                ? "bg-black text-white border-black"
+                                : "bg-white text-black border-gray-300"
+                            }`}
+                          >
+                            {i}
+                          </button>
+                        ))}
+                      </div>
+                      <input
+                        id="company-file-input-1"
+                        type="file"
+                        accept="image/*"
+                        onChange={(e) => handleEditFile(1, e)}
+                        disabled={editLoading}
+                        className="hidden"
+                      />
+                      <div className="flex gap-4 justify-center">
+                        <button
+                          type="button"
+                          className="bg-black text-white px-6 py-2 rounded-lg font-medium hover:bg-gray-700 transition-colors"
+                          onClick={() =>
+                            document
+                              .getElementById("company-file-input-1")
+                              ?.click()
+                          }
+                          disabled={editLoading}
+                        >
+                          Browse
+                        </button>
+                        <button
+                          type="button"
+                          className="bg-black text-white px-6 py-2 rounded-lg font-medium hover:bg-gray-700 transition-colors"
+                          onClick={() => {
+                            setFile1(null);
+                            setFilePreview1(
+                              companyProfile?.file1 || companyProfile?.image
+                                ? formatImageUrl(
+                                    companyProfile.file1 || companyProfile.image
+                                  )
+                                : null
+                            );
+                            const el = document.getElementById(
+                              "company-file-input-1"
+                            ) as HTMLInputElement | null;
+                            if (el) el.value = "";
+                          }}
+                          disabled={editLoading}
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* File 2 */}
+                    <div
+                      className={`md:w-1/3 ${
+                        activeFileTab !== 2
+                          ? "hidden md:block opacity-60"
+                          : "block"
+                      }`}
+                    >
+                      <div className="w-full rounded-xl flex items-center justify-center mb-2 h-48 relative">
+                        {filePreview2 || editProfile?.file2_url ? (
+                          <>
+                            <div
+                              className="w-full h-48 cursor-pointer"
+                              onClick={() =>
+                                document
+                                  .getElementById("company-file-input-2")
+                                  ?.click()
+                              }
+                            >
+                              <img
+                                src={filePreview2 || editProfile.file2_url}
+                                alt="Preview 2"
+                                className="w-full h-48 object-cover rounded-xl"
+                              />
+                            </div>
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setFile2(null);
+                                setFilePreview2(null);
+                                setEditProfile({
+                                  ...editProfile,
+                                  file2_url: "",
+                                });
+                                const el = document.getElementById(
+                                  "company-file-input-2"
+                                ) as HTMLInputElement | null;
+                                if (el) el.value = "";
+                              }}
+                              className="absolute top-2 right-2 bg-red-500 text-white rounded-full w-8 h-8 flex items-center justify-center hover:bg-red-600 transition-colors shadow-lg"
+                              title="Delete image"
+                            >
+                              ✕
+                            </button>
+                          </>
+                        ) : (
+                          <div
+                            className="w-full h-48 bg-gray-300 rounded-xl flex items-center justify-center cursor-pointer"
                             onClick={() =>
                               document
                                 .getElementById("company-file-input-2")
                                 ?.click()
                             }
                           >
-                            {file2?.type.startsWith("video/") ||
-                            filePreview2?.endsWith(".mp4") ||
-                            editProfile?.file2_url?.endsWith(".mp4") ? (
-                              <VideoPlayer
-                                src={
-                                  (filePreview2 ||
-                                    editProfile.file2_url) as string
-                                }
-                                loop
-                                playsInline
-                                className="w-full h-48 object-cover rounded-xl"
-                              />
-                            ) : (
-                              <img
-                                src={filePreview2 || editProfile.file2_url}
-                                alt="Preview 2"
-                                className="w-full h-48 object-cover rounded-xl"
-                              />
-                            )}
+                            <div className="text-gray-600 text-center text-sm font-semibold">
+                              File 2
+                            </div>
                           </div>
+                        )}
+                      </div>
+                      {/* Numeric tabs */}
+                      <div className="flex justify-center gap-3 my-3">
+                        {[1, 2, 3].map((i) => (
                           <button
+                            key={i}
                             type="button"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setFile2(null);
-                              setFilePreview2(null);
-                              setEditProfile({ ...editProfile, file2_url: "" });
-                              const el = document.getElementById(
-                                "company-file-input-2"
-                              ) as HTMLInputElement | null;
-                              if (el) el.value = "";
-                            }}
-                            className="absolute top-2 right-2 bg-red-500 text-white rounded-full w-8 h-8 flex items-center justify-center hover:bg-red-600 transition-colors shadow-lg"
-                            title="Delete image"
+                            aria-pressed={activeFileTab === i}
+                            onClick={() => setActiveFileTab(i)}
+                            className={`w-10 h-10 rounded-full border-2 flex items-center justify-center font-semibold transition-colors ${
+                              activeFileTab === i
+                                ? "bg-black text-white border-black"
+                                : "bg-white text-black border-gray-300"
+                            }`}
                           >
-                            ✕
+                            {i}
                           </button>
-                        </>
-                      ) : (
-                        <div
-                          className="w-full h-48 bg-gray-300 rounded-xl flex items-center justify-center cursor-pointer"
+                        ))}
+                      </div>
+                      <input
+                        id="company-file-input-2"
+                        type="file"
+                        accept="image/*"
+                        onChange={(e) => handleEditFile(2, e)}
+                        disabled={editLoading}
+                        className="hidden"
+                      />
+                      <div className="flex gap-4 justify-center">
+                        <button
+                          type="button"
+                          className="bg-black text-white px-6 py-2 rounded-lg font-medium hover:bg-gray-700 transition-colors"
                           onClick={() =>
                             document
                               .getElementById("company-file-input-2")
                               ?.click()
                           }
+                          disabled={editLoading}
                         >
-                          <div className="text-gray-600 text-center text-sm font-semibold">
-                            File 2
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                    {/* Numeric tabs */}
-                    <div className="flex justify-center gap-3 my-3">
-                      {[1, 2, 3].map((i) => (
-                        <button
-                          key={i}
-                          type="button"
-                          aria-pressed={activeFileTab === i}
-                          onClick={() => setActiveFileTab(i)}
-                          className={`w-10 h-10 rounded-full border-2 flex items-center justify-center font-semibold transition-colors ${
-                            activeFileTab === i
-                              ? "bg-black text-white border-black"
-                              : "bg-white text-black border-gray-300"
-                          }`}
-                        >
-                          {i}
+                          Browse
                         </button>
-                      ))}
+                        <button
+                          type="button"
+                          className="bg-black text-white px-6 py-2 rounded-lg font-medium hover:bg-gray-700 transition-colors"
+                          onClick={() => {
+                            setFile2(null);
+                            setFilePreview2(
+                              companyProfile?.file2
+                                ? formatImageUrl(companyProfile.file2)
+                                : null
+                            );
+                            const el = document.getElementById(
+                              "company-file-input-2"
+                            ) as HTMLInputElement | null;
+                            if (el) el.value = "";
+                          }}
+                          disabled={editLoading}
+                        >
+                          Cancel
+                        </button>
+                      </div>
                     </div>
-                    <input
-                      id="company-file-input-2"
-                      type="file"
-                      accept="image/*,video/*"
-                      onChange={(e) => handleEditFile(2, e)}
-                      disabled={editLoading}
-                      className="hidden"
-                    />
-                    <div className="flex gap-4 justify-center">
-                      <button
-                        type="button"
-                        className="bg-black text-white px-6 py-2 rounded-lg font-medium hover:bg-gray-700 transition-colors"
-                        onClick={() =>
-                          document
-                            .getElementById("company-file-input-2")
-                            ?.click()
-                        }
-                        disabled={editLoading}
-                      >
-                        Browse
-                      </button>
-                      <button
-                        type="button"
-                        className="bg-black text-white px-6 py-2 rounded-lg font-medium hover:bg-gray-700 transition-colors"
-                        onClick={() => {
-                          setFile2(null);
-                          setFilePreview2(
-                            companyProfile?.file2
-                              ? formatImageUrl(companyProfile.file2)
-                              : null
-                          );
-                          const el = document.getElementById(
-                            "company-file-input-2"
-                          ) as HTMLInputElement | null;
-                          if (el) el.value = "";
-                        }}
-                        disabled={editLoading}
-                      >
-                        Cancel
-                      </button>
-                    </div>
-                  </div>
 
-                  {/* File 3 */}
-                  <div
-                    className={`md:w-1/3 ${
-                      activeFileTab !== 3
-                        ? "hidden md:block opacity-60"
-                        : "block"
-                    }`}
-                  >
-                    <div className="w-full rounded-xl flex items-center justify-center mb-2 h-48 relative">
-                      {filePreview3 || editProfile?.file3_url ? (
-                        <>
+                    {/* File 3 */}
+                    <div
+                      className={`md:w-1/3 ${
+                        activeFileTab !== 3
+                          ? "hidden md:block opacity-60"
+                          : "block"
+                      }`}
+                    >
+                      <div className="w-full rounded-xl flex items-center justify-center mb-2 h-48 relative">
+                        {filePreview3 || editProfile?.file3_url ? (
+                          <>
+                            <div
+                              className="w-full h-48 cursor-pointer"
+                              onClick={() =>
+                                document
+                                  .getElementById("company-file-input-3")
+                                  ?.click()
+                              }
+                            >
+                              <img
+                                src={filePreview3 || editProfile.file3_url}
+                                alt="Preview 3"
+                                className="w-full h-48 object-cover rounded-xl"
+                              />
+                            </div>
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setFile3(null);
+                                setFilePreview3(null);
+                                setEditProfile({
+                                  ...editProfile,
+                                  file3_url: "",
+                                });
+                                const el = document.getElementById(
+                                  "company-file-input-3"
+                                ) as HTMLInputElement | null;
+                                if (el) el.value = "";
+                              }}
+                              className="absolute top-2 right-2 bg-red-500 text-white rounded-full w-8 h-8 flex items-center justify-center hover:bg-red-600 transition-colors shadow-lg"
+                              title="Delete image"
+                            >
+                              ✕
+                            </button>
+                          </>
+                        ) : (
                           <div
-                            className="w-full h-48 cursor-pointer"
+                            className="w-full h-48 bg-gray-300 rounded-xl flex items-center justify-center cursor-pointer"
                             onClick={() =>
                               document
                                 .getElementById("company-file-input-3")
                                 ?.click()
                             }
                           >
-                            {file3?.type.startsWith("video/") ||
-                            filePreview3?.endsWith(".mp4") ||
-                            editProfile?.file3_url?.endsWith(".mp4") ? (
-                              <VideoPlayer
-                                src={
-                                  (filePreview3 ||
-                                    editProfile.file3_url) as string
-                                }
-                                loop
-                                playsInline
-                                className="w-full h-48 object-cover rounded-xl"
-                              />
-                            ) : (
-                              <img
-                                src={filePreview3 || editProfile.file3_url}
-                                alt="Preview 3"
-                                className="w-full h-48 object-cover rounded-xl"
-                              />
-                            )}
+                            <div className="text-gray-600 text-center text-sm font-semibold">
+                              File 3
+                            </div>
                           </div>
+                        )}
+                      </div>
+                      {/* Numeric tabs */}
+                      <div className="flex justify-center gap-3 my-3">
+                        {[1, 2, 3].map((i) => (
                           <button
+                            key={i}
                             type="button"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setFile3(null);
-                              setFilePreview3(null);
-                              setEditProfile({ ...editProfile, file3_url: "" });
-                              const el = document.getElementById(
-                                "company-file-input-3"
-                              ) as HTMLInputElement | null;
-                              if (el) el.value = "";
-                            }}
-                            className="absolute top-2 right-2 bg-red-500 text-white rounded-full w-8 h-8 flex items-center justify-center hover:bg-red-600 transition-colors shadow-lg"
-                            title="Delete image"
+                            aria-pressed={activeFileTab === i}
+                            onClick={() => setActiveFileTab(i)}
+                            className={`w-10 h-10 rounded-full border-2 flex items-center justify-center font-semibold transition-colors ${
+                              activeFileTab === i
+                                ? "bg-black text-white border-black"
+                                : "bg-white text-black border-gray-300"
+                            }`}
                           >
-                            ✕
+                            {i}
                           </button>
-                        </>
-                      ) : (
-                        <div
-                          className="w-full h-48 bg-gray-300 rounded-xl flex items-center justify-center cursor-pointer"
+                        ))}
+                      </div>
+                      <input
+                        id="company-file-input-3"
+                        type="file"
+                        accept="image/*"
+                        onChange={(e) => handleEditFile(3, e)}
+                        disabled={editLoading}
+                        className="hidden"
+                      />
+                      <div className="flex gap-4 justify-center">
+                        <button
+                          type="button"
+                          className="bg-black text-white px-6 py-2 rounded-lg font-medium hover:bg-gray-700 transition-colors"
                           onClick={() =>
                             document
                               .getElementById("company-file-input-3")
                               ?.click()
                           }
+                          disabled={editLoading}
                         >
-                          <div className="text-gray-600 text-center text-sm font-semibold">
-                            File 3
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                    {/* Numeric tabs */}
-                    <div className="flex justify-center gap-3 my-3">
-                      {[1, 2, 3].map((i) => (
-                        <button
-                          key={i}
-                          type="button"
-                          aria-pressed={activeFileTab === i}
-                          onClick={() => setActiveFileTab(i)}
-                          className={`w-10 h-10 rounded-full border-2 flex items-center justify-center font-semibold transition-colors ${
-                            activeFileTab === i
-                              ? "bg-black text-white border-black"
-                              : "bg-white text-black border-gray-300"
-                          }`}
-                        >
-                          {i}
+                          Browse
                         </button>
-                      ))}
-                    </div>
-                    <input
-                      id="company-file-input-3"
-                      type="file"
-                      accept="image/*,video/*"
-                      onChange={(e) => handleEditFile(3, e)}
-                      disabled={editLoading}
-                      className="hidden"
-                    />
-                    <div className="flex gap-4 justify-center">
-                      <button
-                        type="button"
-                        className="bg-black text-white px-6 py-2 rounded-lg font-medium hover:bg-gray-700 transition-colors"
-                        onClick={() =>
-                          document
-                            .getElementById("company-file-input-3")
-                            ?.click()
-                        }
-                        disabled={editLoading}
-                      >
-                        Browse
-                      </button>
-                      <button
-                        type="button"
-                        className="bg-black text-white px-6 py-2 rounded-lg font-medium hover:bg-gray-700 transition-colors"
-                        onClick={() => {
-                          setFile3(null);
-                          setFilePreview3(
-                            companyProfile?.file3
-                              ? formatImageUrl(companyProfile.file3)
-                              : null
-                          );
-                          const el = document.getElementById(
-                            "company-file-input-3"
-                          ) as HTMLInputElement | null;
-                          if (el) el.value = "";
-                        }}
-                        disabled={editLoading}
-                      >
-                        Cancel
-                      </button>
+                        <button
+                          type="button"
+                          className="bg-black text-white px-6 py-2 rounded-lg font-medium hover:bg-gray-700 transition-colors"
+                          onClick={() => {
+                            setFile3(null);
+                            setFilePreview3(
+                              companyProfile?.file3
+                                ? formatImageUrl(companyProfile.file3)
+                                : null
+                            );
+                            const el = document.getElementById(
+                              "company-file-input-3"
+                            ) as HTMLInputElement | null;
+                            if (el) el.value = "";
+                          }}
+                          disabled={editLoading}
+                        >
+                          Cancel
+                        </button>
+                      </div>
                     </div>
                   </div>
                 </div>
+              )}
 
-                {editError && (
-                  <div className="text-red-500 text-sm mb-2 text-center w-full">
-                    {editError}
-                  </div>
-                )}
-              </div>
+              {editError && (
+                <div className="text-red-500 text-sm mb-2 text-center w-full">
+                  {editError}
+                </div>
+              )}
 
               <textarea
                 className="rounded-xl border-2 border-blue-200 px-4 py-2 mb-3 w-full h-48 focus:outline-none focus:ring-2 focus:ring-blue-400 bg-white placeholder-gray-500 resize-none"

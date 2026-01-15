@@ -109,12 +109,15 @@ export default function AdvertisementPage() {
   const [createAdError, setCreateAdError] = useState<string | null>(null);
   const [adForm, setAdForm] = useState({
     position: "HOME_BANNER",
-    country: "GLOBAL",
+    country: "INDIA",
     displayCount: 1000,
     redirectUrl: "",
     image: null as File | null,
   });
   const [isPublicLink, setIsPublicLink] = useState<boolean>(false);
+  const [countrySelection, setCountrySelection] = useState<
+    "global" | "country"
+  >("country");
 
   const getAuthHeaders = () => {
     const token = localStorage.getItem("token");
@@ -145,8 +148,8 @@ export default function AdvertisementPage() {
 
   // Country options (fetched) and related state
   const [countryOptions, setCountryOptions] = useState<
-    { code: string; name: string }[]
-  >([{ code: "GLOBAL", name: "Global" }]);
+    { code: string; name: string; key: string }[]
+  >([]);
   const [countriesLoading, setCountriesLoading] = useState(false);
 
   // Fetch packages, credits and available country configs
@@ -227,42 +230,32 @@ export default function AdvertisementPage() {
           setCredits({ totalCredits: 0, usedCredits: 0, balanceCredits: 0 });
         }
 
-        // Fetch country configs (active only)
+        // Fetch countries from telegramdirectory API
         try {
           setCountriesLoading(true);
           const countriesRes = await axios.get(
-            `${API_BASE_URL}/api/v1/advertisement/country-configs?active=true`,
-            { headers: getAuthHeaders() }
+            `https://telegramdirectory.org/api/getCountry`
           );
-          // Attempt to parse response shape flexibly
-          const list = countriesRes.data?.data || countriesRes.data || [];
-          const parsed = list
-            .map((it: any) => {
-              // prefer explicit code/name fields, try other fallbacks
-              const code =
-                it.country ||
-                it.code ||
-                it.iso ||
-                (it._id ? it._id : undefined);
-              const name = it.name || it.displayName || it.countryName || code;
-              return code ? { code: String(code), name: String(name) } : null;
-            })
-            .filter(Boolean);
+          // Filter out the Global option and map to our format
+          const countryList = (countriesRes.data?.CountryData || [])
+            .filter((it: any) => it.country_key !== "GLOBAL")
+            .map((it: any) => ({
+              code: it.country_id,
+              name: it.country_name,
+              key: it.country_key,
+            }));
 
-          // Always include Global option at the top
-          setCountryOptions([{ code: "GLOBAL", name: "Global" }, ...parsed]);
+          setCountryOptions(countryList);
         } catch (countriesErr: any) {
-          console.error("Failed to fetch country configs:", countriesErr);
-          // fallback: keep default GLOBAL (maybe extend to common countries)
+          console.error("Failed to fetch countries:", countriesErr);
+          // fallback countries if API fails
           setCountryOptions([
-            { code: "GLOBAL", name: "Global" },
-            { code: "US", name: "United States" },
-            { code: "IN", name: "India" },
-            { code: "GB", name: "United Kingdom" },
-            { code: "CN", name: "China" },
-            { code: "JP", name: "Japan" },
-            { code: "AU", name: "Australia" },
-            { code: "CA", name: "Canada" },
+            { code: "1", name: "Afghanistan", key: "AFGHANISTAN" },
+            { code: "2", name: "Aland Islands", key: "ALAND_ISLANDS" },
+            { code: "3", name: "Albania", key: "ALBANIA" },
+            { code: "98", name: "India", key: "INDIA" },
+            { code: "225", name: "United States", key: "UNITED_STATES" },
+            { code: "229", name: "United Kingdom", key: "UNITED_KINGDOM" },
           ]);
         } finally {
           setCountriesLoading(false);
@@ -664,8 +657,6 @@ export default function AdvertisementPage() {
             )}
           </div>
 
-          {/* Credit Balance Card - REMOVED as it's now shown in dashboard */}
-
           {/* Tab Navigation */}
 
           {/* Section Title */}
@@ -739,7 +730,7 @@ export default function AdvertisementPage() {
                         </div>
                       </div>
 
-                      {/* Credit Rates */}
+                      {/* Credit Rates
                       {dashboardData.rates && (
                         <div className="mt-4 pt-4 border-t">
                           <p className="text-sm font-semibold text-gray-700 mb-2">
@@ -750,23 +741,23 @@ export default function AdvertisementPage() {
                               <span className="text-gray-600">
                                 Home Banner:
                               </span>
-                              <span className="font-bold text-gray-800 ml-2">
+                              <p className="font-bold text-gray-800 ml-2">
                                 1 credit = {dashboardData.rates.HOME_BANNER}{" "}
                                 displays
-                              </span>
+                              </p>
                             </div>
                             <div className="bg-gray-50 p-2 rounded">
                               <span className="text-gray-600">
                                 Bottom Circle:
                               </span>
-                              <span className="font-bold text-gray-800 ml-2">
+                              <p className="font-bold text-gray-800 ml-2">
                                 1 credit = {dashboardData.rates.BOTTOM_CIRCLE}{" "}
                                 displays
-                              </span>
+                              </p>
                             </div>
                           </div>
                         </div>
-                      )}
+                      )} */}
 
                       {/* Transaction History */}
                       {dashboardData.credits.transactions &&
@@ -807,12 +798,61 @@ export default function AdvertisementPage() {
                         )}
                     </div>
                   )}
-
+                  {/* Summary Section
+                  {dashboardData.summary && (
+                    <div className="bg-white rounded-lg shadow-md p-6">
+                      <h3 className="text-lg font-bold text-gray-800 mb-4">
+                        Overall Summary
+                      </h3>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
+                          <p className="text-xs text-gray-600 mb-1">
+                            Total Display Capacity
+                          </p>
+                          <p className="text-2xl font-bold text-blue-600">
+                            {dashboardData.summary.totalDisplaysCapacity
+                              ? dashboardData.summary.totalDisplaysCapacity.toLocaleString()
+                              : 0}
+                          </p>
+                        </div>
+                        <div className="bg-purple-50 p-4 rounded-lg border border-purple-200">
+                          <p className="text-xs text-gray-600 mb-1">
+                            Total Displays Purchased
+                          </p>
+                          <p className="text-2xl font-bold text-purple-600">
+                            {dashboardData.summary.totalDisplaysPurchased
+                              ? dashboardData.summary.totalDisplaysPurchased.toLocaleString()
+                              : 0}
+                          </p>
+                        </div>
+                        <div className="bg-orange-50 p-4 rounded-lg border border-orange-200">
+                          <p className="text-xs text-gray-600 mb-1">
+                            Total Displays Used
+                          </p>
+                          <p className="text-2xl font-bold text-orange-600">
+                            {dashboardData.summary.totalDisplaysUsed
+                              ? dashboardData.summary.totalDisplaysUsed.toLocaleString()
+                              : 0}
+                          </p>
+                        </div>
+                        <div className="bg-green-50 p-4 rounded-lg border border-green-200">
+                          <p className="text-xs text-gray-600 mb-1">
+                            Displays Remaining
+                          </p>
+                          <p className="text-2xl font-bold text-green-600">
+                            {dashboardData.summary.totalDisplaysRemaining
+                              ? dashboardData.summary.totalDisplaysRemaining.toLocaleString()
+                              : 0}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  )} */}
                   {/* Display Positions Section */}
                   {dashboardData.positions && (
                     <div className="bg-white rounded-lg shadow-md p-6">
-                      <h3 className="text-lg font-bold text-gray-800 mb-4">
-                        Ad Positions Performance
+                      <h3 className="text-lg font-bold text-gray-800 mb-4 text-center">
+                        Adv Performance By Positions
                       </h3>
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         {/* Start Page */}
@@ -871,7 +911,7 @@ export default function AdvertisementPage() {
                                     : 0}
                                 </span>
                               </div>
-                              <div className="flex justify-between">
+                              {/* <div className="flex justify-between">
                                 <span className="text-gray-600">
                                   Displays Purchased:
                                 </span>
@@ -881,7 +921,7 @@ export default function AdvertisementPage() {
                                     ? dashboardData.positions.startPage.displayTotal.toLocaleString()
                                     : 0}
                                 </span>
-                              </div>
+                              </div> */}
                               <div className="flex justify-between">
                                 <span className="text-gray-600">
                                   Displays Used:
@@ -993,7 +1033,7 @@ export default function AdvertisementPage() {
                                     : 0}
                                 </span>
                               </div>
-                              <div className="flex justify-between">
+                              {/* <div className="flex justify-between">
                                 <span className="text-gray-600">
                                   Displays Purchased:
                                 </span>
@@ -1003,7 +1043,7 @@ export default function AdvertisementPage() {
                                     ? dashboardData.positions.bottomCircle.displayTotal.toLocaleString()
                                     : 0}
                                 </span>
-                              </div>
+                              </div> */}
                               <div className="flex justify-between">
                                 <span className="text-gray-600">
                                   Displays Used:
@@ -1060,57 +1100,6 @@ export default function AdvertisementPage() {
                             </div>
                           </div>
                         )}
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Summary Section */}
-                  {dashboardData.summary && (
-                    <div className="bg-white rounded-lg shadow-md p-6">
-                      <h3 className="text-lg font-bold text-gray-800 mb-4">
-                        Overall Summary
-                      </h3>
-                      <div className="grid grid-cols-2 gap-4">
-                        <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
-                          <p className="text-xs text-gray-600 mb-1">
-                            Total Display Capacity
-                          </p>
-                          <p className="text-2xl font-bold text-blue-600">
-                            {dashboardData.summary.totalDisplaysCapacity
-                              ? dashboardData.summary.totalDisplaysCapacity.toLocaleString()
-                              : 0}
-                          </p>
-                        </div>
-                        <div className="bg-purple-50 p-4 rounded-lg border border-purple-200">
-                          <p className="text-xs text-gray-600 mb-1">
-                            Total Displays Purchased
-                          </p>
-                          <p className="text-2xl font-bold text-purple-600">
-                            {dashboardData.summary.totalDisplaysPurchased
-                              ? dashboardData.summary.totalDisplaysPurchased.toLocaleString()
-                              : 0}
-                          </p>
-                        </div>
-                        <div className="bg-orange-50 p-4 rounded-lg border border-orange-200">
-                          <p className="text-xs text-gray-600 mb-1">
-                            Total Displays Used
-                          </p>
-                          <p className="text-2xl font-bold text-orange-600">
-                            {dashboardData.summary.totalDisplaysUsed
-                              ? dashboardData.summary.totalDisplaysUsed.toLocaleString()
-                              : 0}
-                          </p>
-                        </div>
-                        <div className="bg-green-50 p-4 rounded-lg border border-green-200">
-                          <p className="text-xs text-gray-600 mb-1">
-                            Displays Remaining
-                          </p>
-                          <p className="text-2xl font-bold text-green-600">
-                            {dashboardData.summary.totalDisplaysRemaining
-                              ? dashboardData.summary.totalDisplaysRemaining.toLocaleString()
-                              : 0}
-                          </p>
-                        </div>
                       </div>
                     </div>
                   )}
@@ -1250,36 +1239,84 @@ export default function AdvertisementPage() {
                     }
                     className="w-full border border-gray-300 rounded-lg px-3 py-2"
                   >
-                    <option value="HOME_BANNER">Start Page Banner (1:1)</option>
+                    <option value="HOME_BANNER">Start Page Banner</option>
                     <option value="BOTTOM_CIRCLE">
-                      Bottom Navigation Circle (1:1)
+                      Bottom Navigation Circle
                     </option>
                   </select>
                 </div>
 
                 <div>
                   <label className="block text-sm font-bold mb-2 text-gray-700">
-                    Select Country/Global *
+                    Select Targeting Option *
                   </label>
-                  <select
-                    value={adForm.country}
-                    onChange={(e) =>
-                      setAdForm({ ...adForm, country: e.target.value })
-                    }
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2"
-                  >
-                    {countryOptions.map((c) => (
-                      <option key={c.code} value={c.code}>
-                        {c.name}
-                      </option>
-                    ))}
-                  </select>
-                  {countriesLoading && (
-                    <p className="text-xs text-gray-500 mt-1">
-                      Loading countries...
-                    </p>
-                  )}
+                  <div className="space-y-3">
+                    <div className="flex items-center">
+                      <input
+                        type="radio"
+                        id="global-option"
+                        name="targeting"
+                        value="global"
+                        checked={countrySelection === "global"}
+                        onChange={(e) => {
+                          setCountrySelection("global");
+                          setAdForm({ ...adForm, country: "GLOBAL" });
+                        }}
+                        className="h-4 w-4 text-[#007cb6]"
+                      />
+                      <label
+                        htmlFor="global-option"
+                        className="ml-2 cursor-pointer text-gray-700"
+                      >
+                        Global (All Countries)
+                      </label>
+                    </div>
+                    <div className="flex items-center">
+                      <input
+                        type="radio"
+                        id="country-option"
+                        name="targeting"
+                        value="country"
+                        checked={countrySelection === "country"}
+                        onChange={(e) => setCountrySelection("country")}
+                        className="h-4 w-4 text-[#007cb6]"
+                      />
+                      <label
+                        htmlFor="country-option"
+                        className="ml-2 cursor-pointer text-gray-700"
+                      >
+                        Specific Country
+                      </label>
+                    </div>
+                  </div>
                 </div>
+
+                {countrySelection === "country" && (
+                  <div>
+                    <label className="block text-sm font-bold mb-2 text-gray-700">
+                      Select Country *
+                    </label>
+                    <select
+                      value={adForm.country}
+                      onChange={(e) =>
+                        setAdForm({ ...adForm, country: e.target.value })
+                      }
+                      className="w-full border border-gray-300 rounded-lg px-3 py-2"
+                    >
+                      <option value="">Choose a country...</option>
+                      {countryOptions.map((c) => (
+                        <option key={c.code} value={c.key}>
+                          {c.name}
+                        </option>
+                      ))}
+                    </select>
+                    {countriesLoading && (
+                      <p className="text-xs text-gray-500 mt-1">
+                        Loading countries...
+                      </p>
+                    )}
+                  </div>
+                )}
 
                 <div>
                   <label className="block text-sm font-bold mb-2 text-gray-700">
@@ -1304,7 +1341,7 @@ export default function AdvertisementPage() {
 
                 <div>
                   <label className="block text-sm font-bold mb-2 text-gray-700">
-                    Telegram URL ( Only Public Channer/Groups) *
+                    Telegram URL ( Only Public Channel/Groups) *
                   </label>
                   <input
                     type="text"
@@ -1331,11 +1368,11 @@ export default function AdvertisementPage() {
                   )}
                 </div>
 
-                <div>
+                <div className="mb-2">
                   <label className="block text-sm font-bold mb-2 text-gray-700">
                     Upload Image (PNG/JPG) *
                   </label>
-                  <div className="relative">
+                  <div className="relative h-48">
                     <input
                       type="file"
                       accept="image/png,image/jpeg,image/webp"
@@ -1350,11 +1387,11 @@ export default function AdvertisementPage() {
                     />
                     <label
                       htmlFor="image-upload"
-                      className="flex items-center justify-center w-full h-16 border-2 border-dashed border-gray-300 rounded-lg bg-gray-50 hover:bg-gray-100 transition-colors cursor-pointer"
+                      className="flex items-center justify-center w-full h-32 border-2 border-dashed border-gray-300 rounded-lg bg-gray-50 hover:bg-gray-100 transition-colors cursor-pointer"
                     >
                       <div className="text-center">
                         <svg
-                          className="mx-auto h-8 w-8 text-gray-400 mb-1"
+                          className="mx-auto w-8 text-gray-400"
                           fill="none"
                           stroke="currentColor"
                           viewBox="0 0 24 24"
@@ -1391,7 +1428,7 @@ export default function AdvertisementPage() {
                       <p className="text-xs">✓ {adForm.image.name}</p>
                     </div>
                   )}
-                  <p className="text-base text-green-600 mt-2 font-medium">
+                  <p className="text-base text-green-600 font-medium">
                     Image aspect ratio should be 1:1 for best display.
                   </p>
                 </div>

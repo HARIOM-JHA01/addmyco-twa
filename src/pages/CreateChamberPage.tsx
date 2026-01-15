@@ -428,275 +428,308 @@ export default function CreateChamberPage() {
               className="w-full rounded-full px-[12px] py-2 border-2 border-blue-200 focus:outline-none focus:ring-2 focus:ring-blue-400 mb-2 bg-white placeholder-gray-500 text-black"
             />
 
-            {/* File Tab Navigation */}
-            <div className="w-full flex flex-col md:flex-row gap-4 mb-6">
-              {/* File 1 */}
-              <div className="flex-1 flex flex-col items-center">
-                {activeFileTab === 1 && (
-                  <div className="w-full">
-                    <div className="w-full flex justify-center mb-2">
-                      {filePreview1 ? (
-                        <div
-                          className="flex items-center justify-center rounded-xl w-full h-40 overflow-hidden"
-                          style={{
-                            backgroundColor: "var(--app-background-color)",
-                          }}
-                        >
-                          {file1?.type.startsWith("image/") ? (
+            {/* File Upload Section */}
+            {isPremium ? (
+              /* Premium User: Single Video Upload */
+              <div className="w-full mb-6">
+                <div className="w-full flex justify-center mb-2">
+                  {filePreview1 ? (
+                    <div
+                      className="flex items-center justify-center rounded-xl w-full h-48 overflow-hidden"
+                      style={{
+                        backgroundColor: "var(--app-background-color)",
+                      }}
+                    >
+                      {file1?.type.startsWith("video/") ? (
+                        <VideoPlayer
+                          src={filePreview1}
+                          loop
+                          playsInline
+                          className="object-cover w-full h-48 rounded-xl"
+                        />
+                      ) : (
+                        <div className="text-white text-center p-4">
+                          Premium members can only upload videos
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    <div
+                      className="text-center text-white font-bold py-6 relative flex flex-col items-center justify-center w-full h-48 rounded-xl"
+                      style={{
+                        backgroundColor: "var(--app-background-color)",
+                      }}
+                    >
+                      <div className="text-lg">
+                        Premium Member
+                        <br />
+                        Upload 1 Minute Video
+                      </div>
+                      <div className="text-yellow-300 font-bold mt-2">
+                        Video Only (MP4)
+                      </div>
+                    </div>
+                  )}
+                </div>
+                <input
+                  type="file"
+                  accept="video/mp4"
+                  ref={fileInputRef1}
+                  style={{ display: "none" }}
+                  onChange={(e) => handleFileChange(1, e)}
+                />
+                <div className="flex justify-center gap-2">
+                  <button
+                    type="button"
+                    className="bg-black text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-700 transition-colors"
+                    onClick={() => fileInputRef1.current?.click()}
+                  >
+                    Browse Video
+                  </button>
+                  <button
+                    type="button"
+                    className="bg-black text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-700 transition-colors"
+                    onClick={() => {
+                      setFile1(null);
+                      setFilePreview1(null);
+                    }}
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            ) : (
+              /* Non-Premium User: Three Image Uploads */
+              <div className="w-full flex flex-col md:flex-row gap-4 mb-6">
+                {/* File 1 */}
+                <div className="flex-1 flex flex-col items-center">
+                  {activeFileTab === 1 && (
+                    <div className="w-full">
+                      <div className="w-full flex justify-center mb-2">
+                        {filePreview1 ? (
+                          <div
+                            className="flex items-center justify-center rounded-xl w-full h-40 overflow-hidden"
+                            style={{
+                              backgroundColor: "var(--app-background-color)",
+                            }}
+                          >
                             <img
                               src={filePreview1}
                               alt="Preview 1"
                               className="object-cover w-full h-40 rounded-xl"
                             />
-                          ) : file1?.type.startsWith("video/") ? (
-                            <VideoPlayer
-                              src={filePreview1}
-                              loop
-                              playsInline
-                              className="object-cover w-full h-40 rounded-xl"
-                            />
-                          ) : null}
-                        </div>
-                      ) : (
-                        <div
-                          className="text-center text-white text-sm font-bold py-6 relative flex flex-col items-center justify-center w-full h-40 rounded-xl"
-                          style={{
-                            backgroundColor: "var(--app-background-color)",
-                          }}
-                        >
-                          <div>File 1</div>
-                        </div>
-                      )}
-                    </div>
-                    {/* Numeric tabs */}
-                    <div className="flex justify-center gap-4 my-3">
-                      {[1, 2, 3].map((tab) => (
+                          </div>
+                        ) : (
+                          <div
+                            className="text-center text-white text-sm font-bold py-6 relative flex flex-col items-center justify-center w-full h-40 rounded-xl"
+                            style={{
+                              backgroundColor: "var(--app-background-color)",
+                            }}
+                          >
+                            <div>File 1</div>
+                          </div>
+                        )}
+                      </div>
+                      {/* Numeric tabs */}
+                      <div className="flex justify-center gap-4 my-3">
+                        {[1, 2, 3].map((tab) => (
+                          <button
+                            key={tab}
+                            type="button"
+                            onClick={() => setActiveFileTab(tab)}
+                            className={`w-10 h-10 rounded-full font-semibold transition-all ${
+                              activeFileTab === tab
+                                ? "bg-blue-500 text-white scale-110"
+                                : "bg-gray-300 text-black hover:bg-gray-400"
+                            }`}
+                          >
+                            {tab}
+                          </button>
+                        ))}
+                      </div>
+                      <input
+                        type="file"
+                        accept="image/png,image/jpeg,image/jpg,image/gif,image/webp"
+                        ref={fileInputRef1}
+                        style={{ display: "none" }}
+                        onChange={(e) => handleFileChange(1, e)}
+                      />
+                      <div className="flex justify-center gap-2">
                         <button
-                          key={tab}
                           type="button"
-                          onClick={() => setActiveFileTab(tab)}
-                          className={`w-10 h-10 rounded-full font-semibold transition-all ${
-                            activeFileTab === tab
-                              ? "bg-blue-500 text-white scale-110"
-                              : "bg-gray-300 text-black hover:bg-gray-400"
-                          }`}
+                          className="bg-black text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-700 transition-colors"
+                          onClick={() => fileInputRef1.current?.click()}
                         >
-                          {tab}
+                          Browse
                         </button>
-                      ))}
-                    </div>
-                    <input
-                      type="file"
-                      accept={
-                        isPremium
-                          ? "image/png,image/jpeg,image/jpg,image/gif,image/webp,video/mp4"
-                          : "image/png,image/jpeg,image/jpg,image/gif,image/webp"
-                      }
-                      ref={fileInputRef1}
-                      style={{ display: "none" }}
-                      onChange={(e) => handleFileChange(1, e)}
-                    />
-                    <div className="flex justify-center gap-2">
-                      <button
-                        type="button"
-                        className="bg-black text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-700 transition-colors"
-                        onClick={() => fileInputRef1.current?.click()}
-                      >
-                        Browse
-                      </button>
-                      <button
-                        type="button"
-                        className="bg-black text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-700 transition-colors"
-                        onClick={() => {
-                          setFile1(null);
-                          setFilePreview1(null);
-                        }}
-                      >
-                        Cancel
-                      </button>
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              {/* File 2 */}
-              <div className="flex-1 flex flex-col items-center">
-                {activeFileTab === 2 && (
-                  <div className="w-full">
-                    <div className="w-full flex justify-center mb-2">
-                      {filePreview2 ? (
-                        <div
-                          className="flex items-center justify-center rounded-xl w-full h-40 overflow-hidden"
-                          style={{
-                            backgroundColor: "var(--app-background-color)",
+                        <button
+                          type="button"
+                          className="bg-black text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-700 transition-colors"
+                          onClick={() => {
+                            setFile1(null);
+                            setFilePreview1(null);
                           }}
                         >
-                          {file2?.type.startsWith("image/") ? (
+                          Cancel
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* File 2 */}
+                <div className="flex-1 flex flex-col items-center">
+                  {activeFileTab === 2 && (
+                    <div className="w-full">
+                      <div className="w-full flex justify-center mb-2">
+                        {filePreview2 ? (
+                          <div
+                            className="flex items-center justify-center rounded-xl w-full h-40 overflow-hidden"
+                            style={{
+                              backgroundColor: "var(--app-background-color)",
+                            }}
+                          >
                             <img
                               src={filePreview2}
                               alt="Preview 2"
                               className="object-cover w-full h-40 rounded-xl"
                             />
-                          ) : file2?.type.startsWith("video/") ? (
-                            <VideoPlayer
-                              src={filePreview2}
-                              loop
-                              playsInline
-                              className="object-cover w-full h-40 rounded-xl"
-                            />
-                          ) : null}
-                        </div>
-                      ) : (
-                        <div
-                          className="text-center text-white text-sm font-bold py-6 relative flex flex-col items-center justify-center w-full h-40 rounded-xl"
-                          style={{
-                            backgroundColor: "var(--app-background-color)",
-                          }}
-                        >
-                          <div>File 2</div>
-                        </div>
-                      )}
-                    </div>
-                    {/* Numeric tabs */}
-                    <div className="flex justify-center gap-4 my-3">
-                      {[1, 2, 3].map((tab) => (
+                          </div>
+                        ) : (
+                          <div
+                            className="text-center text-white text-sm font-bold py-6 relative flex flex-col items-center justify-center w-full h-40 rounded-xl"
+                            style={{
+                              backgroundColor: "var(--app-background-color)",
+                            }}
+                          >
+                            <div>File 2</div>
+                          </div>
+                        )}
+                      </div>
+                      {/* Numeric tabs */}
+                      <div className="flex justify-center gap-4 my-3">
+                        {[1, 2, 3].map((tab) => (
+                          <button
+                            key={tab}
+                            type="button"
+                            onClick={() => setActiveFileTab(tab)}
+                            className={`w-10 h-10 rounded-full font-semibold transition-all ${
+                              activeFileTab === tab
+                                ? "bg-blue-500 text-white scale-110"
+                                : "bg-gray-300 text-black hover:bg-gray-400"
+                            }`}
+                          >
+                            {tab}
+                          </button>
+                        ))}
+                      </div>
+                      <input
+                        type="file"
+                        accept="image/png,image/jpeg,image/jpg,image/gif,image/webp"
+                        ref={fileInputRef2}
+                        style={{ display: "none" }}
+                        onChange={(e) => handleFileChange(2, e)}
+                      />
+                      <div className="flex justify-center gap-2">
                         <button
-                          key={tab}
                           type="button"
-                          onClick={() => setActiveFileTab(tab)}
-                          className={`w-10 h-10 rounded-full font-semibold transition-all ${
-                            activeFileTab === tab
-                              ? "bg-blue-500 text-white scale-110"
-                              : "bg-gray-300 text-black hover:bg-gray-400"
-                          }`}
+                          className="bg-black text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-700 transition-colors"
+                          onClick={() => fileInputRef2.current?.click()}
                         >
-                          {tab}
+                          Browse
                         </button>
-                      ))}
-                    </div>
-                    <input
-                      type="file"
-                      accept={
-                        isPremium
-                          ? "image/png,image/jpeg,image/jpg,image/gif,image/webp,video/mp4"
-                          : "image/png,image/jpeg,image/jpg,image/gif,image/webp"
-                      }
-                      ref={fileInputRef2}
-                      style={{ display: "none" }}
-                      onChange={(e) => handleFileChange(2, e)}
-                    />
-                    <div className="flex justify-center gap-2">
-                      <button
-                        type="button"
-                        className="bg-black text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-700 transition-colors"
-                        onClick={() => fileInputRef2.current?.click()}
-                      >
-                        Browse
-                      </button>
-                      <button
-                        type="button"
-                        className="bg-black text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-700 transition-colors"
-                        onClick={() => {
-                          setFile2(null);
-                          setFilePreview2(null);
-                        }}
-                      >
-                        Cancel
-                      </button>
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              {/* File 3 */}
-              <div className="flex-1 flex flex-col items-center">
-                {activeFileTab === 3 && (
-                  <div className="w-full">
-                    <div className="w-full flex justify-center mb-2">
-                      {filePreview3 ? (
-                        <div
-                          className="flex items-center justify-center rounded-xl w-full h-40 overflow-hidden"
-                          style={{
-                            backgroundColor: "var(--app-background-color)",
+                        <button
+                          type="button"
+                          className="bg-black text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-700 transition-colors"
+                          onClick={() => {
+                            setFile2(null);
+                            setFilePreview2(null);
                           }}
                         >
-                          {file3?.type.startsWith("image/") ? (
+                          Cancel
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* File 3 */}
+                <div className="flex-1 flex flex-col items-center">
+                  {activeFileTab === 3 && (
+                    <div className="w-full">
+                      <div className="w-full flex justify-center mb-2">
+                        {filePreview3 ? (
+                          <div
+                            className="flex items-center justify-center rounded-xl w-full h-40 overflow-hidden"
+                            style={{
+                              backgroundColor: "var(--app-background-color)",
+                            }}
+                          >
                             <img
                               src={filePreview3}
                               alt="Preview 3"
                               className="object-cover w-full h-40 rounded-xl"
                             />
-                          ) : file3?.type.startsWith("video/") ? (
-                            <VideoPlayer
-                              src={filePreview3}
-                              loop
-                              playsInline
-                              className="object-cover w-full h-40 rounded-xl"
-                            />
-                          ) : null}
-                        </div>
-                      ) : (
-                        <div
-                          className="text-center text-white text-sm font-bold py-6 relative flex flex-col items-center justify-center w-full h-40 rounded-xl"
-                          style={{
-                            backgroundColor: "var(--app-background-color)",
+                          </div>
+                        ) : (
+                          <div
+                            className="text-center text-white text-sm font-bold py-6 relative flex flex-col items-center justify-center w-full h-40 rounded-xl"
+                            style={{
+                              backgroundColor: "var(--app-background-color)",
+                            }}
+                          >
+                            <div>File 3</div>
+                          </div>
+                        )}
+                      </div>
+                      {/* Numeric tabs */}
+                      <div className="flex justify-center gap-4 my-3">
+                        {[1, 2, 3].map((tab) => (
+                          <button
+                            key={tab}
+                            type="button"
+                            onClick={() => setActiveFileTab(tab)}
+                            className={`w-10 h-10 rounded-full font-semibold transition-all ${
+                              activeFileTab === tab
+                                ? "bg-blue-500 text-white scale-110"
+                                : "bg-gray-300 text-black hover:bg-gray-400"
+                            }`}
+                          >
+                            {tab}
+                          </button>
+                        ))}
+                      </div>
+                      <input
+                        type="file"
+                        accept="image/png,image/jpeg,image/jpg,image/gif,image/webp"
+                        ref={fileInputRef3}
+                        style={{ display: "none" }}
+                        onChange={(e) => handleFileChange(3, e)}
+                      />
+                      <div className="flex justify-center gap-2">
+                        <button
+                          type="button"
+                          className="bg-black text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-700 transition-colors"
+                          onClick={() => fileInputRef3.current?.click()}
+                        >
+                          Browse
+                        </button>
+                        <button
+                          type="button"
+                          className="bg-black text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-700 transition-colors"
+                          onClick={() => {
+                            setFile3(null);
+                            setFilePreview3(null);
                           }}
                         >
-                          <div>File 3</div>
-                        </div>
-                      )}
-                    </div>
-                    {/* Numeric tabs */}
-                    <div className="flex justify-center gap-4 my-3">
-                      {[1, 2, 3].map((tab) => (
-                        <button
-                          key={tab}
-                          type="button"
-                          onClick={() => setActiveFileTab(tab)}
-                          className={`w-10 h-10 rounded-full font-semibold transition-all ${
-                            activeFileTab === tab
-                              ? "bg-blue-500 text-white scale-110"
-                              : "bg-gray-300 text-black hover:bg-gray-400"
-                          }`}
-                        >
-                          {tab}
+                          Cancel
                         </button>
-                      ))}
+                      </div>
                     </div>
-                    <input
-                      type="file"
-                      accept={
-                        isPremium
-                          ? "image/png,image/jpeg,image/jpg,image/gif,image/webp,video/mp4"
-                          : "image/png,image/jpeg,image/jpg,image/gif,image/webp"
-                      }
-                      ref={fileInputRef3}
-                      style={{ display: "none" }}
-                      onChange={(e) => handleFileChange(3, e)}
-                    />
-                    <div className="flex justify-center gap-2">
-                      <button
-                        type="button"
-                        className="bg-black text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-700 transition-colors"
-                        onClick={() => fileInputRef3.current?.click()}
-                      >
-                        Browse
-                      </button>
-                      <button
-                        type="button"
-                        className="bg-black text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-700 transition-colors"
-                        onClick={() => {
-                          setFile3(null);
-                          setFilePreview3(null);
-                        }}
-                      >
-                        Cancel
-                      </button>
-                    </div>
-                  </div>
-                )}
+                  )}
+                </div>
               </div>
-            </div>
+            )}
             {error &&
               (file1?.type.startsWith("video/") ||
                 file2?.type.startsWith("video/") ||
