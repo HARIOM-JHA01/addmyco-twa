@@ -104,6 +104,16 @@ export default function AdvertisementPage() {
   // Ad action states
   const [actionLoading, setActionLoading] = useState<string | null>(null);
 
+  // My Ads filter state
+  const [adStatusFilter, setAdStatusFilter] = useState<
+    "all" | "active" | "consumed"
+  >("all");
+
+  // Payment History filter state
+  const [paymentStatusFilter, setPaymentStatusFilter] = useState<
+    "all" | "pending" | "approved" | "rejected"
+  >("all");
+
   // Create ad state
   const [createAdLoading, setCreateAdLoading] = useState(false);
   const [createAdError, setCreateAdError] = useState<string | null>(null);
@@ -1218,7 +1228,7 @@ export default function AdvertisementPage() {
                       : "bg-white border border-gray-200 text-gray-700"
                   }`}
                 >
-                  Start Page
+                  SCoupon (Landing Page)
                 </button>
                 <button
                   type="button"
@@ -1232,7 +1242,7 @@ export default function AdvertisementPage() {
                       : "bg-white border border-gray-200 text-gray-700"
                   }`}
                 >
-                  Circle
+                  CCoupon (Bottom Bar)
                 </button>
               </div>
 
@@ -1274,7 +1284,12 @@ export default function AdvertisementPage() {
                       <div className="text-base text-black space-y-1">
                         <p>💳 Credits: {pkg.displayCredits}</p>
                         {/* TODO : Add no of display */}
-                        <p>📍 Positions: {pkg.positions.join(", ")}</p>
+                        <p>
+                          📍 Position:{" "}
+                          {pkg.positions.includes("HOME_BANNER")
+                            ? "Landing Page Banner"
+                            : "Bottom Bar Circle"}
+                        </p>
                       </div>
                     </div>
                   ))
@@ -1315,7 +1330,7 @@ export default function AdvertisementPage() {
 
                 <div>
                   <label className="block text-sm font-bold mb-2 text-gray-700">
-                    Select your add Position *
+                    Select your adv Position *
                   </label>
                   <select
                     value={adForm.position}
@@ -1324,10 +1339,8 @@ export default function AdvertisementPage() {
                     }
                     className="w-full border border-gray-300 rounded-lg px-3 py-2"
                   >
-                    <option value="HOME_BANNER">Start Page Banner</option>
-                    <option value="BOTTOM_CIRCLE">
-                      Bottom Navigation Circle
-                    </option>
+                    <option value="HOME_BANNER">Landing Page Banner</option>
+                    <option value="BOTTOM_CIRCLE">Bottom Bar Circle</option>
                   </select>
                 </div>
 
@@ -1531,16 +1544,42 @@ export default function AdvertisementPage() {
                 <div className="mb-2">
                   <label className="block text-sm font-bold mb-2 text-gray-700">
                     Upload Image (PNG/JPG) *
-                    <p className="text-base text-green-600 font-medium">
-                      Image aspect ratio should be 1:1 for best display.
+                    <p className="text-base text-blue-600 font-medium">
+                      {adForm.position === "HOME_BANNER"
+                        ? "Image aspect ratio should be 1:1 (Square) for best display."
+                        : "Image aspect ratio should be 1:1 (Circle) for best display."}
                     </p>
                   </label>
-                  <div className="relative h-48">
+                  <div className="relative">
                     <input
                       type="file"
-                      accept="image/png,image/jpeg,image/webp"
+                      accept="image/png,image/jpeg,image/jpg,image/webp"
                       onChange={(e) => {
                         const file = e.target.files?.[0] || null;
+
+                        // Validate that only image files are selected
+                        if (file) {
+                          const validImageTypes = [
+                            "image/png",
+                            "image/jpeg",
+                            "image/jpg",
+                            "image/webp",
+                          ];
+
+                          if (!validImageTypes.includes(file.type)) {
+                            setCreateAdError(
+                              "Please select a valid image file (PNG, JPG, or WEBP only)",
+                            );
+                            e.target.value = ""; // Clear the input
+                            return;
+                          }
+
+                          // Clear any previous errors
+                          if (createAdError?.includes("image file")) {
+                            setCreateAdError(null);
+                          }
+                        }
+
                         setAdForm({
                           ...adForm,
                           image: file,
@@ -1555,13 +1594,17 @@ export default function AdvertisementPage() {
                           setImagePreview(null);
                         }
                       }}
-                      className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                      className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
                       id="image-upload"
                     />
                     {imagePreview ? (
                       <label
                         htmlFor="image-upload"
-                        className="relative w-full h-32 border-2 border-dashed border-gray-300 rounded-lg bg-gray-50 cursor-pointer overflow-hidden group"
+                        className={`relative w-full border-2 border-dashed border-gray-300 bg-gray-50 cursor-pointer overflow-hidden group block ${
+                          adForm.position === "HOME_BANNER"
+                            ? "h-48 rounded-lg"
+                            : "h-64 w-64 mx-auto rounded-full"
+                        }`}
                       >
                         <img
                           src={imagePreview}
@@ -1577,11 +1620,15 @@ export default function AdvertisementPage() {
                     ) : (
                       <label
                         htmlFor="image-upload"
-                        className="flex items-center justify-center w-full h-32 border-2 border-dashed border-gray-300 rounded-lg bg-gray-50 hover:bg-gray-100 transition-colors cursor-pointer"
+                        className={`flex items-center justify-center w-full border-2 border-dashed border-gray-300 bg-gray-50 hover:bg-gray-100 transition-colors cursor-pointer ${
+                          adForm.position === "HOME_BANNER"
+                            ? "h-48 rounded-lg"
+                            : "h-64 w-64 mx-auto rounded-full"
+                        }`}
                       >
                         <div className="text-center">
                           <svg
-                            className="mx-auto w-8 text-gray-400"
+                            className="mx-auto w-12 text-gray-400"
                             fill="none"
                             stroke="currentColor"
                             viewBox="0 0 24 24"
@@ -1594,7 +1641,7 @@ export default function AdvertisementPage() {
                               d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
                             />
                           </svg>
-                          <p className="text-sm text-gray-600">
+                          <p className="text-sm text-gray-600 mt-2">
                             Click to Upload Image
                           </p>
                         </div>
@@ -1640,177 +1687,252 @@ export default function AdvertisementPage() {
           {/* My Ads Tab */}
           {activeTab === "my-ads" && !loading && (
             <div className="space-y-4">
-              {ads.length === 0 ? (
+              {/* Filter buttons */}
+              <div className="flex gap-2 mb-4">
+                <button
+                  onClick={() => setAdStatusFilter("all")}
+                  className={`flex-1 py-2 px-4 rounded-lg font-semibold transition ${
+                    adStatusFilter === "all"
+                      ? "bg-[#007cb6] text-white"
+                      : "bg-gray-200 text-gray-700 hover:bg-gray-300"
+                  }`}
+                >
+                  All
+                </button>
+                <button
+                  onClick={() => setAdStatusFilter("active")}
+                  className={`flex-1 py-2 px-4 rounded-lg font-semibold transition ${
+                    adStatusFilter === "active"
+                      ? "bg-green-500 text-white"
+                      : "bg-gray-200 text-gray-700 hover:bg-gray-300"
+                  }`}
+                >
+                  🟢 Active
+                </button>
+                <button
+                  onClick={() => setAdStatusFilter("consumed")}
+                  className={`flex-1 py-2 px-4 rounded-lg font-semibold transition ${
+                    adStatusFilter === "consumed"
+                      ? "bg-red-500 text-white"
+                      : "bg-gray-200 text-gray-700 hover:bg-gray-300"
+                  }`}
+                >
+                  🔴 Consumed
+                </button>
+              </div>
+
+              {ads.filter((ad) => {
+                if (adStatusFilter === "all") return true;
+                if (adStatusFilter === "active")
+                  return (
+                    ad.status.toLowerCase() === "active" ||
+                    ad.status.toLowerCase() === "paused"
+                  );
+                if (adStatusFilter === "consumed")
+                  return (
+                    ad.status.toLowerCase() !== "active" &&
+                    ad.status.toLowerCase() !== "paused"
+                  );
+                return true;
+              }).length === 0 ? (
                 <div className="text-center py-8">
-                  <p className="text-gray-600">No advertisements yet</p>
+                  <p className="text-gray-600">
+                    {ads.length === 0
+                      ? "No advertisements yet"
+                      : `No ${adStatusFilter} advertisements`}
+                  </p>
                 </div>
               ) : (
-                ads.map((ad) => (
-                  <div
-                    key={ad._id}
-                    className="border border-gray-200 rounded-lg overflow-hidden"
-                  >
-                    <button
-                      type="button"
-                      onClick={() =>
-                        setOpenPaymentId(
-                          openPaymentId === ad._id ? null : ad._id,
-                        )
-                      }
-                      className="w-full flex items-center justify-between p-4 bg-white hover:bg-gray-50 focus:outline-none"
+                ads
+                  .filter((ad) => {
+                    if (adStatusFilter === "all") return true;
+                    if (adStatusFilter === "active")
+                      return (
+                        ad.status.toLowerCase() === "active" ||
+                        ad.status.toLowerCase() === "paused"
+                      );
+                    if (adStatusFilter === "consumed")
+                      return (
+                        ad.status.toLowerCase() !== "active" &&
+                        ad.status.toLowerCase() !== "paused"
+                      );
+                    return true;
+                  })
+                  .map((ad) => (
+                    <div
+                      key={ad._id}
+                      className="border border-gray-200 rounded-lg overflow-hidden"
                     >
-                      <div className="text-left flex-1">
-                        <div className="flex items-center gap-2 mb-1">
-                          <span className="bg-[#007cb6] text-white px-2 py-1 rounded text-xs font-bold">
-                            {ad.position}
-                          </span>
-                          <span
-                            className={`px-2 py-1 rounded text-xs font-bold ${
-                              ad.status === "active"
-                                ? "bg-green-100 text-green-800"
-                                : ad.status === "paused"
-                                  ? "bg-yellow-100 text-yellow-800"
-                                  : "bg-red-100 text-red-800"
-                            }`}
-                          >
-                            {ad.status === "active"
-                              ? "🟢 Active"
-                              : ad.status === "paused"
-                                ? "🟡 Paused"
-                                : "🔴 Consumed"}
-                          </span>
-                        </div>
-                        <h3 className="font-semibold text-gray-800">
-                          {ad.country}
-                        </h3>
-                        <p className="text-xs text-gray-500">
-                          Created: {new Date(ad.createdAt).toLocaleDateString()}
-                        </p>
-                      </div>
-                      <svg
-                        className={`h-4 w-4 text-gray-500 transform transition-transform flex-shrink-0 ${
-                          openPaymentId === ad._id ? "rotate-180" : ""
-                        }`}
-                        viewBox="0 0 20 20"
-                        fill="none"
-                        xmlns="http://www.w3.org/2000/svg"
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setOpenPaymentId(
+                            openPaymentId === ad._id ? null : ad._id,
+                          )
+                        }
+                        className="w-full flex items-center justify-between p-4 bg-white hover:bg-gray-50 focus:outline-none"
                       >
-                        <path
-                          d="M6 8l4 4 4-4"
-                          stroke="currentColor"
-                          strokeWidth="2"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                        />
-                      </svg>
-                    </button>
-
-                    {openPaymentId === ad._id && (
-                      <div className="p-4 bg-gray-50 space-y-3">
-                        {ad.imageUrl && (
-                          <div className="bg-white p-3 rounded shadow-sm">
-                            <img
-                              src={ad.imageUrl}
-                              alt="Ad"
-                              className="w-full h-40 object-cover rounded"
-                            />
+                        <div className="text-left flex-1">
+                          <div className="flex items-center gap-2 mb-1">
+                            <span className="bg-[#007cb6] text-white px-2 py-1 rounded text-xs font-bold">
+                              {ad.position}
+                            </span>
+                            <span
+                              className={`px-2 py-1 rounded text-xs font-bold ${
+                                ad.status.toLowerCase() === "active"
+                                  ? "bg-green-100 text-green-800"
+                                  : ad.status.toLowerCase() === "paused"
+                                    ? "bg-yellow-100 text-yellow-800"
+                                    : "bg-red-100 text-red-800"
+                              }`}
+                            >
+                              {ad.status.toLowerCase() === "active"
+                                ? "🟢 Active"
+                                : ad.status.toLowerCase() === "paused"
+                                  ? "🟡 Paused"
+                                  : "🔴 Consumed"}
+                            </span>
                           </div>
-                        )}
-
-                        <div className="bg-white p-3 rounded shadow-sm">
-                          <p className="text-xs text-gray-600 mb-1">
-                            Telegram URL
+                          <h3 className="font-semibold text-gray-800">
+                            {ad.country}
+                          </h3>
+                          <p className="text-xs text-gray-500">
+                            Created:{" "}
+                            {new Date(ad.createdAt).toLocaleDateString()}
                           </p>
-                          <a
-                            href={ad.redirectUrl}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-xs text-blue-600 underline break-all"
-                          >
-                            {ad.redirectUrl}
-                          </a>
                         </div>
+                        <svg
+                          className={`h-4 w-4 text-gray-500 transform transition-transform flex-shrink-0 ${
+                            openPaymentId === ad._id ? "rotate-180" : ""
+                          }`}
+                          viewBox="0 0 20 20"
+                          fill="none"
+                          xmlns="http://www.w3.org/2000/svg"
+                        >
+                          <path
+                            d="M6 8l4 4 4-4"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          />
+                        </svg>
+                      </button>
 
-                        <div className="grid grid-cols-2 gap-3">
-                          <div className="bg-white p-2 rounded shadow-sm">
-                            <p className="text-xs text-gray-600">Displays</p>
-                            <p className="font-bold text-sm">
-                              {ad.displayUsed} / {ad.displayCount}
-                            </p>
-                          </div>
-                          <div className="bg-white p-2 rounded shadow-sm">
-                            <p className="text-xs text-gray-600">
-                              Views / Clicks
-                            </p>
-                            <p className="font-bold text-sm">
-                              {ad.viewCount} / {ad.clickCount}
-                            </p>
-                          </div>
-                          <div className="bg-white p-2 rounded shadow-sm">
-                            <p className="text-xs text-gray-600">CTR</p>
-                            <p className="font-bold text-sm">
-                              {ad.ctrPercentage.toFixed(2)}%
-                            </p>
-                          </div>
-                          <div className="bg-white p-2 rounded shadow-sm">
-                            <p className="text-xs text-gray-600">Progress</p>
-                            <div className="w-full bg-gray-300 rounded h-2 mt-1">
-                              <div
-                                className="bg-[#007cb6] h-2 rounded"
-                                style={{
-                                  width: `${
-                                    (ad.displayUsed / ad.displayCount) * 100
-                                  }%`,
-                                }}
+                      {openPaymentId === ad._id && (
+                        <div className="p-4 bg-gray-50 space-y-3">
+                          {ad.imageUrl && (
+                            <div className="bg-white p-3 rounded shadow-sm">
+                              <img
+                                src={ad.imageUrl}
+                                alt="Ad"
+                                className="w-full h-40 object-cover rounded"
                               />
                             </div>
-                          </div>
-                        </div>
-
-                        {/* Action buttons */}
-                        <div className="flex flex-col gap-2 mt-4">
-                          <div className="flex gap-2">
-                            {ad.status === "active" && (
-                              <button
-                                onClick={() => handlePauseAd(ad._id)}
-                                disabled={actionLoading === ad._id}
-                                className="flex-1 bg-yellow-500 text-white py-2 rounded-lg text-sm font-bold hover:bg-yellow-600 disabled:opacity-50"
-                              >
-                                {actionLoading === ad._id ? "..." : "⏸ Pause"}
-                              </button>
-                            )}
-                            {ad.status === "paused" && (
-                              <button
-                                onClick={() => handleResumeAd(ad._id)}
-                                disabled={actionLoading === ad._id}
-                                className="flex-1 bg-green-500 text-white py-2 rounded-lg text-sm font-bold hover:bg-green-600 disabled:opacity-50"
-                              >
-                                {actionLoading === ad._id ? "..." : "▶ Resume"}
-                              </button>
-                            )}
-                            <button
-                              onClick={() => handleDeleteAd(ad._id)}
-                              disabled={actionLoading === ad._id}
-                              className="flex-1 bg-red-500 text-white py-2 rounded-lg text-sm font-bold hover:bg-red-600 disabled:opacity-50"
-                            >
-                              {actionLoading === ad._id ? "..." : "🗑 Delete"}
-                            </button>
-                          </div>
-                          {ad.displayUsed >= ad.displayCount && (
-                            <button
-                              onClick={() => {
-                                setActiveTab("buy-credits");
-                              }}
-                              className="w-full bg-blue-500 text-white py-2 rounded-lg text-sm font-bold hover:bg-blue-600 transition"
-                            >
-                              ✨ Renew Credits
-                            </button>
                           )}
+
+                          <div className="bg-white p-3 rounded shadow-sm">
+                            <p className="text-xs text-gray-600 mb-1">
+                              Target URL
+                            </p>
+                            <a
+                              href={ad.redirectUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-xs text-blue-600 underline break-all"
+                            >
+                              {ad.redirectUrl}
+                            </a>
+                          </div>
+
+                          <div className="grid grid-cols-2 gap-3">
+                            <div className="bg-white p-2 rounded shadow-sm">
+                              <p className="text-xs text-gray-600">Displays</p>
+                              <p className="font-bold text-sm">
+                                {ad.displayUsed} / {ad.displayCount}
+                              </p>
+                            </div>
+                            <div className="bg-white p-2 rounded shadow-sm">
+                              <p className="text-xs text-gray-600">
+                                Views / Clicks
+                              </p>
+                              <p className="font-bold text-sm">
+                                {ad.viewCount} / {ad.clickCount}
+                              </p>
+                            </div>
+                            <div className="bg-white p-2 rounded shadow-sm">
+                              <p className="text-xs text-gray-600">CTR</p>
+                              <p className="font-bold text-sm">
+                                {ad.ctrPercentage.toFixed(2)}%
+                              </p>
+                            </div>
+                            <div className="bg-white p-2 rounded shadow-sm">
+                              <p className="text-xs text-gray-600">Progress</p>
+                              <div className="w-full bg-gray-300 rounded h-2 mt-1">
+                                <div
+                                  className="bg-[#007cb6] h-2 rounded"
+                                  style={{
+                                    width: `${
+                                      (ad.displayUsed / ad.displayCount) * 100
+                                    }%`,
+                                  }}
+                                />
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Action buttons */}
+                          <div className="flex flex-col gap-2 mt-4">
+                            <div className="flex gap-2">
+                              {ad.status === "active" && (
+                                <button
+                                  onClick={() => handlePauseAd(ad._id)}
+                                  disabled={actionLoading === ad._id}
+                                  className="flex-1 bg-yellow-500 text-white py-2 rounded-lg text-sm font-bold hover:bg-yellow-600 disabled:opacity-50"
+                                >
+                                  {actionLoading === ad._id ? "..." : "⏸ Pause"}
+                                </button>
+                              )}
+                              {ad.status === "paused" && (
+                                <button
+                                  onClick={() => handleResumeAd(ad._id)}
+                                  disabled={actionLoading === ad._id}
+                                  className="flex-1 bg-green-500 text-white py-2 rounded-lg text-sm font-bold hover:bg-green-600 disabled:opacity-50"
+                                >
+                                  {actionLoading === ad._id
+                                    ? "..."
+                                    : "▶ Resume"}
+                                </button>
+                              )}
+                              <button
+                                onClick={() => WebApp.showAlert("Coming Soon!")}
+                                className="flex-1 bg-blue-500 text-white py-2 rounded-lg text-sm font-bold hover:bg-blue-600"
+                              >
+                                📊 View Progress
+                              </button>
+                              <button
+                                onClick={() => handleDeleteAd(ad._id)}
+                                disabled={actionLoading === ad._id}
+                                className="flex-1 bg-red-500 text-white py-2 rounded-lg text-sm font-bold hover:bg-red-600 disabled:opacity-50"
+                              >
+                                {actionLoading === ad._id ? "..." : "🗑 Delete"}
+                              </button>
+                            </div>
+                            {ad.displayUsed >= ad.displayCount && (
+                              <button
+                                onClick={() => {
+                                  setActiveTab("buy-credits");
+                                }}
+                                className="w-full bg-blue-500 text-white py-2 rounded-lg text-sm font-bold hover:bg-blue-600 transition"
+                              >
+                                ✨ Renew Credits
+                              </button>
+                            )}
+                          </div>
                         </div>
-                      </div>
-                    )}
-                  </div>
-                ))
+                      )}
+                    </div>
+                  ))
               )}
             </div>
           )}
@@ -1818,133 +1940,206 @@ export default function AdvertisementPage() {
           {/* Payment History Tab */}
           {activeTab === "payment-history" && !loading && (
             <div className="space-y-4">
-              {paymentHistory.length === 0 ? (
+              {/* Filter buttons */}
+              <div className="flex gap-2 mb-4">
+                <button
+                  onClick={() => setPaymentStatusFilter("all")}
+                  className={`flex-1 py-2 px-4 rounded-lg font-semibold transition ${
+                    paymentStatusFilter === "all"
+                      ? "bg-[#007cb6] text-white"
+                      : "bg-gray-200 text-gray-700 hover:bg-gray-300"
+                  }`}
+                >
+                  All
+                </button>
+                <button
+                  onClick={() => setPaymentStatusFilter("pending")}
+                  className={`flex-1 py-2 px-4 rounded-lg font-semibold transition ${
+                    paymentStatusFilter === "pending"
+                      ? "bg-yellow-500 text-white"
+                      : "bg-gray-200 text-gray-700 hover:bg-gray-300"
+                  }`}
+                >
+                  🟡 Pending
+                </button>
+                <button
+                  onClick={() => setPaymentStatusFilter("approved")}
+                  className={`flex-1 py-2 px-4 rounded-lg font-semibold transition ${
+                    paymentStatusFilter === "approved"
+                      ? "bg-green-500 text-white"
+                      : "bg-gray-200 text-gray-700 hover:bg-gray-300"
+                  }`}
+                >
+                  🟢 Approved
+                </button>
+                <button
+                  onClick={() => setPaymentStatusFilter("rejected")}
+                  className={`flex-1 py-2 px-4 rounded-lg font-semibold transition ${
+                    paymentStatusFilter === "rejected"
+                      ? "bg-red-500 text-white"
+                      : "bg-gray-200 text-gray-700 hover:bg-gray-300"
+                  }`}
+                >
+                  🔴 Rejected
+                </button>
+              </div>
+
+              {paymentHistory.filter((payment) => {
+                if (paymentStatusFilter === "all") return true;
+                if (paymentStatusFilter === "pending")
+                  return payment.status === 0;
+                if (paymentStatusFilter === "approved")
+                  return payment.status === 1;
+                if (paymentStatusFilter === "rejected")
+                  return payment.status === 2;
+                return true;
+              }).length === 0 ? (
                 <div className="text-center py-8">
-                  <p className="text-gray-600">No payment history yet</p>
+                  <p className="text-gray-600">
+                    {paymentHistory.length === 0
+                      ? "No payment history yet"
+                      : `No ${paymentStatusFilter} payments`}
+                  </p>
                 </div>
               ) : (
-                paymentHistory.map((payment) => {
-                  const statusConfig = {
-                    0: {
-                      label: "Pending",
-                      color: "bg-yellow-100 text-yellow-800",
-                    },
-                    1: {
-                      label: "Approved",
-                      color: "bg-green-100 text-green-800",
-                    },
-                    2: {
-                      label: "Rejected",
-                      color: "bg-red-100 text-red-800",
-                    },
-                  };
-                  const config =
-                    statusConfig[payment.status as keyof typeof statusConfig];
+                paymentHistory
+                  .filter((payment) => {
+                    if (paymentStatusFilter === "all") return true;
+                    if (paymentStatusFilter === "pending")
+                      return payment.status === 0;
+                    if (paymentStatusFilter === "approved")
+                      return payment.status === 1;
+                    if (paymentStatusFilter === "rejected")
+                      return payment.status === 2;
+                    return true;
+                  })
+                  .map((payment) => {
+                    const statusConfig = {
+                      0: {
+                        label: "Pending",
+                        color: "bg-yellow-100 text-yellow-800",
+                      },
+                      1: {
+                        label: "Approved",
+                        color: "bg-green-100 text-green-800",
+                      },
+                      2: {
+                        label: "Rejected",
+                        color: "bg-red-100 text-red-800",
+                      },
+                    };
+                    const config =
+                      statusConfig[payment.status as keyof typeof statusConfig];
 
-                  return (
-                    <div
-                      key={payment._id}
-                      className="border border-gray-200 rounded-lg overflow-hidden"
-                    >
-                      <button
-                        type="button"
-                        onClick={() =>
-                          setOpenPaymentId(
-                            openPaymentId === payment._id ? null : payment._id,
-                          )
-                        }
-                        className="w-full flex items-center justify-between p-4 bg-white hover:bg-gray-50 focus:outline-none"
+                    return (
+                      <div
+                        key={payment._id}
+                        className="border border-gray-200 rounded-lg overflow-hidden"
                       >
-                        <div className="text-left">
-                          <h3 className="font-semibold text-gray-800">
-                            {payment.package.name}
-                          </h3>
-                          <p className="text-xs text-gray-500">
-                            {new Date(payment.createdAt).toLocaleString()}
-                          </p>
-                        </div>
-                        <div className="flex items-center gap-3">
-                          <span
-                            className={`px-2 py-1 rounded text-xs font-bold ${config.color}`}
-                          >
-                            {config.label}
-                          </span>
-                          <svg
-                            className={`h-4 w-4 text-gray-500 transform transition-transform ${
-                              openPaymentId === payment._id ? "rotate-180" : ""
-                            }`}
-                            viewBox="0 0 20 20"
-                            fill="none"
-                            xmlns="http://www.w3.org/2000/svg"
-                          >
-                            <path
-                              d="M6 8l4 4 4-4"
-                              stroke="currentColor"
-                              strokeWidth="2"
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                            />
-                          </svg>
-                        </div>
-                      </button>
-
-                      {openPaymentId === payment._id && (
-                        <div className="p-4 bg-gray-50 space-y-3">
-                          <div className="grid grid-cols-2 gap-3">
-                            <div className="bg-white p-2 rounded shadow-sm">
-                              <p className="text-xs text-gray-600">Amount</p>
-                              <p className="font-bold">
-                                ${payment.amount} USDT
-                              </p>
-                            </div>
-                            <div className="bg-white p-2 rounded shadow-sm">
-                              <p className="text-xs text-gray-600">Credits</p>
-                              <p className="font-bold">{payment.credits}</p>
-                            </div>
-                            <div className="col-span-2 bg-white p-2 rounded shadow-sm">
-                              <p className="text-xs text-gray-600">
-                                Transaction ID
-                              </p>
-                              <p className="text-xs font-mono break-all">
-                                {payment.transactionId}
-                              </p>
-                            </div>
-                            <div className="col-span-2 bg-white p-2 rounded shadow-sm">
-                              <p className="text-xs text-gray-600">
-                                Wallet Address
-                              </p>
-                              <p className="text-xs font-mono break-all">
-                                {payment.walletAddress}
-                              </p>
-                            </div>
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setOpenPaymentId(
+                              openPaymentId === payment._id
+                                ? null
+                                : payment._id,
+                            )
+                          }
+                          className="w-full flex items-center justify-between p-4 bg-white hover:bg-gray-50 focus:outline-none"
+                        >
+                          <div className="text-left">
+                            <h3 className="font-semibold text-gray-800">
+                              {payment.package.name}
+                            </h3>
+                            <p className="text-xs text-gray-500">
+                              {new Date(payment.createdAt).toLocaleString()}
+                            </p>
                           </div>
+                          <div className="flex items-center gap-3">
+                            <span
+                              className={`px-2 py-1 rounded text-xs font-bold ${config.color}`}
+                            >
+                              {config.label}
+                            </span>
+                            <svg
+                              className={`h-4 w-4 text-gray-500 transform transition-transform ${
+                                openPaymentId === payment._id
+                                  ? "rotate-180"
+                                  : ""
+                              }`}
+                              viewBox="0 0 20 20"
+                              fill="none"
+                              xmlns="http://www.w3.org/2000/svg"
+                            >
+                              <path
+                                d="M6 8l4 4 4-4"
+                                stroke="currentColor"
+                                strokeWidth="2"
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                              />
+                            </svg>
+                          </div>
+                        </button>
 
-                          {payment.status === 1 && payment.approvalNotes && (
-                            <div className="bg-green-50 p-2 rounded">
-                              <p className="text-xs text-green-600 font-semibold">
-                                Admin Notes:
-                              </p>
-                              <p className="text-xs text-green-800">
-                                {payment.approvalNotes}
-                              </p>
+                        {openPaymentId === payment._id && (
+                          <div className="p-4 bg-gray-50 space-y-3">
+                            <div className="grid grid-cols-2 gap-3">
+                              <div className="bg-white p-2 rounded shadow-sm">
+                                <p className="text-xs text-gray-600">Amount</p>
+                                <p className="font-bold">
+                                  ${payment.amount} USDT
+                                </p>
+                              </div>
+                              <div className="bg-white p-2 rounded shadow-sm">
+                                <p className="text-xs text-gray-600">Credits</p>
+                                <p className="font-bold">{payment.credits}</p>
+                              </div>
+                              <div className="col-span-2 bg-white p-2 rounded shadow-sm">
+                                <p className="text-xs text-gray-600">
+                                  Transaction ID
+                                </p>
+                                <p className="text-xs font-mono break-all">
+                                  {payment.transactionId}
+                                </p>
+                              </div>
+                              <div className="col-span-2 bg-white p-2 rounded shadow-sm">
+                                <p className="text-xs text-gray-600">
+                                  Wallet Address
+                                </p>
+                                <p className="text-xs font-mono break-all">
+                                  {payment.walletAddress}
+                                </p>
+                              </div>
                             </div>
-                          )}
 
-                          {payment.status === 2 && payment.rejectionReason && (
-                            <div className="bg-red-50 p-2 rounded">
-                              <p className="text-xs text-red-600 font-semibold">
-                                Rejection Reason:
-                              </p>
-                              <p className="text-xs text-red-800">
-                                {payment.rejectionReason}
-                              </p>
-                            </div>
-                          )}
-                        </div>
-                      )}
-                    </div>
-                  );
-                })
+                            {payment.status === 1 && payment.approvalNotes && (
+                              <div className="bg-green-50 p-2 rounded">
+                                <p className="text-xs text-green-600 font-semibold">
+                                  Admin Notes:
+                                </p>
+                                <p className="text-xs text-green-800">
+                                  {payment.approvalNotes}
+                                </p>
+                              </div>
+                            )}
+
+                            {payment.status === 2 &&
+                              payment.rejectionReason && (
+                                <div className="bg-red-50 p-2 rounded">
+                                  <p className="text-xs text-red-600 font-semibold">
+                                    Rejection Reason:
+                                  </p>
+                                  <p className="text-xs text-red-800">
+                                    {payment.rejectionReason}
+                                  </p>
+                                </div>
+                              )}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })
               )}
             </div>
           )}
