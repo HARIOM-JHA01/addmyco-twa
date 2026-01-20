@@ -1379,6 +1379,7 @@ export default function AdvertisementPage() {
                             onChange={(e) => {
                               setCountrySelection("global");
                               setAdForm({ ...adForm, country: "GLOBAL" });
+                              console.log("Set country to GLOBAL", e);
                             }}
                             className="h-4 w-4 text-[#007cb6]"
                           />
@@ -1396,7 +1397,10 @@ export default function AdvertisementPage() {
                             name="targeting"
                             value="country"
                             checked={countrySelection === "country"}
-                            onChange={(e) => setCountrySelection("country")}
+                            onChange={(e) => {
+                              setCountrySelection("country");
+                              console.log("Set country to specific", e);
+                            }}
                             className="h-4 w-4 text-[#007cb6]"
                           />
                           <label
