@@ -114,10 +114,14 @@ export default function AdvertisementPage() {
     redirectUrl: "",
     image: null as File | null,
   });
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [isPublicLink, setIsPublicLink] = useState<boolean>(false);
   const [countrySelection, setCountrySelection] = useState<
     "global" | "country"
   >("country");
+  const [countryFilterEnabled, setCountryFilterEnabled] = useState<
+    boolean | null
+  >(null);
 
   const getAuthHeaders = () => {
     const token = localStorage.getItem("token");
@@ -170,7 +174,7 @@ export default function AdvertisementPage() {
             `${API_BASE_URL}/api/v1/advertisement/packages`,
             {
               headers: getAuthHeaders(),
-            }
+            },
           );
           setPackages(packagesRes.data?.data || []);
         } catch (pkgErr: any) {
@@ -215,14 +219,14 @@ export default function AdvertisementPage() {
             `${API_BASE_URL}/api/v1/advertisement/my-credits`,
             {
               headers: getAuthHeaders(),
-            }
+            },
           );
           setCredits(
             creditsRes.data?.data || {
               totalCredits: 0,
               usedCredits: 0,
               balanceCredits: 0,
-            }
+            },
           );
         } catch (creditErr: any) {
           console.error("Failed to fetch credits:", creditErr);
@@ -234,7 +238,7 @@ export default function AdvertisementPage() {
         try {
           setCountriesLoading(true);
           const countriesRes = await axios.get(
-            `https://telegramdirectory.org/api/getCountry`
+            `https://telegramdirectory.org/api/getCountry`,
           );
           // Filter out the Global option and map to our format
           const countryList = (countriesRes.data?.CountryData || [])
@@ -274,6 +278,34 @@ export default function AdvertisementPage() {
     fetchData();
   }, []);
 
+  // Fetch ad country filter config whenever create-ad tab is accessed
+  useEffect(() => {
+    if (activeTab === "create-ad") {
+      const fetchCountryFilterConfig = async () => {
+        try {
+          const configRes = await axios.get(
+            `${API_BASE_URL}/api/v1/advertisement/config/ad-country-filter`,
+            { headers: getAuthHeaders() },
+          );
+          const cfgVal =
+            configRes.data?.ConfigValue ?? configRes.data?.configValue;
+          const enabled = String(cfgVal) === "1";
+          setCountryFilterEnabled(enabled);
+          if (!enabled) {
+            // If disabled, force global selection
+            setCountrySelection("global");
+            setAdForm((prev) => ({ ...prev, country: "GLOBAL" }));
+          }
+        } catch (cfgErr: any) {
+          console.error("Failed to fetch ad country filter config:", cfgErr);
+          // Default to enabled (show both) if config fetch fails
+          setCountryFilterEnabled(true);
+        }
+      };
+      fetchCountryFilterConfig();
+    }
+  }, [activeTab]);
+
   // Fetch user's ads
   useEffect(() => {
     if (activeTab === "my-ads") {
@@ -284,7 +316,7 @@ export default function AdvertisementPage() {
             `${API_BASE_URL}/api/v1/advertisement/my-ads`,
             {
               headers: getAuthHeaders(),
-            }
+            },
           );
           setAds(res.data?.data || []);
         } catch (err: any) {
@@ -312,7 +344,7 @@ export default function AdvertisementPage() {
             `${API_BASE_URL}/api/v1/advertisement/payment-history`,
             {
               headers: getAuthHeaders(),
-            }
+            },
           );
           setPaymentHistory(res.data?.data || []);
         } catch (err: any) {
@@ -340,7 +372,7 @@ export default function AdvertisementPage() {
             `${API_BASE_URL}/api/v1/advertisement/my-stats`,
             {
               headers: getAuthHeaders(),
-            }
+            },
           );
           if (res.data?.success) {
             setDashboardData(res.data?.data);
@@ -366,7 +398,7 @@ export default function AdvertisementPage() {
 
     if (!transactionId || !walletAddress) {
       setUsdtModalError(
-        "Please provide both transaction ID and wallet address"
+        "Please provide both transaction ID and wallet address",
       );
       return;
     }
@@ -381,12 +413,12 @@ export default function AdvertisementPage() {
           transactionId: transactionId,
           walletAddress: walletAddress,
         },
-        { headers: getAuthHeaders() }
+        { headers: getAuthHeaders() },
       );
 
       if (res.data?.success) {
         WebApp.showAlert(
-          `Payment details submitted successfully! Please wait for admin approval.`
+          `Payment details submitted successfully! Please wait for admin approval.`,
         );
 
         setUsdtModalOpen(false);
@@ -399,7 +431,7 @@ export default function AdvertisementPage() {
       }
     } catch (err: any) {
       setUsdtModalError(
-        err?.response?.data?.message || "Payment submission failed"
+        err?.response?.data?.message || "Payment submission failed",
       );
     } finally {
       setUsdtModalLoading(false);
@@ -415,7 +447,7 @@ export default function AdvertisementPage() {
     }
     if (!isPublicLink) {
       setCreateAdError(
-        "Telegram URL must be a public channel link (e.g., https://t.me/your_channel)"
+        "Telegram URL must be a public channel link (e.g., https://t.me/your_channel)",
       );
       return;
     }
@@ -452,12 +484,12 @@ export default function AdvertisementPage() {
             ...getAuthHeaders(),
             "Content-Type": "multipart/form-data",
           },
-        }
+        },
       );
 
       if (res.data?.success) {
         WebApp.showAlert(
-          "Advertisement created successfully! It will be reviewed by admin."
+          "Advertisement created successfully! It will be reviewed by admin.",
         );
         setAdForm({
           position: "HOME_BANNER",
@@ -466,10 +498,11 @@ export default function AdvertisementPage() {
           redirectUrl: "",
           image: null,
         });
+        setImagePreview(null);
         // Refresh credits and ads
         const creditsRes = await axios.get(
           `${API_BASE_URL}/api/v1/advertisement/my-credits`,
-          { headers: getAuthHeaders() }
+          { headers: getAuthHeaders() },
         );
         setCredits(creditsRes.data?.data || null);
         setActiveTab("my-ads");
@@ -488,7 +521,7 @@ export default function AdvertisementPage() {
       const res = await axios.patch(
         `${API_BASE_URL}/advertisement/${adId}/pause`,
         {},
-        { headers: getAuthHeaders() }
+        { headers: getAuthHeaders() },
       );
 
       if (res.data?.success) {
@@ -498,13 +531,13 @@ export default function AdvertisementPage() {
           `${API_BASE_URL}/api/v1/advertisement/my-ads`,
           {
             headers: getAuthHeaders(),
-          }
+          },
         );
         setAds(adsRes.data?.data || []);
       }
     } catch (err: any) {
       WebApp.showAlert(
-        err?.response?.data?.message || "Failed to pause advertisement"
+        err?.response?.data?.message || "Failed to pause advertisement",
       );
     } finally {
       setActionLoading(null);
@@ -518,7 +551,7 @@ export default function AdvertisementPage() {
       const res = await axios.patch(
         `${API_BASE_URL}/advertisement/${adId}/resume`,
         {},
-        { headers: getAuthHeaders() }
+        { headers: getAuthHeaders() },
       );
 
       if (res.data?.success) {
@@ -531,7 +564,7 @@ export default function AdvertisementPage() {
       }
     } catch (err: any) {
       WebApp.showAlert(
-        err?.response?.data?.message || "Failed to resume advertisement"
+        err?.response?.data?.message || "Failed to resume advertisement",
       );
     } finally {
       setActionLoading(null);
@@ -550,7 +583,7 @@ export default function AdvertisementPage() {
         `${API_BASE_URL}/api/v1/advertisement/${adId}`,
         {
           headers: getAuthHeaders(),
-        }
+        },
       );
 
       if (res.data?.success) {
@@ -560,13 +593,13 @@ export default function AdvertisementPage() {
           `${API_BASE_URL}/api/v1/advertisement/my-ads`,
           {
             headers: getAuthHeaders(),
-          }
+          },
         );
         setAds(adsRes.data?.data || []);
       }
     } catch (err: any) {
       WebApp.showAlert(
-        err?.response?.data?.message || "Failed to delete advertisement"
+        err?.response?.data?.message || "Failed to delete advertisement",
       );
     } finally {
       setActionLoading(null);
@@ -665,24 +698,18 @@ export default function AdvertisementPage() {
               {activeTab === "dashboard"
                 ? "Advertisement Dashboard"
                 : activeTab === "create-ad"
-                ? "Create Advertisement"
-                : activeTab === "my-ads"
-                ? "My Advertisements"
-                : activeTab === "buy-credits"
-                ? "Buy Credits"
-                : "Payment History"}
+                  ? "Create Advertisement"
+                  : activeTab === "my-ads"
+                    ? "My Advertisements"
+                    : activeTab === "buy-credits"
+                      ? "Buy Credits"
+                      : "Payment History"}
             </h2>
           </div>
 
           {error && (
             <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
               {error}
-            </div>
-          )}
-
-          {loading && (
-            <div className="text-center py-8">
-              <p className="text-gray-600">{i18n.t("loading")}</p>
             </div>
           )}
 
@@ -787,11 +814,11 @@ export default function AdvertisementPage() {
                                     </div>
                                     <div className="text-gray-500 mt-1">
                                       {new Date(
-                                        tx.transactionDate
+                                        tx.transactionDate,
                                       ).toLocaleDateString()}
                                     </div>
                                   </div>
-                                )
+                                ),
                               )}
                             </div>
                           </div>
@@ -1155,7 +1182,7 @@ export default function AdvertisementPage() {
               {packages.filter((pkg) =>
                 buyTab === "start"
                   ? pkg.positions.includes("HOME_BANNER")
-                  : pkg.positions.includes("BOTTOM_CIRCLE")
+                  : pkg.positions.includes("BOTTOM_CIRCLE"),
               ).length === 0 ? (
                 <div className="text-center py-6 text-gray-600">
                   No packages available for this section.
@@ -1165,7 +1192,7 @@ export default function AdvertisementPage() {
                   .filter((pkg) =>
                     buyTab === "start"
                       ? pkg.positions.includes("HOME_BANNER")
-                      : pkg.positions.includes("BOTTOM_CIRCLE")
+                      : pkg.positions.includes("BOTTOM_CIRCLE"),
                   )
                   .map((pkg) => (
                     <div
@@ -1251,43 +1278,65 @@ export default function AdvertisementPage() {
                     Select Targeting Option *
                   </label>
                   <div className="space-y-3">
-                    <div className="flex items-center">
-                      <input
-                        type="radio"
-                        id="global-option"
-                        name="targeting"
-                        value="global"
-                        checked={countrySelection === "global"}
-                        onChange={(e) => {
-                          setCountrySelection("global");
-                          setAdForm({ ...adForm, country: "GLOBAL" });
-                        }}
-                        className="h-4 w-4 text-[#007cb6]"
-                      />
-                      <label
-                        htmlFor="global-option"
-                        className="ml-2 cursor-pointer text-gray-700"
-                      >
-                        Global (All Countries)
-                      </label>
-                    </div>
-                    <div className="flex items-center">
-                      <input
-                        type="radio"
-                        id="country-option"
-                        name="targeting"
-                        value="country"
-                        checked={countrySelection === "country"}
-                        onChange={(e) => setCountrySelection("country")}
-                        className="h-4 w-4 text-[#007cb6]"
-                      />
-                      <label
-                        htmlFor="country-option"
-                        className="ml-2 cursor-pointer text-gray-700"
-                      >
-                        Specific Country
-                      </label>
-                    </div>
+                    {countryFilterEnabled === false ? (
+                      <div className="flex items-center">
+                        <input
+                          type="radio"
+                          id="global-option"
+                          name="targeting"
+                          value="global"
+                          checked={true}
+                          readOnly
+                          className="h-4 w-4 text-[#007cb6]"
+                        />
+                        <label
+                          htmlFor="global-option"
+                          className="ml-2 cursor-pointer text-gray-700"
+                        >
+                          Global (All Countries)
+                        </label>
+                      </div>
+                    ) : (
+                      <>
+                        <div className="flex items-center">
+                          <input
+                            type="radio"
+                            id="global-option"
+                            name="targeting"
+                            value="global"
+                            checked={countrySelection === "global"}
+                            onChange={(e) => {
+                              setCountrySelection("global");
+                              setAdForm({ ...adForm, country: "GLOBAL" });
+                            }}
+                            className="h-4 w-4 text-[#007cb6]"
+                          />
+                          <label
+                            htmlFor="global-option"
+                            className="ml-2 cursor-pointer text-gray-700"
+                          >
+                            Global (All Countries)
+                          </label>
+                        </div>
+                        <div className="flex items-center">
+                          <input
+                            type="radio"
+                            id="country-option"
+                            name="targeting"
+                            value="country"
+                            checked={countrySelection === "country"}
+                            onChange={(e) => setCountrySelection("country")}
+                            className="h-4 w-4 text-[#007cb6]"
+                          />
+                          <label
+                            htmlFor="country-option"
+                            className="ml-2 cursor-pointer text-gray-700"
+                          >
+                            Specific Country
+                          </label>
+                        </div>
+                      </>
+                    )}
                   </div>
                 </div>
 
@@ -1376,43 +1425,69 @@ export default function AdvertisementPage() {
                     <input
                       type="file"
                       accept="image/png,image/jpeg,image/webp"
-                      onChange={(e) =>
+                      onChange={(e) => {
+                        const file = e.target.files?.[0] || null;
                         setAdForm({
                           ...adForm,
-                          image: e.target.files?.[0] || null,
-                        })
-                      }
+                          image: file,
+                        });
+                        if (file) {
+                          const reader = new FileReader();
+                          reader.onloadend = () => {
+                            setImagePreview(reader.result as string);
+                          };
+                          reader.readAsDataURL(file);
+                        } else {
+                          setImagePreview(null);
+                        }
+                      }}
                       className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
                       id="image-upload"
                     />
-                    <label
-                      htmlFor="image-upload"
-                      className="flex items-center justify-center w-full h-32 border-2 border-dashed border-gray-300 rounded-lg bg-gray-50 hover:bg-gray-100 transition-colors cursor-pointer"
-                    >
-                      <div className="text-center">
-                        <svg
-                          className="mx-auto w-8 text-gray-400"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                          xmlns="http://www.w3.org/2000/svg"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
-                          />
-                        </svg>
-                        <p className="text-sm text-gray-600">
-                          {adForm.image
-                            ? "Change Image"
-                            : "Click to Upload Image"}
-                        </p>
-                      </div>
-                    </label>
+                    {imagePreview ? (
+                      <label
+                        htmlFor="image-upload"
+                        className="relative w-full h-32 border-2 border-dashed border-gray-300 rounded-lg bg-gray-50 cursor-pointer overflow-hidden group"
+                      >
+                        <img
+                          src={imagePreview}
+                          alt="Preview"
+                          className="w-full h-full object-cover"
+                        />
+                        <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-40 transition-all flex items-center justify-center">
+                          <span className="text-white text-xs font-semibold opacity-0 group-hover:opacity-100 transition-opacity">
+                            Change Image
+                          </span>
+                        </div>
+                      </label>
+                    ) : (
+                      <label
+                        htmlFor="image-upload"
+                        className="flex items-center justify-center w-full h-32 border-2 border-dashed border-gray-300 rounded-lg bg-gray-50 hover:bg-gray-100 transition-colors cursor-pointer"
+                      >
+                        <div className="text-center">
+                          <svg
+                            className="mx-auto w-8 text-gray-400"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                            xmlns="http://www.w3.org/2000/svg"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
+                            />
+                          </svg>
+                          <p className="text-sm text-gray-600">
+                            Click to Upload Image
+                          </p>
+                        </div>
+                      </label>
+                    )}
                   </div>
-                  {adForm.image && (
+                  {imagePreview && (
                     <div className="mt-2 flex items-center text-green-600">
                       <svg
                         className="h-4 w-4 mr-1"
@@ -1425,7 +1500,7 @@ export default function AdvertisementPage() {
                           clipRule="evenodd"
                         />
                       </svg>
-                      <p className="text-xs">✓ {adForm.image.name}</p>
+                      <p className="text-xs">✓ {adForm.image?.name}</p>
                     </div>
                   )}
                   <p className="text-base text-green-600 font-medium">
@@ -1462,103 +1537,167 @@ export default function AdvertisementPage() {
                 ads.map((ad) => (
                   <div
                     key={ad._id}
-                    className="border border-gray-200 rounded-lg p-4"
+                    className="border border-gray-200 rounded-lg overflow-hidden"
                   >
-                    <div className="flex justify-between items-start mb-3">
-                      <div>
-                        <span className="bg-[#007cb6] text-white px-2 py-1 rounded text-xs font-bold">
-                          {ad.position}
-                        </span>
-                        <span className="ml-2 bg-gray-200 text-gray-700 px-2 py-1 rounded text-xs font-bold">
-                          {ad.status}
-                        </span>
-                      </div>
-                      <p className="text-xs text-gray-500">{ad.country}</p>
-                    </div>
-
-                    {ad.imageUrl && (
-                      <img
-                        src={ad.imageUrl}
-                        alt="Ad"
-                        className="w-full h-32 object-cover rounded mb-3"
-                      />
-                    )}
-
-                    <a
-                      href={ad.redirectUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-sm text-blue-600 underline mb-3 block truncate"
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setOpenPaymentId(
+                          openPaymentId === ad._id ? null : ad._id,
+                        )
+                      }
+                      className="w-full flex items-center justify-between p-4 bg-white hover:bg-gray-50 focus:outline-none"
                     >
-                      {ad.redirectUrl}
-                    </a>
+                      <div className="text-left flex-1">
+                        <div className="flex items-center gap-2 mb-1">
+                          <span className="bg-[#007cb6] text-white px-2 py-1 rounded text-xs font-bold">
+                            {ad.position}
+                          </span>
+                          <span
+                            className={`px-2 py-1 rounded text-xs font-bold ${
+                              ad.status === "active"
+                                ? "bg-green-100 text-green-800"
+                                : ad.status === "paused"
+                                  ? "bg-yellow-100 text-yellow-800"
+                                  : "bg-red-100 text-red-800"
+                            }`}
+                          >
+                            {ad.status === "active"
+                              ? "🟢 Active"
+                              : ad.status === "paused"
+                                ? "🟡 Paused"
+                                : "🔴 Consumed"}
+                          </span>
+                        </div>
+                        <h3 className="font-semibold text-gray-800">
+                          {ad.country}
+                        </h3>
+                        <p className="text-xs text-gray-500">
+                          Created: {new Date(ad.createdAt).toLocaleDateString()}
+                        </p>
+                      </div>
+                      <svg
+                        className={`h-4 w-4 text-gray-500 transform transition-transform flex-shrink-0 ${
+                          openPaymentId === ad._id ? "rotate-180" : ""
+                        }`}
+                        viewBox="0 0 20 20"
+                        fill="none"
+                        xmlns="http://www.w3.org/2000/svg"
+                      >
+                        <path
+                          d="M6 8l4 4 4-4"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        />
+                      </svg>
+                    </button>
 
-                    <div className="grid grid-cols-2 gap-3 text-sm mb-3">
-                      <div className="bg-gray-50 p-2 rounded">
-                        <p className="text-gray-600">Displays</p>
-                        <p className="font-bold">
-                          {ad.displayUsed} / {ad.displayCount}
-                        </p>
-                      </div>
-                      <div className="bg-gray-50 p-2 rounded">
-                        <p className="text-gray-600">Views / Clicks</p>
-                        <p className="font-bold">
-                          {ad.viewCount} / {ad.clickCount}
-                        </p>
-                      </div>
-                      <div className="bg-gray-50 p-2 rounded">
-                        <p className="text-gray-600">CTR</p>
-                        <p className="font-bold">
-                          {ad.ctrPercentage.toFixed(2)}%
-                        </p>
-                      </div>
-                      <div className="bg-gray-50 p-2 rounded">
-                        <p className="text-gray-600">Progress</p>
-                        <div className="w-full bg-gray-300 rounded h-2 mt-1">
-                          <div
-                            className="bg-[#007cb6] h-2 rounded"
-                            style={{
-                              width: `${
-                                (ad.displayUsed / ad.displayCount) * 100
-                              }%`,
-                            }}
-                          />
+                    {openPaymentId === ad._id && (
+                      <div className="p-4 bg-gray-50 space-y-3">
+                        {ad.imageUrl && (
+                          <div className="bg-white p-3 rounded shadow-sm">
+                            <img
+                              src={ad.imageUrl}
+                              alt="Ad"
+                              className="w-full h-40 object-cover rounded"
+                            />
+                          </div>
+                        )}
+
+                        <div className="bg-white p-3 rounded shadow-sm">
+                          <p className="text-xs text-gray-600 mb-1">
+                            Telegram URL
+                          </p>
+                          <a
+                            href={ad.redirectUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-xs text-blue-600 underline break-all"
+                          >
+                            {ad.redirectUrl}
+                          </a>
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-3">
+                          <div className="bg-white p-2 rounded shadow-sm">
+                            <p className="text-xs text-gray-600">Displays</p>
+                            <p className="font-bold text-sm">
+                              {ad.displayUsed} / {ad.displayCount}
+                            </p>
+                          </div>
+                          <div className="bg-white p-2 rounded shadow-sm">
+                            <p className="text-xs text-gray-600">
+                              Views / Clicks
+                            </p>
+                            <p className="font-bold text-sm">
+                              {ad.viewCount} / {ad.clickCount}
+                            </p>
+                          </div>
+                          <div className="bg-white p-2 rounded shadow-sm">
+                            <p className="text-xs text-gray-600">CTR</p>
+                            <p className="font-bold text-sm">
+                              {ad.ctrPercentage.toFixed(2)}%
+                            </p>
+                          </div>
+                          <div className="bg-white p-2 rounded shadow-sm">
+                            <p className="text-xs text-gray-600">Progress</p>
+                            <div className="w-full bg-gray-300 rounded h-2 mt-1">
+                              <div
+                                className="bg-[#007cb6] h-2 rounded"
+                                style={{
+                                  width: `${
+                                    (ad.displayUsed / ad.displayCount) * 100
+                                  }%`,
+                                }}
+                              />
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Action buttons */}
+                        <div className="flex flex-col gap-2 mt-4">
+                          <div className="flex gap-2">
+                            {ad.status === "active" && (
+                              <button
+                                onClick={() => handlePauseAd(ad._id)}
+                                disabled={actionLoading === ad._id}
+                                className="flex-1 bg-yellow-500 text-white py-2 rounded-lg text-sm font-bold hover:bg-yellow-600 disabled:opacity-50"
+                              >
+                                {actionLoading === ad._id ? "..." : "⏸ Pause"}
+                              </button>
+                            )}
+                            {ad.status === "paused" && (
+                              <button
+                                onClick={() => handleResumeAd(ad._id)}
+                                disabled={actionLoading === ad._id}
+                                className="flex-1 bg-green-500 text-white py-2 rounded-lg text-sm font-bold hover:bg-green-600 disabled:opacity-50"
+                              >
+                                {actionLoading === ad._id ? "..." : "▶ Resume"}
+                              </button>
+                            )}
+                            <button
+                              onClick={() => handleDeleteAd(ad._id)}
+                              disabled={actionLoading === ad._id}
+                              className="flex-1 bg-red-500 text-white py-2 rounded-lg text-sm font-bold hover:bg-red-600 disabled:opacity-50"
+                            >
+                              {actionLoading === ad._id ? "..." : "🗑 Delete"}
+                            </button>
+                          </div>
+                          {ad.displayUsed >= ad.displayCount && (
+                            <button
+                              onClick={() => {
+                                setActiveTab("buy-credits");
+                              }}
+                              className="w-full bg-blue-500 text-white py-2 rounded-lg text-sm font-bold hover:bg-blue-600 transition"
+                            >
+                              ✨ Renew Credits
+                            </button>
+                          )}
                         </div>
                       </div>
-                    </div>
-
-                    <p className="text-xs text-gray-500 mb-3">
-                      Created: {new Date(ad.createdAt).toLocaleDateString()}
-                    </p>
-
-                    {/* Action buttons */}
-                    <div className="flex gap-2 mt-3">
-                      {ad.status === "active" && (
-                        <button
-                          onClick={() => handlePauseAd(ad._id)}
-                          disabled={actionLoading === ad._id}
-                          className="flex-1 bg-yellow-500 text-white py-2 rounded-lg text-sm font-bold hover:bg-yellow-600 disabled:opacity-50"
-                        >
-                          {actionLoading === ad._id ? "..." : "⏸ Pause"}
-                        </button>
-                      )}
-                      {ad.status === "paused" && (
-                        <button
-                          onClick={() => handleResumeAd(ad._id)}
-                          disabled={actionLoading === ad._id}
-                          className="flex-1 bg-green-500 text-white py-2 rounded-lg text-sm font-bold hover:bg-green-600 disabled:opacity-50"
-                        >
-                          {actionLoading === ad._id ? "..." : "▶ Resume"}
-                        </button>
-                      )}
-                      <button
-                        onClick={() => handleDeleteAd(ad._id)}
-                        disabled={actionLoading === ad._id}
-                        className="flex-1 bg-red-500 text-white py-2 rounded-lg text-sm font-bold hover:bg-red-600 disabled:opacity-50"
-                      >
-                        {actionLoading === ad._id ? "..." : "🗑 Delete"}
-                      </button>
-                    </div>
+                    )}
                   </div>
                 ))
               )}
@@ -1600,7 +1739,7 @@ export default function AdvertisementPage() {
                         type="button"
                         onClick={() =>
                           setOpenPaymentId(
-                            openPaymentId === payment._id ? null : payment._id
+                            openPaymentId === payment._id ? null : payment._id,
                           )
                         }
                         className="w-full flex items-center justify-between p-4 bg-white hover:bg-gray-50 focus:outline-none"
@@ -1760,7 +1899,7 @@ export default function AdvertisementPage() {
                         onClick={async () => {
                           try {
                             await navigator.clipboard.writeText(
-                              "TK2TMn99SBCrdbZpSef7rFE3vTccvR6dCz"
+                              "TK2TMn99SBCrdbZpSef7rFE3vTccvR6dCz",
                             );
                             WebApp.showAlert("Wallet address copied!");
                           } catch (e) {
