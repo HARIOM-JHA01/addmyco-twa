@@ -4,6 +4,8 @@ import WebApp from "@twa-dev/sdk";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
 import i18n from "../i18n";
+import AdStatisticsPanel from "../components/AdStatisticsPanel";
+import { getAdStatistics } from "../services/advertisementService";
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
@@ -108,6 +110,11 @@ export default function AdvertisementPage() {
   const [adStatusFilter, setAdStatusFilter] = useState<
     "all" | "active" | "consumed"
   >("all");
+
+  // Statistics state
+  const [statsLoading, setStatsLoading] = useState<string | null>(null);
+  const [adStats, setAdStats] = useState<any>(null);
+  const [statsModalOpen, setStatsModalOpen] = useState(false);
 
   // Payment History filter state
   const [paymentStatusFilter, setPaymentStatusFilter] = useState<
@@ -579,6 +586,41 @@ export default function AdvertisementPage() {
       setCreateAdError(err?.response?.data?.message || "Failed to create ad");
     } finally {
       setCreateAdLoading(false);
+    }
+  };
+
+  // Handle fetch ad statistics
+  const handleViewStats = async (adId: string) => {
+    setStatsLoading(adId);
+    try {
+      const token = localStorage.getItem("token");
+      if (!token) {
+        WebApp.showAlert("No authentication token found");
+        setStatsLoading(null);
+        return;
+      }
+
+      console.log("Fetching stats for ad:", adId);
+      const stats = await getAdStatistics(adId, token);
+      console.log("Stats received:", stats);
+
+      if (!stats) {
+        WebApp.showAlert("No statistics data available for this ad");
+        setStatsLoading(null);
+        return;
+      }
+
+      setAdStats(stats);
+      setStatsModalOpen(true);
+    } catch (err: any) {
+      console.error("Error fetching statistics:", err);
+      const errorMessage =
+        err?.response?.data?.message ||
+        err?.message ||
+        "Failed to fetch advertisement statistics";
+      WebApp.showAlert(errorMessage);
+    } finally {
+      setStatsLoading(null);
     }
   };
 
@@ -1830,7 +1872,7 @@ export default function AdvertisementPage() {
                               <img
                                 src={ad.imageUrl}
                                 alt="Ad"
-                                className="w-full h-40 object-cover rounded"
+                                className="w-full h-40 object-contain rounded"
                               />
                             </div>
                           )}
@@ -1909,10 +1951,11 @@ export default function AdvertisementPage() {
                                 </button>
                               )}
                               <button
-                                onClick={() => WebApp.showAlert("Coming Soon!")}
-                                className="flex-1 bg-blue-500 text-white py-2 rounded-lg text-sm font-bold hover:bg-blue-600"
+                                onClick={() => handleViewStats(ad._id)}
+                                disabled={statsLoading === ad._id}
+                                className="flex-1 bg-blue-500 text-white py-2 rounded-lg text-sm font-bold hover:bg-blue-600 disabled:opacity-50"
                               >
-                                📊 View Progress
+                                {statsLoading === ad._id ? "..." : "📊 Stats"}
                               </button>
                               <button
                                 onClick={() => handleDeleteAd(ad._id)}
@@ -2270,6 +2313,18 @@ export default function AdvertisementPage() {
         </div>
       </main>
       <Footer />
+
+      {/* Statistics Panel Modal */}
+      {statsModalOpen && adStats && (
+        <AdStatisticsPanel
+          stats={adStats}
+          isOpen={statsModalOpen}
+          onClose={() => {
+            setStatsModalOpen(false);
+            setAdStats(null);
+          }}
+        />
+      )}
     </div>
   );
 }

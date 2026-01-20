@@ -34,7 +34,7 @@ export interface Advertisement {
  */
 export const fetchAdvertisements = async (
   position: string = "HOME_BANNER",
-  country?: string
+  country?: string,
 ): Promise<Advertisement[]> => {
   try {
     // Try to fetch active advertisements from the new API
@@ -45,7 +45,7 @@ export const fetchAdvertisements = async (
 
     const res = await axios.get(
       `${API_BASE_URL}/api/v1/advertisement/active?${params.toString()}`,
-      { timeout: 5000 }
+      { timeout: 5000 },
     );
 
     const ads = res.data?.data || [];
@@ -82,7 +82,7 @@ export const trackAdDisplay = async (adId: string): Promise<void> => {
     await axios.post(
       `${API_BASE_URL}/api/v1/advertisement/${adId}/track-display`,
       {},
-      { timeout: 3000 }
+      { timeout: 3000 },
     );
   } catch (err) {
     console.warn(`Failed to track display for ad ${adId}:`, err);
@@ -97,9 +97,60 @@ export const trackAdClick = async (adId: string): Promise<void> => {
     await axios.post(
       `${API_BASE_URL}/api/v1/advertisement/${adId}/track-click`,
       {},
-      { timeout: 3000 }
+      { timeout: 3000 },
     );
   } catch (err) {
     console.warn(`Failed to track click for ad ${adId}:`, err);
   }
+};
+
+/**
+ * Get statistics for a specific advertisement
+ */
+export const getAdStatistics = async (adId: string, token: string) => {
+  try {
+    const url = `${API_BASE_URL}/api/v1/advertisement/${adId}/stats`;
+    console.log("Calling API:", url);
+
+    const response = await axios.get(url, {
+      headers: { Authorization: `Bearer ${token}` },
+      timeout: 10000,
+    });
+
+    console.log("API Response:", response.data);
+    return response.data?.data;
+  } catch (err: any) {
+    console.error(
+      "Error in getAdStatistics:",
+      err.response?.data || err.message,
+    );
+    throw err;
+  }
+};
+
+/**
+ * Get user's advertisements with view summary
+ */
+export const getMyAdsWithStats = async (
+  token: string,
+  filters?: {
+    status?: string;
+    position?: string;
+    page?: number;
+    limit?: number;
+  },
+) => {
+  const params = new URLSearchParams();
+  if (filters?.status) params.append("status", filters.status);
+  if (filters?.position) params.append("position", filters.position);
+  if (filters?.page) params.append("page", filters.page.toString());
+  if (filters?.limit) params.append("limit", filters.limit.toString());
+
+  const response = await axios.get(
+    `${API_BASE_URL}/api/v1/advertisement/my-ads?${params.toString()}`,
+    {
+      headers: { Authorization: `Bearer ${token}` },
+    },
+  );
+  return response.data?.data;
 };

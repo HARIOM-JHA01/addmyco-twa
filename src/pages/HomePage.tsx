@@ -136,7 +136,7 @@ export default function HomePage() {
       "";
     const detailsText = `Name : ${name}\nCompany name : ${company}\nDesignation: ${designation}\nAddmyCo address : ${qrLink}`;
     const url = `https://t.me/share/url?url=${encodeURIComponent(
-      qrLink
+      qrLink,
     )}&text=${encodeURIComponent(detailsText)}`;
     window.open(url, "_blank");
     setShowShareModal(false);
@@ -159,7 +159,7 @@ export default function HomePage() {
       profile?.username || profile?.telegram_username || profile?.tgid || "";
     const qrLink = username ? `${origin}/t.me/${username}` : origin;
     const url = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(
-      qrLink
+      qrLink,
     )}`;
     window.open(url, "_blank");
     setShowShareModal(false);
@@ -172,7 +172,7 @@ export default function HomePage() {
     const qrLink = username ? `${origin}/t.me/${username}` : origin;
     const text = `Check this profile: ${qrLink}`;
     const url = `https://twitter.com/intent/tweet?text=${encodeURIComponent(
-      text
+      text,
     )}`;
     window.open(url, "_blank");
     setShowShareModal(false);
@@ -184,7 +184,7 @@ export default function HomePage() {
       profile?.username || profile?.telegram_username || profile?.tgid || "";
     const qrLink = username ? `${origin}/t.me/${username}` : origin;
     const url = `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(
-      qrLink
+      qrLink,
     )}`;
     window.open(url, "_blank");
     setShowShareModal(false);
@@ -220,7 +220,7 @@ export default function HomePage() {
       profile?.username || profile?.telegram_username || profile?.tgid || "";
     const qrLink = username ? `${origin}/t.me/${username}` : origin;
     const url = `https://social-plugins.line.me/lineit/share?url=${encodeURIComponent(
-      qrLink
+      qrLink,
     )}`;
     window.open(url, "_blank");
     setShowShareModal(false);
@@ -288,12 +288,12 @@ export default function HomePage() {
                       try {
                         const res = await axios.post(
                           `${API_BASE_URL}/iscontactexist/${encodeURIComponent(
-                            username
+                            username,
                           )}`,
                           {},
                           {
                             headers: { Authorization: `Bearer ${token}` },
-                          }
+                          },
                         );
                         if (
                           res.status === 200 &&
@@ -309,7 +309,7 @@ export default function HomePage() {
                         } else {
                           console.warn(
                             "iscontactexist check failed",
-                            e?.response?.status || e
+                            e?.response?.status || e,
                           );
                         }
                       }
@@ -334,7 +334,7 @@ export default function HomePage() {
             }
           }
           return true; // Return true to close the popup
-        }
+        },
       );
     } catch (error) {
       console.error("QR Scanner error:", error);

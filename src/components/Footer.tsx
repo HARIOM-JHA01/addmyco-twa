@@ -9,6 +9,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import WebApp from "@twa-dev/sdk";
 import i18n, { getLanguage, setLanguage } from "../i18n";
+import BottomCircleAdBanner from "./BottomCircleAdBanner";
 
 export default function Footer() {
   const router = useNavigate();
@@ -17,7 +18,7 @@ export default function Footer() {
   // const [workModalText, setWorkModalText] = useState("");
   const [showLanguageModal, setShowLanguageModal] = useState(false);
   const [selectedLanguage, setSelectedLanguage] = useState(
-    getLanguage() === "zh" ? "Chinese" : "English"
+    getLanguage() === "zh" ? "Chinese" : "English",
   );
 
   useEffect(() => {
@@ -47,7 +48,7 @@ export default function Footer() {
           localStorage.removeItem("token");
           WebApp.close();
         }
-      }
+      },
     );
   };
 
@@ -232,14 +233,12 @@ export default function Footer() {
             {/* payment history now in settings popup */}
           </div>
           <div className="relative flex justify-center items-center w-24">
-            <img
-              src={TGDIcon}
-              alt="TGD"
-              className="w-20 h-20 rounded-full bg-white border-4 border-[#007cb6] z-20 absolute -top-14 left-1/2 -translate-x-1/2 shadow-lg"
-              style={{ boxShadow: "0 4px 16px 0 rgba(0,0,0,0.10)" }}
-              onClick={() => {
+            <BottomCircleAdBanner
+              fallbackImage={TGDIcon}
+              onFallbackClick={() => {
                 WebApp.openTelegramLink("https://t.me/TGDirectories");
               }}
+              isFooterMode={true}
             />
           </div>
           <div className="flex gap-2">
