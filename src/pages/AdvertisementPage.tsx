@@ -110,10 +110,14 @@ export default function AdvertisementPage() {
   const [adForm, setAdForm] = useState({
     position: "HOME_BANNER",
     country: "INDIA",
-    displayCount: 1000,
+    credits: 1,
     redirectUrl: "",
     image: null as File | null,
   });
+  const [rates, setRates] = useState<{
+    HOME_BANNER: number;
+    BOTTOM_CIRCLE: number;
+  } | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [isPublicLink, setIsPublicLink] = useState<boolean>(false);
   const [countrySelection, setCountrySelection] = useState<
@@ -131,19 +135,33 @@ export default function AdvertisementPage() {
   // Validate whether a Telegram URL is a public channel link
   const isTelegramPublicLink = (url: string) => {
     try {
+      // Check if URL is valid
+      if (!url || !url.trim()) return false;
+
       const parsed = new URL(url);
+
+      // Must be t.me domain
       if (parsed.hostname !== "t.me") return false;
+
+      // Get the path and remove leading/trailing slashes
       const path = parsed.pathname.replace(/^\/+|\/+$/g, "");
       if (!path) return false;
-      // Disallow invite or private links (start with +, joinchat, or c)
-      if (
-        path.startsWith("+") ||
-        path.startsWith("joinchat") ||
-        path.startsWith("c")
-      )
-        return false;
+
+      // Disallow private/invite links that start with +
+      // Format: https://t.me/+xxx (private link)
+      if (path.startsWith("+")) return false;
+
+      // Disallow joinchat links (old invite format)
+      if (path.startsWith("joinchat")) return false;
+
+      // Disallow private channel links (c/channel_id format)
+      if (path.startsWith("c/")) return false;
+
+      // Extract username (first part before any /)
       const username = path.split("/")[0];
-      // Telegram usernames: 5-32 chars, letters, numbers, underscores
+
+      // Public channel/group usernames must be 5-32 chars, alphanumeric + underscores
+      // Format: https://t.me/channelname
       return /^[A-Za-z0-9_]{5,32}$/.test(username);
     } catch (e) {
       return false;
@@ -376,6 +394,10 @@ export default function AdvertisementPage() {
           );
           if (res.data?.success) {
             setDashboardData(res.data?.data);
+            // Store rates for use in create ad form
+            if (res.data?.data?.rates) {
+              setRates(res.data.data.rates);
+            }
           } else {
             setDashboardError("Failed to load dashboard data");
           }
@@ -391,6 +413,33 @@ export default function AdvertisementPage() {
       fetchDashboard();
     }
   }, [activeTab]);
+
+  // Fetch rates when on create-ad tab if not already loaded
+  useEffect(() => {
+    if (activeTab === "create-ad" && !rates) {
+      const fetchRates = async () => {
+        try {
+          const res = await axios.get(
+            `${API_BASE_URL}/api/v1/advertisement/my-stats`,
+            {
+              headers: getAuthHeaders(),
+            },
+          );
+          if (res.data?.success && res.data?.data?.rates) {
+            setRates(res.data.data.rates);
+          }
+        } catch (err: any) {
+          console.error("Error fetching rates:", err);
+          // Fallback to default rate if API fails
+          setRates({
+            HOME_BANNER: 1000,
+            BOTTOM_CIRCLE: 1000,
+          });
+        }
+      };
+      fetchRates();
+    }
+  }, [activeTab, rates]);
 
   // Handle USDT payment - submit payment request
   const handleUsdtPayment = async () => {
@@ -452,13 +501,22 @@ export default function AdvertisementPage() {
       return;
     }
 
-    const requiredCredits = Math.ceil(adForm.displayCount / 1000);
     const availableBalance =
       credits?.availableCredits || credits?.balanceCredits || 0;
-    if (credits && requiredCredits > availableBalance) {
+    if (adForm.credits < 1) {
+      setCreateAdError("Minimum 1 credit is required");
+      return;
+    }
+    if (credits && adForm.credits > availableBalance) {
       setCreateAdError("Insufficient credits for this advertisement");
       return;
     }
+
+    // Get the conversion rate for the selected position
+    const displaysPerCredit = rates
+      ? rates[adForm.position as keyof typeof rates]
+      : 1000; // fallback to 1000 if rates not loaded
+    const displayCount = adForm.credits * displaysPerCredit;
 
     setCreateAdLoading(true);
     setCreateAdError(null);
@@ -468,8 +526,8 @@ export default function AdvertisementPage() {
       formData.append("description", `Advertisement for ${adForm.country}`);
       formData.append("position", adForm.position);
       formData.append("country", adForm.country);
-      formData.append("displayCount", String(adForm.displayCount));
-      formData.append("credits", String(requiredCredits));
+      formData.append("displayCount", String(displayCount));
+      formData.append("credits", String(adForm.credits));
       // backend expects redirectUrl; include it explicitly
       formData.append("redirectUrl", adForm.redirectUrl);
       // keep targetUrl too in case some endpoints accept it
@@ -494,7 +552,7 @@ export default function AdvertisementPage() {
         setAdForm({
           position: "HOME_BANNER",
           country: "GLOBAL",
-          displayCount: 1000,
+          credits: 1,
           redirectUrl: "",
           image: null,
         });
@@ -1369,22 +1427,75 @@ export default function AdvertisementPage() {
 
                 <div>
                   <label className="block text-sm font-bold mb-2 text-gray-700">
-                    Number of Displays *
+                    Number of Credits *
                   </label>
+                  <div className="mb-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                    <p className="text-sm text-gray-700 mb-2">
+                      <span className="font-semibold">Available Credits:</span>{" "}
+                      <span className="text-blue-600 font-bold">
+                        {credits?.availableCredits ||
+                          credits?.balanceCredits ||
+                          0}
+                      </span>
+                    </p>
+                    <p className="text-xs text-gray-600">
+                      {rates ? (
+                        <>
+                          1 credit ={" "}
+                          {rates[
+                            adForm.position as keyof typeof rates
+                          ].toLocaleString()}{" "}
+                          displays
+                          {/* <br />
+                          <span className="text-gray-500 italic">
+                            (Rate for{" "}
+                            {adForm.position === "HOME_BANNER"
+                              ? "Start Page Banner"
+                              : "Bottom Circle"}
+                            )
+                          </span> */}
+                        </>
+                      ) : (
+                        "Loading rates..."
+                      )}
+                    </p>
+                  </div>
                   <input
                     type="number"
-                    min="100"
-                    value={adForm.displayCount}
-                    onChange={(e) =>
+                    min="1"
+                    max={
+                      credits?.availableCredits || credits?.balanceCredits || 1
+                    }
+                    value={adForm.credits}
+                    onChange={(e) => {
+                      const maxCredits =
+                        credits?.availableCredits ||
+                        credits?.balanceCredits ||
+                        1;
+                      const value = parseInt(e.target.value) || 1;
                       setAdForm({
                         ...adForm,
-                        displayCount: parseInt(e.target.value) || 1000,
-                      })
-                    }
+                        credits: Math.max(1, Math.min(value, maxCredits)),
+                      });
+                    }}
                     className="w-full border border-gray-300 rounded-lg px-3 py-2"
                   />
-                  <p className="text-xs text-gray-500 mt-1">
-                    Requires {Math.ceil(adForm.displayCount / 1000)} credit(s)
+                  <p className="text-xs text-gray-500 mt-2">
+                    {rates && (
+                      <>
+                        <span className="font-semibold">Displays:</span>{" "}
+                        {(
+                          adForm.credits *
+                          rates[adForm.position as keyof typeof rates]
+                        ).toLocaleString()}{" "}
+                        ({adForm.credits} credit
+                        {adForm.credits !== 1 ? "s" : ""} ×{" "}
+                        {rates[
+                          adForm.position as keyof typeof rates
+                        ].toLocaleString()}{" "}
+                        displays/credit)
+                      </>
+                    )}
                   </p>
                 </div>
 
@@ -1411,7 +1522,7 @@ export default function AdvertisementPage() {
                       }`}
                     >
                       {isPublicLink
-                        ? "Public Telegram channel link detected ✅"
+                        ? ""
                         : "Please enter a public Telegram channel link (no invite/private links)"}
                     </p>
                   )}
@@ -1420,6 +1531,9 @@ export default function AdvertisementPage() {
                 <div className="mb-2">
                   <label className="block text-sm font-bold mb-2 text-gray-700">
                     Upload Image (PNG/JPG) *
+                    <p className="text-base text-green-600 font-medium">
+                      Image aspect ratio should be 1:1 for best display.
+                    </p>
                   </label>
                   <div className="relative h-48">
                     <input
@@ -1503,9 +1617,6 @@ export default function AdvertisementPage() {
                       <p className="text-xs">✓ {adForm.image?.name}</p>
                     </div>
                   )}
-                  <p className="text-base text-green-600 font-medium">
-                    Image aspect ratio should be 1:1 for best display.
-                  </p>
                 </div>
 
                 <button
