@@ -538,10 +538,10 @@ export default function AdvertisementPage() {
     }
 
     // Get the conversion rate for the selected position
-    const displaysPerCredit = rates
-      ? rates[adForm.position as keyof typeof rates]
-      : 1000; // fallback to 1000 if rates not loaded
-    const displayCount = adForm.credits * displaysPerCredit;
+    // const displaysPerCredit = rates
+    //   ? rates[adForm.position as keyof typeof rates]
+    //   : 1000; // fallback to 1000 if rates not loaded
+    // const _ = adForm.credits * displaysPerCredit;
 
     setCreateAdLoading(true);
     setCreateAdError(null);
