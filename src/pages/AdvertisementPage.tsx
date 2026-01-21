@@ -6,6 +6,7 @@ import Footer from "../components/Footer";
 import i18n from "../i18n";
 import AdStatisticsPanel from "../components/AdStatisticsPanel";
 import { getAdStatistics } from "../services/advertisementService";
+import { useProfileStore } from "../store/profileStore";
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
@@ -79,6 +80,7 @@ type TabType =
   | "payment-history";
 
 export default function AdvertisementPage() {
+  const profile = useProfileStore((state) => state.profile);
   const [activeTab, setActiveTab] = useState<TabType>("dashboard");
   const [packages, setPackages] = useState<Package[]>([]);
   const [credits, setCredits] = useState<CreditBalance | null>(null);
@@ -545,16 +547,17 @@ export default function AdvertisementPage() {
     setCreateAdError(null);
     try {
       const formData = new FormData();
-      formData.append("title", `Ad - ${adForm.position}`);
-      formData.append("description", `Advertisement for ${adForm.country}`);
+      // Add sponsorId from user profile
+      if (profile?._id) {
+        formData.append("sponsorId", profile._id);
+      }
       formData.append("position", adForm.position);
-      formData.append("country", adForm.country);
-      formData.append("displayCount", String(displayCount));
+      // Format country: if GLOBAL, send "GLOBAL", else send the selected country code
+      const countryValue =
+        adForm.country === "GLOBAL" ? "GLOBAL" : adForm.country;
+      formData.append("country", countryValue);
       formData.append("credits", String(adForm.credits));
-      // backend expects redirectUrl; include it explicitly
       formData.append("redirectUrl", adForm.redirectUrl);
-      // keep targetUrl too in case some endpoints accept it
-      formData.append("targetUrl", adForm.redirectUrl);
       formData.append("image", adForm.image);
 
       const res = await axios.post(
