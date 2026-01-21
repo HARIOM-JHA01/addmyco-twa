@@ -519,7 +519,13 @@ export default function AdvertisementPage() {
     }
 
     const availableBalance =
-      credits?.availableCredits || credits?.balanceCredits || 0;
+      credits?.availableCredits ?? credits?.balanceCredits ?? 0;
+    if (availableBalance === 0) {
+      setCreateAdError(
+        "You do not have any Coupon credit to assign Adv. Buy Now",
+      );
+      return;
+    }
     if (adForm.credits < 1) {
       setCreateAdError("Minimum 1 credit is required");
       return;
@@ -716,6 +722,10 @@ export default function AdvertisementPage() {
     }
   };
 
+  // Compute available credits for create-ad validations (respect zero)
+  const availableCreditsVal =
+    credits?.availableCredits ?? credits?.balanceCredits ?? 0;
+
   return (
     <div className="min-h-screen w-full overflow-x-hidden flex flex-col bg-gray-300">
       <Header />
@@ -841,7 +851,7 @@ export default function AdvertisementPage() {
                   {/* Credits Section */}
                   {dashboardData.credits && (
                     <div className="bg-white rounded-lg shadow-md p-6">
-                      <h3 className="text-lg font-bold text-gray-800 mb-4">
+                      <h3 className="text-lg text-center font-bold text-gray-800 mb-4">
                         Credits Overview
                       </h3>
                       <div className="grid grid-cols-3 gap-4">
@@ -866,6 +876,21 @@ export default function AdvertisementPage() {
                           </p>
                         </div>
                       </div>
+
+                      {(dashboardData.credits.balance ?? 0) === 0 && (
+                        <div className="mt-4 bg-yellow-50 border border-yellow-400 text-gray-800 px-4 py-3 rounded mb-4 flex items-center justify-between">
+                          <p className="text-sm">
+                            You do not have any Coupon credit to assign Adv.{" "}
+                            <button
+                              type="button"
+                              onClick={() => setActiveTab("buy-credits")}
+                              className="ml-2 underline font-semibold text-[#007cb6]"
+                            >
+                              Buy Now
+                            </button>
+                          </p>
+                        </div>
+                      )}
 
                       {/* Credit Rates
                       {dashboardData.rates && (
@@ -919,7 +944,7 @@ export default function AdvertisementPage() {
                                       </span>
                                     </div>
                                     <div className="flex justify-between text-gray-600">
-                                      <span>ID: {tx.transactionId}</span>
+                                      {/* <span>ID: {tx.transactionId}</span> */}
                                       <span>${tx.amountUSDT} USDT</span>
                                     </div>
                                     <div className="text-gray-500 mt-1">
@@ -997,7 +1022,7 @@ export default function AdvertisementPage() {
                           <div className="border border-gray-200 rounded-lg p-4 bg-gradient-to-br from-gray-50 to-white">
                             <h4 className="font-semibold text-gray-800 mb-3 flex items-center gap-2">
                               <span className="text-lg">📱</span> Home Banner
-                              (Start Page)
+                              (Landing Page)
                             </h4>
                             <div className="space-y-2 text-sm">
                               <div className="flex justify-between">
@@ -1087,23 +1112,23 @@ export default function AdvertisementPage() {
                                 </div>
                               )}
 
-                              <div className="pt-3 border-t mt-3">
-                                <div className="flex justify-between text-xs mb-1">
-                                  <span className="text-gray-600">
+                              <div className="-mx-4 -mb-4 mt-3 bg-gradient-to-r from-purple-50 via-blue-50 to-purple-50 border-t border-purple-200 px-4 py-3 rounded-b-lg">
+                                <div className="flex justify-between text-xs mb-2 items-center">
+                                  <span className="text-gray-700 font-semibold">
                                     Active Ads:
                                   </span>
-                                  <span className="font-bold text-blue-600">
+                                  <span className="inline-block px-3 py-1 rounded-full text-sm font-bold bg-green-500 text-white shadow-md">
                                     {
                                       dashboardData.positions.startPage
                                         .activeAds
                                     }
                                   </span>
                                 </div>
-                                <div className="flex justify-between text-xs">
-                                  <span className="text-gray-600">
+                                <div className="flex justify-between text-xs items-center">
+                                  <span className="text-gray-700 font-semibold">
                                     Total Ads:
                                   </span>
-                                  <span className="font-bold">
+                                  <span className="inline-block px-3 py-1 rounded-full text-sm font-bold bg-blue-500 text-white shadow-md">
                                     {dashboardData.positions.startPage.totalAds}
                                   </span>
                                 </div>
@@ -1210,23 +1235,23 @@ export default function AdvertisementPage() {
                                 </div>
                               )}
 
-                              <div className="pt-3 border-t mt-3">
-                                <div className="flex justify-between text-xs mb-1">
-                                  <span className="text-gray-600">
+                              <div className="-mx-4 -mb-4 mt-3 bg-gradient-to-r from-orange-50 via-pink-50 to-orange-50 border-t border-orange-200 px-4 py-3 rounded-b-lg">
+                                <div className="flex justify-between text-xs mb-2 items-center">
+                                  <span className="text-gray-700 font-semibold">
                                     Active Ads:
                                   </span>
-                                  <span className="font-bold text-blue-600">
+                                  <span className="inline-block px-3 py-1 rounded-full text-sm font-bold bg-green-500 text-white shadow-md">
                                     {
                                       dashboardData.positions.bottomCircle
                                         .activeAds
                                     }
                                   </span>
                                 </div>
-                                <div className="flex justify-between text-xs">
-                                  <span className="text-gray-600">
+                                <div className="flex justify-between text-xs items-center">
+                                  <span className="text-gray-700 font-semibold">
                                     Total Ads:
                                   </span>
-                                  <span className="font-bold">
+                                  <span className="inline-block px-3 py-1 rounded-full text-sm font-bold bg-blue-500 text-white shadow-md">
                                     {
                                       dashboardData.positions.bottomCircle
                                         .totalAds
@@ -1351,15 +1376,21 @@ export default function AdvertisementPage() {
           {/* Create Ad Tab */}
           {activeTab === "create-ad" && !loading && (
             <>
-              {(credits?.availableCredits || credits?.balanceCredits || 0) ===
-              0 ? (
+              {availableCreditsVal === 0 ? (
                 <div className="bg-yellow-50 border border-yellow-400 text-red-500 px-4 py-3 rounded mb-4">
                   <p className="font-semibold text-center">
                     No Available Credits
                   </p>
                   <p className="text-sm mt-1">
-                    You do not have any available credit in your account please
-                    buy credit before creating advertisements
+                    You do not have any available credit in your account. Please{" "}
+                    <button
+                      type="button"
+                      className="underline font-semibold text-[#007cb6] ml-1"
+                      onClick={() => setActiveTab("buy-credits")}
+                    >
+                      Buy Now
+                    </button>{" "}
+                    before creating advertisements.
                   </p>
                 </div>
               ) : null}
@@ -1492,9 +1523,7 @@ export default function AdvertisementPage() {
                     <p className="text-sm text-gray-700 mb-2">
                       <span className="font-semibold">Available Credits:</span>{" "}
                       <span className="text-blue-600 font-bold">
-                        {credits?.availableCredits ||
-                          credits?.balanceCredits ||
-                          0}
+                        {availableCreditsVal}
                       </span>
                     </p>
                     <p className="text-xs text-gray-600">
@@ -1522,33 +1551,33 @@ export default function AdvertisementPage() {
                   <input
                     type="number"
                     min="1"
-                    max={
-                      credits?.availableCredits || credits?.balanceCredits || 1
-                    }
-                    value={adForm.credits}
+                    max={availableCreditsVal > 0 ? availableCreditsVal : 1}
+                    value={availableCreditsVal === 0 ? 0 : adForm.credits}
                     onChange={(e) => {
                       const maxCredits =
-                        credits?.availableCredits ||
-                        credits?.balanceCredits ||
-                        1;
+                        availableCreditsVal > 0 ? availableCreditsVal : 1;
                       const value = parseInt(e.target.value) || 1;
                       setAdForm({
                         ...adForm,
                         credits: Math.max(1, Math.min(value, maxCredits)),
                       });
                     }}
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2"
+                    disabled={availableCreditsVal === 0}
+                    className="w-full border border-gray-300 rounded-lg px-3 py-2 disabled:opacity-50 disabled:cursor-not-allowed"
                   />
                   <p className="text-xs text-gray-500 mt-2">
                     {rates && (
                       <>
                         <span className="font-semibold">Displays:</span>{" "}
                         {(
-                          adForm.credits *
+                          (availableCreditsVal === 0 ? 0 : adForm.credits) *
                           rates[adForm.position as keyof typeof rates]
                         ).toLocaleString()}{" "}
-                        ({adForm.credits} credit
-                        {adForm.credits !== 1 ? "s" : ""} ×{" "}
+                        ({availableCreditsVal === 0 ? 0 : adForm.credits} credit
+                        {(availableCreditsVal === 0 ? 0 : adForm.credits) !== 1
+                          ? "s"
+                          : ""}{" "}
+                        ×{" "}
                         {rates[
                           adForm.position as keyof typeof rates
                         ].toLocaleString()}{" "}
@@ -1714,7 +1743,11 @@ export default function AdvertisementPage() {
 
                 <button
                   type="submit"
-                  disabled={createAdLoading || !isPublicLink}
+                  disabled={
+                    createAdLoading ||
+                    !isPublicLink ||
+                    availableCreditsVal === 0
+                  }
                   className="w-full bg-[#007cb6] text-white py-3 rounded-lg font-bold hover:bg-[#005f8e] transition disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {createAdLoading

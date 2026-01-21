@@ -22,7 +22,7 @@ const WelcomePage: React.FC<WelcomePageProps> = ({ onLogin, partnerCode }) => {
   const [isInTelegram, setIsInTelegram] = useState(true);
   const carouselInterval = useRef<NodeJS.Timeout | null>(null);
   const buttonRef = useRef<HTMLButtonElement | null>(null);
-  const [buttonWidth, setButtonWidth] = useState<number | null>(null);
+  const [_, setButtonWidth] = useState<number | null>(null);
 
   useEffect(() => {
     try {
@@ -208,7 +208,7 @@ const WelcomePage: React.FC<WelcomePageProps> = ({ onLogin, partnerCode }) => {
                       // Track click event
                       if (banners[currentBanner]._id) {
                         trackAdClick(banners[currentBanner]._id).catch(
-                          () => {}
+                          () => {},
                         );
                       }
                     }}
@@ -224,8 +224,8 @@ const WelcomePage: React.FC<WelcomePageProps> = ({ onLogin, partnerCode }) => {
                       }
                       className="rounded-lg shadow-lg object-cover"
                       style={{
-                        width: buttonWidth ? `${buttonWidth}px` : undefined,
-                        height: buttonWidth ? `${buttonWidth}px` : undefined,
+                        width: "300px",
+                        height: "300px",
                         maxWidth: "100%",
                         objectFit: "cover",
                       }}
@@ -233,7 +233,7 @@ const WelcomePage: React.FC<WelcomePageProps> = ({ onLogin, partnerCode }) => {
                         // Track display/impression event
                         if (banners[currentBanner]._id) {
                           trackAdDisplay(banners[currentBanner]._id).catch(
-                            () => {}
+                            () => {},
                           );
                         }
                       }}
