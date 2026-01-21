@@ -188,7 +188,7 @@ export const createTelegramMiniAppLink = (username: string): string => {
 };
 
 // Video validation constants
-export const MAX_VIDEO_SIZE_MB = 5;
+export const MAX_VIDEO_SIZE_MB = 10;
 export const MAX_VIDEO_DURATION_SECONDS = 120;
 export const MAX_VIDEO_SIZE_BYTES = MAX_VIDEO_SIZE_MB * 1024 * 1024; // 5MB in bytes
 
@@ -214,7 +214,7 @@ export const validateVideoSize = (file: File): VideoValidationResult => {
 
 // Validate video duration (must be less than 120 seconds)
 export const validateVideoDuration = (
-  file: File
+  file: File,
 ): Promise<VideoValidationResult> => {
   return new Promise((resolve) => {
     const video = document.createElement("video");
@@ -228,7 +228,7 @@ export const validateVideoDuration = (
         resolve({
           isValid: false,
           error: `Video duration must be less than ${MAX_VIDEO_DURATION_SECONDS} seconds (2 minutes). Current duration: ${Math.floor(
-            duration
+            duration,
           )} seconds`,
         });
       } else {
@@ -250,7 +250,7 @@ export const validateVideoDuration = (
 
 // Comprehensive video validation (checks both size and duration)
 export const validateVideo = async (
-  file: File
+  file: File,
 ): Promise<VideoValidationResult> => {
   // First check file size
   const sizeValidation = validateVideoSize(file);
