@@ -760,13 +760,13 @@ export default function AdvertisementPage() {
 
             {/* Hamburger Menu Dropdown */}
             {menuOpen && (
-              <div className="absolute top-full right-0 mt-2 bg-white rounded-lg shadow-lg z-50 min-w-max">
+              <div className="absolute top-full right-0 mt-2 bg-[#007cb6] bg-opacity-90 rounded-lg shadow-lg z-50 min-w-max">
                 <button
                   onClick={() => {
                     setActiveTab("dashboard");
                     setMenuOpen(false);
                   }}
-                  className="block w-full text-left px-4 py-2 text-gray-800 hover:bg-blue-100 transition first:rounded-t-lg"
+                  className="block w-full text-left px-4 py-2 text-white font-semibold hover:bg-gray-800 transition first:rounded-t-lg"
                 >
                   Dashboard
                 </button>
@@ -775,7 +775,7 @@ export default function AdvertisementPage() {
                     setActiveTab("create-ad");
                     setMenuOpen(false);
                   }}
-                  className="block w-full text-left px-4 py-2 text-gray-800 hover:bg-blue-100 transition"
+                  className="block w-full text-left px-4 py-2 text-white font-semibold hover:bg-gray-800 transition"
                 >
                   Create Ad
                 </button>
@@ -784,7 +784,7 @@ export default function AdvertisementPage() {
                     setActiveTab("my-ads");
                     setMenuOpen(false);
                   }}
-                  className="block w-full text-left px-4 py-2 text-gray-800 hover:bg-blue-100 transition"
+                  className="block w-full text-left px-4 py-2 text-white font-semibold hover:bg-gray-800 transition"
                 >
                   My Ads
                 </button>
@@ -793,7 +793,7 @@ export default function AdvertisementPage() {
                     setActiveTab("buy-credits");
                     setMenuOpen(false);
                   }}
-                  className="block w-full text-left px-4 py-2 text-gray-800 hover:bg-blue-100 transition"
+                  className="block w-full text-left px-4 py-2 text-white font-semibold hover:bg-gray-800 transition"
                 >
                   Buy Credits
                 </button>
@@ -802,7 +802,7 @@ export default function AdvertisementPage() {
                     setActiveTab("payment-history");
                     setMenuOpen(false);
                   }}
-                  className="block w-full text-left px-4 py-2 text-gray-800 hover:bg-blue-100 transition last:rounded-b-lg"
+                  className="block w-full text-left px-4 py-2 text-white font-semibold hover:bg-gray-800 transition last:rounded-b-lg"
                 >
                   Payments
                 </button>
@@ -1523,7 +1523,11 @@ export default function AdvertisementPage() {
                     <p className="text-sm text-gray-700 mb-2">
                       <span className="font-semibold">Available Credits:</span>{" "}
                       <span className="text-blue-600 font-bold">
-                        {availableCreditsVal}
+                        {adForm.position === "HOME_BANNER"
+                          ? (dashboardData?.positions?.startPage
+                              ?.creditAllocated ?? availableCreditsVal)
+                          : (dashboardData?.positions?.bottomCircle
+                              ?.creditAllocated ?? availableCreditsVal)}
                       </span>
                     </p>
                     <p className="text-xs text-gray-600">
