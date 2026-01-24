@@ -231,7 +231,9 @@ export default function AdStatisticsPanel({
                 topDates.map(([date, views]) => (
                   <div key={date} className="space-y-1">
                     <div className="flex justify-between text-sm">
-                      <span className="font-medium text-gray-700">{date}</span>
+                      <span className="font-medium text-gray-700">
+                        {date.split("-").reverse().join("-")}
+                      </span>
                       <span className="font-semibold text-gray-800">
                         {views.toLocaleString()} views
                       </span>
@@ -303,7 +305,7 @@ export default function AdStatisticsPanel({
                           </span>
                           <span className="mx-2 text-gray-400">•</span>
                           <span className="text-xs font-semibold text-gray-600">
-                            {view.date}
+                            {view.date.split("-").reverse().join("-")}
                           </span>
                         </div>
                         {view.userClicked && (
