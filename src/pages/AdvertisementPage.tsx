@@ -1405,7 +1405,11 @@ export default function AdvertisementPage() {
                   type="button"
                   onClick={() => {
                     setCreateAdTab("start");
-                    setAdForm({ ...adForm, position: "HOME_BANNER" });
+                    setAdForm({
+                      ...adForm,
+                      position: "HOME_BANNER",
+                      credits: 1,
+                    });
                   }}
                   className={`flex-1 py-2 rounded font-semibold ${
                     createAdTab === "start"
@@ -1419,7 +1423,11 @@ export default function AdvertisementPage() {
                   type="button"
                   onClick={() => {
                     setCreateAdTab("circle");
-                    setAdForm({ ...adForm, position: "BOTTOM_CIRCLE" });
+                    setAdForm({
+                      ...adForm,
+                      position: "BOTTOM_CIRCLE",
+                      credits: 1,
+                    });
                   }}
                   className={`flex-1 py-2 rounded font-semibold ${
                     createAdTab === "circle"
@@ -1589,43 +1597,56 @@ export default function AdvertisementPage() {
                       )}
                     </p>
                   </div>
-                  <input
-                    type="number"
-                    min="1"
-                    max={availableCreditsVal > 0 ? availableCreditsVal : 1}
-                    value={availableCreditsVal === 0 ? 0 : adForm.credits}
-                    onChange={(e) => {
-                      const maxCredits =
-                        availableCreditsVal > 0 ? availableCreditsVal : 1;
-                      const value = parseInt(e.target.value) || 1;
-                      setAdForm({
-                        ...adForm,
-                        credits: Math.max(1, Math.min(value, maxCredits)),
-                      });
-                    }}
-                    disabled={availableCreditsVal === 0}
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2 disabled:opacity-50 disabled:cursor-not-allowed"
-                  />
-                  <p className="text-xs text-gray-500 mt-2">
-                    {rates && (
+                  {(() => {
+                    const positionCredits =
+                      adForm.position === "HOME_BANNER"
+                        ? (dashboardData?.positions?.startPage
+                            ?.creditAllocated ?? availableCreditsVal)
+                        : (dashboardData?.positions?.bottomCircle
+                            ?.creditAllocated ?? availableCreditsVal);
+                    const maxCredits =
+                      positionCredits > 0 ? positionCredits : 1;
+
+                    return (
                       <>
-                        <span className="font-semibold">Displays:</span>{" "}
-                        {(
-                          (availableCreditsVal === 0 ? 0 : adForm.credits) *
-                          rates[adForm.position as keyof typeof rates]
-                        ).toLocaleString()}{" "}
-                        ({availableCreditsVal === 0 ? 0 : adForm.credits} credit
-                        {(availableCreditsVal === 0 ? 0 : adForm.credits) !== 1
-                          ? "s"
-                          : ""}{" "}
-                        ×{" "}
-                        {rates[
-                          adForm.position as keyof typeof rates
-                        ].toLocaleString()}{" "}
-                        displays/credit)
+                        <input
+                          type="number"
+                          min="1"
+                          max={maxCredits}
+                          value={maxCredits === 0 ? 0 : adForm.credits}
+                          onChange={(e) => {
+                            const value = parseInt(e.target.value) || 1;
+                            setAdForm({
+                              ...adForm,
+                              credits: Math.max(1, Math.min(value, maxCredits)),
+                            });
+                          }}
+                          disabled={maxCredits === 0}
+                          className="w-full border border-gray-300 rounded-lg px-3 py-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                        />
+                        <p className="text-xs text-gray-500 mt-2">
+                          {rates && (
+                            <>
+                              <span className="font-semibold">Displays:</span>{" "}
+                              {(
+                                (maxCredits === 0 ? 0 : adForm.credits) *
+                                rates[adForm.position as keyof typeof rates]
+                              ).toLocaleString()}{" "}
+                              ({maxCredits === 0 ? 0 : adForm.credits} credit
+                              {(maxCredits === 0 ? 0 : adForm.credits) !== 1
+                                ? "s"
+                                : ""}{" "}
+                              ×{" "}
+                              {rates[
+                                adForm.position as keyof typeof rates
+                              ].toLocaleString()}{" "}
+                              displays/credit)
+                            </>
+                          )}
+                        </p>
                       </>
-                    )}
-                  </p>
+                    );
+                  })()}
                 </div>
 
                 <div>

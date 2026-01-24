@@ -2,6 +2,9 @@ import axios from "axios";
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
+// Store session ID globally for tracking
+let currentSessionId: string | null = null;
+
 export interface Advertisement {
   _id: string;
   title?: string;
@@ -49,6 +52,11 @@ export const fetchAdvertisements = async (
     );
 
     const ads = res.data?.data || [];
+    // Store sessionId for tracking
+    if (res.data?.sessionId) {
+      currentSessionId = res.data.sessionId;
+    }
+
     if (ads.length > 0) {
       console.log("Loaded advertisements from public API:", ads.length);
       return ads;
@@ -85,9 +93,50 @@ export const fetchAdvertisements = async (
  */
 export const trackAdDisplay = async (adId: string): Promise<void> => {
   try {
+    // Get timezone
+    const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+
+    // Get country from Telegram WebApp if available
+    let country = "GLOBAL";
+    try {
+      if (
+        typeof window !== "undefined" &&
+        (window as any).Telegram?.WebApp?.initDataUnsafe?.user
+      ) {
+        const user = (window as any).Telegram.WebApp.initDataUnsafe.user;
+        if (user.language_code) {
+          // Map language codes to country codes (simplified mapping)
+          const langToCountry: { [key: string]: string } = {
+            en: "US",
+            zh: "CN",
+            es: "ES",
+            fr: "FR",
+            de: "DE",
+            it: "IT",
+            ja: "JP",
+            ko: "KR",
+            pt: "BR",
+            ru: "RU",
+          };
+          country = langToCountry[user.language_code] || "GLOBAL";
+        }
+      }
+    } catch (e) {
+      console.log("Could not determine country, using GLOBAL");
+    }
+
+    const body: { sessionId?: string; country: string; timezone: string } = {
+      country,
+      timezone,
+    };
+
+    if (currentSessionId) {
+      body.sessionId = currentSessionId;
+    }
+
     await axios.post(
       `${API_BASE_URL}/api/v1/advertisement/${adId}/track-display`,
-      {},
+      body,
       { timeout: 3000 },
     );
   } catch (err) {
@@ -100,9 +149,50 @@ export const trackAdDisplay = async (adId: string): Promise<void> => {
  */
 export const trackAdClick = async (adId: string): Promise<void> => {
   try {
+    // Get timezone
+    const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+
+    // Get country from Telegram WebApp if available
+    let country = "GLOBAL";
+    try {
+      if (
+        typeof window !== "undefined" &&
+        (window as any).Telegram?.WebApp?.initDataUnsafe?.user
+      ) {
+        const user = (window as any).Telegram.WebApp.initDataUnsafe.user;
+        if (user.language_code) {
+          // Map language codes to country codes (simplified mapping)
+          const langToCountry: { [key: string]: string } = {
+            en: "US",
+            zh: "CN",
+            es: "ES",
+            fr: "FR",
+            de: "DE",
+            it: "IT",
+            ja: "JP",
+            ko: "KR",
+            pt: "BR",
+            ru: "RU",
+          };
+          country = langToCountry[user.language_code] || "GLOBAL";
+        }
+      }
+    } catch (e) {
+      console.log("Could not determine country, using GLOBAL");
+    }
+
+    const body: { sessionId?: string; country: string; timezone: string } = {
+      country,
+      timezone,
+    };
+
+    if (currentSessionId) {
+      body.sessionId = currentSessionId;
+    }
+
     await axios.post(
       `${API_BASE_URL}/api/v1/advertisement/${adId}/track-click`,
-      {},
+      body,
       { timeout: 3000 },
     );
   } catch (err) {
