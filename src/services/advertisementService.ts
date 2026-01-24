@@ -53,6 +53,12 @@ export const fetchAdvertisements = async (
       console.log("Loaded advertisements from public API:", ads.length);
       return ads;
     }
+
+    // For BOTTOM_CIRCLE position, return empty array if API returns no data
+    if (position === "BOTTOM_CIRCLE") {
+      console.log("No advertisements found for BOTTOM_CIRCLE position");
+      return [];
+    }
   } catch (err) {
     console.warn("Failed to fetch active advertisements, using fallback:", err);
   }
