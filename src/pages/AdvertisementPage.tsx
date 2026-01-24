@@ -130,7 +130,7 @@ export default function AdvertisementPage() {
   const [createAdError, setCreateAdError] = useState<string | null>(null);
   const [adForm, setAdForm] = useState({
     position: "HOME_BANNER",
-    country: "INDIA",
+    countries: [] as string[],
     credits: 1,
     redirectUrl: "",
     image: null as File | null,
@@ -521,6 +521,10 @@ export default function AdvertisementPage() {
       );
       return;
     }
+    if (countrySelection === "country" && adForm.countries.length === 0) {
+      setCreateAdError("Please select at least one country");
+      return;
+    }
 
     const availableBalance =
       credits?.availableCredits ?? credits?.balanceCredits ?? 0;
@@ -554,10 +558,8 @@ export default function AdvertisementPage() {
         formData.append("sponsorId", profile._id);
       }
       formData.append("position", adForm.position);
-      // Format country: if GLOBAL, send "GLOBAL", else send the selected country code
-      const countryValue =
-        adForm.country === "GLOBAL" ? "GLOBAL" : adForm.country;
-      formData.append("country", countryValue);
+      // Send countries as JSON array
+      formData.append("countries", JSON.stringify(adForm.countries));
       formData.append("credits", String(adForm.credits));
       formData.append("redirectUrl", adForm.redirectUrl);
       formData.append("image", adForm.image);
@@ -579,7 +581,7 @@ export default function AdvertisementPage() {
         );
         setAdForm({
           position: "HOME_BANNER",
-          country: "GLOBAL",
+          countries: ["GLOBAL"],
           credits: 1,
           redirectUrl: "",
           image: null,
@@ -1495,7 +1497,7 @@ export default function AdvertisementPage() {
                             checked={countrySelection === "global"}
                             onChange={(e) => {
                               setCountrySelection("global");
-                              setAdForm({ ...adForm, country: "GLOBAL" });
+                              setAdForm({ ...adForm, countries: ["GLOBAL"] });
                               console.log("Set country to GLOBAL", e);
                             }}
                             className="h-4 w-4 text-[#007cb6]"
@@ -1535,22 +1537,53 @@ export default function AdvertisementPage() {
                 {countrySelection === "country" && (
                   <div>
                     <label className="block text-sm font-bold mb-2 text-gray-700">
-                      Select Country *
+                      Select Countries * (Hold Ctrl/Cmd to select multiple)
                     </label>
                     <select
-                      value={adForm.country}
-                      onChange={(e) =>
-                        setAdForm({ ...adForm, country: e.target.value })
-                      }
-                      className="w-full border border-gray-300 rounded-lg px-3 py-2"
+                      multiple
+                      value={adForm.countries}
+                      onChange={(e) => {
+                        const selected = Array.from(
+                          e.target.selectedOptions,
+                          (option) => option.value,
+                        );
+                        setAdForm({ ...adForm, countries: selected });
+                      }}
+                      className="w-full border border-gray-300 rounded-lg px-3 py-2 min-h-[120px]"
                     >
-                      <option value="">Choose a country...</option>
                       {countryOptions.map((c) => (
                         <option key={c.code} value={c.key}>
                           {c.name}
                         </option>
                       ))}
                     </select>
+                    {adForm.countries.length > 0 && (
+                      <div className="mt-2 flex flex-wrap gap-2">
+                        {adForm.countries.map((country) => (
+                          <span
+                            key={country}
+                            className="inline-flex items-center gap-1 bg-blue-100 text-blue-800 text-xs font-semibold px-2 py-1 rounded"
+                          >
+                            {countryOptions.find((c) => c.key === country)
+                              ?.name || country}
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setAdForm({
+                                  ...adForm,
+                                  countries: adForm.countries.filter(
+                                    (c) => c !== country,
+                                  ),
+                                });
+                              }}
+                              className="text-blue-600 hover:text-blue-800"
+                            >
+                              ×
+                            </button>
+                          </span>
+                        ))}
+                      </div>
+                    )}
                     {countriesLoading && (
                       <p className="text-xs text-gray-500 mt-1">
                         Loading countries...
