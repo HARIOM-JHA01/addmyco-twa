@@ -96,7 +96,7 @@ export default function AdStatisticsPanel({
           </h2>
           <button
             onClick={onClose}
-            className="text-gray-500 hover:text-gray-700 font-bold text-xl"
+            className="bg-blue-500 text-white hover:bg-blue-600 font-bold px-3 py-1 rounded"
           >
             ✕
           </button>
@@ -193,9 +193,7 @@ export default function AdStatisticsPanel({
           {/* Country Tab */}
           {activeTab === "country" && (
             <div className="space-y-3">
-              <h3 className="font-semibold text-gray-700">
-                Views by Country (Top 10)
-              </h3>
+              <h3 className="font-semibold text-gray-700">Views by Country</h3>
               {topCountries.length === 0 ? (
                 <p className="text-gray-500 text-sm">No data available</p>
               ) : (
@@ -226,9 +224,7 @@ export default function AdStatisticsPanel({
           {/* Date Tab */}
           {activeTab === "date" && (
             <div className="space-y-3">
-              <h3 className="font-semibold text-gray-700">
-                Views by Date (Top 10)
-              </h3>
+              <h3 className="font-semibold text-gray-700">Views by Date</h3>
               {topDates.length === 0 ? (
                 <p className="text-gray-500 text-sm">No data available</p>
               ) : (
@@ -258,7 +254,7 @@ export default function AdStatisticsPanel({
           {activeTab === "time" && (
             <div className="space-y-3">
               <h3 className="font-semibold text-gray-700">
-                Views by Hour (Top 10)
+                Views by Hour( GMT )
               </h3>
               {topTimes.length === 0 ? (
                 <p className="text-gray-500 text-sm">No data available</p>

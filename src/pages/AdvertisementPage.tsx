@@ -7,6 +7,7 @@ import i18n from "../i18n";
 import AdStatisticsPanel from "../components/AdStatisticsPanel";
 import { getAdStatistics } from "../services/advertisementService";
 import { useProfileStore } from "../store/profileStore";
+import { formatDate } from "../utils/date";
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
@@ -952,9 +953,7 @@ export default function AdvertisementPage() {
                                       <span>${tx.amountUSDT} USDT</span>
                                     </div>
                                     <div className="text-gray-500 mt-1">
-                                      {new Date(
-                                        tx.transactionDate,
-                                      ).toLocaleDateString()}
+                                      {formatDate(tx.transactionDate)}
                                     </div>
                                   </div>
                                 ),
@@ -1938,8 +1937,7 @@ export default function AdvertisementPage() {
                             {ad.country}
                           </h3>
                           <p className="text-xs text-gray-500">
-                            Created:{" "}
-                            {new Date(ad.createdAt).toLocaleDateString()}
+                            Created: {formatDate(ad.createdAt)}
                           </p>
                         </div>
                         <svg
@@ -2194,7 +2192,7 @@ export default function AdvertisementPage() {
                               {payment.package.name}
                             </h3>
                             <p className="text-xs text-gray-500">
-                              {new Date(payment.createdAt).toLocaleString()}
+                              {formatDate(payment.createdAt)}
                             </p>
                           </div>
                           <div className="flex items-center gap-3">

@@ -5,6 +5,48 @@ const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 // Store session ID globally for tracking
 let currentSessionId: string | null = null;
 
+// Cache for user location data
+let cachedLocationData: { country: string; timezone: string } | null = null;
+
+/**
+ * Fetch user location data from ipapi.co
+ */
+const fetchUserLocation = async (): Promise<{
+  country: string;
+  timezone: string;
+}> => {
+  // Return cached data if available
+  if (cachedLocationData) {
+    return cachedLocationData;
+  }
+
+  try {
+    const response = await axios.get("https://ipapi.co/json/", {
+      timeout: 5000,
+    });
+
+    if (response.data) {
+      cachedLocationData = {
+        country: response.data.country_code || "GLOBAL",
+        timezone:
+          response.data.timezone ||
+          Intl.DateTimeFormat().resolvedOptions().timeZone,
+      };
+      return cachedLocationData;
+    }
+  } catch (error) {
+    console.warn("Failed to fetch location from ipapi.co:", error);
+  }
+
+  // Fallback to browser timezone
+  const fallback = {
+    country: "GLOBAL",
+    timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+  };
+  cachedLocationData = fallback;
+  return fallback;
+};
+
 export interface Advertisement {
   _id: string;
   title?: string;
@@ -93,41 +135,12 @@ export const fetchAdvertisements = async (
  */
 export const trackAdDisplay = async (adId: string): Promise<void> => {
   try {
-    // Get timezone
-    const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
-
-    // Get country from Telegram WebApp if available
-    let country = "GLOBAL";
-    try {
-      if (
-        typeof window !== "undefined" &&
-        (window as any).Telegram?.WebApp?.initDataUnsafe?.user
-      ) {
-        const user = (window as any).Telegram.WebApp.initDataUnsafe.user;
-        if (user.language_code) {
-          // Map language codes to country codes (simplified mapping)
-          const langToCountry: { [key: string]: string } = {
-            en: "US",
-            zh: "CN",
-            es: "ES",
-            fr: "FR",
-            de: "DE",
-            it: "IT",
-            ja: "JP",
-            ko: "KR",
-            pt: "BR",
-            ru: "RU",
-          };
-          country = langToCountry[user.language_code] || "GLOBAL";
-        }
-      }
-    } catch (e) {
-      console.log("Could not determine country, using GLOBAL");
-    }
+    // Get user location data
+    const locationData = await fetchUserLocation();
 
     const body: { sessionId?: string; country: string; timezone: string } = {
-      country,
-      timezone,
+      country: locationData.country,
+      timezone: locationData.timezone,
     };
 
     if (currentSessionId) {
@@ -149,41 +162,12 @@ export const trackAdDisplay = async (adId: string): Promise<void> => {
  */
 export const trackAdClick = async (adId: string): Promise<void> => {
   try {
-    // Get timezone
-    const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
-
-    // Get country from Telegram WebApp if available
-    let country = "GLOBAL";
-    try {
-      if (
-        typeof window !== "undefined" &&
-        (window as any).Telegram?.WebApp?.initDataUnsafe?.user
-      ) {
-        const user = (window as any).Telegram.WebApp.initDataUnsafe.user;
-        if (user.language_code) {
-          // Map language codes to country codes (simplified mapping)
-          const langToCountry: { [key: string]: string } = {
-            en: "US",
-            zh: "CN",
-            es: "ES",
-            fr: "FR",
-            de: "DE",
-            it: "IT",
-            ja: "JP",
-            ko: "KR",
-            pt: "BR",
-            ru: "RU",
-          };
-          country = langToCountry[user.language_code] || "GLOBAL";
-        }
-      }
-    } catch (e) {
-      console.log("Could not determine country, using GLOBAL");
-    }
+    // Get user location data
+    const locationData = await fetchUserLocation();
 
     const body: { sessionId?: string; country: string; timezone: string } = {
-      country,
-      timezone,
+      country: locationData.country,
+      timezone: locationData.timezone,
     };
 
     if (currentSessionId) {
