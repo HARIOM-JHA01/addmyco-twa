@@ -120,6 +120,15 @@ export default function AdvertisementPage() {
   const [adStats, setAdStats] = useState<any>(null);
   const [statsModalOpen, setStatsModalOpen] = useState(false);
 
+  // Add Credits Modal state
+  const [addCreditsModalOpen, setAddCreditsModalOpen] = useState(false);
+  const [selectedAdForCredits, setSelectedAdForCredits] = useState<
+    string | null
+  >(null);
+  const [creditsToAdd, setCreditsToAdd] = useState<number>(1);
+  const [addCreditsLoading, setAddCreditsLoading] = useState(false);
+  const [addCreditsError, setAddCreditsError] = useState<string | null>(null);
+
   // Payment History filter state
   const [paymentStatusFilter, setPaymentStatusFilter] = useState<
     "all" | "pending" | "approved" | "rejected"
@@ -634,6 +643,97 @@ export default function AdvertisementPage() {
       WebApp.showAlert(errorMessage);
     } finally {
       setStatsLoading(null);
+    }
+  };
+
+  // Handle add credits to advertisement
+  const handleAddCredits = async () => {
+    if (!selectedAdForCredits) return;
+
+    if (creditsToAdd < 1) {
+      setAddCreditsError("Please enter at least 1 credit");
+      return;
+    }
+
+    const availableBalance =
+      credits?.availableCredits ?? credits?.balanceCredits ?? 0;
+    if (creditsToAdd > availableBalance) {
+      setAddCreditsError(
+        `Insufficient credits. Available: ${availableBalance}`,
+      );
+      return;
+    }
+
+    setAddCreditsLoading(true);
+    setAddCreditsError(null);
+    try {
+      const token = localStorage.getItem("token");
+      await axios.patch(
+        `${API_BASE_URL}/api/v1/advertisement/${selectedAdForCredits}/add-credits`,
+        { credits: creditsToAdd },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        },
+      );
+
+      WebApp.showAlert(
+        `Successfully added ${creditsToAdd} credits to the advertisement!`,
+      );
+
+      // Close modal and reset
+      setAddCreditsModalOpen(false);
+      setSelectedAdForCredits(null);
+      setCreditsToAdd(1);
+      setAddCreditsError(null);
+
+      // Refresh data by re-fetching credits and ads
+      const refreshToken = localStorage.getItem("token");
+
+      // Refresh credits
+      try {
+        const creditsRes = await axios.get(
+          `${API_BASE_URL}/api/v1/advertisement/my-credits`,
+          {
+            headers: { Authorization: `Bearer ${refreshToken}` },
+          },
+        );
+        setCredits(
+          creditsRes.data?.data || {
+            totalCredits: 0,
+            usedCredits: 0,
+            balanceCredits: 0,
+          },
+        );
+      } catch (err) {
+        console.error("Failed to refresh credits:", err);
+      }
+
+      // Refresh ads if on my-ads tab
+      if (activeTab === "my-ads") {
+        try {
+          const adsRes = await axios.get(
+            `${API_BASE_URL}/api/v1/advertisement/my-ads`,
+            {
+              headers: { Authorization: `Bearer ${refreshToken}` },
+            },
+          );
+          setAds(adsRes.data?.data || []);
+        } catch (err) {
+          console.error("Failed to refresh ads:", err);
+        }
+      }
+    } catch (err: any) {
+      console.error("Error adding credits:", err);
+      const errorMessage =
+        err?.response?.data?.message ||
+        err?.message ||
+        "Failed to add credits to advertisement";
+      setAddCreditsError(errorMessage);
+    } finally {
+      setAddCreditsLoading(false);
     }
   };
 
@@ -2094,11 +2194,12 @@ export default function AdvertisementPage() {
                             {ad.displayUsed >= ad.displayCount && (
                               <button
                                 onClick={() => {
-                                  setActiveTab("buy-credits");
+                                  setSelectedAdForCredits(ad._id);
+                                  setAddCreditsModalOpen(true);
                                 }}
                                 className="w-full bg-blue-500 text-white py-2 rounded-lg text-sm font-bold hover:bg-blue-600 transition"
                               >
-                                ✨ Renew Credits
+                                ✨ Assign More Credits
                               </button>
                             )}
                           </div>
@@ -2439,6 +2540,75 @@ export default function AdvertisementPage() {
         </div>
       </main>
       <Footer />
+
+      {/* Add Credits Modal */}
+      {addCreditsModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40 p-4">
+          <div className="bg-white rounded-xl shadow-xl w-full max-w-sm relative">
+            <button
+              className="absolute top-2 right-2 text-gray-400 hover:text-gray-700 text-xl z-10"
+              onClick={() => {
+                setAddCreditsModalOpen(false);
+                setSelectedAdForCredits(null);
+                setCreditsToAdd(1);
+                setAddCreditsError(null);
+              }}
+              aria-label="Close"
+            >
+              &times;
+            </button>
+            <div className="p-6">
+              <h3 className="text-lg font-bold text-[#007cb6] mb-4 text-center">
+                Assign More Credits
+              </h3>
+
+              <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                <p className="text-sm text-gray-700">
+                  <span className="font-semibold">Available Credits:</span>{" "}
+                  <span className="text-blue-600 font-bold">
+                    {credits?.availableCredits ?? credits?.balanceCredits ?? 0}
+                  </span>
+                </p>
+              </div>
+
+              <label className="block mb-2 text-sm font-bold text-gray-700">
+                Credits to Add *
+              </label>
+              <input
+                type="number"
+                min="1"
+                max={credits?.availableCredits ?? credits?.balanceCredits ?? 0}
+                className="w-full border border-gray-300 rounded-lg px-3 py-2 mb-4 focus:outline-none focus:ring-2 focus:ring-[#007cb6]"
+                value={creditsToAdd}
+                onChange={(e) => {
+                  const value = parseInt(e.target.value) || 1;
+                  const maxCredits =
+                    credits?.availableCredits ?? credits?.balanceCredits ?? 0;
+                  setCreditsToAdd(Math.max(1, Math.min(value, maxCredits)));
+                }}
+                disabled={addCreditsLoading}
+                placeholder="Enter credits"
+              />
+
+              {addCreditsError && (
+                <div className="text-red-500 text-sm mb-4 p-2 bg-red-50 rounded">
+                  {addCreditsError}
+                </div>
+              )}
+
+              <button
+                onClick={handleAddCredits}
+                disabled={addCreditsLoading || creditsToAdd < 1}
+                className="w-full bg-[#007cb6] text-white py-3 rounded-lg font-bold hover:bg-[#005f8e] transition disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {addCreditsLoading
+                  ? "Adding..."
+                  : `Add ${creditsToAdd} Credit${creditsToAdd !== 1 ? "s" : ""}`}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Statistics Panel Modal */}
       {statsModalOpen && adStats && (
