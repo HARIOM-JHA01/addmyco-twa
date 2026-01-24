@@ -99,6 +99,7 @@ export default function AdvertisementPage() {
   // Buy credits state
   const [selectedPackage, setSelectedPackage] = useState<Package | null>(null);
   const [buyTab, setBuyTab] = useState<"start" | "circle">("start");
+  const [createAdTab, setCreateAdTab] = useState<"start" | "circle">("start");
   const [usdtModalOpen, setUsdtModalOpen] = useState(false);
   const [transactionId, setTransactionId] = useState("");
   const [walletAddress, setWalletAddress] = useState("");
@@ -1397,6 +1398,39 @@ export default function AdvertisementPage() {
                   </p>
                 </div>
               ) : null}
+
+              {/* Sub-tabs for Landing Page / Circle */}
+              <div className="flex gap-2 mb-4">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setCreateAdTab("start");
+                    setAdForm({ ...adForm, position: "HOME_BANNER" });
+                  }}
+                  className={`flex-1 py-2 rounded font-semibold ${
+                    createAdTab === "start"
+                      ? "bg-[#007cb6] text-white"
+                      : "bg-white border border-gray-200 text-gray-700"
+                  }`}
+                >
+                  Landing Page Banner
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setCreateAdTab("circle");
+                    setAdForm({ ...adForm, position: "BOTTOM_CIRCLE" });
+                  }}
+                  className={`flex-1 py-2 rounded font-semibold ${
+                    createAdTab === "circle"
+                      ? "bg-[#007cb6] text-white"
+                      : "bg-white border border-gray-200 text-gray-700"
+                  }`}
+                >
+                  Bottom Bar Circle
+                </button>
+              </div>
+
               <form onSubmit={handleCreateAd} className="space-y-4">
                 {createAdError && (
                   <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
@@ -1682,9 +1716,9 @@ export default function AdvertisementPage() {
                     {imagePreview ? (
                       <label
                         htmlFor="image-upload"
-                        className={`relative w-full border-2 border-dashed border-gray-300 bg-gray-50 cursor-pointer overflow-hidden group block ${
+                        className={`relative border-2 border-dashed border-gray-300 bg-gray-50 cursor-pointer overflow-hidden group block ${
                           adForm.position === "HOME_BANNER"
-                            ? "h-48 rounded-lg"
+                            ? "w-full h-48 rounded-lg"
                             : "h-64 w-64 mx-auto rounded-full"
                         }`}
                       >
@@ -1702,9 +1736,9 @@ export default function AdvertisementPage() {
                     ) : (
                       <label
                         htmlFor="image-upload"
-                        className={`flex items-center justify-center w-full border-2 border-dashed border-gray-300 bg-gray-50 hover:bg-gray-100 transition-colors cursor-pointer ${
+                        className={`flex items-center justify-center border-2 border-dashed border-gray-300 bg-gray-50 hover:bg-gray-100 transition-colors cursor-pointer ${
                           adForm.position === "HOME_BANNER"
-                            ? "h-48 rounded-lg"
+                            ? "w-full h-48 rounded-lg"
                             : "h-64 w-64 mx-auto rounded-full"
                         }`}
                       >
