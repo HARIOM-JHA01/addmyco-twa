@@ -558,8 +558,8 @@ export default function AdvertisementPage() {
         formData.append("sponsorId", profile._id);
       }
       formData.append("position", adForm.position);
-      // Send countries as JSON array
-      formData.append("countries", JSON.stringify(adForm.countries));
+      // Send countries as comma-separated string
+      formData.append("country", adForm.countries.join(","));
       formData.append("credits", String(adForm.credits));
       formData.append("redirectUrl", adForm.redirectUrl);
       formData.append("image", adForm.image);
