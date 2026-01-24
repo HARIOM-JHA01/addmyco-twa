@@ -1537,7 +1537,7 @@ export default function AdvertisementPage() {
                 {countrySelection === "country" && (
                   <div>
                     <label className="block text-sm font-bold mb-2 text-gray-700">
-                      Select Countries * (Hold Ctrl/Cmd to select multiple)
+                      Select Countries *
                     </label>
                     <select
                       multiple
