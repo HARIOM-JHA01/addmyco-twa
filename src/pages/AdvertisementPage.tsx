@@ -102,6 +102,10 @@ export default function AdvertisementPage() {
     boolean | null
   >(null);
 
+  // Position-specific credits state
+  const [positionCredits, setPositionCredits] = useState<any>(null);
+  const [positionCreditsLoading, setPositionCreditsLoading] = useState(false);
+
   const getAuthHeaders = () => {
     const token = localStorage.getItem("token");
     return { Authorization: `Bearer ${token}` };
@@ -173,6 +177,30 @@ export default function AdvertisementPage() {
       fetchCountryFilterConfig();
     }
   }, [activeTab]);
+
+  // Fetch position-specific credits whenever create-ad tab is accessed or position changes
+  useEffect(() => {
+    if (activeTab === "create-ad") {
+      const fetchPositionCredits = async () => {
+        setPositionCreditsLoading(true);
+        try {
+          const res = await axios.get(
+            `${API_BASE_URL}/api/v1/advertisement/my-credits?position=${adForm.position}`,
+            { headers: getAuthHeaders() },
+          );
+          if (res.data?.success) {
+            setPositionCredits(res.data?.data);
+          }
+        } catch (err: any) {
+          console.error("Failed to fetch position-specific credits:", err);
+          setPositionCredits(null);
+        } finally {
+          setPositionCreditsLoading(false);
+        }
+      };
+      fetchPositionCredits();
+    }
+  }, [activeTab, adForm.position]);
 
   // Fetch user's ads
   useEffect(() => {
@@ -1316,6 +1344,53 @@ export default function AdvertisementPage() {
                     <option value="BOTTOM_CIRCLE">Bottom Bar Circle</option>
                   </select>
                 </div>
+
+                {/* Position-Specific Credits Display */}
+                {positionCreditsLoading ? (
+                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                    <p className="text-sm text-gray-600">
+                      Loading credits information...
+                    </p>
+                  </div>
+                ) : positionCredits ? (
+                  <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-lg p-4">
+                    <h4 className="text-sm font-bold text-gray-800 mb-3">
+                      Credits for{" "}
+                      {adForm.position === "HOME_BANNER"
+                        ? "Landing Page Banner"
+                        : "Bottom Bar Circle"}
+                    </h4>
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className="bg-white rounded p-2 border border-blue-100">
+                        <p className="text-xs text-gray-600">Total Credits</p>
+                        <p className="text-lg font-bold text-blue-600">
+                          {positionCredits.totalCredits}
+                        </p>
+                      </div>
+                      <div className="bg-white rounded p-2 border border-orange-100">
+                        <p className="text-xs text-gray-600">
+                          Used for Position
+                        </p>
+                        <p className="text-lg font-bold text-orange-600">
+                          {positionCredits.usedCreditsForPosition ?? 0}
+                        </p>
+                      </div>
+                      <div className="bg-white rounded p-2 border border-green-100">
+                        <p className="text-xs text-gray-600">Available</p>
+                        <p className="text-lg font-bold text-green-600">
+                          {positionCredits.availableCreditsForPosition ??
+                            positionCredits.balanceCredits}
+                        </p>
+                      </div>
+                      <div className="bg-white rounded p-2 border border-purple-100">
+                        <p className="text-xs text-gray-600">Balance</p>
+                        <p className="text-lg font-bold text-purple-600">
+                          {positionCredits.balanceCredits}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                ) : null}
 
                 <div>
                   <label className="block text-sm font-bold mb-2 text-gray-700">
