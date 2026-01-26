@@ -9,82 +9,28 @@ import { getAdStatistics } from "../services/advertisementService";
 import { useProfileStore } from "../store/profileStore";
 import { formatDate } from "../utils/date";
 
+import {
+  Package,
+  Advertisement,
+  TabType,
+  AdForm,
+  PaymentHistory,
+} from "../types/advertisement";
+import { useAdvertisementData } from "../hooks/useAdvertisementData";
+import { UsdtPaymentModal } from "../components/advertisement/UsdtPaymentModal";
+import { AddCreditsModal } from "../components/advertisement/AddCreditsModal";
+import { BuyCreditsTab } from "../components/advertisement/BuyCreditsTab";
+
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
-
-interface Package {
-  _id: string;
-  name: string;
-  description: string;
-  displayCredits: number;
-  priceUSDT: number;
-  positions: string[];
-  duration: number | null;
-  isActive: boolean;
-}
-
-interface Advertisement {
-  _id: string;
-  title?: string;
-  description?: string;
-  position: string;
-  country: string;
-  imageUrl: string;
-  targetUrl?: string;
-  redirectUrl: string;
-  displayCount: number;
-  displayUsed: number;
-  displayRemaining: number;
-  status: string;
-  approvalStatus?: string;
-  viewCount: number;
-  clickCount: number;
-  ctrPercentage: number;
-  impressions?: number;
-  clicks?: number;
-  credits?: number;
-  createdAt: string;
-}
-
-interface CreditBalance {
-  _id?: string;
-  userId?: string;
-  totalCredits: number;
-  usedCredits: number;
-  balanceCredits: number;
-  availableCredits?: number;
-}
-
-interface PaymentHistory {
-  _id: string;
-  user: string;
-  package: {
-    _id: string;
-    name: string;
-    displayCredits: number;
-    priceUSDT: number;
-  };
-  transactionId: string;
-  walletAddress: string;
-  amount: number;
-  credits: number;
-  status: number;
-  approvalNotes?: string;
-  rejectionReason?: string;
-  createdAt: string;
-}
-
-type TabType =
-  | "dashboard"
-  | "buy-credits"
-  | "create-ad"
-  | "my-ads"
-  | "payment-history";
 
 export default function AdvertisementPage() {
   const profile = useProfileStore((state) => state.profile);
   const [activeTab, setActiveTab] = useState<TabType>("dashboard");
-  const [packages, setPackages] = useState<Package[]>([]);
-  const [credits, setCredits] = useState<CreditBalance | null>(null);
+
+  // Use custom hook for data fetching
+  const { packages, credits, countryOptions, countriesLoading, setCredits } =
+    useAdvertisementData();
+
   const [ads, setAds] = useState<Advertisement[]>([]);
   const [paymentHistory, setPaymentHistory] = useState<PaymentHistory[]>([]);
   const [openPaymentId, setOpenPaymentId] = useState<string | null>(null);
@@ -99,7 +45,6 @@ export default function AdvertisementPage() {
 
   // Buy credits state
   const [selectedPackage, setSelectedPackage] = useState<Package | null>(null);
-  const [buyTab, setBuyTab] = useState<"start" | "circle">("start");
   const [createAdTab, setCreateAdTab] = useState<"start" | "circle">("start");
   const [usdtModalOpen, setUsdtModalOpen] = useState(false);
   const [transactionId, setTransactionId] = useState("");
@@ -137,7 +82,7 @@ export default function AdvertisementPage() {
   // Create ad state
   const [createAdLoading, setCreateAdLoading] = useState(false);
   const [createAdError, setCreateAdError] = useState<string | null>(null);
-  const [adForm, setAdForm] = useState({
+  const [adForm, setAdForm] = useState<AdForm>({
     position: "HOME_BANNER",
     countries: [] as string[],
     credits: 1,
@@ -199,132 +144,7 @@ export default function AdvertisementPage() {
   };
 
   // Country options (fetched) and related state
-  const [countryOptions, setCountryOptions] = useState<
-    { code: string; name: string; key: string }[]
-  >([]);
-  const [countriesLoading, setCountriesLoading] = useState(false);
-
-  // Fetch packages, credits and available country configs
-  useEffect(() => {
-    const fetchData = async () => {
-      setLoading(true);
-      setError(null);
-      try {
-        const token = localStorage.getItem("token");
-        if (!token) {
-          setError("No authentication token found. Please login.");
-          setLoading(false);
-          return;
-        }
-
-        try {
-          const packagesRes = await axios.get(
-            `${API_BASE_URL}/api/v1/advertisement/packages`,
-            {
-              headers: getAuthHeaders(),
-            },
-          );
-          setPackages(packagesRes.data?.data || []);
-        } catch (pkgErr: any) {
-          console.error("Failed to fetch packages:", pkgErr);
-          // If packages fail, use default packages
-          setPackages([
-            {
-              _id: "default-1",
-              name: "Starter",
-              description: "100 display credits",
-              displayCredits: 100,
-              priceUSDT: 10,
-              positions: ["HOME_BANNER"],
-              duration: null,
-              isActive: true,
-            },
-            {
-              _id: "default-2",
-              name: "Professional",
-              description: "500 display credits",
-              displayCredits: 500,
-              priceUSDT: 40,
-              positions: ["HOME_BANNER", "BOTTOM_CIRCLE"],
-              duration: null,
-              isActive: true,
-            },
-            {
-              _id: "default-3",
-              name: "Enterprise",
-              description: "1000 display credits",
-              displayCredits: 1000,
-              priceUSDT: 70,
-              positions: ["HOME_BANNER", "BOTTOM_CIRCLE"],
-              duration: null,
-              isActive: true,
-            },
-          ]);
-        }
-
-        try {
-          const creditsRes = await axios.get(
-            `${API_BASE_URL}/api/v1/advertisement/my-credits`,
-            {
-              headers: getAuthHeaders(),
-            },
-          );
-          setCredits(
-            creditsRes.data?.data || {
-              totalCredits: 0,
-              usedCredits: 0,
-              balanceCredits: 0,
-            },
-          );
-        } catch (creditErr: any) {
-          console.error("Failed to fetch credits:", creditErr);
-          // Set default zero credits
-          setCredits({ totalCredits: 0, usedCredits: 0, balanceCredits: 0 });
-        }
-
-        // Fetch countries from telegramdirectory API
-        try {
-          setCountriesLoading(true);
-          const countriesRes = await axios.get(
-            `https://telegramdirectory.org/api/getCountry`,
-          );
-          // Filter out the Global option and map to our format
-          const countryList = (countriesRes.data?.CountryData || [])
-            .filter((it: any) => it.country_key !== "GLOBAL")
-            .map((it: any) => ({
-              code: it.country_id,
-              name: it.country_name,
-              key: it.country_key,
-            }));
-
-          setCountryOptions(countryList);
-        } catch (countriesErr: any) {
-          console.error("Failed to fetch countries:", countriesErr);
-          // fallback countries if API fails
-          setCountryOptions([
-            { code: "1", name: "Afghanistan", key: "AFGHANISTAN" },
-            { code: "2", name: "Aland Islands", key: "ALAND_ISLANDS" },
-            { code: "3", name: "Albania", key: "ALBANIA" },
-            { code: "98", name: "India", key: "INDIA" },
-            { code: "225", name: "United States", key: "UNITED_STATES" },
-            { code: "229", name: "United Kingdom", key: "UNITED_KINGDOM" },
-          ]);
-        } finally {
-          setCountriesLoading(false);
-        }
-      } catch (err: any) {
-        const errorMessage =
-          err?.response?.data?.message ||
-          err?.message ||
-          "Failed to load advertisement data";
-        setError(errorMessage);
-        console.error("Advertisement data fetch error:", err);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchData();
-  }, []);
+  // These are now provided by useAdvertisementData hook
 
   // Fetch ad country filter config whenever create-ad tab is accessed
   useEffect(() => {
@@ -1402,101 +1222,14 @@ export default function AdvertisementPage() {
 
           {/* Buy Credits Tab */}
           {activeTab === "buy-credits" && !loading && (
-            <div className="space-y-4">
-              <p className="text-sm text-black mb-4">
-                Select a package to purchase advertisement credits
-              </p>
-
-              {/* Sub-tabs for Start Page / Circle */}
-              <div className="flex gap-2 mb-3">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setBuyTab("start");
-                    setSelectedPackage(null);
-                  }}
-                  className={`flex-1 py-2 rounded font-semibold ${
-                    buyTab === "start"
-                      ? "bg-[#007cb6] text-white"
-                      : "bg-white border border-gray-200 text-gray-700"
-                  }`}
-                >
-                  SCoupon (Landing Page)
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setBuyTab("circle");
-                    setSelectedPackage(null);
-                  }}
-                  className={`flex-1 py-2 rounded font-semibold ${
-                    buyTab === "circle"
-                      ? "bg-[#007cb6] text-white"
-                      : "bg-white border border-gray-200 text-gray-700"
-                  }`}
-                >
-                  CCoupon (Bottom Bar)
-                </button>
-              </div>
-
-              {/* Packages list filtered by selected sub-tab */}
-              {packages.filter((pkg) =>
-                buyTab === "start"
-                  ? pkg.positions.includes("HOME_BANNER")
-                  : pkg.positions.includes("BOTTOM_CIRCLE"),
-              ).length === 0 ? (
-                <div className="text-center py-6 text-gray-600">
-                  No packages available for this section.
-                </div>
-              ) : (
-                packages
-                  .filter((pkg) =>
-                    buyTab === "start"
-                      ? pkg.positions.includes("HOME_BANNER")
-                      : pkg.positions.includes("BOTTOM_CIRCLE"),
-                  )
-                  .map((pkg) => (
-                    <div
-                      key={pkg._id}
-                      className={`border-2 rounded-lg p-4 cursor-pointer transition ${
-                        selectedPackage?._id === pkg._id
-                          ? "bg-[#007cb6] text-black"
-                          : "border-gray-200 hover:border-[#007cb6]"
-                      }`}
-                      onClick={() => setSelectedPackage(pkg)}
-                    >
-                      <div className="flex justify-between items-start mb-2">
-                        <h3 className="font-bold text-black">{pkg.name}</h3>
-                        <span className="bg-[#007cb6] text-black px-2 py-1 rounded text-base font-bold">
-                          ${pkg.priceUSDT}
-                        </span>
-                      </div>
-                      <p className="text-sm text-black mb-2">
-                        {pkg.description}
-                      </p>
-                      <div className="text-base text-black space-y-1">
-                        <p>💳 Credits: {pkg.displayCredits}</p>
-                        {/* TODO : Add no of display */}
-                        <p>
-                          📍 Position:{" "}
-                          {pkg.positions.includes("HOME_BANNER")
-                            ? "Landing Page Banner"
-                            : "Bottom Bar Circle"}
-                        </p>
-                      </div>
-                    </div>
-                  ))
-              )}
-
-              {selectedPackage && (
-                <button
-                  onClick={() => setUsdtModalOpen(true)}
-                  className="w-full bg-[#007cb6] text-black py-3 rounded-lg font-bold hover:bg-[#005f8e] transition"
-                >
-                  Pay with USDT
-                </button>
-              )}
-            </div>
+            <BuyCreditsTab
+              packages={packages}
+              loading={loading}
+              onPackageSelect={(pkg) => {
+                setSelectedPackage(pkg);
+                setUsdtModalOpen(true);
+              }}
+            />
           )}
 
           {/* Create Ad Tab */}
@@ -2438,198 +2171,46 @@ export default function AdvertisementPage() {
               )}
             </div>
           )}
-
-          {/* USDT Payment Modal */}
-          {usdtModalOpen && (
-            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40 p-4">
-              <div className="bg-white rounded-xl shadow-xl w-full max-w-xs relative max-h-[90vh] flex flex-col">
-                <button
-                  className="absolute top-2 right-2 text-gray-400 hover:text-gray-700 text-xl z-10"
-                  onClick={() => {
-                    setUsdtModalOpen(false);
-                    setTransactionId("");
-                    setWalletAddress("");
-                    setSelectedPackage(null);
-                    setUsdtModalError(null);
-                  }}
-                  aria-label="Close"
-                >
-                  &times;
-                </button>
-                <div className="overflow-y-auto p-6">
-                  <h3 className="text-lg font-bold text-[#007cb6] mb-4 text-center">
-                    Purchase Advertisement Credits
-                  </h3>
-
-                  <div className="mb-3 text-sm text-white bg-[#005f8e] p-3 rounded-lg">
-                    <div className="mb-2">
-                      <span className="font-semibold">Package: </span>
-                      {selectedPackage?.name ?? "-"}
-                    </div>
-                    <div className="mb-2">
-                      <span className="font-semibold">Price: </span>$
-                      {selectedPackage?.priceUSDT ?? "-"} USDT
-                    </div>
-                    <div>
-                      <span className="font-semibold">Credits: </span>
-                      {selectedPackage?.displayCredits ?? "-"}
-                    </div>
-                    {/* TODO : Add no of display */}
-                  </div>
-
-                  <div className="w-full bg-gray-50 border border-gray-200 rounded-lg p-3 text-sm text-gray-700 mb-3">
-                    <div className="font-semibold mb-1 text-center">
-                      Send USDT to verified wallet address
-                    </div>
-                    <div className="text-sm font-semibold text-green-600 mb-2 text-center">
-                      No Fees No charges!!!
-                    </div>
-                    <div className="font-medium mb-1">Steps:</div>
-                    <ol className="list-decimal list-inside text-sm">
-                      <li>Send USDT to the provided wallet address</li>
-                      <li>Enter your transaction ID below</li>
-                      <li>Enter the wallet address you sent from</li>
-                      <li>Submit for admin verification</li>
-                    </ol>
-                    <div className="mt-3 text-sm break-all bg-gray-100 p-3 rounded-lg text-center">
-                      <div className="mb-1 text-center font-semibold">
-                        Send USDT to this address:
-                      </div>
-                      <button
-                        className="text-blue-600 underline"
-                        onClick={async () => {
-                          try {
-                            await navigator.clipboard.writeText(
-                              "TK2TMn99SBCrdbZpSef7rFE3vTccvR6dCz",
-                            );
-                            WebApp.showAlert("Wallet address copied!");
-                          } catch (e) {
-                            WebApp.showAlert("Failed to copy address");
-                          }
-                        }}
-                      >
-                        TK2TMn99SBCrdbZpSef7rFE3vTccvR6dCz
-                      </button>
-                    </div>
-                  </div>
-
-                  <label className="block mb-2 text-sm font-medium text-gray-700">
-                    Transaction ID *
-                  </label>
-                  <input
-                    type="text"
-                    className="w-full border border-gray-300 rounded px-3 py-2 mb-2 focus:outline-none focus:ring-2 focus:ring-[#007cb6]"
-                    value={transactionId}
-                    onChange={(e) => setTransactionId(e.target.value)}
-                    placeholder="Enter transaction ID"
-                    disabled={usdtModalLoading}
-                  />
-
-                  <label className="block mb-2 text-sm font-medium text-gray-700">
-                    Wallet Address *
-                  </label>
-                  <input
-                    type="text"
-                    className="w-full border border-gray-300 rounded px-3 py-2 mb-2 focus:outline-none focus:ring-2 focus:ring-[#007cb6]"
-                    value={walletAddress}
-                    onChange={(e) => setWalletAddress(e.target.value)}
-                    placeholder="Your wallet address (e.g., 0x...)"
-                    disabled={usdtModalLoading}
-                  />
-
-                  {usdtModalError && (
-                    <div className="text-red-500 text-sm mb-2">
-                      {usdtModalError}
-                    </div>
-                  )}
-
-                  <button
-                    className="w-full bg-gradient-to-r from-[#007cb6] to-[#00a8e8] text-white font-semibold py-2 rounded-lg mt-2 hover:from-[#00a8e8] hover:to-[#007cb6] transition disabled:opacity-60 disabled:cursor-not-allowed shadow-lg"
-                    onClick={handleUsdtPayment}
-                    disabled={
-                      usdtModalLoading || !transactionId || !walletAddress
-                    }
-                  >
-                    {usdtModalLoading ? "Submitting..." : "Submit Payment"}
-                  </button>
-
-                  <div className="h-10 w-5"></div>
-                </div>
-              </div>
-            </div>
-          )}
         </div>
       </main>
       <Footer />
 
+      {/* USDT Payment Modal */}
+      <UsdtPaymentModal
+        isOpen={usdtModalOpen}
+        selectedPackage={selectedPackage}
+        transactionId={transactionId}
+        walletAddress={walletAddress}
+        loading={usdtModalLoading}
+        error={usdtModalError}
+        onClose={() => {
+          setUsdtModalOpen(false);
+          setTransactionId("");
+          setWalletAddress("");
+          setSelectedPackage(null);
+          setUsdtModalError(null);
+        }}
+        onTransactionIdChange={setTransactionId}
+        onWalletAddressChange={setWalletAddress}
+        onSubmit={handleUsdtPayment}
+      />
+
       {/* Add Credits Modal */}
-      {addCreditsModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40 p-4">
-          <div className="bg-white rounded-xl shadow-xl w-full max-w-sm relative">
-            <button
-              className="absolute top-2 right-2 text-gray-400 hover:text-gray-700 text-xl z-10"
-              onClick={() => {
-                setAddCreditsModalOpen(false);
-                setSelectedAdForCredits(null);
-                setCreditsToAdd(1);
-                setAddCreditsError(null);
-              }}
-              aria-label="Close"
-            >
-              &times;
-            </button>
-            <div className="p-6">
-              <h3 className="text-lg font-bold text-[#007cb6] mb-4 text-center">
-                Assign More Credits
-              </h3>
-
-              <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-                <p className="text-sm text-gray-700">
-                  <span className="font-semibold">Available Credits:</span>{" "}
-                  <span className="text-blue-600 font-bold">
-                    {credits?.availableCredits ?? credits?.balanceCredits ?? 0}
-                  </span>
-                </p>
-              </div>
-
-              <label className="block mb-2 text-sm font-bold text-gray-700">
-                Credits to Add *
-              </label>
-              <input
-                type="number"
-                min="1"
-                max={credits?.availableCredits ?? credits?.balanceCredits ?? 0}
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 mb-4 focus:outline-none focus:ring-2 focus:ring-[#007cb6]"
-                value={creditsToAdd}
-                onChange={(e) => {
-                  const value = parseInt(e.target.value) || 1;
-                  const maxCredits =
-                    credits?.availableCredits ?? credits?.balanceCredits ?? 0;
-                  setCreditsToAdd(Math.max(1, Math.min(value, maxCredits)));
-                }}
-                disabled={addCreditsLoading}
-                placeholder="Enter credits"
-              />
-
-              {addCreditsError && (
-                <div className="text-red-500 text-sm mb-4 p-2 bg-red-50 rounded">
-                  {addCreditsError}
-                </div>
-              )}
-
-              <button
-                onClick={handleAddCredits}
-                disabled={addCreditsLoading || creditsToAdd < 1}
-                className="w-full bg-[#007cb6] text-white py-3 rounded-lg font-bold hover:bg-[#005f8e] transition disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {addCreditsLoading
-                  ? "Adding..."
-                  : `Add ${creditsToAdd} Credit${creditsToAdd !== 1 ? "s" : ""}`}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <AddCreditsModal
+        isOpen={addCreditsModalOpen}
+        credits={credits}
+        creditsToAdd={creditsToAdd}
+        loading={addCreditsLoading}
+        error={addCreditsError}
+        onClose={() => {
+          setAddCreditsModalOpen(false);
+          setSelectedAdForCredits(null);
+          setCreditsToAdd(1);
+          setAddCreditsError(null);
+        }}
+        onCreditsChange={setCreditsToAdd}
+        onSubmit={handleAddCredits}
+      />
 
       {/* Statistics Panel Modal */}
       {statsModalOpen && adStats && (
