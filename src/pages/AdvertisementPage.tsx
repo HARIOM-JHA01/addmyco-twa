@@ -1572,14 +1572,16 @@ export default function AdvertisementPage() {
                       <>
                         <input
                           type="number"
-                          min="1"
                           max={maxCredits}
-                          value={maxCredits === 0 ? 0 : adForm.credits}
+                          value={maxCredits === 0 ? 0 : adForm.credits || ""}
                           onChange={(e) => {
-                            const value = parseInt(e.target.value) || 1;
+                            const value =
+                              e.target.value === ""
+                                ? 0
+                                : parseInt(e.target.value);
                             setAdForm({
                               ...adForm,
-                              credits: Math.max(1, Math.min(value, maxCredits)),
+                              credits: Math.max(0, Math.min(value, maxCredits)),
                             });
                           }}
                           disabled={maxCredits === 0}
@@ -1700,7 +1702,7 @@ export default function AdvertisementPage() {
                         htmlFor="image-upload"
                         className={`relative border-2 border-dashed border-gray-300 bg-gray-50 cursor-pointer overflow-hidden group block ${
                           adForm.position === "HOME_BANNER"
-                            ? "w-full h-48 rounded-lg"
+                            ? "h-64 w-64 mx-auto rounded-lg"
                             : "h-64 w-64 mx-auto rounded-full"
                         }`}
                       >
@@ -1720,7 +1722,7 @@ export default function AdvertisementPage() {
                         htmlFor="image-upload"
                         className={`flex items-center justify-center border-2 border-dashed border-gray-300 bg-gray-50 hover:bg-gray-100 transition-colors cursor-pointer ${
                           adForm.position === "HOME_BANNER"
-                            ? "w-full h-48 rounded-lg"
+                            ? "h-64 w-64 mx-auto rounded-lg"
                             : "h-64 w-64 mx-auto rounded-full"
                         }`}
                       >
