@@ -162,7 +162,7 @@ export default function AdvertisementPage() {
           if (!enabled) {
             // If disabled, force global selection
             setCountrySelection("global");
-            setAdForm((prev) => ({ ...prev, country: "GLOBAL" }));
+            setAdForm((prev) => ({ ...prev, countries: ["GLOBAL"] }));
           }
         } catch (cfgErr: any) {
           console.error("Failed to fetch ad country filter config:", cfgErr);
