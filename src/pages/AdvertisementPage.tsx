@@ -984,21 +984,6 @@ export default function AdvertisementPage() {
                         </div>
                       </div>
 
-                      {(dashboardData.credits.balance ?? 0) === 0 && (
-                        <div className="mt-4 bg-yellow-50 border border-yellow-400 text-gray-800 px-4 py-3 rounded mb-4 flex items-center justify-between">
-                          <p className="text-sm">
-                            You do not have any Coupon credit to assign Adv.{" "}
-                            <button
-                              type="button"
-                              onClick={() => setActiveTab("buy-credits")}
-                              className="ml-2 underline font-semibold text-[#007cb6]"
-                            >
-                              Buy Now
-                            </button>
-                          </p>
-                        </div>
-                      )}
-
                       {/* Credit Rates
                       {dashboardData.rates && (
                         <div className="mt-4 pt-4 border-t">
@@ -1238,6 +1223,24 @@ export default function AdvertisementPage() {
                                   </span>
                                 </div>
                               </div>
+
+                              {(dashboardData.positions.startPage
+                                .creditAllocated ?? 0) === 0 && (
+                                <div className="-mx-4 -mb-4 mt-0 bg-yellow-50 border-t border-yellow-400 text-gray-800 px-4 py-2 rounded-b-lg">
+                                  <p className="text-xs">
+                                    No credits allocated for Landing Page.{" "}
+                                    <button
+                                      type="button"
+                                      onClick={() =>
+                                        setActiveTab("buy-credits")
+                                      }
+                                      className="underline font-semibold text-[#007cb6]"
+                                    >
+                                      Buy Now
+                                    </button>
+                                  </p>
+                                </div>
+                              )}
                             </div>
                           </div>
                         )}
@@ -1364,6 +1367,24 @@ export default function AdvertisementPage() {
                                   </span>
                                 </div>
                               </div>
+
+                              {(dashboardData.positions.bottomCircle
+                                .creditAllocated ?? 0) === 0 && (
+                                <div className="-mx-4 -mb-4 mt-0 bg-yellow-50 border-t border-yellow-400 text-gray-800 px-4 py-2 rounded-b-lg">
+                                  <p className="text-xs">
+                                    No credits allocated for Bottom Circle.{" "}
+                                    <button
+                                      type="button"
+                                      onClick={() =>
+                                        setActiveTab("buy-credits")
+                                      }
+                                      className="underline font-semibold text-[#007cb6]"
+                                    >
+                                      Buy Now
+                                    </button>
+                                  </p>
+                                </div>
+                              )}
                             </div>
                           </div>
                         )}
