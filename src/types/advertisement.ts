@@ -4,6 +4,7 @@ export interface Package {
   description: string;
   displayCredits: number;
   priceUSDT: number;
+  originalPriceUSDT?: number | null;
   positions: string[];
   duration: number | null;
   isActive: boolean;
