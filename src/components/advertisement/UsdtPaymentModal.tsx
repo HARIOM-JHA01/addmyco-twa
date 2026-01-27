@@ -30,7 +30,7 @@ export const UsdtPaymentModal: React.FC<UsdtPaymentModalProps> = ({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40 p-4">
-      <div className="bg-white rounded-xl shadow-xl w-full max-w-xs relative max-h-[90vh] flex flex-col">
+      <div className="bg-white rounded-xl shadow-xl w-full max-w-xs relative max-h-[90vh] flex flex-col text-black">
         <button
           className="absolute top-2 right-2 text-gray-400 hover:text-gray-700 text-xl z-10"
           onClick={onClose}
