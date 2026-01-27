@@ -257,7 +257,7 @@ export default function PublicCompanyView({
               }}
               onClick={() =>
                 setCurrentCompanyIndex((i) =>
-                  Math.min(i + 1, companies.length - 1)
+                  Math.min(i + 1, companies.length - 1),
                 )
               }
             >
@@ -285,7 +285,9 @@ export default function PublicCompanyView({
                   playsInline
                   className="w-full h-48 object-cover rounded-xl"
                 />
-              ) : companyProfile.image ? (
+              ) : profile.membertype ===
+                "premium" ? // Premium members only show videos, no images
+              null : companyProfile.image ? (
                 companyProfile.image.endsWith(".mp4") ? (
                   <VideoPlayer
                     src={companyProfile.image}
