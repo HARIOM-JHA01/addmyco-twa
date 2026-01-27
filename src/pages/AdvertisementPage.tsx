@@ -2154,7 +2154,7 @@ export default function AdvertisementPage() {
                         >
                           <div className="text-left">
                             <h3 className="font-semibold text-gray-800">
-                              {payment.package.name}
+                              {payment.package.name || ""}
                             </h3>
                             <p className="text-xs text-gray-500">
                               {formatDate(payment.createdAt)}
@@ -2193,7 +2193,7 @@ export default function AdvertisementPage() {
                               <div className="bg-white p-2 rounded shadow-sm">
                                 <p className="text-xs text-gray-600">Amount</p>
                                 <p className="font-bold">
-                                  ${payment.amount} USDT
+                                  ${payment.amount || ""} USDT
                                 </p>
                               </div>
                               <div className="bg-white p-2 rounded shadow-sm">
@@ -2205,7 +2205,7 @@ export default function AdvertisementPage() {
                                   Transaction ID
                                 </p>
                                 <p className="text-xs font-mono break-all">
-                                  {payment.transactionId}
+                                  {payment.transactionId || ""}
                                 </p>
                               </div>
                               <div className="col-span-2 bg-white p-2 rounded shadow-sm">
@@ -2213,7 +2213,7 @@ export default function AdvertisementPage() {
                                   Wallet Address
                                 </p>
                                 <p className="text-xs font-mono break-all">
-                                  {payment.walletAddress}
+                                  {payment.walletAddress || ""}
                                 </p>
                               </div>
                             </div>
@@ -2224,7 +2224,7 @@ export default function AdvertisementPage() {
                                   Admin Notes:
                                 </p>
                                 <p className="text-xs text-green-800">
-                                  {payment.approvalNotes}
+                                  {payment.approvalNotes || ""}
                                 </p>
                               </div>
                             )}
@@ -2236,7 +2236,7 @@ export default function AdvertisementPage() {
                                     Rejection Reason:
                                   </p>
                                   <p className="text-xs text-red-800">
-                                    {payment.rejectionReason}
+                                    {payment.rejectionReason || ""}
                                   </p>
                                 </div>
                               )}
