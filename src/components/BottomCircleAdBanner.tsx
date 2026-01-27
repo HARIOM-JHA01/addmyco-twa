@@ -1,18 +1,6 @@
-import { useState, useEffect } from "react";
+import { useEffect } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import {
-  fetchAdvertisements,
-  trackAdDisplay,
-} from "../services/advertisementService";
-
-interface Advertisement {
-  _id: string;
-  imageUrl?: string;
-  Banner?: string;
-  redirectUrl?: string;
-  Link?: string;
-  position?: string;
-}
+import { useBottomCircleAd } from "../contexts/BottomCircleAdContext";
 
 interface BottomCircleAdBannerProps {
   fallbackImage?: string;
@@ -25,48 +13,18 @@ export default function BottomCircleAdBanner({
   onFallbackClick,
   isFooterMode = false,
 }: BottomCircleAdBannerProps) {
-  const [ads, setAds] = useState<Advertisement[]>([]);
-  const [currentIndex, setCurrentIndex] = useState(0);
-  const [loading, setLoading] = useState(true);
-  const [trackedAds, setTrackedAds] = useState<Set<string>>(new Set());
-
-  // Fetch advertisements on component mount
-  useEffect(() => {
-    const loadAds = async () => {
-      setLoading(true);
-      try {
-        console.log("[BottomCircleAd] Fetching BOTTOM_CIRCLE ads...");
-        const advertisements = await fetchAdvertisements("BOTTOM_CIRCLE");
-
-        if (advertisements && advertisements.length > 0) {
-          console.log("[BottomCircleAd] Loaded ads:", advertisements.length);
-          setAds(advertisements);
-        } else {
-          console.log("[BottomCircleAd] No ads found");
-          setAds([]);
-        }
-      } catch (err: any) {
-        console.error("[BottomCircleAd] Error loading ads:", err);
-        setAds([]);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    loadAds();
-  }, []);
+  const { ads, currentIndex, loading, setCurrentIndex, trackDisplay } =
+    useBottomCircleAd();
 
   // Track display when ad changes
   useEffect(() => {
     if (ads.length > 0) {
       const currentAd = ads[currentIndex];
-      if (currentAd && !trackedAds.has(currentAd._id)) {
-        console.log("[BottomCircleAd] Tracking display for ad:", currentAd._id);
-        trackAdDisplay(currentAd._id);
-        setTrackedAds((prev) => new Set([...prev, currentAd._id]));
+      if (currentAd) {
+        trackDisplay(currentAd._id);
       }
     }
-  }, [currentIndex, ads, trackedAds]);
+  }, [currentIndex, ads, trackDisplay]);
 
   // Show fallback image if no ads or still loading in footer mode
   if (isFooterMode) {

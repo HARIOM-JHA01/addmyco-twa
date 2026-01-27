@@ -29,6 +29,7 @@ import PublicProfileContainer from "./pages/PublicProfileContainer";
 import { fetchBackgroundByUsername as fetchBgByUsername } from "./utils/theme";
 import WelcomePopup from "./components/WelcomePopup";
 import PartnerCodePopup from "./components/PartnerCodePopup";
+import { BottomCircleAdProvider } from "./contexts/BottomCircleAdContext";
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
@@ -44,7 +45,7 @@ function AppRoutes() {
   const [profile, setProfile] = useState<any>(null);
   const [profileLoading, setProfileLoading] = useState(true);
   const [deepLinkPartnerCode, setDeepLinkPartnerCode] = useState<string | null>(
-    null
+    null,
   );
 
   const fetchBackgroundByUsername = fetchBgByUsername;
@@ -62,7 +63,7 @@ function AppRoutes() {
         "hasToken:",
         hasToken,
         "path:",
-        path
+        path,
       );
 
       const atAppRoot = path === "/" || path === "/start" || path === "";
@@ -130,7 +131,7 @@ function AppRoutes() {
       try {
         console.log("Redirecting to Telegram deep link");
         window.location.href = `https://t.me/AddmyCo_bot/app?startapp=${encodeURIComponent(
-          param
+          param,
         )}`;
       } catch (e) {
         console.error("Failed to redirect to Telegram deep link", e);
@@ -193,13 +194,13 @@ function AppRoutes() {
     if (savedBgColor) {
       document.documentElement.style.setProperty(
         "--app-background-color",
-        savedBgColor
+        savedBgColor,
       );
     }
     if (savedFontColor) {
       document.documentElement.style.setProperty(
         "--app-font-color",
-        savedFontColor
+        savedFontColor,
       );
     }
 
@@ -256,12 +257,12 @@ function AppRoutes() {
     };
     window.addEventListener(
       "profile-updated",
-      onProfileUpdated as EventListener
+      onProfileUpdated as EventListener,
     );
     return () =>
       window.removeEventListener(
         "profile-updated",
-        onProfileUpdated as EventListener
+        onProfileUpdated as EventListener,
       );
   }, []);
 
@@ -344,13 +345,13 @@ function AppRoutes() {
         "initData:",
         WebApp.initData,
         "initDataUnsafe:",
-        WebApp.initDataUnsafe
+        WebApp.initDataUnsafe,
       );
       let username = user?.username;
       if (!username) {
         try {
           const promptName = window.prompt(
-            "Telegram username not available. Enter a test username to continue (cancel to abort):"
+            "Telegram username not available. Enter a test username to continue (cancel to abort):",
           );
           if (!promptName) {
             try {
@@ -401,7 +402,7 @@ function AppRoutes() {
       }
       const response = await axios.post(
         `${API_BASE_URL}/telegram-login`,
-        payload
+        payload,
       );
       const { data } = response;
       if (data && data.success) {
@@ -410,7 +411,7 @@ function AppRoutes() {
         if (data.message) {
           if (
             data.message.includes(
-              "Welcome! You have been rewarded free premium membership for 1 year."
+              "Welcome! You have been rewarded free premium membership for 1 year.",
             )
           ) {
             try {
@@ -423,7 +424,7 @@ function AppRoutes() {
             } catch {}
           } else if (
             data.message.includes(
-              "Welcome! You have been registered as a free user."
+              "Welcome! You have been registered as a free user.",
             )
           ) {
             setShowWelcomePopup(true);
@@ -491,7 +492,7 @@ function AppRoutes() {
             navigate("/");
           } else {
             console.log(
-              "App: navigating to /create-company after getProfile (profile exists but no company)"
+              "App: navigating to /create-company after getProfile (profile exists but no company)",
             );
             navigate("/create-company");
           }
@@ -500,7 +501,7 @@ function AppRoutes() {
           setShowWelcome(false);
           setProfileLoading(false);
           console.log(
-            "App: navigating to /create-company due to getProfile failure"
+            "App: navigating to /create-company due to getProfile failure",
           );
           navigate("/create-company");
         }
@@ -516,7 +517,7 @@ function AppRoutes() {
         e.response.status === 422 &&
         typeof e.response.data?.message === "string" &&
         e.response.data.message.includes(
-          "Partner has no remaining user credits"
+          "Partner has no remaining user credits",
         )
       ) {
         // Show a friendly popup when partner has no credits
@@ -532,13 +533,13 @@ function AppRoutes() {
               try {
                 WebApp.close();
               } catch (_) {}
-            }
+            },
           );
         } catch (popupErr) {
           // Fallback to alert if popup fails
           try {
             WebApp.showAlert(
-              "The referal link of this partner is inactive kindly contact your partner and try again"
+              "The referal link of this partner is inactive kindly contact your partner and try again",
             );
           } catch (_) {}
         }
@@ -628,7 +629,9 @@ function AppRoutes() {
 function App() {
   return (
     <BrowserRouter>
-      <AppRoutes />
+      <BottomCircleAdProvider>
+        <AppRoutes />
+      </BottomCircleAdProvider>
     </BrowserRouter>
   );
 }
