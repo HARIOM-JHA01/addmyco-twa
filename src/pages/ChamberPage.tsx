@@ -136,7 +136,7 @@ export default function ChamberPage() {
         `${API_BASE_URL}/deletechamber/${currentChamber._id}`,
         {
           headers: { Authorization: `Bearer ${token}` },
-        }
+        },
       );
 
       // After successful delete, fetch all chambers from server to refresh state
@@ -168,7 +168,7 @@ export default function ChamberPage() {
         // If refresh fails, fall back to removing locally
         if (Array.isArray(chamberData)) {
           const updatedChambers = chamberData.filter(
-            (c) => c._id !== currentChamber._id
+            (c) => c._id !== currentChamber._id,
           );
           setChamberData(updatedChambers.length > 0 ? updatedChambers : null);
           setCurrentChamberIndex(0);
@@ -191,7 +191,7 @@ export default function ChamberPage() {
       setEditError(
         err?.response?.data?.message ||
           err.message ||
-          "Failed to delete chamber"
+          "Failed to delete chamber",
       );
     } finally {
       setDeleteLoading(false);
@@ -200,7 +200,7 @@ export default function ChamberPage() {
 
   // Handle edit form input
   const handleEditInput = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
   ) => {
     const { name, value } = e.target;
 
@@ -217,7 +217,7 @@ export default function ChamberPage() {
         setEditError("");
       } else if (isNaN(numValue) || numValue < 0 || numValue >= chambersCount) {
         setEditError(
-          `Display order must be between 0 and ${chambersCount - 1}`
+          `Display order must be between 0 and ${chambersCount - 1}`,
         );
       } else {
         setEditError("");
@@ -254,7 +254,7 @@ export default function ChamberPage() {
   // Handle edit form file for multiple files
   const handleEditFile = async (
     fileNumber: 1 | 2 | 3,
-    e: React.ChangeEvent<HTMLInputElement>
+    e: React.ChangeEvent<HTMLInputElement>,
   ) => {
     if (e.target.files && e.target.files[0]) {
       const selectedFile = e.target.files[0];
@@ -263,8 +263,8 @@ export default function ChamberPage() {
         fileNumber === 1
           ? fileInputRef1
           : fileNumber === 2
-          ? fileInputRef2
-          : fileInputRef3;
+            ? fileInputRef2
+            : fileInputRef3;
 
       if (selectedFile.type.startsWith("video/")) {
         if (!isPremium) {
@@ -381,15 +381,15 @@ export default function ChamberPage() {
 
         formData.append(
           "chamber_name_english",
-          String(editChamber.enName || "")
+          String(editChamber.enName || ""),
         );
         formData.append(
           "chamber_name_chinese",
-          String(editChamber.cnName || "")
+          String(editChamber.cnName || ""),
         );
         formData.append(
           "chamberdesignation",
-          String(editChamber.designation || "")
+          String(editChamber.designation || ""),
         );
         formData.append("detail", String(editChamber.details || ""));
         formData.append("chamberwebsite", String(editChamber.website || ""));
@@ -407,7 +407,7 @@ export default function ChamberPage() {
         formData.append("tgchannel", String(editChamber.telegram || ""));
         formData.append(
           "chamberfanpage",
-          String(editChamber.chamberfanpage || "")
+          String(editChamber.chamberfanpage || ""),
         );
         formData.append("chamber_order", String(editChamber.order ?? ""));
 
@@ -500,7 +500,7 @@ export default function ChamberPage() {
       setValidationErrors({});
     } catch (err: any) {
       setEditError(
-        err?.response?.data?.message || err.message || "Failed to save chamber"
+        err?.response?.data?.message || err.message || "Failed to save chamber",
       );
     } finally {
       setEditLoading(false);
@@ -646,12 +646,10 @@ export default function ChamberPage() {
                       }}
                     >
                       <div className="text-lg">
-                        Premium Member
-                        <br />
-                        Upload 1 Minute Video
+                        Premium Members Can Upload Video Below 1 Minute Length
                       </div>
                       <div className="text-yellow-300 font-bold mt-2">
-                        Video Only (MP4)
+                        Size Scale 16:9 at 800x 450 , And Below ( 10 MB )
                       </div>
                     </div>
                   )}
@@ -1066,7 +1064,7 @@ export default function ChamberPage() {
                   const used = Array.isArray(chamberData)
                     ? chamberData
                         .map((c: any) =>
-                          Number(c.chamber_order ?? c.order ?? -1)
+                          Number(c.chamber_order ?? c.order ?? -1),
                         )
                         .filter((m: number) => !isNaN(m) && m > 0 && m <= 15)
                         .includes(n)
@@ -1119,8 +1117,8 @@ export default function ChamberPage() {
                     ? i18n.t("updating")
                     : i18n.t("saving")
                   : editMode === "update"
-                  ? i18n.t("update")
-                  : i18n.t("save")}
+                    ? i18n.t("update")
+                    : i18n.t("save")}
               </button>
             </div>
             {/* Delete button inside edit mode (only for updates) */}
@@ -1283,7 +1281,7 @@ export default function ChamberPage() {
                         }}
                         onClick={() =>
                           setCurrentChamberIndex((i) =>
-                            Math.min(i + 1, chambers.length - 1)
+                            Math.min(i + 1, chambers.length - 1),
                           )
                         }
                       >

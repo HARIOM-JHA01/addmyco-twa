@@ -78,7 +78,7 @@ export default function CreateChamberPage() {
   }, []);
 
   const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
   ) => {
     const { name, value } = e.target;
     setForm({ ...form, [name]: value });
@@ -116,22 +116,22 @@ export default function CreateChamberPage() {
 
   const handleFileChange = async (
     fileNumber: 1 | 2 | 3,
-    e: React.ChangeEvent<HTMLInputElement>
+    e: React.ChangeEvent<HTMLInputElement>,
   ) => {
     const selectedFile = e.target.files?.[0] || null;
     const fileInputRef =
       fileNumber === 1
         ? fileInputRef1
         : fileNumber === 2
-        ? fileInputRef2
-        : fileInputRef3;
+          ? fileInputRef2
+          : fileInputRef3;
 
     if (selectedFile) {
       // If file is a video, only allow mp4 and only for premium users
       if (selectedFile.type.startsWith("video/")) {
         if (!isPremium) {
           WebApp.showAlert(
-            "Video uploads are available for premium users only."
+            "Video uploads are available for premium users only.",
           );
           if (fileNumber === 1) {
             setFile1(null);
@@ -257,41 +257,41 @@ export default function CreateChamberPage() {
       // Format all URLs before submission
       formData.append(
         "chamberwebsite",
-        form.website ? formatUrl(form.website) : ""
+        form.website ? formatUrl(form.website) : "",
       );
       formData.append(
         "WhatsApp",
-        form.whatsapp ? formatUrl(form.whatsapp) : ""
+        form.whatsapp ? formatUrl(form.whatsapp) : "",
       );
       formData.append("WeChat", form.wechat ? formatUrl(form.wechat) : "");
       formData.append("Line", form.line ? formatUrl(form.line) : "");
       formData.append(
         "Instagram",
-        form.instagram ? formatUrl(form.instagram) : ""
+        form.instagram ? formatUrl(form.instagram) : "",
       );
       formData.append(
         "Facebook",
-        form.facebook ? formatUrl(form.facebook) : ""
+        form.facebook ? formatUrl(form.facebook) : "",
       );
       formData.append("Twitter", form.twitter ? formatUrl(form.twitter) : "");
       formData.append("Youtube", form.youtube ? formatUrl(form.youtube) : "");
       formData.append(
         "Linkedin",
-        form.linkedin ? formatUrl(form.linkedin) : ""
+        form.linkedin ? formatUrl(form.linkedin) : "",
       );
       formData.append(
         "SnapChat",
-        form.snapchat ? formatUrl(form.snapchat) : ""
+        form.snapchat ? formatUrl(form.snapchat) : "",
       );
       formData.append("Skype", form.skype ? formatUrl(form.skype) : "");
       formData.append("TikTok", form.tiktok ? formatUrl(form.tiktok) : "");
       formData.append(
         "tgchannel",
-        form.tgchannel ? formatUrl(form.tgchannel) : ""
+        form.tgchannel ? formatUrl(form.tgchannel) : "",
       );
       formData.append(
         "chamberfanpage",
-        form.chamberfanpage ? formatUrl(form.chamberfanpage) : ""
+        form.chamberfanpage ? formatUrl(form.chamberfanpage) : "",
       );
       formData.append("order", form.order);
 
@@ -355,7 +355,7 @@ export default function CreateChamberPage() {
             setProfileStore(profileData);
             try {
               window.dispatchEvent(
-                new CustomEvent("profile-updated", { detail: profileData })
+                new CustomEvent("profile-updated", { detail: profileData }),
               );
             } catch (evErr) {
               console.warn("Failed to dispatch profile-updated event", evErr);
@@ -363,14 +363,14 @@ export default function CreateChamberPage() {
           } catch (storeErr) {
             console.warn(
               "Failed to update profile store after chamber creation",
-              storeErr
+              storeErr,
             );
           }
         }
       } catch (pfErr) {
         console.warn(
           "Failed to re-fetch profile after chamber creation",
-          pfErr
+          pfErr,
         );
       }
 
@@ -386,7 +386,7 @@ export default function CreateChamberPage() {
       setError(
         err?.response?.data?.message ||
           err.message ||
-          "Failed to create chamber"
+          "Failed to create chamber",
       );
     } finally {
       setLoading(false);
@@ -461,12 +461,10 @@ export default function CreateChamberPage() {
                       }}
                     >
                       <div className="text-lg">
-                        Premium Member
-                        <br />
-                        Upload 1 Minute Video
+                        Premium Members Can Upload Video Below 1 Minute Length
                       </div>
                       <div className="text-yellow-300 font-bold mt-2">
-                        Video Only (MP4)
+                        Size Scale 16:9 at 800x 450 , And Below ( 10 MB )
                       </div>
                     </div>
                   )}

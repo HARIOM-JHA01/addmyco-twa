@@ -171,7 +171,7 @@ export default function SubCompanyPage() {
         `${API_BASE_URL}/deletecompany/${companyProfile._id}`,
         {
           headers: { Authorization: `Bearer ${token}` },
-        }
+        },
       );
 
       // After successful delete, fetch all companies from server to refresh state
@@ -213,7 +213,7 @@ export default function SubCompanyPage() {
       } catch (err) {
         // If refresh fails, fall back to removing locally
         const updatedCompanies = companies.filter(
-          (c) => c._id !== companyProfile._id
+          (c) => c._id !== companyProfile._id,
         );
         setCompanies(updatedCompanies);
         setCurrentCompanyIndex(0);
@@ -239,7 +239,7 @@ export default function SubCompanyPage() {
       setEditError(
         err?.response?.data?.message ||
           err.message ||
-          "Failed to delete company"
+          "Failed to delete company",
       );
     } finally {
       setDeleteLoading(false);
@@ -282,7 +282,7 @@ export default function SubCompanyPage() {
   };
   // Handle edit form input
   const handleEditInput = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
   ) => {
     const { name, value } = e.target;
 
@@ -312,7 +312,7 @@ export default function SubCompanyPage() {
   // Handle edit form file for each of the 3 files
   const handleEditFile = async (
     fileNumber: 1 | 2 | 3,
-    e: React.ChangeEvent<HTMLInputElement>
+    e: React.ChangeEvent<HTMLInputElement>,
   ) => {
     if (e.target.files && e.target.files[0]) {
       const selectedFile = e.target.files[0];
@@ -404,7 +404,7 @@ export default function SubCompanyPage() {
         company_order:
           editProfile.order !== undefined && editProfile.order !== ""
             ? editProfile.order
-            : companyProfile?.company_order ?? 0,
+            : (companyProfile?.company_order ?? 0),
       };
 
       // We do not send base64. If a new file was selected we'll send it as multipart/form-data below.
@@ -430,15 +430,15 @@ export default function SubCompanyPage() {
       // Append simple fields
       formData.append(
         "company_name_english",
-        String(companyDoc.company_name_english || "")
+        String(companyDoc.company_name_english || ""),
       );
       formData.append(
         "company_name_chinese",
-        String(companyDoc.company_name_chinese || "")
+        String(companyDoc.company_name_chinese || ""),
       );
       formData.append(
         "companydesignation",
-        String(companyDoc.companydesignation || "")
+        String(companyDoc.companydesignation || ""),
       );
       formData.append("description", String(companyDoc.description || ""));
       formData.append("Instagram", String(companyDoc.Instagram || ""));
@@ -448,7 +448,7 @@ export default function SubCompanyPage() {
       formData.append("website", String(companyDoc.website || ""));
       formData.append(
         "company_order",
-        String(companyDoc.company_order ?? companyDoc.order ?? 0)
+        String(companyDoc.company_order ?? companyDoc.order ?? 0),
       );
 
       // File fields: send file1, file2, file3
@@ -526,7 +526,7 @@ export default function SubCompanyPage() {
       setEditError(
         err?.response?.data?.message ||
           err.message ||
-          "Failed to save company profile"
+          "Failed to save company profile",
       );
     } finally {
       setEditLoading(false);
@@ -622,7 +622,7 @@ export default function SubCompanyPage() {
                             setFilePreview1(null);
                             setEditProfile({ ...editProfile, file1_url: "" });
                             const el = document.getElementById(
-                              "company-file-input-1"
+                              "company-file-input-1",
                             ) as HTMLInputElement | null;
                             if (el) el.value = "";
                           }}
@@ -643,12 +643,11 @@ export default function SubCompanyPage() {
                       >
                         <div className="text-white text-center font-bold">
                           <div className="text-lg">
-                            Premium Member
-                            <br />
-                            Upload 1 Minute Video
+                            Premium Members Can Upload Video Below 1 Minute
+                            Length
                           </div>
                           <div className="text-yellow-300 mt-2">
-                            Video Only (MP4)
+                            Size Scale 16:9 at 800x 450 , And Below ( 10 MB )
                           </div>
                         </div>
                       </div>
@@ -681,12 +680,12 @@ export default function SubCompanyPage() {
                         setFilePreview1(
                           companyProfile?.file1 || companyProfile?.image
                             ? formatImageUrl(
-                                companyProfile.file1 || companyProfile.image
+                                companyProfile.file1 || companyProfile.image,
                               )
-                            : null
+                            : null,
                         );
                         const el = document.getElementById(
-                          "company-file-input-1"
+                          "company-file-input-1",
                         ) as HTMLInputElement | null;
                         if (el) el.value = "";
                       }}
@@ -736,7 +735,7 @@ export default function SubCompanyPage() {
                                   file1_url: "",
                                 });
                                 const el = document.getElementById(
-                                  "company-file-input-1"
+                                  "company-file-input-1",
                                 ) as HTMLInputElement | null;
                                 if (el) el.value = "";
                               }}
@@ -808,12 +807,13 @@ export default function SubCompanyPage() {
                             setFilePreview1(
                               companyProfile?.file1 || companyProfile?.image
                                 ? formatImageUrl(
-                                    companyProfile.file1 || companyProfile.image
+                                    companyProfile.file1 ||
+                                      companyProfile.image,
                                   )
-                                : null
+                                : null,
                             );
                             const el = document.getElementById(
-                              "company-file-input-1"
+                              "company-file-input-1",
                             ) as HTMLInputElement | null;
                             if (el) el.value = "";
                           }}
@@ -860,7 +860,7 @@ export default function SubCompanyPage() {
                                   file2_url: "",
                                 });
                                 const el = document.getElementById(
-                                  "company-file-input-2"
+                                  "company-file-input-2",
                                 ) as HTMLInputElement | null;
                                 if (el) el.value = "";
                               }}
@@ -932,10 +932,10 @@ export default function SubCompanyPage() {
                             setFilePreview2(
                               companyProfile?.file2
                                 ? formatImageUrl(companyProfile.file2)
-                                : null
+                                : null,
                             );
                             const el = document.getElementById(
-                              "company-file-input-2"
+                              "company-file-input-2",
                             ) as HTMLInputElement | null;
                             if (el) el.value = "";
                           }}
@@ -982,7 +982,7 @@ export default function SubCompanyPage() {
                                   file3_url: "",
                                 });
                                 const el = document.getElementById(
-                                  "company-file-input-3"
+                                  "company-file-input-3",
                                 ) as HTMLInputElement | null;
                                 if (el) el.value = "";
                               }}
@@ -1054,10 +1054,10 @@ export default function SubCompanyPage() {
                             setFilePreview3(
                               companyProfile?.file3
                                 ? formatImageUrl(companyProfile.file3)
-                                : null
+                                : null,
                             );
                             const el = document.getElementById(
-                              "company-file-input-3"
+                              "company-file-input-3",
                             ) as HTMLInputElement | null;
                             if (el) el.value = "";
                           }}
@@ -1237,8 +1237,8 @@ export default function SubCompanyPage() {
                     ? i18n.t("updating")
                     : i18n.t("saving")
                   : editMode === "update"
-                  ? i18n.t("update")
-                  : i18n.t("save")}
+                    ? i18n.t("update")
+                    : i18n.t("save")}
               </button>
               {/* Cancel button below Update/Save in edit mode */}
               <button
@@ -1408,7 +1408,7 @@ export default function SubCompanyPage() {
                   }}
                   onClick={() =>
                     setCurrentCompanyIndex((i) =>
-                      Math.min(i + 1, companies.length - 1)
+                      Math.min(i + 1, companies.length - 1),
                     )
                   }
                 >
@@ -1602,7 +1602,7 @@ export default function SubCompanyPage() {
                       if (companyProfile?.website)
                         window.open(
                           formatUrl(companyProfile.website),
-                          "_blank"
+                          "_blank",
                         );
                     },
                   },

@@ -94,7 +94,7 @@ export default function CreateCompanyPage() {
     fetchCompanies();
   }, []);
   const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
   ) => {
     const { name, value } = e.target;
     setForm({ ...form, [name]: value });
@@ -107,7 +107,7 @@ export default function CreateCompanyPage() {
     // Real-time validation for URL fields
     if (
       ["website", "telegramId", "Facebook", "Instagram", "Youtube"].includes(
-        name
+        name,
       )
     ) {
       const urlError = getUrlError(value, name);
@@ -119,7 +119,7 @@ export default function CreateCompanyPage() {
 
   const handleFileChange = async (
     fileNumber: 1 | 2 | 3,
-    e: React.ChangeEvent<HTMLInputElement>
+    e: React.ChangeEvent<HTMLInputElement>,
   ) => {
     const file = e.target.files?.[0] || null;
     const fileKey = `file${fileNumber}` as "file1" | "file2" | "file3";
@@ -127,15 +127,15 @@ export default function CreateCompanyPage() {
       fileNumber === 1
         ? fileInputRef1
         : fileNumber === 2
-        ? fileInputRef2
-        : fileInputRef3;
+          ? fileInputRef2
+          : fileInputRef3;
 
     if (file) {
       // If file is a video, only allow mp4 and only for premium users
       if (file.type.startsWith("video/")) {
         if (!isPremium) {
           WebApp.showAlert(
-            "Video uploads are available for premium users only."
+            "Video uploads are available for premium users only.",
           );
           setForm({ ...form, [fileKey]: null });
           if (fileInputRef.current) fileInputRef.current.value = "";
@@ -260,7 +260,7 @@ export default function CreateCompanyPage() {
             // notify other parts of the app (App.tsx) that profile was updated
             try {
               window.dispatchEvent(
-                new CustomEvent("profile-updated", { detail: profileData })
+                new CustomEvent("profile-updated", { detail: profileData }),
               );
             } catch (evErr) {
               console.warn("Failed to dispatch profile-updated event", evErr);
@@ -268,14 +268,14 @@ export default function CreateCompanyPage() {
           } catch (storeErr) {
             console.warn(
               "Failed to update profile store after company creation",
-              storeErr
+              storeErr,
             );
           }
         }
       } catch (pfErr) {
         console.warn(
           "Failed to re-fetch profile after company creation",
-          pfErr
+          pfErr,
         );
       }
 
@@ -291,7 +291,7 @@ export default function CreateCompanyPage() {
       setError(
         err?.response?.data?.message ||
           err.message ||
-          "Failed to create company profile"
+          "Failed to create company profile",
       );
     } finally {
       setLoading(false);
@@ -356,12 +356,10 @@ export default function CreateCompanyPage() {
                     ) : (
                       <div className="bg-[#01a2e9] text-center text-white font-bold py-6 relative flex flex-col items-center justify-center w-full h-48 rounded-xl">
                         <div className="text-lg">
-                          Premium Member
-                          <br />
-                          Upload 1 Minute Video
+                          Premium Members Can Upload Video Below 1 Minute Length
                         </div>
                         <div className="text-yellow-300 font-bold mt-2">
-                          Video Only (MP4)
+                          Size Scale 16:9 at 800x 450 , And Below ( 10 MB )
                         </div>
                       </div>
                     )}
