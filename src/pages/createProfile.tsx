@@ -151,7 +151,7 @@ export default function CreateProfile() {
       setError("");
     } else {
       setError(
-        "Only MP4 video files are allowed for videos, otherwise upload an image."
+        "Only MP4 video files are allowed for videos, otherwise upload an image.",
       );
       setMediaPreview(null);
       setMediaType(null);
@@ -223,7 +223,7 @@ export default function CreateProfile() {
 
       const formData = new FormData();
       Object.entries(formattedForm).forEach(([key, value]) =>
-        formData.append(key, value)
+        formData.append(key, value),
       );
       if (profile_image) formData.append("profile_image", profile_image);
       await axios.post(`${API_BASE_URL}/addprofile`, formData, {
@@ -233,7 +233,7 @@ export default function CreateProfile() {
       });
       console.log("Profile created successfully");
       setSuccess(
-        "Profile created successfully! Redirecting to create company..."
+        "Profile created successfully! Redirecting to create company...",
       );
 
       try {
@@ -248,7 +248,7 @@ export default function CreateProfile() {
           } catch (storeErr) {
             console.warn(
               "Failed to update profile store after creation",
-              storeErr
+              storeErr,
             );
           }
         }
@@ -267,7 +267,7 @@ export default function CreateProfile() {
       setError(
         err?.response?.data?.message ||
           err.message ||
-          "Failed to create profile"
+          "Failed to create profile",
       );
     } finally {
       setLoading(false);
@@ -437,7 +437,7 @@ export default function CreateProfile() {
             <div className="w-full mb-2">
               <input
                 name="email"
-                placeholder="Email"
+                placeholder="Bluemarketer@Hotmail.com.hk"
                 value={form.email}
                 onChange={handleChange}
                 type="email"

@@ -101,7 +101,7 @@ export const BuyCreditsTab: React.FC<BuyCreditsTabProps> = ({
                       ${pkg.originalPriceUSDT}
                     </span>
                   )}
-                  <span className="bg-[#007cb6] text-black px-2 py-1 rounded text-base font-bold">
+                  <span className="bg-red-500 text-black px-2 py-1 rounded text-xl font-bold">
                     ${pkg.priceUSDT}
                   </span>
                 </div>
