@@ -23,7 +23,11 @@ import {
   faWeixin,
   faSkype,
 } from "@fortawesome/free-brands-svg-icons";
-import { faPhone, faGlobe } from "@fortawesome/free-solid-svg-icons";
+import {
+  faPhone,
+  faGlobe,
+  faEnvelope,
+} from "@fortawesome/free-solid-svg-icons";
 import { callOrCopyPhone } from "../utils/phone";
 import Layout from "../components/Layout";
 import { useNavigate } from "react-router-dom";
@@ -62,7 +66,7 @@ export default function ProfilePage() {
         setError(
           err?.response?.data?.message ||
             err.message ||
-            "Failed to fetch profile"
+            "Failed to fetch profile",
         );
       } finally {
         setLoading(false);
@@ -219,7 +223,7 @@ export default function ProfilePage() {
                         className="w-12 h-12 rounded-full flex items-center justify-center overflow-hidden cursor-pointer flex-shrink-0"
                         onClick={() =>
                           WebApp.openTelegramLink(
-                            `https://t.me/${profile.telegramId}`
+                            `https://t.me/${profile.telegramId}`,
                           )
                         }
                         style={{
@@ -264,6 +268,24 @@ export default function ProfilePage() {
                         className="w-9 h-9 object-contain"
                       />
                     </div>
+                    {profile?.email && (
+                      <div
+                        className="w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0 cursor-pointer"
+                        onClick={() =>
+                          window.open(`mailto:${profile.email}`, "_blank")
+                        }
+                        style={{
+                          backgroundColor: "var(--app-background-color)",
+                          scrollSnapAlign: "center" as any,
+                        }}
+                      >
+                        <FontAwesomeIcon
+                          icon={faEnvelope}
+                          size="2x"
+                          color="white"
+                        />
+                      </div>
+                    )}
                     {profile?.website && (
                       <div
                         className="w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0 cursor-pointer"
