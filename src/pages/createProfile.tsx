@@ -437,7 +437,7 @@ export default function CreateProfile() {
             <div className="w-full mb-2">
               <input
                 name="email"
-                placeholder="Bluemarketer@Hotmail.com.hk"
+                placeholder="Email ex: Bluemarketer@Hotmail.com.hk"
                 value={form.email}
                 onChange={handleChange}
                 type="email"

@@ -193,7 +193,7 @@ export default function UpdateProfilePage() {
             Authorization: `Bearer ${token}`,
             "Content-Type": "multipart/form-data",
           },
-        }
+        },
       );
       if (res.status === 200) {
         WebApp.showAlert("Profile updated successfully!");
@@ -218,7 +218,7 @@ export default function UpdateProfilePage() {
       }
     } catch (err: any) {
       WebApp.showAlert(
-        err.response?.data?.message || "Failed to update profile"
+        err.response?.data?.message || "Failed to update profile",
       );
     } finally {
       setLoading(false);
@@ -518,7 +518,7 @@ export default function UpdateProfilePage() {
               <input
                 type="email"
                 className="w-full bg-transparent text-[#00AEEF] outline-none placeholder-blue-300"
-                placeholder="Email"
+                placeholder="Email ex: Bluemarketer@Hotmail.com.hk"
                 value={email}
                 onChange={(e) => {
                   setEmail(e.target.value);
