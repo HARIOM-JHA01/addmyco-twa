@@ -97,11 +97,11 @@ export const BuyCreditsTab: React.FC<BuyCreditsTabProps> = ({
                 <h3 className="font-bold text-black">{pkg.name}</h3>
                 <div className="flex flex-col items-end gap-1">
                   {pkg.originalPriceUSDT && (
-                    <span className="text-gray-500 text-sm line-through">
+                    <span className="text-red-500 text-base line-through">
                       ${pkg.originalPriceUSDT}
                     </span>
                   )}
-                  <span className="bg-red-500 text-black px-2 py-1 rounded text-xl font-bold">
+                  <span className="bg-[#007cb6] text-black px-2 py-1 rounded text-base font-bold">
                     ${pkg.priceUSDT}
                   </span>
                 </div>
