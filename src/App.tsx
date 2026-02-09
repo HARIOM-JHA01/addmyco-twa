@@ -18,6 +18,7 @@ import CreateProfile from "./pages/createProfile";
 import ThemePage from "./pages/ThemePage";
 import WelcomePage from "./pages/WelcomePage";
 import MembershipPage from "./pages/MembershipPage";
+import DonatorPage from "./pages/DonatorPage";
 import PaymentHistoryPage from "./pages/PaymentHistoryPage";
 import AdvertisementPage from "./pages/AdvertisementPage";
 import axios from "axios";
@@ -161,6 +162,7 @@ function AppRoutes() {
       "create-company",
       "theme",
       "membership",
+      "donator",
       "payment-history",
       "background",
       "advertisements",
@@ -601,6 +603,7 @@ function AppRoutes() {
           <Route path="/create-company" element={<CreateCompanyPage />} />
           <Route path="/theme" element={<ThemePage />} />
           <Route path="/membership" element={<MembershipPage />} />
+          <Route path="/donator" element={<DonatorPage />} />
           <Route path="/advertisements" element={<AdvertisementPage />} />
           <Route path="/payment-history" element={<PaymentHistoryPage />} />
           <Route path="/background" element={<BackgroundPage />} />

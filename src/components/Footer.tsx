@@ -9,10 +9,12 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import WebApp from "@twa-dev/sdk";
 import i18n, { getLanguage, setLanguage } from "../i18n";
+import { useProfileStore } from "../store/profileStore";
 import BottomCircleAdBanner from "./BottomCircleAdBanner";
 
 export default function Footer() {
   const router = useNavigate();
+  const profile = useProfileStore((s) => s.profile);
   const [showSettings, setShowSettings] = useState(false);
   // const [showWorkModal, setShowWorkModal] = useState(false);
   // const [workModalText, setWorkModalText] = useState("");
@@ -67,6 +69,17 @@ export default function Footer() {
             >
               {i18n.t("membership")}
             </button>
+            {profile?.usertype === 2 && (
+              <button
+                className="text-white font-semibold px-4 py-2 text-left hover:bg-gray-800"
+                onClick={() => {
+                  setShowSettings(false);
+                  router("/donator");
+                }}
+              >
+                {i18n.t("donator_section")}
+              </button>
+            )}
             <button
               className="text-white font-semibold px-4 py-2 text-left hover:bg-gray-800"
               onClick={() => {
