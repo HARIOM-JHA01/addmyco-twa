@@ -51,6 +51,33 @@ export interface Purchase {
   createdAt: string;
 }
 
+// Donator purchase with full details
+export interface DonatorPurchase {
+  _id: string;
+  packageName: string;
+  amount: number;
+  currency: string;
+  transactionId: string;
+  walletAddress: string;
+  creditsGrantedEmployee: number;
+  creditsGrantedOperator: number;
+  status: number; // 0: pending, 1: approved, 2: rejected
+  statusLabel: string;
+  createdAt: string;
+  approvedAt?: string;
+}
+
+// Purchase list response
+export interface DonatorPurchasesResponse {
+  data: DonatorPurchase[];
+  meta: {
+    total: number;
+    page: number;
+    limit: number;
+    pages: number;
+  };
+}
+
 export interface OperatorUsers {
   creditsUsed: number;
   potentialUsers: number;
@@ -76,6 +103,7 @@ export interface CreateEmployeeResponse {
 export interface BuyPackagePayload {
   packageId: string;
   transactionId: string;
+  walletAddress?: string;
 }
 
 export interface BuyPackageResponse {
@@ -84,9 +112,86 @@ export interface BuyPackageResponse {
   amount: number;
 }
 
+// Create operator
+export interface CreateOperatorPayload {
+  name: string;
+  telegramUsername: string;
+  password: string;
+  initialCredits: number;
+  initialOperatorSlots: number;
+}
+
+export interface CreateOperatorResponse {
+  _id: string;
+  name: string;
+  email: string;
+  credits: number;
+  operatorSlots: number;
+  isActive: boolean;
+  createdAt: string;
+}
+
+// Buy package for a specific operator
+export interface BuyPackageForOperatorPayload {
+  packageId: string;
+  operatorId: string;
+  transactionId: string;
+  walletAddress?: string;
+}
+
+export interface BuyPackageForOperatorResponse {
+  purchaseId: string;
+  operatorId: string;
+  status: number;
+  amount: number;
+}
+
+// Search response for operators/employees
+export interface SearchResponse<T> {
+  data: T[];
+  total: number;
+  page: number;
+  limit: number;
+}
+
+// Donator summary aggregated response
+export interface DonatorSummary {
+  profile: {
+    _id: string;
+    username: string;
+    tgid: string;
+    email: string;
+    owner_name_english?: string;
+    owner_name_chinese?: string;
+    memberid: string;
+    membertype: string;
+    country: string;
+    countryCode: string;
+    profilestatus: number;
+    companystatus: number;
+    enddate: string;
+    startdate: string;
+    paymentstatus: number;
+    createdAt: string;
+    [key: string]: any; // Allow additional fields
+  };
+  operators: SubOperator[];
+  purchases: Purchase[];
+  purchasesSummary: {
+    total: number;
+    approved: number;
+    totalCreditsOperator: number;
+    totalCreditsEmployee: number;
+  };
+  employeesSummary: {
+    totalEmployeesCreated: number;
+    recentUsers: any[];
+  };
+}
+
 export type DonatorTabType =
   | "dashboard"
   | "buy-credits"
-  | "create-employee"
-  | "my-employees"
+  | "create-operator"
+  | "my-operators"
   | "purchase-history";

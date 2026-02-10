@@ -1,15 +1,9 @@
 import React from "react";
-import { Package } from "../../types/advertisement";
+import { DonatorPackage } from "../../types/donator";
 
-interface UsdtPaymentModalProps {
+interface DonatorUsdtPaymentModalProps {
   isOpen: boolean;
-  // support both advertisement Package and donator package shape
-  selectedPackage:
-    | (Package & {
-        employeeCredits?: number;
-        operatorCredits?: number;
-      })
-    | null;
+  selectedPackage: DonatorPackage | null;
   transactionId: string;
   walletAddress: string;
   loading: boolean;
@@ -20,7 +14,9 @@ interface UsdtPaymentModalProps {
   onSubmit: () => void;
 }
 
-export const UsdtPaymentModal: React.FC<UsdtPaymentModalProps> = ({
+export const DonatorUsdtPaymentModal: React.FC<
+  DonatorUsdtPaymentModalProps
+> = ({
   isOpen,
   selectedPackage,
   transactionId,
@@ -34,10 +30,6 @@ export const UsdtPaymentModal: React.FC<UsdtPaymentModalProps> = ({
 }) => {
   if (!isOpen || !selectedPackage) return null;
 
-  const isDonatorPackage =
-    typeof selectedPackage.employeeCredits === "number" ||
-    typeof selectedPackage.operatorCredits === "number";
-
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40 p-4">
       <div className="bg-white rounded-xl shadow-xl w-full max-w-xs relative max-h-[90vh] flex flex-col text-black">
@@ -46,44 +38,31 @@ export const UsdtPaymentModal: React.FC<UsdtPaymentModalProps> = ({
           onClick={onClose}
           aria-label="Close"
         >
-          &times;
+          ×
         </button>
+
         <div className="overflow-y-auto p-6">
           <h3 className="text-lg font-bold text-[#007cb6] mb-4 text-center">
-            {isDonatorPackage
-              ? "Purchase Package"
-              : "Purchase Advertisement Credits"}
+            Donator Package Details
           </h3>
 
           <div className="bg-blue-50 p-4 rounded-lg mb-4">
-            <p className="text-sm font-semibold text-gray-700 mb-2">
-              Package Details
-            </p>
             <div className="space-y-1 text-sm">
               <p>
-                <span className="font-semibold">Name:</span>{" "}
+                <span className="font-semibold">Package Name:</span>{" "}
                 {selectedPackage.name}
               </p>
-              {isDonatorPackage ? (
-                <>
-                  <p>
-                    <span className="font-semibold">Employees:</span>{" "}
-                    {selectedPackage.employeeCredits ?? 0}
-                  </p>
-                  <p>
-                    <span className="font-semibold">Operators:</span>{" "}
-                    {selectedPackage.operatorCredits ?? 0}
-                  </p>
-                </>
-              ) : (
-                <p>
-                  <span className="font-semibold">Credits:</span>{" "}
-                  {selectedPackage.displayCredits}
-                </p>
-              )}
+              <p>
+                <span className="font-semibold">No. Of Employees:</span>{" "}
+                {selectedPackage.employeeCredits}
+              </p>
+              <p>
+                <span className="font-semibold">No. Of Operators:</span>{" "}
+                {selectedPackage.operatorCredits}
+              </p>
               <p>
                 <span className="font-semibold">Price:</span> $
-                {selectedPackage.priceUSDT} USDT
+                {selectedPackage.price} USDT
               </p>
             </div>
           </div>
@@ -96,13 +75,12 @@ export const UsdtPaymentModal: React.FC<UsdtPaymentModalProps> = ({
               No Fees No charges!!!
             </p>
             <ol className="list-decimal list-inside space-y-1 text-xs">
-              <li>
-                Send ${selectedPackage.priceUSDT} USDT to the wallet below
-              </li>
+              <li>Send ${selectedPackage.price} USDT to the wallet below</li>
               <li>Copy the transaction ID from your wallet</li>
               <li>Paste it below along with your wallet address</li>
               <li>Wait for admin approval (usually within 24 hours)</li>
             </ol>
+
             <div className="mt-3 text-sm break-all bg-gray-100 p-3 rounded-lg text-center">
               <div className="mb-1 text-center font-semibold">
                 Send USDT to this address:

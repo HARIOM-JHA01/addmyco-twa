@@ -3,33 +3,45 @@ import Header from "../components/Header";
 import Footer from "../components/Footer";
 import i18n from "../i18n";
 import {
-  getOperatorProfile,
-  getOperatorCredits,
   getPackages,
-  buyPackage,
+  donatorBuyPackage,
   createEmployee,
   getUsers,
+  getOperatorsEmployeesAdmin,
+  createOperator,
+  searchOperators,
+  buyPackageForOperator,
+  searchEmployees,
+  getDonatorSummary,
+  getDonatorPurchases,
   OperatorAuthError,
   operatorLogin,
 } from "../services/donatorService";
 import { useNavigate } from "react-router-dom";
 import {
   DonatorTabType,
-  OperatorProfile,
-  OperatorCredits,
   DonatorPackage,
   OperatorUsers,
   CreateEmployeePayload,
+  CreateOperatorPayload,
+  SubOperator,
+  SearchResponse,
+  DonatorSummary,
+  DonatorPurchase,
 } from "../types/donator";
 import WebApp from "@twa-dev/sdk";
+import { DonatorUsdtPaymentModal } from "../components/donator/DonatorUsdtPaymentModal";
 
 export default function DonatorDashboard() {
-  const [activeTab, setActiveTab] = useState<DonatorTabType>("dashboard");
+  const [activeTab, setActiveTab] = useState<
+    DonatorTabType | "manage-operators" | "search-employees"
+  >("dashboard");
   const [menuOpen, setMenuOpen] = useState(false);
 
   // Dashboard state
-  const [profile, setProfile] = useState<OperatorProfile | null>(null);
-  const [credits, setCredits] = useState<OperatorCredits | null>(null);
+  const [donatorSummary, setDonatorSummary] = useState<DonatorSummary | null>(
+    null,
+  );
   const [users, setUsers] = useState<OperatorUsers | null>(null);
   const [dashboardLoading, setDashboardLoading] = useState(false);
   const [dashboardError, setDashboardError] = useState<string | null>(null);
@@ -54,6 +66,7 @@ export default function DonatorDashboard() {
   );
   const [buyModalOpen, setBuyModalOpen] = useState(false);
   const [transactionId, setTransactionId] = useState("");
+  const [walletAddress, setWalletAddress] = useState("");
   const [buyLoading, setBuyLoading] = useState(false);
   const [buyError, setBuyError] = useState<string | null>(null);
 
@@ -70,13 +83,77 @@ export default function DonatorDashboard() {
   // My Employees state
   const [employeesLoading, setEmployeesLoading] = useState(false);
   const [employeesError, setEmployeesError] = useState<string | null>(null);
+  // If the signed-in token has admin scope, prefer the admin endpoint's richer response
+  const [adminOperatorsEmployees, setAdminOperatorsEmployees] = useState<
+    any | null
+  >(null);
+
+  // Manage Operators state
+  const [operatorForm, setOperatorForm] = useState<CreateOperatorPayload>({
+    name: "",
+    telegramUsername: "",
+    password: "",
+    initialCredits: 0,
+    initialOperatorSlots: 0,
+  });
+  const [operatorsLoading, setOperatorsLoading] = useState(false);
+  const [operatorsError, setOperatorsError] = useState<string | null>(null);
+  const [operatorsList, setOperatorsList] = useState<SubOperator[]>([]);
+  const [operatorsPage, setOperatorsPage] = useState(1);
+  const [operatorsSearch, setOperatorsSearch] = useState("");
+  const [operatorsTotal, setOperatorsTotal] = useState(0);
+  const [createOperatorLoading, setCreateOperatorLoading] = useState(false);
+  const [createOperatorError, setCreateOperatorError] = useState<string | null>(
+    null,
+  );
+  const [createOperatorSuccess, setCreateOperatorSuccess] = useState<
+    string | null
+  >(null);
+
+  // Buy for Operator state
+  const [buyForOperatorLoading, setBuyForOperatorLoading] = useState(false);
+  const [buyForOperatorError, setBuyForOperatorError] = useState<string | null>(
+    null,
+  );
+  const [selectedOperatorForBuy, setSelectedOperatorForBuy] =
+    useState<SubOperator | null>(null);
+  const [buyForOperatorModal, setBuyForOperatorModal] = useState(false);
+  const [buyForOperatorTxn, setBuyForOperatorTxn] = useState("");
+  const [buyForOperatorWallet, setBuyForOperatorWallet] = useState("");
+  const [selectedPackageForOperator, setSelectedPackageForOperator] =
+    useState<DonatorPackage | null>(null);
+
+  // Search Employees state
+  const [employeesSearchQuery, setEmployeesSearchQuery] = useState("");
+  const [employeesSearchPage, setEmployeesSearchPage] = useState(1);
+  const [employeesSearchLoading, setEmployeesSearchLoading] = useState(false);
+  const [employeesSearchError, setEmployeesSearchError] = useState<
+    string | null
+  >(null);
+  const [employeesSearchResults, setEmployeesSearchResults] = useState<any[]>(
+    [],
+  );
+  const [employeesSearchTotal, setEmployeesSearchTotal] = useState(0);
+
+  // Purchase History state
+  const [purchaseHistory, setPurchaseHistory] = useState<DonatorPurchase[]>([]);
+  const [purchaseHistoryLoading, setPurchaseHistoryLoading] = useState(false);
+  const [purchaseHistoryError, setPurchaseHistoryError] = useState<
+    string | null
+  >(null);
+  const [purchaseHistoryPage, setPurchaseHistoryPage] = useState(1);
+  const [purchaseHistoryTotal, setPurchaseHistoryTotal] = useState(0);
+  const [purchaseHistoryPages, setPurchaseHistoryPages] = useState(0);
+  const [purchaseStatusFilter, setPurchaseStatusFilter] = useState<
+    number | undefined
+  >(undefined);
 
   // Fetch dashboard data
   useEffect(() => {
     if (activeTab === "dashboard") {
       // Check if operator is authenticated
-      const operatorToken = localStorage.getItem("operatorToken");
-      if (!operatorToken) {
+      const token = localStorage.getItem("token");
+      if (!token) {
         setDashboardError(
           "Please login as an operator. Operator authentication token not found.",
         );
@@ -95,10 +172,10 @@ export default function DonatorDashboard() {
 
   // Fetch employees
   useEffect(() => {
-    if (activeTab === "my-employees" || activeTab === "purchase-history") {
+    if (activeTab === "my-operators") {
       // Check if operator is authenticated
-      const operatorToken = localStorage.getItem("operatorToken");
-      if (!operatorToken) {
+      const token = localStorage.getItem("token");
+      if (!token) {
         setEmployeesError(
           "Please login as an operator. Operator authentication token not found.",
         );
@@ -108,22 +185,43 @@ export default function DonatorDashboard() {
     }
   }, [activeTab]);
 
+  // Fetch purchase history
+  useEffect(() => {
+    if (activeTab === "purchase-history") {
+      // Check if donator is authenticated
+      const token = localStorage.getItem("token");
+      if (!token) {
+        setPurchaseHistoryError(
+          "Please login as a donator. Authentication token not found.",
+        );
+        return;
+      }
+      fetchPurchaseHistory();
+    }
+  }, [activeTab, purchaseHistoryPage, purchaseStatusFilter]);
+
   const fetchDashboardData = async () => {
     setDashboardLoading(true);
     setDashboardError(null);
     try {
-      const [profileData, creditsData, usersData] = await Promise.all([
-        getOperatorProfile(),
-        getOperatorCredits(),
-        getUsers(),
-      ]);
-      setProfile(profileData);
-      setCredits(creditsData);
-      setUsers(usersData);
+      // Fetch aggregated donator summary (profile, operators, employees, purchases, credits)
+      const summary = await getDonatorSummary();
+      setDonatorSummary(summary);
+
+      // Store operators list for other tabs
+      setOperatorsList(summary.operators || []);
+      setOperatorsTotal(summary.operators?.length || 0);
+
+      // Map summary data to users format for compatibility
+      setUsers({
+        creditsUsed: 0, // Not provided in summary
+        potentialUsers: summary.employeesSummary.totalEmployeesCreated,
+        purchases: summary.purchases,
+      });
     } catch (error: any) {
       if (error instanceof OperatorAuthError) {
         setDashboardError(
-          "Operator not authenticated — please login as an operator.",
+          "Donator not authenticated — please login as a donator.",
         );
       } else {
         setDashboardError(error.message || "Failed to load dashboard data");
@@ -151,38 +249,95 @@ export default function DonatorDashboard() {
   const fetchEmployees = async () => {
     setEmployeesLoading(true);
     setEmployeesError(null);
+    setAdminOperatorsEmployees(null);
+
+    // Prefer admin endpoint when a stored token is available (uses localStorage token)
     try {
+      const adminData = await getOperatorsEmployeesAdmin();
+      // store raw admin response for admin-only UI
+      setAdminOperatorsEmployees(adminData || null);
+
+      // If the admin endpoint returns a shape compatible with OperatorUsers, map it
+      if (adminData && adminData.usersSummary) {
+        // example mapping when admin returns a summary
+        setUsers({
+          creditsUsed: adminData.usersSummary.creditsUsed || 0,
+          potentialUsers: adminData.usersSummary.totalEmployees || 0,
+          purchases: adminData.usersSummary.purchases || [],
+        });
+        setEmployeesLoading(false);
+        return;
+      }
+
+      // Fallback: try operator endpoint if admin returned nothing useful
       const data = await getUsers();
       setUsers(data);
     } catch (error: any) {
-      setEmployeesError(error.message || "Failed to load employees");
-      console.error("Employees error:", error);
+      // If admin call failed due to missing/insufficient token, fall back to operator endpoint
+      console.warn(
+        "Admin operators-employees fetch failed, falling back to operator users:",
+        error?.message || error,
+      );
+      try {
+        const data = await getUsers();
+        setUsers(data);
+      } catch (err: any) {
+        setEmployeesError(err.message || "Failed to load employees");
+        console.error("Employees error:", err);
+      }
     } finally {
       setEmployeesLoading(false);
     }
   };
 
+  const fetchPurchaseHistory = async () => {
+    setPurchaseHistoryLoading(true);
+    setPurchaseHistoryError(null);
+    try {
+      const response = await getDonatorPurchases(
+        purchaseHistoryPage,
+        20, // limit
+        purchaseStatusFilter,
+      );
+      setPurchaseHistory(response.data);
+      setPurchaseHistoryTotal(response.meta.total);
+      setPurchaseHistoryPages(response.meta.pages);
+    } catch (error: any) {
+      if (error instanceof OperatorAuthError) {
+        setPurchaseHistoryError(
+          "Donator not authenticated — please login as a donator.",
+        );
+      } else {
+        setPurchaseHistoryError(
+          error.message || "Failed to load purchase history",
+        );
+      }
+      console.error("Purchase history error:", error);
+    } finally {
+      setPurchaseHistoryLoading(false);
+    }
+  };
+
   const handleBuyPackage = async () => {
-    if (!selectedPackage || !transactionId.trim()) {
-      setBuyError("Please enter a transaction ID");
+    if (!selectedPackage || !transactionId.trim() || !walletAddress.trim()) {
+      setBuyError("Please enter a transaction ID and your wallet address");
       return;
     }
 
     // Check authentication first
-    const operatorToken = localStorage.getItem("operatorToken");
-    if (!operatorToken) {
-      setBuyError(
-        "Please login as an operator. Authentication token not found.",
-      );
+    const token = localStorage.getItem("token");
+    if (!token) {
+      setBuyError("Please login as a donator. Authentication token not found.");
       return;
     }
 
     setBuyLoading(true);
     setBuyError(null);
     try {
-      await buyPackage({
+      await donatorBuyPackage({
         packageId: selectedPackage._id,
         transactionId: transactionId.trim(),
+        walletAddress: walletAddress.trim(),
       });
 
       WebApp.showAlert(
@@ -190,6 +345,7 @@ export default function DonatorDashboard() {
       );
       setBuyModalOpen(false);
       setTransactionId("");
+      setWalletAddress("");
       setSelectedPackage(null);
 
       // Refresh dashboard data
@@ -206,8 +362,8 @@ export default function DonatorDashboard() {
     e.preventDefault();
 
     // Check authentication first
-    const operatorToken = localStorage.getItem("operatorToken");
-    if (!operatorToken) {
+    const token = localStorage.getItem("token");
+    if (!token) {
       setCreateError(
         "Please login as an operator. Authentication token not found.",
       );
@@ -270,6 +426,149 @@ export default function DonatorDashboard() {
     }
   };
 
+  const handleCreateOperator = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const token = localStorage.getItem("token");
+    if (!token) {
+      setCreateOperatorError(
+        "Please login as an operator. Authentication token not found.",
+      );
+      return;
+    }
+
+    if (
+      !operatorForm.name.trim() ||
+      !operatorForm.telegramUsername.trim() ||
+      !operatorForm.password.trim()
+    ) {
+      setCreateOperatorError(
+        "Name, telegram username, and password are required",
+      );
+      return;
+    }
+
+    setCreateOperatorLoading(true);
+    setCreateOperatorError(null);
+    setCreateOperatorSuccess(null);
+
+    try {
+      const result = await createOperator(operatorForm);
+      setCreateOperatorSuccess(`Operator created: ${result.name}`);
+      setOperatorForm({
+        name: "",
+        telegramUsername: "",
+        password: "",
+        initialCredits: 0,
+        initialOperatorSlots: 0,
+      });
+      // Refresh operators list
+      await handleSearchOperators();
+    } catch (error: any) {
+      setCreateOperatorError(error.message || "Failed to create operator");
+      console.error("Create operator error:", error);
+    } finally {
+      setCreateOperatorLoading(false);
+    }
+  };
+
+  const handleSearchOperators = async (query: string = operatorsSearch) => {
+    const token = localStorage.getItem("token");
+    if (!token) {
+      setOperatorsError("Authentication token not found");
+      return;
+    }
+
+    setOperatorsLoading(true);
+    setOperatorsError(null);
+
+    try {
+      const result: SearchResponse<SubOperator> = await searchOperators(
+        query || undefined,
+        operatorsPage,
+        50,
+      );
+      setOperatorsList(result.data || []);
+      setOperatorsTotal(result.total || 0);
+    } catch (error: any) {
+      setOperatorsError(error.message || "Failed to search operators");
+      console.error("Search operators error:", error);
+    } finally {
+      setOperatorsLoading(false);
+    }
+  };
+
+  const handleBuyForOperator = async () => {
+    if (!selectedOperatorForBuy || !selectedPackageForOperator) {
+      setBuyForOperatorError("Please select an operator and package");
+      return;
+    }
+
+    if (!buyForOperatorTxn.trim() || !buyForOperatorWallet.trim()) {
+      setBuyForOperatorError("Transaction ID and wallet address are required");
+      return;
+    }
+
+    const token = localStorage.getItem("token");
+    if (!token) {
+      setBuyForOperatorError("Authentication token not found");
+      return;
+    }
+
+    setBuyForOperatorLoading(true);
+    setBuyForOperatorError(null);
+
+    try {
+      await buyPackageForOperator({
+        packageId: selectedPackageForOperator._id,
+        operatorId: selectedOperatorForBuy._id,
+        transactionId: buyForOperatorTxn.trim(),
+        walletAddress: buyForOperatorWallet.trim(),
+      });
+
+      WebApp.showAlert("Purchase created for operator successfully!");
+      setBuyForOperatorModal(false);
+      setBuyForOperatorTxn("");
+      setBuyForOperatorWallet("");
+      setSelectedOperatorForBuy(null);
+      setSelectedPackageForOperator(null);
+    } catch (error: any) {
+      setBuyForOperatorError(
+        error.message || "Failed to purchase for operator",
+      );
+      console.error("Buy for operator error:", error);
+    } finally {
+      setBuyForOperatorLoading(false);
+    }
+  };
+
+  const handleSearchEmployees = async (
+    query: string = employeesSearchQuery,
+  ) => {
+    const token = localStorage.getItem("token");
+    if (!token) {
+      setEmployeesSearchError("Authentication token not found");
+      return;
+    }
+
+    setEmployeesSearchLoading(true);
+    setEmployeesSearchError(null);
+
+    try {
+      const result: SearchResponse<any> = await searchEmployees(
+        query || undefined,
+        employeesSearchPage,
+        50,
+      );
+      setEmployeesSearchResults(result.data || []);
+      setEmployeesSearchTotal(result.total || 0);
+    } catch (error: any) {
+      setEmployeesSearchError(error.message || "Failed to search employees");
+      console.error("Search employees error:", error);
+    } finally {
+      setEmployeesSearchLoading(false);
+    }
+  };
+
   return (
     <div className="min-h-screen w-full overflow-x-hidden flex flex-col bg-gray-300">
       <Header />
@@ -325,30 +624,48 @@ export default function DonatorDashboard() {
                 </button>
                 <button
                   onClick={() => {
-                    setActiveTab("create-employee");
+                    setActiveTab("create-operator");
                     setMenuOpen(false);
                   }}
                   className="block w-full text-left px-4 py-2 text-white font-semibold hover:bg-gray-800 transition"
                 >
-                  {i18n.t("create_employee")}
+                  {i18n.t("create_operator")}
                 </button>
                 <button
                   onClick={() => {
-                    setActiveTab("my-employees");
+                    setActiveTab("my-operators");
                     setMenuOpen(false);
                   }}
                   className="block w-full text-left px-4 py-2 text-white font-semibold hover:bg-gray-800 transition"
                 >
-                  {i18n.t("my_employees")}
+                  {i18n.t("my_operators")}
                 </button>
                 <button
                   onClick={() => {
                     setActiveTab("purchase-history");
                     setMenuOpen(false);
                   }}
-                  className="block w-full text-left px-4 py-2 text-white font-semibold hover:bg-gray-800 transition last:rounded-b-lg"
+                  className="block w-full text-left px-4 py-2 text-white font-semibold hover:bg-gray-800 transition"
                 >
                   {i18n.t("purchase_history")}
+                </button>
+                <button
+                  onClick={() => {
+                    setActiveTab("manage-operators" as any);
+                    setMenuOpen(false);
+                  }}
+                  className="block w-full text-left px-4 py-2 text-white font-semibold hover:bg-gray-800 transition"
+                >
+                  Manage Operators
+                </button>
+                <button
+                  onClick={() => {
+                    setActiveTab("search-employees" as any);
+                    setMenuOpen(false);
+                  }}
+                  className="block w-full text-left px-4 py-2 text-white font-semibold hover:bg-gray-800 transition last:rounded-b-lg"
+                >
+                  Search Employees
                 </button>
               </div>
             )}
@@ -361,11 +678,15 @@ export default function DonatorDashboard() {
                 ? i18n.t("dashboard")
                 : activeTab === "buy-credits"
                   ? i18n.t("buy_credits")
-                  : activeTab === "create-employee"
-                    ? i18n.t("create_employee")
-                    : activeTab === "my-employees"
-                      ? i18n.t("my_employees")
-                      : i18n.t("purchase_history")}
+                  : activeTab === "create-operator"
+                    ? i18n.t("create_operator")
+                    : activeTab === "my-operators"
+                      ? i18n.t("my_operators")
+                      : activeTab === "purchase-history"
+                        ? i18n.t("purchase_history")
+                        : activeTab === "manage-operators"
+                          ? "Manage Operators"
+                          : "Search Employees"}
             </h2>
           </div>
           {/* Dashboard Tab */}
@@ -406,7 +727,7 @@ export default function DonatorDashboard() {
                           onClick={() => {
                             const userToken = localStorage.getItem("token");
                             if (userToken) {
-                              localStorage.setItem("operatorToken", userToken);
+                              localStorage.setItem("token", userToken);
                               setDashboardError(null);
                               fetchDashboardData();
                             } else {
@@ -438,49 +759,80 @@ export default function DonatorDashboard() {
                 </div>
               ) : (
                 <div className="space-y-6">
-                  {/* Profile Card */}
-                  {profile && (
-                    <div className="bg-white rounded-lg shadow-md p-6">
-                      <h3 className="text-lg text-center font-bold text-gray-800 mb-4">
-                        Operator Profile
-                      </h3>
-                      <div className="bg-gradient-to-r from-[#007cb6] to-[#005f8e] text-white rounded-lg p-4">
-                        <p className="text-xl font-bold mb-1">{profile.name}</p>
-                        <p className="text-sm opacity-90">{profile.email}</p>
-                        <p className="text-xs opacity-75 mt-2">
-                          {i18n.t("role")}: {profile.role}
-                        </p>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Credits Section */}
-                  {credits && (
+                  {/* Credits Overview */}
+                  {donatorSummary?.purchasesSummary && (
                     <div className="bg-white rounded-lg shadow-md p-6">
                       <h3 className="text-lg text-center font-bold text-gray-800 mb-4">
                         Credits Overview
                       </h3>
                       <div className="grid grid-cols-2 gap-4">
-                        <div className="bg-gradient-to-br from-green-50 to-green-100 p-4 rounded-lg border border-green-200">
+                        <div className="bg-gradient-to-br from-purple-50 to-purple-100 p-4 rounded-lg border border-purple-200">
                           <p className="text-xs text-gray-600 mb-1">
-                            {i18n.t("employee_credits")}
+                            Operator Credits
                           </p>
-                          <p className="text-3xl font-bold text-green-600">
-                            {credits.credits}
+                          <p className="text-2xl font-bold text-purple-600">
+                            {
+                              donatorSummary.purchasesSummary
+                                .totalCreditsOperator
+                            }
                           </p>
-                          <p className="text-xs text-green-600 mt-1">
-                            {i18n.t("available")}
+                          <p className="text-xs text-purple-600 mt-1">
+                            From {donatorSummary.purchasesSummary.approved}{" "}
+                            approved purchases
                           </p>
                         </div>
+                        <div className="bg-gradient-to-br from-green-50 to-green-100 p-4 rounded-lg border border-green-200">
+                          <p className="text-xs text-gray-600 mb-1">
+                            Employee Credits
+                          </p>
+                          <p className="text-2xl font-bold text-green-600">
+                            {
+                              donatorSummary.purchasesSummary
+                                .totalCreditsEmployee
+                            }
+                          </p>
+                          <p className="text-xs text-green-600 mt-1">
+                            Total purchases:{" "}
+                            {donatorSummary.purchasesSummary.total}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Operators & Employees Summary */}
+                  {donatorSummary && (
+                    <div className="bg-white rounded-lg shadow-md p-6">
+                      <h3 className="text-lg text-center font-bold text-gray-800 mb-4">
+                        Operators & Employees
+                      </h3>
+                      <div className="grid grid-cols-2 gap-4">
                         <div className="bg-gradient-to-br from-blue-50 to-blue-100 p-4 rounded-lg border border-blue-200">
                           <p className="text-xs text-gray-600 mb-1">
-                            {i18n.t("operator_slots")}
+                            Total Operators
                           </p>
                           <p className="text-3xl font-bold text-blue-600">
-                            {credits.operatorSlots}
+                            {donatorSummary.operators?.length || 0}
                           </p>
                           <p className="text-xs text-blue-600 mt-1">
-                            {i18n.t("available")}
+                            {donatorSummary.operators?.filter(
+                              (op: any) => op.isActive,
+                            ).length || 0}{" "}
+                            active
+                          </p>
+                        </div>
+                        <div className="bg-gradient-to-br from-green-50 to-green-100 p-4 rounded-lg border border-green-200">
+                          <p className="text-xs text-gray-600 mb-1">
+                            Total Employees
+                          </p>
+                          <p className="text-3xl font-bold text-green-600">
+                            {
+                              donatorSummary.employeesSummary
+                                .totalEmployeesCreated
+                            }
+                          </p>
+                          <p className="text-xs text-green-600 mt-1">
+                            Created by your operators
                           </p>
                         </div>
                       </div>
@@ -608,19 +960,9 @@ export default function DonatorDashboard() {
             </>
           )}
 
-          {/* Create Employee Tab */}
-          {activeTab === "create-employee" && (
+          {/* Create Operator Tab */}
+          {activeTab === "create-operator" && (
             <div className="bg-white rounded-lg shadow-md p-6">
-              {/* Current Credits Display */}
-              {credits && (
-                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
-                  <div className="text-sm text-blue-700">
-                    {i18n.t("available_credits")}:
-                    <span className="font-bold ml-2">{credits.credits}</span>
-                  </div>
-                </div>
-              )}
-
               <form onSubmit={handleCreateEmployee} className="space-y-4">
                 <div>
                   <label className="block text-sm font-semibold text-gray-700 mb-2">
@@ -692,25 +1034,19 @@ export default function DonatorDashboard() {
 
                 <button
                   type="submit"
-                  disabled={createLoading || (credits?.credits || 0) === 0}
+                  disabled={createLoading}
                   className="w-full bg-[#007cb6] text-white py-3 rounded-md font-semibold hover:bg-[#005f8e] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {createLoading
                     ? i18n.t("creating")
-                    : i18n.t("create_employee")}
+                    : i18n.t("create_operator")}
                 </button>
-
-                {(credits?.credits || 0) === 0 && (
-                  <div className="text-orange-600 text-sm text-center">
-                    {i18n.t("no_credits_available")}
-                  </div>
-                )}
               </form>
             </div>
           )}
 
-          {/* My Employees Tab */}
-          {activeTab === "my-employees" && (
+          {/* My Operators Tab */}
+          {activeTab === "my-operators" && (
             <>
               {employeesError && (
                 <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
@@ -724,32 +1060,95 @@ export default function DonatorDashboard() {
                 </div>
               ) : users ? (
                 <div className="space-y-6">
-                  {/* Summary Stats */}
-                  <div className="bg-white rounded-lg shadow-md p-6">
-                    <h3 className="text-lg text-center font-bold text-gray-800 mb-4">
-                      Statistics
-                    </h3>
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="bg-gradient-to-br from-purple-50 to-purple-100 p-4 rounded-lg border border-purple-200">
-                        <p className="text-xs text-gray-600 mb-1">
-                          {i18n.t("credits_used")}
-                        </p>
-                        <p className="text-3xl font-bold text-purple-600">
-                          {users.creditsUsed}
-                        </p>
-                      </div>
-                      <div className="bg-gradient-to-br from-orange-50 to-orange-100 p-4 rounded-lg border border-orange-200">
-                        <p className="text-xs text-gray-600 mb-1">
-                          {i18n.t("total_employees")}
-                        </p>
-                        <p className="text-3xl font-bold text-orange-600">
-                          {users.potentialUsers}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
+                  {/* Admin-powered summary (if available) */}
+                  {adminOperatorsEmployees ? (
+                    <div className="bg-white rounded-lg shadow-md p-6">
+                      <h3 className="text-lg text-center font-bold text-gray-800 mb-4">
+                        Admin — Operators & Employees
+                      </h3>
 
-                  {/* Purchases/Packages List */}
+                      <div className="grid grid-cols-2 gap-4 mb-4">
+                        <div className="bg-gradient-to-br from-purple-50 to-purple-100 p-4 rounded-lg border border-purple-200">
+                          <p className="text-xs text-gray-600 mb-1">
+                            Total Employees
+                          </p>
+                          <p className="text-3xl font-bold text-purple-600">
+                            {adminOperatorsEmployees.totalEmployees ??
+                              adminOperatorsEmployees.employees?.length ??
+                              0}
+                          </p>
+                        </div>
+                        <div className="bg-gradient-to-br from-orange-50 to-orange-100 p-4 rounded-lg border border-orange-200">
+                          <p className="text-xs text-gray-600 mb-1">
+                            Total Operators
+                          </p>
+                          <p className="text-3xl font-bold text-orange-600">
+                            {adminOperatorsEmployees.totalOperators ??
+                              adminOperatorsEmployees.operators?.length ??
+                              0}
+                          </p>
+                        </div>
+                      </div>
+
+                      {/* show top operators (if any) */}
+                      {adminOperatorsEmployees.operators &&
+                        adminOperatorsEmployees.operators.length > 0 && (
+                          <div className="space-y-3">
+                            {adminOperatorsEmployees.operators
+                              .slice(0, 6)
+                              .map((op: any) => (
+                                <div
+                                  key={op._id}
+                                  className="bg-gray-50 border border-gray-200 rounded-lg p-3 flex justify-between items-center"
+                                >
+                                  <div>
+                                    <div className="font-semibold text-gray-800">
+                                      {op.name || op.email}
+                                    </div>
+                                    <div className="text-xs text-gray-500">
+                                      {op.email}
+                                    </div>
+                                  </div>
+                                  <div className="text-sm text-gray-600">
+                                    Credits:{" "}
+                                    <span className="font-bold">
+                                      {op.credits ?? "—"}
+                                    </span>
+                                  </div>
+                                </div>
+                              ))}
+                          </div>
+                        )}
+                    </div>
+                  ) : (
+                    <>
+                      {/* Summary Stats */}
+                      <div className="bg-white rounded-lg shadow-md p-6">
+                        <h3 className="text-lg text-center font-bold text-gray-800 mb-4">
+                          Statistics
+                        </h3>
+                        <div className="grid grid-cols-2 gap-4">
+                          <div className="bg-gradient-to-br from-purple-50 to-purple-100 p-4 rounded-lg border border-purple-200">
+                            <p className="text-xs text-gray-600 mb-1">
+                              {i18n.t("credits_used")}
+                            </p>
+                            <p className="text-3xl font-bold text-purple-600">
+                              {users.creditsUsed}
+                            </p>
+                          </div>
+                          <div className="bg-gradient-to-br from-orange-50 to-orange-100 p-4 rounded-lg border border-orange-200">
+                            <p className="text-xs text-gray-600 mb-1">
+                              {i18n.t("total_employees")}
+                            </p>
+                            <p className="text-3xl font-bold text-orange-600">
+                              {users.potentialUsers}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    </>
+                  )}
+
                   {users.purchases && users.purchases.length > 0 ? (
                     <div className="bg-white rounded-lg shadow-md p-6">
                       <h3 className="text-lg text-center font-bold text-gray-800 mb-4">
@@ -794,19 +1193,44 @@ export default function DonatorDashboard() {
           {/* Purchase History Tab */}
           {activeTab === "purchase-history" && (
             <>
-              {employeesError && (
+              {purchaseHistoryError && (
                 <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
-                  {employeesError}
+                  {purchaseHistoryError}
                 </div>
               )}
 
-              {employeesLoading ? (
+              {/* Filter Section */}
+              <div className="bg-white rounded-lg shadow-md p-4 mb-6">
+                <div className="flex gap-4 items-end">
+                  <div className="flex-1">
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                      Filter by Status
+                    </label>
+                    <select
+                      value={purchaseStatusFilter?.toString() || ""}
+                      onChange={(e) =>
+                        setPurchaseStatusFilter(
+                          e.target.value ? parseInt(e.target.value) : undefined,
+                        )
+                      }
+                      className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-[#007cb6] focus:border-transparent"
+                    >
+                      <option value="">All Status</option>
+                      <option value="0">Pending</option>
+                      <option value="1">Approved</option>
+                      <option value="2">Rejected</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+
+              {purchaseHistoryLoading ? (
                 <div className="text-center py-8">
                   <p className="text-gray-600">{i18n.t("loading")}</p>
                 </div>
-              ) : users && users.purchases && users.purchases.length > 0 ? (
+              ) : purchaseHistory && purchaseHistory.length > 0 ? (
                 <div className="space-y-4">
-                  {users.purchases.map((purchase) => (
+                  {purchaseHistory.map((purchase) => (
                     <div
                       key={purchase._id}
                       className="bg-white rounded-lg shadow-md p-5"
@@ -821,140 +1245,520 @@ export default function DonatorDashboard() {
                           </div>
                         </div>
                         <div className="text-right">
-                          {purchase.status !== undefined && (
-                            <span
-                              className={`inline-block px-3 py-1 rounded-full text-xs font-semibold ${
-                                purchase.status === 1
-                                  ? "bg-green-100 text-green-700"
-                                  : purchase.status === 2
-                                    ? "bg-red-100 text-red-700"
-                                    : "bg-yellow-100 text-yellow-700"
-                              }`}
-                            >
-                              {purchase.status === 1
-                                ? i18n.t("approved")
+                          <span
+                            className={`inline-block px-3 py-1 rounded-full text-xs font-semibold ${
+                              purchase.status === 1
+                                ? "bg-green-100 text-green-700"
                                 : purchase.status === 2
-                                  ? i18n.t("rejected")
-                                  : i18n.t("pending")}
-                            </span>
-                          )}
+                                  ? "bg-red-100 text-red-700"
+                                  : "bg-yellow-100 text-yellow-700"
+                            }`}
+                          >
+                            {purchase.statusLabel}
+                          </span>
                         </div>
                       </div>
-                      <div className="grid grid-cols-2 gap-4 text-sm">
+                      <div className="grid grid-cols-2 gap-4 text-sm mb-3">
                         <div>
                           <span className="text-gray-600">
-                            {i18n.t("credits_granted")}:
+                            Employee Credits:
                           </span>
                           <span className="font-bold text-green-600 ml-2">
-                            {purchase.creditsGranted}
+                            {purchase.creditsGrantedEmployee}
                           </span>
                         </div>
-                        {purchase.amount && (
-                          <div>
-                            <span className="text-gray-600">
-                              {i18n.t("amount")}:
-                            </span>
-                            <span className="font-bold ml-2">
-                              ${purchase.amount}
-                            </span>
-                          </div>
-                        )}
-                        {purchase.transactionId && (
-                          <div className="col-span-2">
-                            <span className="text-gray-600">
-                              {i18n.t("transaction_id")}:
-                            </span>
-                            <span className="font-mono text-sm ml-2">
-                              {purchase.transactionId}
-                            </span>
-                          </div>
+                        <div>
+                          <span className="text-gray-600">
+                            Operator Credits:
+                          </span>
+                          <span className="font-bold text-blue-600 ml-2">
+                            {purchase.creditsGrantedOperator}
+                          </span>
+                        </div>
+                        <div>
+                          <span className="text-gray-600">Amount:</span>
+                          <span className="font-bold ml-2">
+                            {purchase.amount} {purchase.currency}
+                          </span>
+                        </div>
+                        <div>
+                          <span className="text-gray-600">Transaction ID:</span>
+                          <span className="font-mono text-xs ml-2">
+                            {purchase.transactionId}
+                          </span>
+                        </div>
+                      </div>
+                      <div className="text-xs text-gray-500 bg-gray-50 p-2 rounded">
+                        Wallet: {purchase.walletAddress}
+                        {purchase.approvedAt && (
+                          <>
+                            <br />
+                            Approved:{" "}
+                            {new Date(purchase.approvedAt).toLocaleString()}
+                          </>
                         )}
                       </div>
                     </div>
                   ))}
+
+                  {/* Pagination */}
+                  <div className="flex justify-between items-center mt-6 pt-4 border-t">
+                    <span className="text-sm text-gray-600">
+                      Page {purchaseHistoryPage} of {purchaseHistoryPages}{" "}
+                      (Total: {purchaseHistoryTotal})
+                    </span>
+                    <div className="flex gap-2">
+                      <button
+                        disabled={purchaseHistoryPage <= 1}
+                        onClick={() =>
+                          setPurchaseHistoryPage(purchaseHistoryPage - 1)
+                        }
+                        className="px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300 disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        Previous
+                      </button>
+                      <button
+                        disabled={purchaseHistoryPage >= purchaseHistoryPages}
+                        onClick={() =>
+                          setPurchaseHistoryPage(purchaseHistoryPage + 1)
+                        }
+                        className="px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300 disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        Next
+                      </button>
+                    </div>
+                  </div>
                 </div>
               ) : (
-                <div className="bg-white rounded-lg shadow-md p-6 text-center text-gray-500">
-                  {i18n.t("no_purchase_history")}
+                <div className="bg-gray-50 rounded-lg p-8 text-center">
+                  <p className="text-gray-600">
+                    {i18n.t("no_purchases_found")}
+                  </p>
                 </div>
               )}
             </>
           )}
 
-          {/* Buy Package Modal */}
           {buyModalOpen && selectedPackage && (
-            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-              <div className="bg-white rounded-lg p-6 w-full max-w-md">
-                <h3 className="text-xl font-bold text-gray-800 mb-4">
-                  {i18n.t("buy_package")}: {selectedPackage.name}
-                </h3>
+            <DonatorUsdtPaymentModal
+              isOpen={buyModalOpen}
+              selectedPackage={selectedPackage}
+              transactionId={transactionId}
+              walletAddress={walletAddress}
+              loading={buyLoading}
+              error={buyError}
+              onClose={() => {
+                setBuyModalOpen(false);
+                setTransactionId("");
+                setWalletAddress("");
+                setSelectedPackage(null);
+                setBuyError(null);
+              }}
+              onTransactionIdChange={setTransactionId}
+              onWalletAddressChange={setWalletAddress}
+              onSubmit={handleBuyPackage}
+            />
+          )}
 
-                <div className="mb-4 p-4 bg-gray-50 rounded-lg">
-                  <div className="text-sm text-gray-600 mb-2">
-                    {i18n.t("package_details")}:
-                  </div>
-                  <div className="text-sm space-y-1">
+          {/* Manage Operators Tab */}
+          {activeTab === "manage-operators" && (
+            <>
+              {operatorsError && (
+                <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
+                  {operatorsError}
+                </div>
+              )}
+
+              <div className="space-y-6">
+                {/* Create Operator Form */}
+                <div className="bg-white rounded-lg shadow-md p-6">
+                  <h3 className="text-lg font-bold text-gray-800 mb-4">
+                    Create New Operator
+                  </h3>
+
+                  <form onSubmit={handleCreateOperator} className="space-y-4">
                     <div>
-                      {i18n.t("employee_credits")}:
-                      <span className="font-bold ml-2">
-                        {selectedPackage.employeeCredits}
-                      </span>
+                      <label className="block text-sm font-semibold text-gray-700 mb-2">
+                        Operator Name *
+                      </label>
+                      <input
+                        type="text"
+                        value={operatorForm.name}
+                        onChange={(e) =>
+                          setOperatorForm({
+                            ...operatorForm,
+                            name: e.target.value,
+                          })
+                        }
+                        className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-[#007cb6] focus:border-transparent"
+                        placeholder="Acme Ops"
+                        required
+                      />
                     </div>
+
                     <div>
-                      {i18n.t("operator_credits")}:
-                      <span className="font-bold ml-2">
-                        {selectedPackage.operatorCredits}
-                      </span>
+                      <label className="block text-sm font-semibold text-gray-700 mb-2">
+                        Telegram Username *
+                      </label>
+                      <input
+                        type="text"
+                        value={operatorForm.telegramUsername}
+                        onChange={(e) =>
+                          setOperatorForm({
+                            ...operatorForm,
+                            telegramUsername: e.target.value,
+                          })
+                        }
+                        className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-[#007cb6] focus:border-transparent"
+                        placeholder="@username"
+                        required
+                      />
                     </div>
-                    <div className="text-lg font-bold text-[#007cb6] mt-2">
-                      ${selectedPackage.price} USDT
+
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-700 mb-2">
+                        Password *
+                      </label>
+                      <input
+                        type="password"
+                        value={operatorForm.password}
+                        onChange={(e) =>
+                          setOperatorForm({
+                            ...operatorForm,
+                            password: e.target.value,
+                          })
+                        }
+                        className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-[#007cb6] focus:border-transparent"
+                        placeholder="Enter password"
+                        required
+                      />
                     </div>
-                  </div>
+
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-sm font-semibold text-gray-700 mb-2">
+                          Initial Credits
+                        </label>
+                        <input
+                          type="number"
+                          min="0"
+                          value={operatorForm.initialCredits}
+                          onChange={(e) =>
+                            setOperatorForm({
+                              ...operatorForm,
+                              initialCredits: parseInt(e.target.value) || 0,
+                            })
+                          }
+                          className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-[#007cb6] focus:border-transparent"
+                          placeholder="10"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-semibold text-gray-700 mb-2">
+                          Initial Operator Slots
+                        </label>
+                        <input
+                          type="number"
+                          min="0"
+                          value={operatorForm.initialOperatorSlots}
+                          onChange={(e) =>
+                            setOperatorForm({
+                              ...operatorForm,
+                              initialOperatorSlots:
+                                parseInt(e.target.value) || 0,
+                            })
+                          }
+                          className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-[#007cb6] focus:border-transparent"
+                          placeholder="2"
+                        />
+                      </div>
+                    </div>
+
+                    {createOperatorError && (
+                      <div className="text-red-500 text-sm bg-red-50 p-3 rounded-md">
+                        {createOperatorError}
+                      </div>
+                    )}
+
+                    {createOperatorSuccess && (
+                      <div className="text-green-600 text-sm bg-green-50 p-3 rounded-md">
+                        {createOperatorSuccess}
+                      </div>
+                    )}
+
+                    <button
+                      type="submit"
+                      disabled={createOperatorLoading}
+                      className="w-full bg-[#007cb6] text-white py-2 rounded-md font-semibold hover:bg-[#005f8e] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {createOperatorLoading
+                        ? "Creating..."
+                        : "Create Operator"}
+                    </button>
+                  </form>
                 </div>
 
-                <div className="mb-4">
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">
-                    {i18n.t("transaction_id")} *
-                  </label>
-                  <input
-                    type="text"
-                    value={transactionId}
-                    onChange={(e) => setTransactionId(e.target.value)}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-[#007cb6] focus:border-transparent"
-                    placeholder="TXN-2026-0001"
-                  />
-                  <div className="text-xs text-gray-500 mt-1">
-                    {i18n.t("transaction_id_help")}
+                {/* Search Operators */}
+                <div className="bg-white rounded-lg shadow-md p-6">
+                  <h3 className="text-lg font-bold text-gray-800 mb-4">
+                    Search Operators
+                  </h3>
+
+                  <div className="flex gap-2 mb-4">
+                    <input
+                      type="text"
+                      value={operatorsSearch}
+                      onChange={(e) => setOperatorsSearch(e.target.value)}
+                      placeholder="Search by name or email..."
+                      className="flex-1 px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-[#007cb6] focus:border-transparent"
+                    />
+                    <button
+                      onClick={() => {
+                        setOperatorsPage(1);
+                        handleSearchOperators(operatorsSearch);
+                      }}
+                      disabled={operatorsLoading}
+                      className="px-4 py-2 bg-[#007cb6] text-white rounded-md font-semibold hover:bg-[#005f8e] disabled:opacity-50"
+                    >
+                      Search
+                    </button>
                   </div>
+
+                  {operatorsLoading ? (
+                    <div className="text-center py-4 text-gray-600">
+                      Loading...
+                    </div>
+                  ) : operatorsList.length > 0 ? (
+                    <div className="space-y-3">
+                      {operatorsList.map((op) => (
+                        <div
+                          key={op._id}
+                          className="bg-gray-50 border border-gray-200 rounded-lg p-4 flex justify-between items-center"
+                        >
+                          <div>
+                            <div className="font-semibold text-gray-800">
+                              {op.name}
+                            </div>
+                            <div className="text-sm text-gray-600">
+                              {op.email}
+                            </div>
+                            <div className="text-xs text-gray-500 mt-1">
+                              Credits: {op.credits} | Slots: {op.operatorSlots}
+                            </div>
+                          </div>
+                          <button
+                            onClick={() => {
+                              setSelectedOperatorForBuy(op);
+                              setBuyForOperatorModal(true);
+                            }}
+                            className="px-3 py-2 bg-[#007cb6] text-white rounded text-sm font-semibold hover:bg-[#005f8e]"
+                          >
+                            Buy Package
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="text-center py-4 text-gray-500">
+                      No operators found
+                    </div>
+                  )}
+
+                  {operatorsTotal > 50 && (
+                    <div className="text-center mt-4 text-sm text-gray-600">
+                      Showing {operatorsList.length} of {operatorsTotal}{" "}
+                      operators
+                    </div>
+                  )}
                 </div>
+              </div>
+            </>
+          )}
 
-                {buyError && (
-                  <div className="text-red-500 text-sm bg-red-50 p-3 rounded-md mb-4">
-                    {buyError}
+          {/* Search Employees Tab */}
+          {activeTab === "search-employees" && (
+            <>
+              {employeesSearchError && (
+                <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
+                  {employeesSearchError}
+                </div>
+              )}
+
+              <div className="space-y-4">
+                <div className="bg-white rounded-lg shadow-md p-6">
+                  <h3 className="text-lg font-bold text-gray-800 mb-4">
+                    Search Employees
+                  </h3>
+
+                  <div className="flex gap-2 mb-4">
+                    <input
+                      type="text"
+                      value={employeesSearchQuery}
+                      onChange={(e) => setEmployeesSearchQuery(e.target.value)}
+                      placeholder="Search by name, email, username..."
+                      className="flex-1 px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-[#007cb6] focus:border-transparent"
+                    />
+                    <button
+                      onClick={() => {
+                        setEmployeesSearchPage(1);
+                        handleSearchEmployees(employeesSearchQuery);
+                      }}
+                      disabled={employeesSearchLoading}
+                      className="px-4 py-2 bg-[#007cb6] text-white rounded-md font-semibold hover:bg-[#005f8e] disabled:opacity-50"
+                    >
+                      Search
+                    </button>
                   </div>
-                )}
 
-                <div className="flex gap-3">
+                  {employeesSearchLoading ? (
+                    <div className="text-center py-4 text-gray-600">
+                      Loading...
+                    </div>
+                  ) : employeesSearchResults.length > 0 ? (
+                    <div className="space-y-3">
+                      {employeesSearchResults.map((emp: any, idx: number) => (
+                        <div
+                          key={emp._id || idx}
+                          className="bg-gray-50 border border-gray-200 rounded-lg p-4"
+                        >
+                          <div className="font-semibold text-gray-800">
+                            {emp.name || emp.username || "N/A"}
+                          </div>
+                          <div className="text-sm text-gray-600">
+                            {emp.email || emp.tgid || "—"}
+                          </div>
+                          {emp.membershipEnd && (
+                            <div className="text-xs text-gray-500 mt-1">
+                              Membership until:{" "}
+                              {new Date(emp.membershipEnd).toLocaleDateString()}
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="text-center py-4 text-gray-500">
+                      {employeesSearchQuery
+                        ? "No employees found"
+                        : "Enter a search term to find employees"}
+                    </div>
+                  )}
+
+                  {employeesSearchTotal > 50 && (
+                    <div className="text-center mt-4 text-sm text-gray-600">
+                      Showing {employeesSearchResults.length} of{" "}
+                      {employeesSearchTotal} employees
+                    </div>
+                  )}
+                </div>
+              </div>
+            </>
+          )}
+
+          {/* Buy Package for Operator Modal */}
+          {buyForOperatorModal && selectedOperatorForBuy && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40 p-4">
+              <div className="bg-white rounded-xl shadow-xl w-full max-w-md max-h-[90vh] overflow-y-auto">
+                <div className="sticky top-0 bg-white border-b p-4 flex justify-between items-center">
+                  <h3 className="text-lg font-bold text-gray-800">
+                    Buy Package for {selectedOperatorForBuy.name}
+                  </h3>
                   <button
                     onClick={() => {
-                      setBuyModalOpen(false);
-                      setTransactionId("");
-                      setSelectedPackage(null);
-                      setBuyError(null);
+                      setBuyForOperatorModal(false);
+                      setBuyForOperatorTxn("");
+                      setBuyForOperatorWallet("");
+                      setSelectedPackageForOperator(null);
                     }}
-                    className="flex-1 bg-gray-200 text-gray-700 py-2 rounded-md font-semibold hover:bg-gray-300 transition-colors"
-                    disabled={buyLoading}
+                    className="text-gray-400 hover:text-gray-700 text-xl"
                   >
-                    {i18n.t("cancel")}
+                    ×
                   </button>
+                </div>
+
+                <div className="p-6 space-y-4">
+                  {/* Select Package */}
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                      Select Package *
+                    </label>
+                    <div className="space-y-2 max-h-48 overflow-y-auto">
+                      {packages.map((pkg) => (
+                        <button
+                          key={pkg._id}
+                          onClick={() => setSelectedPackageForOperator(pkg)}
+                          className={`w-full text-left p-3 rounded border-2 transition ${
+                            selectedPackageForOperator?._id === pkg._id
+                              ? "border-[#007cb6] bg-blue-50"
+                              : "border-gray-200 hover:border-[#007cb6]"
+                          }`}
+                        >
+                          <div className="font-semibold text-gray-800">
+                            {pkg.name}
+                          </div>
+                          <div className="text-sm text-gray-600">
+                            Employees: {pkg.employeeCredits} | Operators:{" "}
+                            {pkg.operatorCredits}
+                          </div>
+                          <div className="text-sm font-bold text-[#007cb6]">
+                            ${pkg.price} USDT
+                          </div>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {selectedPackageForOperator && (
+                    <>
+                      <div>
+                        <label className="block text-sm font-semibold text-gray-700 mb-2">
+                          Transaction ID *
+                        </label>
+                        <input
+                          type="text"
+                          value={buyForOperatorTxn}
+                          onChange={(e) => setBuyForOperatorTxn(e.target.value)}
+                          placeholder="TXN-2026-0001"
+                          className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-[#007cb6] focus:border-transparent"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-semibold text-gray-700 mb-2">
+                          Your Wallet Address *
+                        </label>
+                        <input
+                          type="text"
+                          value={buyForOperatorWallet}
+                          onChange={(e) =>
+                            setBuyForOperatorWallet(e.target.value)
+                          }
+                          placeholder="Your wallet address"
+                          className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-[#007cb6] focus:border-transparent"
+                        />
+                      </div>
+                    </>
+                  )}
+
+                  {buyForOperatorError && (
+                    <div className="text-red-500 text-sm bg-red-50 p-3 rounded">
+                      {buyForOperatorError}
+                    </div>
+                  )}
+
                   <button
-                    onClick={handleBuyPackage}
-                    disabled={buyLoading || !transactionId.trim()}
-                    className="flex-1 bg-[#007cb6] text-white py-2 rounded-md font-semibold hover:bg-[#005f8e] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    onClick={handleBuyForOperator}
+                    disabled={
+                      buyForOperatorLoading ||
+                      !selectedPackageForOperator ||
+                      !buyForOperatorTxn.trim() ||
+                      !buyForOperatorWallet.trim()
+                    }
+                    className="w-full bg-[#007cb6] text-white py-2 rounded-md font-semibold hover:bg-[#005f8e] disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    {buyLoading
-                      ? i18n.t("processing")
-                      : i18n.t("submit_payment")}
+                    {buyForOperatorLoading
+                      ? "Processing..."
+                      : "Complete Purchase"}
                   </button>
                 </div>
               </div>
@@ -1045,7 +1849,7 @@ export default function DonatorDashboard() {
                       onClick={() => {
                         const t = localStorage.getItem("token");
                         if (t) {
-                          localStorage.setItem("operatorToken", t);
+                          localStorage.setItem("token", t);
                           setOperatorLoginOpen(false);
                           fetchDashboardData();
                         } else {
