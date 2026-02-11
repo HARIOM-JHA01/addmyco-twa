@@ -20,6 +20,33 @@ import {
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
+// Assign credits to operator
+export const assignCreditsToOperator = async (
+  operatorId: string,
+  employeeCreditsToAssign: number,
+): Promise<any> => {
+  try {
+    const response = await axios.post(
+      `${API_BASE_URL}/donator/assign-credits`,
+      {
+        operatorId,
+        employeeCreditsToAssign,
+      },
+      {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+      },
+    );
+    return response.data;
+  } catch (error: any) {
+    console.error("Failed to assign credits:", error);
+    throw new Error(
+      error?.response?.data?.message || "Failed to assign credits",
+    );
+  }
+};
+
 // Specific error for operator auth pre-flight failures so callers can react differently
 export class OperatorAuthError extends Error {
   constructor(message = "Operator not authenticated") {
@@ -216,7 +243,7 @@ export const getOperators = async (): Promise<{
   total: number;
 }> => {
   try {
-    const response = await axios.get(`${API_BASE_URL}/donator/me/operators`, {
+    const response = await axios.get(`${API_BASE_URL}/donator/operators`, {
       headers: getOperatorAuthHeaders(),
     });
     return {
@@ -226,26 +253,6 @@ export const getOperators = async (): Promise<{
   } catch (error: any) {
     // If missing token, bubble up immediately so callers can handle auth separately
     if (error instanceof OperatorAuthError) throw error;
-
-    // If the route is not present on the server, try the alias for backward compatibility
-    const status = error?.response?.status;
-    if (status === 404 || status === 405) {
-      try {
-        const aliasRes = await axios.get(`${API_BASE_URL}/donator/operators`, {
-          headers: getOperatorAuthHeaders(),
-        });
-        return {
-          data: aliasRes.data.data || [],
-          total: aliasRes.data.total || 0,
-        };
-      } catch (aliasErr: any) {
-        console.error("Alias /donator/operators also failed:", aliasErr);
-        throw new Error(
-          aliasErr?.response?.data?.message ||
-            "Failed to fetch operators (alias)",
-        );
-      }
-    }
 
     console.error("Failed to fetch operators:", error);
     throw new Error(
@@ -365,7 +372,7 @@ export const createOperator = async (
 ): Promise<CreateOperatorResponse> => {
   try {
     const response = await axios.post(
-      `${API_BASE_URL}/donator/me/operators`,
+      `${API_BASE_URL}/donator/operators`,
       payload,
       {
         headers: getOperatorAuthHeaders(),

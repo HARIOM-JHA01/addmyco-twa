@@ -114,11 +114,8 @@ export interface BuyPackageResponse {
 
 // Create operator
 export interface CreateOperatorPayload {
-  name: string;
-  telegramUsername: string;
+  tgid: string;
   password: string;
-  initialCredits: number;
-  initialOperatorSlots: number;
 }
 
 export interface CreateOperatorResponse {

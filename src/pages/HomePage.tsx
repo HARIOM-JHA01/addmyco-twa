@@ -26,6 +26,7 @@ import {
 } from "@fortawesome/free-brands-svg-icons";
 import {
   faPhone,
+  faEnvelope,
   faChevronLeft,
   faChevronRight,
   faGlobe,
@@ -502,6 +503,20 @@ export default function HomePage() {
                   }}
                 >
                   <FontAwesomeIcon icon={faPhone} size="2x" color="white" />
+                </div>
+              )}
+              {profile?.email && (
+                <div
+                  className="w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0 cursor-pointer"
+                  onClick={() =>
+                    window.open(`mailto:${profile.email}`, "_blank")
+                  }
+                  style={{
+                    backgroundColor: "var(--app-background-color)",
+                    scrollSnapAlign: "center" as any,
+                  }}
+                >
+                  <FontAwesomeIcon icon={faEnvelope} size="2x" color="white" />
                 </div>
               )}
               <div
