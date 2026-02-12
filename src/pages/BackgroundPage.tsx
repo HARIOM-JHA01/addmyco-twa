@@ -66,8 +66,8 @@ export default function BackgroundPage() {
             thumbnails: Array.isArray(thumbnails)
               ? thumbnails
               : thumbnails
-              ? [thumbnails]
-              : [],
+                ? [thumbnails]
+                : [],
             // primary url convenient field
             url:
               primary ||
@@ -176,7 +176,7 @@ export default function BackgroundPage() {
         c._id === activeTab ||
         c.id === activeTab ||
         c.name === activeTab ||
-        c.categoryname === activeTab
+        c.categoryname === activeTab,
     );
 
     // Filter systemImages by category if possible
@@ -226,15 +226,44 @@ export default function BackgroundPage() {
 
   const handleUploadClick = () => uploadInputRef.current?.click();
   const handleUploadChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (isFree) return; // safety check
     const file = e.target.files?.[0];
-    if (!file) return;
+    if (!file) {
+      // clear input so same file can be re-selected later
+      if (uploadInputRef.current) uploadInputRef.current.value = "";
+      return;
+    }
+
     const reader = new FileReader();
     reader.onload = () => {
       // Preview locally and select it immediately
       const url = reader.result as string;
+
+      // 1) apply immediate preview (body background)
       setSelectedImage(url);
-      // TODO: POST to upload endpoint if available
-      // axios.post(`${API_BASE_URL}/uploadBackground`, formData, { headers })
+
+      // 2) add to the local "userImages" state so it appears under "Your Images"
+      const localImg = {
+        _id: `local-${Date.now()}`,
+        url,
+        thumbnails: [url],
+        uniqueKey: `local-${Date.now()}`,
+        // keep original file for possible upload later
+        __file: file,
+      } as any;
+      setUserImages((prev) => [localImg, ...(prev || [])]);
+
+      // 3) switch to "my" tab and open preview modal for quick set/upload
+      setActiveTab("my");
+      setModalImage(localImg);
+      setModalOpen(true);
+
+      // 4) reset file input so the same file can be re-selected later
+      if (uploadInputRef.current) uploadInputRef.current.value = "";
+
+      // NOTE: actual server upload is intentionally left as a TODO so behavior
+      // matches existing flow where server images come from `getimage` endpoint.
+      // If you want immediate server upload here, I can add it (with progress).
     };
     reader.readAsDataURL(file);
   };
@@ -260,7 +289,7 @@ export default function BackgroundPage() {
       await axios.post(
         `${API_BASE_URL}/backgroundimage`,
         { Thumbnail: imageUrl },
-        { headers: { Authorization: `Bearer ${token}` } }
+        { headers: { Authorization: `Bearer ${token}` } },
       );
 
       // Apply locally and close modal
@@ -279,7 +308,7 @@ export default function BackgroundPage() {
       setModalError(
         err?.response?.data?.message ||
           err.message ||
-          "Failed to set background"
+          "Failed to set background",
       );
     } finally {
       setModalLoading(false);
@@ -320,13 +349,13 @@ export default function BackgroundPage() {
                           const el = e.currentTarget as HTMLElement;
                           el.style.backgroundColor = (
                             getComputedStyle(
-                              document.documentElement
+                              document.documentElement,
                             ).getPropertyValue("--app-background-color") ||
                             "#007cb6"
                           ).trim();
                           el.style.color = (
                             getComputedStyle(
-                              document.documentElement
+                              document.documentElement,
                             ).getPropertyValue("--app-font-color") || "#ffffff"
                           ).trim();
                         }}
@@ -354,7 +383,7 @@ export default function BackgroundPage() {
                     onClick={() => {
                       if (isFree) {
                         alert(
-                          "Upload is available for premium users only. Please upgrade to upload your background images."
+                          "Upload is available for premium users only. Please upgrade to upload your background images.",
                         );
                         return;
                       }
