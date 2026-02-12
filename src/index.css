@@ -49,6 +49,21 @@ body {
     color: var(--app-font-color);
 }
 
+/* Ensure all text-entry controls always show typed text in black */
+input[type="text"],
+input[type="email"],
+input[type="password"],
+input[type="search"],
+input[type="tel"],
+input[type="url"],
+input[type="number"],
+textarea,
+select,
+[contenteditable="true"] {
+  color: #000 !important;
+  -webkit-text-fill-color: #000 !important; /* for browser autofill */
+}
+
 /* Helper classes components can use to pick up the background color */
 .bg-app {
     background-color: var(--app-background-color) !important;
