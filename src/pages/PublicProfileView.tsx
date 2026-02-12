@@ -25,7 +25,11 @@ import {
   faWeixin,
   faSkype,
 } from "@fortawesome/free-brands-svg-icons";
-import { faPhone, faGlobe } from "@fortawesome/free-solid-svg-icons";
+import {
+  faPhone,
+  faGlobe,
+  faEnvelope,
+} from "@fortawesome/free-solid-svg-icons";
 import { callOrCopyPhone } from "../utils/phone";
 import PublicLayout from "../components/PublicLayout";
 import {
@@ -117,7 +121,7 @@ export default function PublicProfileView({
             telegram_username: username,
             country: country || "India",
             countryCode: countryCode || "IN",
-          }
+          },
         );
 
         if (loginResponse.data && loginResponse.data.success) {
@@ -148,7 +152,7 @@ export default function PublicProfileView({
           `${API_BASE_URL}/getcompanyprofile`,
           {
             headers: { Authorization: `Bearer ${token}` },
-          }
+          },
         );
         let myCompanies: any = companyRes?.data?.data || companyRes?.data || [];
         if (myCompanies && !Array.isArray(myCompanies))
@@ -159,7 +163,7 @@ export default function PublicProfileView({
 
         if (!hasPersonal || !hasCompany) {
           WebApp.showAlert(
-            "Before adding this to your contact, you must complete your profile and revisit the link again"
+            "Before adding this to your contact, you must complete your profile and revisit the link again",
           );
           setTimeout(() => {
             try {
@@ -183,7 +187,7 @@ export default function PublicProfileView({
             Authorization: `Bearer ${token}`,
             "Content-Type": "application/json",
           },
-        }
+        },
       );
       if (response.data && response.data.success) {
         WebApp.showAlert(response.data.message);
@@ -205,7 +209,7 @@ export default function PublicProfileView({
         WebApp.showAlert("Session expired. Please try again.");
       } else {
         WebApp.showAlert(
-          error.response?.data?.message || "Failed to add contact"
+          error.response?.data?.message || "Failed to add contact",
         );
       }
     } finally {
@@ -303,10 +307,10 @@ export default function PublicProfileView({
           try {
             const res = await axios.post(
               `${API_BASE_URL}/iscontactexist/${encodeURIComponent(
-                profile.username
+                profile.username,
               )}`,
               {},
-              { headers: { Authorization: `Bearer ${token}` } }
+              { headers: { Authorization: `Bearer ${token}` } },
             );
             if (
               res.status === 200 &&
@@ -322,7 +326,7 @@ export default function PublicProfileView({
             } else {
               console.warn(
                 "iscontactexist check failed",
-                e?.response?.status || e
+                e?.response?.status || e,
               );
             }
           }
@@ -479,7 +483,7 @@ export default function PublicProfileView({
                     onClick={() =>
                       window.open(
                         `https://t.me/${profile.telegramId}`,
-                        "_blank"
+                        "_blank",
                       )
                     }
                     style={{
@@ -504,6 +508,24 @@ export default function PublicProfileView({
                     }}
                   >
                     <FontAwesomeIcon icon={faPhone} size="2x" color="white" />
+                  </div>
+                )}
+                {profile.email && (
+                  <div
+                    className="w-12 h-12 rounded-full flex items-center justify-center overflow-hidden cursor-pointer flex-shrink-0"
+                    onClick={() =>
+                      window.open(`mailto:${profile.email}`, "_blank")
+                    }
+                    style={{
+                      backgroundColor: "var(--app-background-color)",
+                      scrollSnapAlign: "center" as any,
+                    }}
+                  >
+                    <FontAwesomeIcon
+                      icon={faEnvelope}
+                      size="2x"
+                      color="white"
+                    />
                   </div>
                 )}
                 {hasChambers && (
