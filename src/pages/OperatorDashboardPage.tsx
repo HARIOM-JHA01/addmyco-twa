@@ -41,8 +41,10 @@ export default function OperatorDashboardPage() {
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<"overview" | "employees" | "create">("overview");
-  
+  const [activeTab, setActiveTab] = useState<
+    "overview" | "employees" | "create"
+  >("overview");
+
   // Create employee form state
   const [createEmployeeForm, setCreateEmployeeForm] = useState({
     employeeTgid: "",
@@ -91,7 +93,10 @@ export default function OperatorDashboardPage() {
       console.error("Failed to fetch operator data:", err);
       setError(err?.message || "Failed to load operator dashboard");
       // If not authenticated, redirect to welcome page
-      if (err?.message?.includes("authenticate") || err?.message?.includes("token")) {
+      if (
+        err?.message?.includes("authenticate") ||
+        err?.message?.includes("token")
+      ) {
         navigate("/");
       }
     } finally {
@@ -115,7 +120,7 @@ export default function OperatorDashboardPage() {
             operatorLogout();
             navigate("/");
           }
-        }
+        },
       );
     } catch {
       // Fallback if WebApp popup fails
@@ -138,8 +143,10 @@ export default function OperatorDashboardPage() {
         employeeName: createEmployeeForm.employeeName.trim(),
         employeeEmail: createEmployeeForm.employeeEmail.trim() || undefined,
       });
-      setCreateSuccess(`Employee created successfully! Username: ${result.username}`);
-      
+      setCreateSuccess(
+        `Employee created successfully! Username: ${result.username}`,
+      );
+
       // Reset form
       setCreateEmployeeForm({
         employeeTgid: "",
@@ -264,13 +271,19 @@ export default function OperatorDashboardPage() {
                   <p className="font-mono text-sm">{profile?._id}</p>
                 </div>
                 <div>
-                  <p className="text-sm text-gray-600">Total Credits Allocated</p>
-                  <p className="font-medium text-2xl text-blue-600">{profile?.creditsAllocated || 0}</p>
+                  <p className="text-sm text-gray-600">
+                    Total Credits Allocated
+                  </p>
+                  <p className="font-medium text-2xl text-blue-600">
+                    {profile?.creditsAllocated || 0}
+                  </p>
                 </div>
                 <div>
                   <p className="text-sm text-gray-600">Member Since</p>
                   <p className="font-medium">
-                    {profile?.createdAt ? new Date(profile.createdAt).toLocaleDateString() : "N/A"}
+                    {profile?.createdAt
+                      ? new Date(profile.createdAt).toLocaleDateString()
+                      : "N/A"}
                   </p>
                 </div>
               </div>
@@ -281,21 +294,30 @@ export default function OperatorDashboardPage() {
               <h2 className="text-xl font-bold mb-4">Credits & Slots</h2>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div className="text-center p-4 bg-green-50 rounded-lg">
-                  <p className="text-sm text-gray-600 mb-1">Available Credits</p>
-                  <p className="text-3xl font-bold text-green-600">{credits?.employeeCredits || 0}</p>
+                  <p className="text-sm text-gray-600 mb-1">
+                    Available Credits
+                  </p>
+                  <p className="text-3xl font-bold text-green-600">
+                    {credits?.employeeCredits || 0}
+                  </p>
                 </div>
                 <div className="text-center p-4 bg-blue-50 rounded-lg">
                   <p className="text-sm text-gray-600 mb-1">Slots Used</p>
-                  <p className="text-3xl font-bold text-blue-600">{credits?.slotsUsed || 0}</p>
+                  <p className="text-3xl font-bold text-blue-600">
+                    {credits?.slotsUsed || 0}
+                  </p>
                 </div>
                 <div className="text-center p-4 bg-purple-50 rounded-lg">
                   <p className="text-sm text-gray-600 mb-1">Remaining Slots</p>
-                  <p className="text-3xl font-bold text-purple-600">{credits?.remainingSlots || 0}</p>
+                  <p className="text-3xl font-bold text-purple-600">
+                    {credits?.remainingSlots || 0}
+                  </p>
                 </div>
               </div>
               {(credits?.remainingSlots || 0) === 0 && (
                 <div className="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded text-sm text-yellow-800">
-                  ⚠️ You have no remaining slots. Contact your administrator to get more credits.
+                  ⚠️ You have no remaining slots. Contact your administrator to
+                  get more credits.
                 </div>
               )}
             </div>
@@ -305,24 +327,31 @@ export default function OperatorDashboardPage() {
               <h2 className="text-xl font-bold mb-4">Quick Stats</h2>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 <div className="text-center">
-                  <p className="text-2xl font-bold text-blue-600">{employees.length}</p>
+                  <p className="text-2xl font-bold text-blue-600">
+                    {employees.length}
+                  </p>
                   <p className="text-sm text-gray-600">Total Employees</p>
                 </div>
                 <div className="text-center">
                   <p className="text-2xl font-bold text-green-600">
-                    {employees.filter(e => e.membertype === "premium").length}
+                    {employees.filter((e) => e.membertype === "premium").length}
                   </p>
                   <p className="text-sm text-gray-600">Premium Users</p>
                 </div>
                 <div className="text-center">
                   <p className="text-2xl font-bold text-gray-600">
-                    {employees.filter(e => e.membertype === "free").length}
+                    {employees.filter((e) => e.membertype === "free").length}
                   </p>
                   <p className="text-sm text-gray-600">Free Users</p>
                 </div>
                 <div className="text-center">
                   <p className="text-2xl font-bold text-purple-600">
-                    {((credits?.slotsUsed || 0) / (profile?.creditsAllocated || 1) * 100).toFixed(0)}%
+                    {(
+                      ((credits?.slotsUsed || 0) /
+                        (profile?.creditsAllocated || 1)) *
+                      100
+                    ).toFixed(0)}
+                    %
                   </p>
                   <p className="text-sm text-gray-600">Usage Rate</p>
                 </div>
@@ -355,19 +384,35 @@ export default function OperatorDashboardPage() {
                 <table className="w-full">
                   <thead className="bg-gray-50">
                     <tr>
-                      <th className="px-4 py-3 text-left text-sm font-medium text-gray-600">Username</th>
-                      <th className="px-4 py-3 text-left text-sm font-medium text-gray-600">English Name</th>
-                      <th className="px-4 py-3 text-left text-sm font-medium text-gray-600">Chinese Name</th>
-                      <th className="px-4 py-3 text-left text-sm font-medium text-gray-600">Type</th>
-                      <th className="px-4 py-3 text-left text-sm font-medium text-gray-600">Created</th>
+                      <th className="px-4 py-3 text-left text-sm font-medium text-gray-600">
+                        Username
+                      </th>
+                      <th className="px-4 py-3 text-left text-sm font-medium text-gray-600">
+                        English Name
+                      </th>
+                      <th className="px-4 py-3 text-left text-sm font-medium text-gray-600">
+                        Chinese Name
+                      </th>
+                      <th className="px-4 py-3 text-left text-sm font-medium text-gray-600">
+                        Type
+                      </th>
+                      <th className="px-4 py-3 text-left text-sm font-medium text-gray-600">
+                        Created
+                      </th>
                     </tr>
                   </thead>
                   <tbody className="divide-y">
                     {employees.map((employee) => (
                       <tr key={employee._id} className="hover:bg-gray-50">
-                        <td className="px-4 py-3 text-sm">{employee.telegram_username}</td>
-                        <td className="px-4 py-3 text-sm">{employee.owner_name_english || "N/A"}</td>
-                        <td className="px-4 py-3 text-sm">{employee.owner_name_chinese || "N/A"}</td>
+                        <td className="px-4 py-3 text-sm">
+                          {employee.telegram_username}
+                        </td>
+                        <td className="px-4 py-3 text-sm">
+                          {employee.owner_name_english || "N/A"}
+                        </td>
+                        <td className="px-4 py-3 text-sm">
+                          {employee.owner_name_chinese || "N/A"}
+                        </td>
                         <td className="px-4 py-3">
                           <span
                             className={`inline-block px-2 py-1 text-xs rounded ${
@@ -397,12 +442,13 @@ export default function OperatorDashboardPage() {
         {activeTab === "create" && (
           <div className="bg-white rounded-lg shadow p-6">
             <h2 className="text-xl font-bold mb-4">Create New Employee</h2>
-            
+
             {(credits?.remainingSlots || 0) === 0 ? (
               <div className="p-4 bg-red-50 border border-red-200 rounded text-red-800">
                 <p className="font-medium">Cannot create employee</p>
                 <p className="text-sm mt-1">
-                  You have no remaining slots. Please contact your administrator to get more credits.
+                  You have no remaining slots. Please contact your administrator
+                  to get more credits.
                 </p>
               </div>
             ) : (

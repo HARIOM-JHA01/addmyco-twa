@@ -589,7 +589,10 @@ function AppRoutes() {
         </Routes>
       ) : isOperatorSession ? (
         <Routes>
-          <Route path="/operator-dashboard" element={<OperatorDashboardPage />} />
+          <Route
+            path="/operator-dashboard"
+            element={<OperatorDashboardPage />}
+          />
           <Route path="*" element={<OperatorDashboardPage />} />
         </Routes>
       ) : showWelcome ? (
