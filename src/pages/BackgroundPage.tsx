@@ -27,6 +27,7 @@ export default function BackgroundPage() {
   const [modalSuccess, setModalSuccess] = useState<string | null>(null);
   const gridRef = useRef<HTMLDivElement | null>(null);
   const [scrollProgress, setScrollProgress] = useState(0);
+  const [uploadProgress, setUploadProgress] = useState<number | null>(null);
   const uploadInputRef = useRef<HTMLInputElement | null>(null);
 
   // membership check - free users can't upload or see user images
@@ -239,31 +240,98 @@ export default function BackgroundPage() {
       // Preview locally and select it immediately
       const url = reader.result as string;
 
-      // 1) apply immediate preview (body background)
+      // Local optimistic preview
       setSelectedImage(url);
 
-      // 2) add to the local "userImages" state so it appears under "Your Images"
       const localImg = {
         _id: `local-${Date.now()}`,
         url,
         thumbnails: [url],
         uniqueKey: `local-${Date.now()}`,
-        // keep original file for possible upload later
         __file: file,
       } as any;
-      setUserImages((prev) => [localImg, ...(prev || [])]);
 
-      // 3) switch to "my" tab and open preview modal for quick set/upload
+      // show in UI immediately
+      setUserImages((prev) => [localImg, ...(prev || [])]);
       setActiveTab("my");
       setModalImage(localImg);
       setModalOpen(true);
 
-      // 4) reset file input so the same file can be re-selected later
+      // reset input so same file can be re-selected later
       if (uploadInputRef.current) uploadInputRef.current.value = "";
 
-      // NOTE: actual server upload is intentionally left as a TODO so behavior
-      // matches existing flow where server images come from `getimage` endpoint.
-      // If you want immediate server upload here, I can add it (with progress).
+      // Start upload to server (if token present)
+      (async () => {
+        const token = localStorage.getItem("token");
+        if (!token) {
+          setModalError("Not authenticated. Upload will remain local.");
+          return;
+        }
+
+        try {
+          setUploadProgress(0);
+          const form = new FormData();
+          form.append("file", file);
+
+          const res = await axios.post(
+            `${API_BASE_URL}/uploadBackground`,
+            form,
+            {
+              headers: {
+                Authorization: `Bearer ${token}`,
+                "Content-Type": "multipart/form-data",
+              },
+              onUploadProgress: (progressEvent) => {
+                if (progressEvent.total) {
+                  const pct =
+                    (progressEvent.loaded / progressEvent.total) * 100;
+                  setUploadProgress(Math.min(100, Math.round(pct)));
+                }
+              },
+            },
+          );
+
+          const serverData = res?.data?.data || res?.data || null;
+          if (!serverData) {
+            throw new Error("Invalid server response");
+          }
+
+          // normalize server item
+          const serverImg = {
+            _id: serverData._id || serverData.id || `uploaded-${Date.now()}`,
+            url:
+              serverData.url ||
+              serverData.image ||
+              serverData.thumbnail ||
+              serverData.src ||
+              localImg.url,
+            thumbnails:
+              serverData.thumbnails ||
+              (serverData.url ? [serverData.url] : localImg.thumbnails),
+            uniqueKey: serverData._id || `uploaded-${Date.now()}`,
+            // keep any other metadata
+            ...serverData,
+          } as any;
+
+          // replace local optimistic item with server item
+          setUserImages((prev) => {
+            const filtered = (prev || []).filter(
+              (i: any) => i.uniqueKey !== localImg.uniqueKey,
+            );
+            return [serverImg, ...filtered];
+          });
+
+          setModalImage(serverImg);
+          setModalSuccess("Uploaded successfully");
+        } catch (err: any) {
+          console.error("Upload failed", err);
+          setModalError(
+            err?.response?.data?.message || err.message || "Upload failed",
+          );
+        } finally {
+          setUploadProgress(null);
+        }
+      })();
     };
     reader.readAsDataURL(file);
   };
@@ -564,6 +632,24 @@ export default function BackgroundPage() {
                           />
                         </svg>
                         <span>{modalSuccess}</span>
+                      </div>
+                    )}
+
+                    {uploadProgress !== null && (
+                      <div className="mb-4">
+                        <div className="w-full bg-gray-200 rounded-full h-2 overflow-hidden">
+                          <div
+                            className="h-full transition-all"
+                            style={{
+                              width: `${Math.round(uploadProgress)}%`,
+                              background:
+                                "var(--app-background-color, #007cb6)",
+                            }}
+                          />
+                        </div>
+                        <div className="text-sm text-gray-600 mt-2">
+                          Uploading: {Math.round(uploadProgress)}%
+                        </div>
                       </div>
                     )}
 
