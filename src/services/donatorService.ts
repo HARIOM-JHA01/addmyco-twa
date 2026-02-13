@@ -333,14 +333,14 @@ export const getOperatorsEmployeesAdmin = async (
 
 // Operator login (for future use if needed)
 export const operatorLogin = async (
-  email: string,
+  username: string,
   password: string,
 ): Promise<OperatorProfile & { token: string }> => {
   try {
     const response = await axios.post(
       `${API_BASE_URL}/donator/operator/login`,
       {
-        email,
+        username,
         password,
       },
     );

@@ -14,6 +14,7 @@ import {
   searchEmployees,
   getDonatorSummary,
   getDonatorPurchases,
+  getOperatorProfile,
   assignCreditsToOperator,
   OperatorAuthError,
   operatorLogin,
@@ -49,11 +50,19 @@ export default function DonatorDashboard() {
   const [dashboardLoading, setDashboardLoading] = useState(false);
   const [dashboardError, setDashboardError] = useState<string | null>(null);
 
+  // Current operator profile & their created namecards (employees)
+  const [operatorProfile, setOperatorProfile] = useState<any | null>(null);
+  const [operatorEmployees, setOperatorEmployees] = useState<any[] | null>(
+    null,
+  );
+  const [operatorEmployeesLoading, setOperatorEmployeesLoading] =
+    useState(false);
+
   const navigate = useNavigate();
 
   // Operator-login UI state
   const [operatorLoginOpen, setOperatorLoginOpen] = useState(false);
-  const [operatorLoginEmail, setOperatorLoginEmail] = useState("");
+  const [operatorLoginUsername, setOperatorLoginUsername] = useState("");
   const [operatorLoginPassword, setOperatorLoginPassword] = useState("");
   const [operatorLoginLoading, setOperatorLoginLoading] = useState(false);
   const [operatorLoginError, setOperatorLoginError] = useState<string | null>(
@@ -220,6 +229,9 @@ export default function DonatorDashboard() {
   const fetchDashboardData = async () => {
     setDashboardLoading(true);
     setDashboardError(null);
+    setOperatorProfile(null);
+    setOperatorEmployees(null);
+
     try {
       // Fetch aggregated donator summary (profile, operators, employees, purchases, credits)
       const summary = await getDonatorSummary();
@@ -235,6 +247,29 @@ export default function DonatorDashboard() {
         potentialUsers: summary.employeesSummary.totalEmployeesCreated,
         purchases: summary.purchases,
       });
+
+      // Also try fetching currently-authed operator profile & their employees
+      try {
+        const op = await getOperatorProfile();
+        setOperatorProfile(op || null);
+
+        if (op && op._id) {
+          setOperatorEmployeesLoading(true);
+          try {
+            const details = await getOperatorDetails(op._id);
+            setOperatorEmployees(details?.employees || []);
+          } catch (err) {
+            // ignore — showing empty list is fine
+            setOperatorEmployees([]);
+          } finally {
+            setOperatorEmployeesLoading(false);
+          }
+        }
+      } catch (err) {
+        // not an operator session or endpoint failed — leave operator UI absent
+        setOperatorProfile(null);
+        setOperatorEmployees(null);
+      }
     } catch (error: any) {
       if (error instanceof OperatorAuthError) {
         setDashboardError(
@@ -389,9 +424,9 @@ export default function DonatorDashboard() {
     setOperatorLoginLoading(true);
     setOperatorLoginError(null);
     try {
-      await operatorLogin(operatorLoginEmail.trim(), operatorLoginPassword);
+      await operatorLogin(operatorLoginUsername.trim(), operatorLoginPassword);
       setOperatorLoginOpen(false);
-      setOperatorLoginEmail("");
+      setOperatorLoginUsername("");
       setOperatorLoginPassword("");
       // refresh operator data
       await fetchDashboardData();
@@ -818,6 +853,77 @@ export default function DonatorDashboard() {
                 </div>
               ) : (
                 <div className="space-y-6">
+                  {/* Operator welcome + namecards (shown when operator session present) */}
+                  {operatorProfile && (
+                    <div className="bg-white rounded-lg shadow-md p-4 flex flex-col gap-3">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <div className="text-sm text-gray-600">
+                            Welcome back
+                          </div>
+                          <div className="text-xl font-bold text-gray-800">
+                            {operatorProfile.name || operatorProfile.email}
+                          </div>
+                        </div>
+                        <div className="flex gap-2">
+                          <button
+                            className="bg-[#007cb6] text-white px-4 py-2 rounded-md"
+                            onClick={() =>
+                              (window.location.href = "/create-profile")
+                            }
+                          >
+                            Create name card
+                          </button>
+                        </div>
+                      </div>
+
+                      <div>
+                        <h4 className="text-sm font-semibold text-gray-700 mb-2">
+                          Your namecards
+                        </h4>
+
+                        {operatorEmployeesLoading ? (
+                          <div className="text-sm text-gray-500">
+                            Loading...
+                          </div>
+                        ) : operatorEmployees &&
+                          operatorEmployees.length > 0 ? (
+                          <div className="space-y-2 max-h-56 overflow-y-auto">
+                            {operatorEmployees.map((emp) => (
+                              <div
+                                key={emp._id || emp.username || emp.tgid}
+                                className="flex items-center justify-between bg-gray-50 p-2 rounded"
+                              >
+                                <div>
+                                  <div className="font-medium text-gray-800">
+                                    {emp.owner_name_english ||
+                                      emp.name ||
+                                      emp.username ||
+                                      emp.tgid}
+                                  </div>
+                                  <div className="text-xs text-gray-500">
+                                    {emp.email || emp.tgid || emp.username}
+                                  </div>
+                                </div>
+                                <div className="text-xs text-gray-400">
+                                  {emp.createdAt
+                                    ? new Date(
+                                        emp.createdAt,
+                                      ).toLocaleDateString()
+                                    : ""}
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        ) : (
+                          <div className="text-sm text-gray-500">
+                            No namecards created yet.
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+
                   {/* Credits Overview */}
                   {donatorSummary?.purchasesSummary && (
                     <div className="bg-white rounded-lg shadow-md p-6">
@@ -2217,12 +2323,12 @@ export default function DonatorDashboard() {
               <form onSubmit={handleOperatorLogin} className="space-y-3">
                 <div>
                   <label className="text-xs font-medium text-gray-700">
-                    Email
+                    Username
                   </label>
                   <input
-                    type="email"
-                    value={operatorLoginEmail}
-                    onChange={(e) => setOperatorLoginEmail(e.target.value)}
+                    type="text"
+                    value={operatorLoginUsername}
+                    onChange={(e) => setOperatorLoginUsername(e.target.value)}
                     className="w-full mt-1 px-3 py-2 border rounded-md"
                     required
                   />

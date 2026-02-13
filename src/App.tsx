@@ -19,6 +19,7 @@ import ThemePage from "./pages/ThemePage";
 import WelcomePage from "./pages/WelcomePage";
 import MembershipPage from "./pages/MembershipPage";
 import DonatorPage from "./pages/DonatorPage";
+import OperatorDashboardPage from "./pages/OperatorDashboardPage";
 import PaymentHistoryPage from "./pages/PaymentHistoryPage";
 import AdvertisementPage from "./pages/AdvertisementPage";
 import axios from "axios";
@@ -48,8 +49,26 @@ function AppRoutes() {
   const [deepLinkPartnerCode, setDeepLinkPartnerCode] = useState<string | null>(
     null,
   );
+  const [isOperatorSession, setIsOperatorSession] = useState(false);
 
   const fetchBackgroundByUsername = fetchBgByUsername;
+
+  // Check for operator login flag on mount
+  useEffect(() => {
+    const operatorFlag = localStorage.getItem("operator_logged_in");
+    const hasToken = !!localStorage.getItem("token");
+
+    if (operatorFlag === "true" && hasToken) {
+      // Clear the flag
+      localStorage.removeItem("operator_logged_in");
+      // Set operator session flag
+      setIsOperatorSession(true);
+      setShowWelcome(false);
+      setProfileLoading(false);
+      // Navigate to operator dashboard
+      navigate("/operator-dashboard", { replace: true });
+    }
+  }, [navigate]);
 
   // Handle Telegram startParam (when app is opened via Telegram deep link)
   useEffect(() => {
@@ -567,6 +586,11 @@ function AppRoutes() {
           <Route path="/:username" element={<PublicProfileContainer />} />
           <Route path="/:username/:view" element={<PublicProfileContainer />} />
           <Route path="*" element={<div>404 Not Found</div>} />
+        </Routes>
+      ) : isOperatorSession ? (
+        <Routes>
+          <Route path="/operator-dashboard" element={<OperatorDashboardPage />} />
+          <Route path="*" element={<OperatorDashboardPage />} />
         </Routes>
       ) : showWelcome ? (
         <WelcomePage onLogin={handleLogin} partnerCode={deepLinkPartnerCode} />

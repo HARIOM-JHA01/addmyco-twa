@@ -24,6 +24,15 @@ const WelcomePage: React.FC<WelcomePageProps> = ({ onLogin, partnerCode }) => {
   const buttonRef = useRef<HTMLButtonElement | null>(null);
   const [_, setButtonWidth] = useState<number | null>(null);
 
+  // Operator login modal state (welcome page)
+  const [operatorLoginOpen, setOperatorLoginOpen] = useState(false);
+  const [operatorLoginUsername, setOperatorLoginUsername] = useState("");
+  const [operatorLoginPassword, setOperatorLoginPassword] = useState("");
+  const [operatorLoginLoading, setOperatorLoginLoading] = useState(false);
+  const [operatorLoginError, setOperatorLoginError] = useState<string | null>(
+    null,
+  );
+
   useEffect(() => {
     try {
       WebApp.ready();
@@ -85,6 +94,27 @@ const WelcomePage: React.FC<WelcomePageProps> = ({ onLogin, partnerCode }) => {
     }
   };
 
+  // Operator login from Welcome page
+  const handleOperatorLoginFromWelcome = async (e?: React.FormEvent) => {
+    e?.preventDefault();
+    setOperatorLoginLoading(true);
+    setOperatorLoginError(null);
+    try {
+      // lazy-import service to keep top imports minimal
+      const { operatorLogin } = await import("../services/donatorService");
+      await operatorLogin(operatorLoginUsername.trim(), operatorLoginPassword);
+      // Set flag to indicate operator login before reload
+      localStorage.setItem("operator_logged_in", "true");
+      // on success navigate to operator dashboard
+      window.location.href = "/operator-dashboard"; // full reload avoids auth timing issues
+    } catch (err: any) {
+      setOperatorLoginError(err?.message || "Login failed");
+      console.error("Operator login (welcome) error:", err);
+    } finally {
+      setOperatorLoginLoading(false);
+    }
+  };
+
   useEffect(() => {
     const btn = buttonRef.current;
     if (!btn) return;
@@ -137,40 +167,126 @@ const WelcomePage: React.FC<WelcomePageProps> = ({ onLogin, partnerCode }) => {
                 </p>
               </div>
             ) : (
-              <button
-                ref={buttonRef}
-                className="px-6 py-3 bg-green-600 text-white text-2xl rounded-lg shadow hover:bg-green-700 transition flex items-center justify-center min-w-[180px]"
-                onClick={handleLogin}
-                disabled={loginLoading}
-              >
-                {loginLoading ? (
-                  <span className="flex items-center gap-2 font-space-bold">
-                    <svg
-                      className="animate-spin h-6 w-6 text-white"
-                      xmlns="http://www.w3.org/2000/svg"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                    >
-                      <circle
-                        className="opacity-25"
-                        cx="12"
-                        cy="12"
-                        r="10"
-                        stroke="currentColor"
-                        strokeWidth="4"
-                      ></circle>
-                      <path
-                        className="opacity-75"
-                        fill="currentColor"
-                        d="M4 12a8 8 0 018-8v8z"
-                      ></path>
-                    </svg>
-                    Loading...
-                  </span>
-                ) : (
-                  "Log in to Smart MiniApp"
+              <>
+                <button
+                  ref={buttonRef}
+                  className="px-6 py-3 bg-green-600 text-white text-2xl rounded-lg shadow hover:bg-green-700 transition flex items-center justify-center min-w-[180px]"
+                  onClick={handleLogin}
+                  disabled={loginLoading}
+                >
+                  {loginLoading ? (
+                    <span className="flex items-center gap-2 font-space-bold">
+                      <svg
+                        className="animate-spin h-6 w-6 text-white"
+                        xmlns="http://www.w3.org/2000/svg"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                      >
+                        <circle
+                          className="opacity-25"
+                          cx="12"
+                          cy="12"
+                          r="10"
+                          stroke="currentColor"
+                          strokeWidth="4"
+                        ></circle>
+                        <path
+                          className="opacity-75"
+                          fill="currentColor"
+                          d="M4 12a8 8 0 018-8v8z"
+                        ></path>
+                      </svg>
+                      Loading...
+                    </span>
+                  ) : (
+                    "Log in to Smart MiniApp"
+                  )}
+                </button>
+
+                {/* operator login text button */}
+                <button
+                  onClick={() => setOperatorLoginOpen(true)}
+                  className="mt-3 px-4 py-2 bg-orange-500 text-white font-semibold rounded-lg hover:bg-orange-600 transition"
+                >
+                  Enterprise operator login
+                </button>
+
+                {/* Enterprise operator login modal (from welcome) */}
+                {operatorLoginOpen && (
+                  <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4">
+                    <div className="w-full max-w-md bg-white rounded-lg shadow-xl p-6">
+                      <h3 className="text-lg font-semibold mb-2">
+                        Enterprise operator login
+                      </h3>
+                      <p className="text-sm text-gray-600 mb-4">
+                        Sign in with your operator credentials to manage credits
+                        and employees.
+                      </p>
+
+                      {operatorLoginError && (
+                        <div className="text-sm text-red-600 bg-red-50 p-3 rounded mb-3">
+                          {operatorLoginError}
+                        </div>
+                      )}
+
+                      <form
+                        onSubmit={handleOperatorLoginFromWelcome}
+                        className="space-y-3"
+                      >
+                        <div>
+                          <label className="text-xs font-medium text-gray-700">
+                            Username
+                          </label>
+                          <input
+                            type="text"
+                            value={operatorLoginUsername}
+                            onChange={(e) =>
+                              setOperatorLoginUsername(e.target.value)
+                            }
+                            className="w-full mt-1 px-3 py-2 border rounded-md"
+                            required
+                          />
+                        </div>
+
+                        <div>
+                          <label className="text-xs font-medium text-gray-700">
+                            Password
+                          </label>
+                          <input
+                            type="password"
+                            value={operatorLoginPassword}
+                            onChange={(e) =>
+                              setOperatorLoginPassword(e.target.value)
+                            }
+                            className="w-full mt-1 px-3 py-2 border rounded-md"
+                            required
+                          />
+                        </div>
+
+                        <div className="flex gap-2 mt-2">
+                          <button
+                            type="submit"
+                            disabled={operatorLoginLoading}
+                            className="flex-1 bg-[#007cb6] text-white py-2 rounded-md font-semibold disabled:opacity-50"
+                          >
+                            {operatorLoginLoading ? "Processing..." : "Login"}
+                          </button>
+                          <button
+                            type="button"
+                            className="flex-1 bg-gray-100 border rounded-md"
+                            onClick={() => {
+                              setOperatorLoginOpen(false);
+                              setOperatorLoginError(null);
+                            }}
+                          >
+                            Cancel
+                          </button>
+                        </div>
+                      </form>
+                    </div>
+                  </div>
                 )}
-              </button>
+              </>
             )}
           </div>
         </main>
