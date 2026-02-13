@@ -179,6 +179,10 @@ export interface DonatorSummary {
     approved: number;
     totalCreditsOperator: number;
     totalCreditsEmployee: number;
+    usedCreditsOperator: number;
+    usedCreditsEmployee: number;
+    leftCreditsOperator: number;
+    leftCreditsEmployee: number;
   };
   employeesSummary: {
     totalEmployeesCreated: number;

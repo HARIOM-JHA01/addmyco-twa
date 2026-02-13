@@ -4,21 +4,17 @@ import { useProfileStore } from "../store/profileStore";
 import Layout from "../components/Layout";
 import i18n from "../i18n";
 import backgroundImg from "../assets/background.jpg";
-// Removed unused search icon after refactor
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
 export default function BackgroundPage() {
-  // Data sources
   const [systemImages, setSystemImages] = useState<any[]>([]);
   const [userImages, setUserImages] = useState<any[]>([]);
   const [categories, setCategories] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // UI state matching screenshot
-  const [activeTab, setActiveTab] = useState<string>("all"); // 'all', system category slug, or 'my'
-  // Category key is tracked via activeTab; no separate state required
+  const [activeTab, setActiveTab] = useState<string>("all");
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
   const [modalImage, setModalImage] = useState<any | null>(null);
@@ -30,7 +26,6 @@ export default function BackgroundPage() {
   const [uploadProgress, setUploadProgress] = useState<number | null>(null);
   const uploadInputRef = useRef<HTMLInputElement | null>(null);
 
-  // membership check - free users can't upload or see user images
   const profile = useProfileStore((s) => s.profile);
   const memberType = profile?.membertype || profile?.membertype || "free";
   const isFree =
@@ -53,7 +48,6 @@ export default function BackgroundPage() {
             headers: { Authorization: `Bearer ${token}` },
           }),
         ]);
-        // Normalize system images: API uses `Thumbnail` (array) and `categoryname` fields
         const rawSystem = sysRes?.data?.data || [];
         const normalizedSystem = rawSystem.map((it: any) => {
           const thumbnails = it.Thumbnail || it.thumbnail || it.Thumbnail || [];
@@ -63,13 +57,11 @@ export default function BackgroundPage() {
           return {
             ...it,
             _id: it._id,
-            // keep original Thumbnail array
             thumbnails: Array.isArray(thumbnails)
               ? thumbnails
               : thumbnails
                 ? [thumbnails]
                 : [],
-            // primary url convenient field
             url:
               primary ||
               it.url ||
@@ -77,7 +69,6 @@ export default function BackgroundPage() {
               it.imgUrl ||
               it.src ||
               it.thumbnail,
-            // category id/name from API (some items have categoryname string or category array)
             categoryId:
               it.categoryname ||
               (it.category && it.category[0] && it.category[0]._id) ||
@@ -100,9 +91,6 @@ export default function BackgroundPage() {
     fetchAll();
   }, []);
 
-  // Build tabs similar to screenshot: dynamic categories + My images
-  // Tabs: show actual category names from API, plus 'Your Images'
-  // Hide 'Your Images' tab for free users
   const tabs = useMemo(() => {
     const catTabs = (categories || []).map((c: any) => ({
       key: c.slug || c._id || c.id || c.categoryname || String(Math.random()),
@@ -123,7 +111,6 @@ export default function BackgroundPage() {
       type: "my" as const,
     };
 
-    // Free users should not see "Your Images" tab
     if (isFree) {
       return [allTab, ...catTabs];
     }
@@ -131,46 +118,51 @@ export default function BackgroundPage() {
     return [allTab, ...catTabs, myTab];
   }, [categories, isFree]);
 
-  // Images for the active tab (mock: use systemImages for categories, userImages for my)
-  // Show images for the selected category, or user's images for 'my'
-  // Flatten Thumbnail arrays so each individual thumbnail becomes a separate grid item
-  // Free users should not see user images
   const imagesForTab = useMemo(() => {
-    if (activeTab === "my") {
-      // Free users should not see user images
-      return isFree ? [] : userImages;
-    }
-
-    // Helper function to expand thumbnails array into separate image objects
     const expandThumbnails = (images: any[]) => {
       const expanded: any[] = [];
       images.forEach((img: any) => {
         const thumbnails = img.thumbnails || [];
         if (thumbnails.length > 0) {
-          // Create a separate item for each thumbnail
           thumbnails.forEach((thumbUrl: string, index: number) => {
             expanded.push({
               ...img,
               url: thumbUrl,
               thumbnailIndex: index,
-              // Keep original _id but make unique key for React
               uniqueKey: `${img._id}-thumb-${index}`,
             });
           });
         } else {
-          // No thumbnails array, use the main url
           expanded.push(img);
         }
       });
       return expanded;
     };
 
-    // Show all system images for "all" tab
+    if (activeTab === "my") {
+      if (isFree) return [];
+
+      const yourImagesFromSystem = (systemImages || []).filter((img: any) => {
+        const catRaw = (
+          img.categoryname ||
+          img.categoryName ||
+          (img.category && img.category[0] && img.category[0].categoryname) ||
+          ""
+        )
+          .toString()
+          .trim()
+          .toLowerCase();
+        return catRaw === "your-images" || catRaw === "your images";
+      });
+
+      const combined = [...(userImages || []), ...yourImagesFromSystem];
+      return expandThumbnails(combined);
+    }
+
     if (activeTab === "all") {
       return expandThumbnails(systemImages);
     }
 
-    // Find the selected category object
     const cat = categories.find(
       (c: any) =>
         c.slug === activeTab ||
@@ -180,9 +172,7 @@ export default function BackgroundPage() {
         c.categoryname === activeTab,
     );
 
-    // Filter systemImages by category if possible
     if (cat && systemImages.length > 0) {
-      // Filter normalized system images by category id or categoryName
       const catKey = cat.slug || cat._id || cat.id || cat.name;
       const filtered = systemImages.filter((img: any) => {
         return (
@@ -197,11 +187,9 @@ export default function BackgroundPage() {
       return expandThumbnails(filtered);
     }
 
-    // fallback: show all system images
     return expandThumbnails(systemImages);
   }, [activeTab, categories, systemImages, userImages, isFree]);
 
-  // Scroll progress handler
   useEffect(() => {
     const el = gridRef.current;
     if (!el) return;
@@ -215,33 +203,26 @@ export default function BackgroundPage() {
     return () => el.removeEventListener("scroll", onScroll);
   }, [gridRef, imagesForTab]);
 
-  // Apply selected background as preview
   useEffect(() => {
     if (!selectedImage) return;
     document.body.style.backgroundImage = `url(${selectedImage})`;
     document.body.style.backgroundSize = "cover";
     document.body.style.backgroundPosition = "center";
-    // notify app to refetch/apply if needed
     window.dispatchEvent(new Event("background-updated"));
   }, [selectedImage]);
 
   const handleUploadClick = () => uploadInputRef.current?.click();
   const handleUploadChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (isFree) return; // safety check
+    if (isFree) return;
     const file = e.target.files?.[0];
     if (!file) {
-      // clear input so same file can be re-selected later
       if (uploadInputRef.current) uploadInputRef.current.value = "";
       return;
     }
 
     const reader = new FileReader();
     reader.onload = () => {
-      // Preview locally and select it immediately
       const url = reader.result as string;
-
-      // Local optimistic preview
-      setSelectedImage(url);
 
       const localImg = {
         _id: `local-${Date.now()}`,
@@ -251,89 +232,83 @@ export default function BackgroundPage() {
         __file: file,
       } as any;
 
-      // show in UI immediately
       setUserImages((prev) => [localImg, ...(prev || [])]);
       setActiveTab("my");
       setModalImage(localImg);
       setModalOpen(true);
+      setModalError(null);
+      setModalSuccess(null);
+      setUploadProgress(null);
 
-      // reset input so same file can be re-selected later
       if (uploadInputRef.current) uploadInputRef.current.value = "";
-
-      // Start upload to server (if token present)
-      (async () => {
-        const token = localStorage.getItem("token");
-        if (!token) {
-          setModalError("Not authenticated. Upload will remain local.");
-          return;
-        }
-
-        try {
-          setUploadProgress(0);
-          const form = new FormData();
-          form.append("file", file);
-
-          const res = await axios.post(
-            `${API_BASE_URL}/uploadBackground`,
-            form,
-            {
-              headers: {
-                Authorization: `Bearer ${token}`,
-                "Content-Type": "multipart/form-data",
-              },
-              onUploadProgress: (progressEvent) => {
-                if (progressEvent.total) {
-                  const pct =
-                    (progressEvent.loaded / progressEvent.total) * 100;
-                  setUploadProgress(Math.min(100, Math.round(pct)));
-                }
-              },
-            },
-          );
-
-          const serverData = res?.data?.data || res?.data || null;
-          if (!serverData) {
-            throw new Error("Invalid server response");
-          }
-
-          // normalize server item
-          const serverImg = {
-            _id: serverData._id || serverData.id || `uploaded-${Date.now()}`,
-            url:
-              serverData.url ||
-              serverData.image ||
-              serverData.thumbnail ||
-              serverData.src ||
-              localImg.url,
-            thumbnails:
-              serverData.thumbnails ||
-              (serverData.url ? [serverData.url] : localImg.thumbnails),
-            uniqueKey: serverData._id || `uploaded-${Date.now()}`,
-            // keep any other metadata
-            ...serverData,
-          } as any;
-
-          // replace local optimistic item with server item
-          setUserImages((prev) => {
-            const filtered = (prev || []).filter(
-              (i: any) => i.uniqueKey !== localImg.uniqueKey,
-            );
-            return [serverImg, ...filtered];
-          });
-
-          setModalImage(serverImg);
-          setModalSuccess("Uploaded successfully");
-        } catch (err: any) {
-          console.error("Upload failed", err);
-          setModalError(
-            err?.response?.data?.message || err.message || "Upload failed",
-          );
-        } finally {
-          setUploadProgress(null);
-        }
-      })();
     };
     reader.readAsDataURL(file);
+  };
+
+  const handleUploadImageToServer = async () => {
+    if (!modalImage || !modalImage.__file) return;
+
+    const token = localStorage.getItem("token");
+    if (!token) {
+      setModalError("Not authenticated. Please login.");
+      return;
+    }
+
+    try {
+      setUploadProgress(0);
+      const form = new FormData();
+      form.append("file", modalImage.__file);
+
+      const res = await axios.post(`${API_BASE_URL}/uploadBackground`, form, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "multipart/form-data",
+        },
+        onUploadProgress: (progressEvent) => {
+          if (progressEvent.total) {
+            const pct = (progressEvent.loaded / progressEvent.total) * 100;
+            setUploadProgress(Math.min(100, Math.round(pct)));
+          }
+        },
+      });
+
+      const serverData = res?.data?.data || res?.data || null;
+      if (!serverData) {
+        throw new Error("Invalid server response");
+      }
+
+      const serverImg = {
+        _id: serverData._id || serverData.id || `uploaded-${Date.now()}`,
+        url:
+          serverData.url ||
+          serverData.image ||
+          serverData.thumbnail ||
+          serverData.src ||
+          modalImage.url,
+        thumbnails:
+          serverData.thumbnails ||
+          (serverData.url ? [serverData.url] : modalImage.thumbnails),
+        uniqueKey: serverData._id || `uploaded-${Date.now()}`,
+        ...serverData,
+      } as any;
+
+      setUserImages((prev) => {
+        const filtered = (prev || []).filter(
+          (i: any) => i.uniqueKey !== modalImage.uniqueKey,
+        );
+        return [serverImg, ...filtered];
+      });
+
+      setModalImage(serverImg);
+      setModalSuccess("Image uploaded successfully");
+      setUploadProgress(null);
+    } catch (err: any) {
+      console.error("Upload failed", err);
+      setModalError(
+        err?.response?.data?.message || err.message || "Upload failed",
+      );
+      setUploadProgress(null);
+    }
   };
 
   const handleSetBackgroundImage = async () => {
@@ -360,14 +335,11 @@ export default function BackgroundPage() {
         { headers: { Authorization: `Bearer ${token}` } },
       );
 
-      // Apply locally and close modal
       setSelectedImage(imageUrl);
       setModalSuccess("Background set successfully");
 
-      // Notify app to refetch background
       window.dispatchEvent(new Event("background-updated"));
 
-      // Close modal after short delay
       setTimeout(() => {
         setModalOpen(false);
         setModalSuccess(null);
@@ -391,7 +363,6 @@ export default function BackgroundPage() {
       >
         <div className="px-2 pt-3 pb-28 flex-1 flex justify-center">
           <div className="w-full max-w-[880px] bg-white/20 backdrop-blur-sm rounded-2xl p-4 shadow-md">
-            {/* Category buttons with upload button - styled scrollbar matching ContactPage */}
             <div className="mt-4 overflow-x-auto scrollbar-custom">
               <div className="flex gap-4 min-w-max px-2 mb-4">
                 {tabs.map((t) => {
@@ -402,7 +373,6 @@ export default function BackgroundPage() {
                         type="button"
                         onClick={(e) => {
                           setActiveTab(t.key);
-                          // Clear any inline hover styles when clicking
                           const el = e.currentTarget as HTMLElement;
                           el.style.backgroundColor = "";
                           el.style.color = "";
@@ -441,7 +411,6 @@ export default function BackgroundPage() {
                     </div>
                   );
                 })}
-                {/* Upload button inline with categories */}
                 <div className="flex items-center">
                   <button
                     className={`px-4 py-1 rounded-sm font-bold text-white whitespace-nowrap ${
@@ -475,7 +444,6 @@ export default function BackgroundPage() {
               </div>
             </div>
 
-            {/* Progress bar */}
             <div className="w-full h-2 bg-white/70 rounded-full mb-3 overflow-hidden">
               <div
                 className="h-full rounded-full"
@@ -487,7 +455,6 @@ export default function BackgroundPage() {
               />
             </div>
 
-            {/* Image grid */}
             {loading ? (
               <div className="text-white/90">{i18n.t("loading")}</div>
             ) : error ? (
@@ -507,7 +474,6 @@ export default function BackgroundPage() {
                   </div>
                 ) : (
                   imagesForTab.map((img: any, idx: number) => {
-                    // Use the normalized url or fallback to thumbnails
                     const url =
                       img.url ||
                       (Array.isArray(img.thumbnails) && img.thumbnails[0]) ||
@@ -549,7 +515,6 @@ export default function BackgroundPage() {
                 )}
               </div>
             )}
-            {/* Enhanced modal for preview + set background */}
             {modalOpen && modalImage && (
               <div
                 className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-fadeIn"
@@ -559,7 +524,6 @@ export default function BackgroundPage() {
                   className="bg-white rounded-2xl overflow-hidden max-w-2xl w-full shadow-2xl transform transition-all"
                   onClick={(e) => e.stopPropagation()}
                 >
-                  {/* Header with close button */}
                   <div className="relative bg-gradient-to-r from-blue-500 to-purple-600 px-6 py-4">
                     <h3 className="text-white text-xl font-bold">
                       Background Preview
@@ -585,7 +549,6 @@ export default function BackgroundPage() {
                     </button>
                   </div>
 
-                  {/* Image preview */}
                   <div className="relative w-full bg-gradient-to-br from-gray-100 to-gray-200 p-6">
                     <div className="relative w-full aspect-video bg-white rounded-xl overflow-hidden shadow-inner">
                       <img
@@ -600,7 +563,6 @@ export default function BackgroundPage() {
                     </div>
                   </div>
 
-                  {/* Actions and messages */}
                   <div className="p-6 bg-gray-50">
                     {modalError && (
                       <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm flex items-start gap-2">
@@ -654,13 +616,51 @@ export default function BackgroundPage() {
                     )}
 
                     <div className="flex gap-3">
+                      {modalImage?._id?.startsWith("local-") && (
+                        <button
+                          className="flex-1 py-3 rounded-xl font-bold text-white transition-all transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 shadow-lg"
+                          style={{
+                            background:
+                              uploadProgress !== null ? "#9ca3af" : "#ff007a",
+                          }}
+                          disabled={uploadProgress !== null}
+                          onClick={handleUploadImageToServer}
+                        >
+                          {uploadProgress !== null ? (
+                            <span className="flex items-center justify-center gap-2">
+                              <svg
+                                className="animate-spin h-5 w-5"
+                                fill="none"
+                                viewBox="0 0 24 24"
+                              >
+                                <circle
+                                  className="opacity-25"
+                                  cx="12"
+                                  cy="12"
+                                  r="10"
+                                  stroke="currentColor"
+                                  strokeWidth="4"
+                                ></circle>
+                                <path
+                                  className="opacity-75"
+                                  fill="currentColor"
+                                  d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                                ></path>
+                              </svg>
+                              Uploading...
+                            </span>
+                          ) : (
+                            "Upload Image"
+                          )}
+                        </button>
+                      )}
                       <button
                         className="flex-1 py-3 rounded-xl font-bold text-white transition-all transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 shadow-lg"
                         style={{
                           background:
                             "linear-gradient(135deg, var(--app-background-color, #007cb6) 0%, #0056b3 100%)",
                         }}
-                        disabled={modalLoading}
+                        disabled={modalLoading || uploadProgress !== null}
                         onClick={handleSetBackgroundImage}
                       >
                         {modalLoading ? (
@@ -695,7 +695,7 @@ export default function BackgroundPage() {
                         onClick={() => {
                           setModalOpen(false);
                         }}
-                        disabled={modalLoading}
+                        disabled={modalLoading || uploadProgress !== null}
                       >
                         Cancel
                       </button>

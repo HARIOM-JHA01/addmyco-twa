@@ -17,6 +17,8 @@ import {
   assignCreditsToOperator,
   OperatorAuthError,
   operatorLogin,
+  getOperatorDetails,
+  deleteOperator,
 } from "../services/donatorService";
 import { useNavigate } from "react-router-dom";
 import {
@@ -31,10 +33,11 @@ import {
 } from "../types/donator";
 import WebApp from "@twa-dev/sdk";
 import { DonatorUsdtPaymentModal } from "../components/donator/DonatorUsdtPaymentModal";
+import { formatDate } from "../utils/date";
 
 export default function DonatorDashboard() {
   const [activeTab, setActiveTab] = useState<
-    DonatorTabType | "manage-operators" | "search-employees"
+    DonatorTabType | "create-operator" | "manage-operators" | "search-employees"
   >("dashboard");
   const [menuOpen, setMenuOpen] = useState(false);
 
@@ -42,7 +45,7 @@ export default function DonatorDashboard() {
   const [donatorSummary, setDonatorSummary] = useState<DonatorSummary | null>(
     null,
   );
-  const [users, setUsers] = useState<OperatorUsers | null>(null);
+  const [_, setUsers] = useState<OperatorUsers | null>(null);
   const [dashboardLoading, setDashboardLoading] = useState(false);
   const [dashboardError, setDashboardError] = useState<string | null>(null);
 
@@ -145,6 +148,22 @@ export default function DonatorDashboard() {
   const [purchaseStatusFilter, setPurchaseStatusFilter] = useState<
     number | undefined
   >(undefined);
+  const [openPaymentId, setOpenPaymentId] = useState<string | null>(null);
+
+  // Operator actions state
+  const [openActionMenuId, setOpenActionMenuId] = useState<string | null>(null);
+  const [viewOperatorModal, setViewOperatorModal] = useState(false);
+  const [selectedOperatorForView, setSelectedOperatorForView] =
+    useState<SubOperator | null>(null);
+  const [operatorDetailsLoading, setOperatorDetailsLoading] = useState(false);
+  const [operatorDetailsError, setOperatorDetailsError] = useState<
+    string | null
+  >(null);
+  const [operatorDetails, setOperatorDetails] = useState<any>(null);
+  const [deleteOperatorLoading, setDeleteOperatorLoading] = useState(false);
+  const [operatorToDelete, setOperatorToDelete] = useState<SubOperator | null>(
+    null,
+  );
 
   // Fetch dashboard data
   useEffect(() => {
@@ -168,9 +187,9 @@ export default function DonatorDashboard() {
     }
   }, [activeTab]);
 
-  // Fetch operators when manage-operators tab is active
+  // Fetch operators when manage-operators or create-operator tab is active
   useEffect(() => {
-    if (activeTab === "manage-operators") {
+    if (activeTab === "manage-operators" || activeTab === "create-operator") {
       // Check if operator is authenticated
       const token = localStorage.getItem("token");
       if (!token) {
@@ -503,6 +522,16 @@ export default function DonatorDashboard() {
       return;
     }
 
+    // Client-side check against donator available employee credits (if available)
+    const available =
+      donatorSummary?.purchasesSummary?.leftCreditsEmployee ?? undefined;
+    if (typeof available === "number" && credits > available) {
+      setAssignCreditsError(
+        `You only have ${available} employee credits available`,
+      );
+      return;
+    }
+
     const token = localStorage.getItem("token");
     if (!token) {
       setAssignCreditsError("Authentication token not found");
@@ -524,6 +553,9 @@ export default function DonatorDashboard() {
 
       // Refresh operators list to show updated credits
       await fetchEmployees();
+
+      // refresh dashboard summary (balances)
+      fetchDashboardData();
     } catch (error: any) {
       setAssignCreditsError(error.message || "Failed to assign credits");
       console.error("Assign credits error:", error);
@@ -557,6 +589,53 @@ export default function DonatorDashboard() {
       console.error("Search employees error:", error);
     } finally {
       setEmployeesSearchLoading(false);
+    }
+  };
+
+  // Handle view operator details
+  const handleViewOperator = async (operator: SubOperator) => {
+    setSelectedOperatorForView(operator);
+    setViewOperatorModal(true);
+    setOperatorDetailsLoading(true);
+    setOperatorDetailsError(null);
+    setOperatorDetails(null);
+
+    try {
+      const details = await getOperatorDetails(operator._id);
+      setOperatorDetails(details);
+    } catch (error: any) {
+      setOperatorDetailsError(
+        error.message || "Failed to load operator details",
+      );
+      console.error("View operator error:", error);
+    } finally {
+      setOperatorDetailsLoading(false);
+    }
+  };
+
+  // Handle delete operator
+  const handleDeleteOperator = async (operator: SubOperator) => {
+    setOperatorToDelete(operator);
+  };
+
+  const confirmDeleteOperator = async () => {
+    if (!operatorToDelete) return;
+
+    setDeleteOperatorLoading(true);
+    try {
+      await deleteOperator(operatorToDelete._id);
+      WebApp.showAlert(
+        `Operator ${operatorToDelete.name || operatorToDelete.email} deleted successfully!`,
+      );
+      setOperatorToDelete(null);
+
+      // Refresh operators list
+      await fetchEmployees();
+    } catch (error: any) {
+      WebApp.showAlert(`Failed to delete operator: ${error.message}`);
+      console.error("Delete operator error:", error);
+    } finally {
+      setDeleteOperatorLoading(false);
     }
   };
 
@@ -615,6 +694,15 @@ export default function DonatorDashboard() {
                 </button>
                 <button
                   onClick={() => {
+                    setActiveTab("create-operator" as any);
+                    setMenuOpen(false);
+                  }}
+                  className="block w-full text-left px-4 py-2 text-white font-semibold hover:bg-gray-800 transition"
+                >
+                  Create Operator
+                </button>
+                <button
+                  onClick={() => {
                     setActiveTab("manage-operators" as any);
                     setMenuOpen(false);
                   }}
@@ -651,11 +739,13 @@ export default function DonatorDashboard() {
                 ? i18n.t("dashboard")
                 : activeTab === "buy-credits"
                   ? i18n.t("buy_credits")
-                  : activeTab === "manage-operators"
-                    ? i18n.t("manage_operators")
-                    : activeTab === "purchase-history"
-                      ? i18n.t("purchase_history")
-                      : "Search Employees"}
+                  : activeTab === "create-operator"
+                    ? "Create Operator"
+                    : activeTab === "manage-operators"
+                      ? i18n.t("manage_operators")
+                      : activeTab === "purchase-history"
+                        ? i18n.t("purchase_history")
+                        : "Search Employees"}
             </h2>
           </div>
           {/* Dashboard Tab */}
@@ -735,43 +825,102 @@ export default function DonatorDashboard() {
                         Credits Overview
                       </h3>
                       <div className="grid grid-cols-1 gap-4">
+                        {/* Operator Credits Box */}
                         <div className="bg-gradient-to-br from-purple-50 to-purple-100 p-4 rounded-lg border border-purple-200">
-                          <p className="text-xs text-gray-600 mb-1">
+                          <h4 className="text-sm font-bold text-purple-700 mb-3">
                             Operator Credits
-                          </p>
-                          Total Credits:{" "}
-                          <p className="text-2xl font-bold text-purple-600">
-                            {
-                              donatorSummary.purchasesSummary
-                                .totalCreditsOperator
-                            }
-                          </p>
-                          {/* add a section for used credit */}
-                          Used Credits:{" "}
-                          <p className="text-sm font-medium text-purple-500">
-                            {
-                              donatorSummary.purchasesSummary
-                                .totalCreditsOperator
-                            }
-                          </p>
-                          Balance Credits:{" "}
-                          <p className="text-sm font-medium text-purple-500">
-                            {
-                              donatorSummary.purchasesSummary
-                                .totalCreditsOperator
-                            }
-                          </p>
+                          </h4>
+
+                          {/* Total Credits */}
+                          <div className="flex justify-between items-center mb-2">
+                            <span className="text-gray-700 font-medium">
+                              Total Credits:
+                            </span>
+                            <span className="text-xl font-bold text-purple-600">
+                              {
+                                donatorSummary.purchasesSummary
+                                  .totalCreditsOperator
+                              }
+                            </span>
+                          </div>
+
+                          {/* Used Credits */}
+                          <div className="flex justify-between items-center mb-3">
+                            <span className="text-gray-700 font-medium">
+                              Used Credits:
+                            </span>
+                            <span className="text-xl font-bold text-purple-600">
+                              {
+                                donatorSummary.purchasesSummary
+                                  .usedCreditsOperator
+                              }
+                            </span>
+                          </div>
+
+                          {/* Horizontal Line */}
+                          <hr className="border-purple-300 my-3" />
+
+                          {/* Balance Credits */}
+                          <div className="flex justify-between items-center">
+                            <span className="text-gray-700 font-semibold">
+                              Balance Credits:
+                            </span>
+                            <span className="text-2xl font-bold text-purple-700">
+                              {
+                                donatorSummary.purchasesSummary
+                                  .leftCreditsOperator
+                              }
+                            </span>
+                          </div>
                         </div>
+
+                        {/* Employee Credits Box */}
                         <div className="bg-gradient-to-br from-green-50 to-green-100 p-4 rounded-lg border border-green-200">
-                          <p className="text-xs text-gray-600 mb-1">
+                          <h4 className="text-sm font-bold text-green-700 mb-3">
                             Employee Credits
-                          </p>
-                          <p className="text-2xl font-bold text-green-600">
-                            {
-                              donatorSummary.purchasesSummary
-                                .totalCreditsEmployee
-                            }
-                          </p>
+                          </h4>
+
+                          {/* Total Credits */}
+                          <div className="flex justify-between items-center mb-2">
+                            <span className="text-gray-700 font-medium">
+                              Total Credits:
+                            </span>
+                            <span className="text-xl font-bold text-green-600">
+                              {
+                                donatorSummary.purchasesSummary
+                                  .totalCreditsEmployee
+                              }
+                            </span>
+                          </div>
+
+                          {/* Used Credits */}
+                          <div className="flex justify-between items-center mb-3">
+                            <span className="text-gray-700 font-medium">
+                              Used Credits:
+                            </span>
+                            <span className="text-xl font-bold text-green-600">
+                              {
+                                donatorSummary.purchasesSummary
+                                  .usedCreditsEmployee
+                              }
+                            </span>
+                          </div>
+
+                          {/* Horizontal Line */}
+                          <hr className="border-green-300 my-3" />
+
+                          {/* Balance Credits */}
+                          <div className="flex justify-between items-center">
+                            <span className="text-gray-700 font-semibold">
+                              Balance Credits:
+                            </span>
+                            <span className="text-2xl font-bold text-green-700">
+                              {
+                                donatorSummary.purchasesSummary
+                                  .leftCreditsEmployee
+                              }
+                            </span>
+                          </div>
                         </div>
                       </div>
                     </div>
@@ -816,32 +965,62 @@ export default function DonatorDashboard() {
                     </div>
                   )}
 
-                  {/* Quick Stats */}
-                  {users && (
-                    <div className="bg-white rounded-lg shadow-md p-6">
-                      <h3 className="text-lg text-center font-bold text-gray-800 mb-4">
-                        Employee Statistics
-                      </h3>
-                      <div className="grid grid-cols-2 gap-4">
-                        <div className="bg-gradient-to-br from-purple-50 to-purple-100 p-4 rounded-lg border border-purple-200">
-                          <p className="text-xs text-gray-600 mb-1">
-                            {i18n.t("credits_used")}
-                          </p>
-                          <p className="text-3xl font-bold text-purple-600">
-                            {users.creditsUsed}
-                          </p>
-                        </div>
-                        <div className="bg-gradient-to-br from-orange-50 to-orange-100 p-4 rounded-lg border border-orange-200">
-                          <p className="text-xs text-gray-600 mb-1">
-                            {i18n.t("total_employees")}
-                          </p>
-                          <p className="text-3xl font-bold text-orange-600">
-                            {users.potentialUsers}
-                          </p>
+                  {/* Recent Transactions */}
+                  {donatorSummary?.purchases &&
+                    donatorSummary.purchases.length > 0 && (
+                      <div className="bg-white rounded-lg shadow-md p-6">
+                        <h3 className="text-lg text-center font-bold text-gray-800 mb-4">
+                          Recent Transactions
+                        </h3>
+                        <div className="space-y-3 max-h-96 overflow-y-auto">
+                          {donatorSummary.purchases.map((purchase, idx) => (
+                            <div
+                              key={purchase._id || idx}
+                              className="bg-gradient-to-br from-gray-50 to-gray-100 p-4 rounded-lg border border-gray-200"
+                            >
+                              <div className="flex justify-between items-start mb-2">
+                                <div>
+                                  <p className="font-semibold text-gray-800">
+                                    {purchase.packageName}
+                                  </p>
+                                  <p className="text-sm text-gray-600">
+                                    +{purchase.creditsGranted} Credits
+                                  </p>
+                                </div>
+                                <span
+                                  className={`px-3 py-1 rounded-full text-xs font-bold ${
+                                    purchase.status === 1
+                                      ? "bg-green-100 text-green-700"
+                                      : purchase.status === 2
+                                        ? "bg-red-100 text-red-700"
+                                        : "bg-yellow-100 text-yellow-700"
+                                  }`}
+                                >
+                                  {purchase.status === 1
+                                    ? "Approved"
+                                    : purchase.status === 2
+                                      ? "Rejected"
+                                      : "Pending"}
+                                </span>
+                              </div>
+                              <div className="flex justify-between text-sm text-gray-600">
+                                {purchase.amount && (
+                                  <span>${purchase.amount} USDT</span>
+                                )}
+                                {purchase.transactionId && (
+                                  <span className="text-xs font-mono truncate max-w-[150px]">
+                                    {purchase.transactionId}
+                                  </span>
+                                )}
+                              </div>
+                              <div className="text-xs text-gray-500 mt-2">
+                                {formatDate(purchase.createdAt)}
+                              </div>
+                            </div>
+                          ))}
                         </div>
                       </div>
-                    </div>
-                  )}
+                    )}
                 </div>
               )}
             </>
@@ -981,20 +1160,30 @@ export default function DonatorDashboard() {
                   {purchaseHistory.map((purchase) => (
                     <div
                       key={purchase._id}
-                      className="bg-white rounded-lg shadow-md p-5"
+                      className="border border-gray-200 rounded-lg overflow-hidden"
                     >
-                      <div className="flex justify-between items-start mb-3">
-                        <div>
-                          <h3 className="font-bold text-lg text-gray-800">
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setOpenPaymentId(
+                            openPaymentId === purchase._id
+                              ? null
+                              : purchase._id,
+                          )
+                        }
+                        className="w-full flex items-center justify-between p-4 bg-white hover:bg-gray-50 focus:outline-none"
+                      >
+                        <div className="text-left">
+                          <h3 className="font-semibold text-gray-800">
                             {purchase.packageName}
                           </h3>
-                          <div className="text-sm text-gray-600 mt-1">
+                          <p className="text-xs text-gray-500">
                             {new Date(purchase.createdAt).toLocaleString()}
-                          </div>
+                          </p>
                         </div>
-                        <div className="text-right">
+                        <div className="flex items-center gap-3">
                           <span
-                            className={`inline-block px-3 py-1 rounded-full text-xs font-semibold ${
+                            className={`px-2 py-1 rounded text-xs font-bold ${
                               purchase.status === 1
                                 ? "bg-green-100 text-green-700"
                                 : purchase.status === 2
@@ -1004,48 +1193,80 @@ export default function DonatorDashboard() {
                           >
                             {purchase.statusLabel}
                           </span>
+                          <svg
+                            className={`h-4 w-4 text-gray-500 transform transition-transform ${
+                              openPaymentId === purchase._id ? "rotate-180" : ""
+                            }`}
+                            viewBox="0 0 20 20"
+                            fill="none"
+                            xmlns="http://www.w3.org/2000/svg"
+                          >
+                            <path
+                              d="M6 8l4 4 4-4"
+                              stroke="currentColor"
+                              strokeWidth="2"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                            />
+                          </svg>
                         </div>
-                      </div>
-                      <div className="grid grid-cols-2 gap-4 text-sm mb-3">
-                        <div>
-                          <span className="text-gray-600">
-                            Employee Credits:
-                          </span>
-                          <span className="font-bold text-green-600 ml-2">
-                            {purchase.creditsGrantedEmployee}
-                          </span>
+                      </button>
+
+                      {openPaymentId === purchase._id && (
+                        <div className="p-4 bg-gray-50 space-y-3">
+                          <div className="grid grid-cols-2 gap-3">
+                            <div className="bg-white p-2 rounded shadow-sm">
+                              <p className="text-xs text-gray-600">Amount</p>
+                              <p className="font-bold">
+                                ${purchase.amount} {purchase.currency}
+                              </p>
+                            </div>
+                            <div className="bg-white p-2 rounded shadow-sm">
+                              <p className="text-xs text-gray-600">
+                                Employee Credits
+                              </p>
+                              <p className="font-bold text-green-600">
+                                {purchase.creditsGrantedEmployee}
+                              </p>
+                            </div>
+                            <div className="bg-white p-2 rounded shadow-sm">
+                              <p className="text-xs text-gray-600">
+                                Operator Credits
+                              </p>
+                              <p className="font-bold text-blue-600">
+                                {purchase.creditsGrantedOperator}
+                              </p>
+                            </div>
+                            <div className="col-span-2 bg-white p-2 rounded shadow-sm">
+                              <p className="text-xs text-gray-600">
+                                Transaction ID
+                              </p>
+                              <p className="text-xs font-mono break-all">
+                                {purchase.transactionId}
+                              </p>
+                            </div>
+                            <div className="col-span-2 bg-white p-2 rounded shadow-sm">
+                              <p className="text-xs text-gray-600">
+                                Wallet Address
+                              </p>
+                              <p className="text-xs font-mono break-all">
+                                {purchase.walletAddress}
+                              </p>
+                            </div>
+                          </div>
+
+                          {purchase.approvedAt && (
+                            <div className="bg-green-50 p-2 rounded">
+                              <p className="text-xs text-gray-600">
+                                <strong>Approved At:</strong>
+                              </p>
+                              <p className="text-sm text-green-700">
+                                {new Date(purchase.approvedAt).toLocaleString()}
+                              </p>
+                            </div>
+                          )}
                         </div>
-                        <div>
-                          <span className="text-gray-600">
-                            Operator Credits:
-                          </span>
-                          <span className="font-bold text-blue-600 ml-2">
-                            {purchase.creditsGrantedOperator}
-                          </span>
-                        </div>
-                        <div>
-                          <span className="text-gray-600">Amount:</span>
-                          <span className="font-bold ml-2">
-                            {purchase.amount} {purchase.currency}
-                          </span>
-                        </div>
-                        <div>
-                          <span className="text-gray-600">Transaction ID:</span>
-                          <span className="font-mono text-xs ml-2">
-                            {purchase.transactionId}
-                          </span>
-                        </div>
-                      </div>
-                      <div className="text-xs text-gray-500 bg-gray-50 p-2 rounded">
-                        Wallet: {purchase.walletAddress}
-                        {purchase.approvedAt && (
-                          <>
-                            <br />
-                            Approved:{" "}
-                            {new Date(purchase.approvedAt).toLocaleString()}
-                          </>
-                        )}
-                      </div>
+                      )}
                     </div>
                   ))}
 
@@ -1108,8 +1329,8 @@ export default function DonatorDashboard() {
             />
           )}
 
-          {/* Manage Operators Tab */}
-          {activeTab === "manage-operators" && (
+          {/* Create Operator Tab */}
+          {activeTab === "create-operator" && (
             <>
               {operatorsError && (
                 <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
@@ -1186,7 +1407,20 @@ export default function DonatorDashboard() {
                     </button>
                   </form>
                 </div>
+              </div>
+            </>
+          )}
 
+          {/* Manage Operators Tab */}
+          {activeTab === "manage-operators" && (
+            <>
+              {operatorsError && (
+                <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
+                  {operatorsError}
+                </div>
+              )}
+
+              <div className="space-y-6">
                 {/* My Operators List */}
                 {employeesLoading ? (
                   <div className="text-center py-8">
@@ -1203,56 +1437,155 @@ export default function DonatorDashboard() {
                         {operatorsList.map((op) => (
                           <div
                             key={op._id}
-                            className="bg-gray-50 border border-gray-200 rounded-lg p-4"
+                            className="bg-gradient-to-r from-gray-50 to-gray-100 border border-gray-300 rounded-lg p-4 shadow-sm hover:shadow-md transition-shadow"
                           >
                             <div className="flex justify-between items-start">
                               <div className="flex-1">
-                                <div className="font-semibold text-gray-800">
-                                  {op.name || op.email}
+                                <div className="flex items-center gap-2">
+                                  <div className="font-bold text-lg text-gray-800">
+                                    {op.name || op.email}
+                                  </div>
+                                  <span
+                                    className={`px-2 py-0.5 rounded-full text-xs font-semibold ${
+                                      op.isActive
+                                        ? "bg-green-100 text-green-700"
+                                        : "bg-red-100 text-red-700"
+                                    }`}
+                                  >
+                                    {op.isActive ? "Active" : "Inactive"}
+                                  </span>
                                 </div>
                                 <div className="text-sm text-gray-600 mt-1">
                                   {op.email}
                                 </div>
-                                <div className="flex gap-4 text-xs text-gray-500 mt-2">
-                                  <span>
-                                    Credits:{" "}
-                                    <span className="font-semibold text-blue-600">
+                                <div className="flex gap-4 mt-3 items-center">
+                                  <div className="bg-blue-50 px-3 py-1 rounded-md border border-blue-200">
+                                    <span className="text-xs text-gray-600">
+                                      Credits:
+                                    </span>
+                                    <span className="ml-2 font-bold text-blue-700">
                                       {op.credits ?? 0}
                                     </span>
-                                  </span>
-                                  <span>
-                                    Slots:{" "}
-                                    <span className="font-semibold text-green-600">
-                                      {op.operatorSlots ?? 0}
-                                    </span>
-                                  </span>
-                                  <span>
-                                    Status:{" "}
-                                    <span
-                                      className={`font-semibold ${
-                                        op.isActive
-                                          ? "text-green-600"
-                                          : "text-red-600"
-                                      }`}
-                                    >
-                                      {op.isActive ? "Active" : "Inactive"}
-                                    </span>
-                                  </span>
+                                  </div>
+                                  {/* <div className="text-xs text-gray-500">
+                                    &middot; Created:{" "}
+                                    {new Date(
+                                      op.createdAt,
+                                    ).toLocaleDateString()}
+                                  </div> */}
                                 </div>
-                                <div className="text-xs text-gray-400 mt-1">
+                                <div className="text-xs text-gray-400 mt-2">
                                   Created:{" "}
                                   {new Date(op.createdAt).toLocaleDateString()}
                                 </div>
                               </div>
-                              <button
-                                onClick={() => {
-                                  setSelectedOperatorForAssign(op);
-                                  setAssignCreditsModal(true);
-                                }}
-                                className="ml-4 px-3 py-2 bg-[#007cb6] text-white rounded text-sm font-semibold hover:bg-[#005f8e]"
-                              >
-                                Assign Credits
-                              </button>
+
+                              {/* Action Menu */}
+                              <div className="relative ml-4">
+                                <button
+                                  onClick={() =>
+                                    setOpenActionMenuId(
+                                      openActionMenuId === op._id
+                                        ? null
+                                        : op._id,
+                                    )
+                                  }
+                                  className="p-2 hover:bg-gray-200 rounded-full transition-colors"
+                                  aria-label="Actions"
+                                >
+                                  <svg
+                                    className="w-6 h-6 text-gray-600"
+                                    fill="currentColor"
+                                    viewBox="0 0 20 20"
+                                  >
+                                    <path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z" />
+                                  </svg>
+                                </button>
+
+                                {openActionMenuId === op._id && (
+                                  <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-xl border border-gray-200 z-10">
+                                    <button
+                                      onClick={() => {
+                                        setOpenActionMenuId(null);
+                                        setSelectedOperatorForAssign(op);
+                                        setAssignCreditsModal(true);
+                                      }}
+                                      className="w-full text-left px-4 py-3 hover:bg-blue-50 transition-colors flex items-center gap-2 first:rounded-t-lg"
+                                    >
+                                      <svg
+                                        className="w-5 h-5 text-blue-600"
+                                        fill="none"
+                                        stroke="currentColor"
+                                        viewBox="0 0 24 24"
+                                      >
+                                        <path
+                                          strokeLinecap="round"
+                                          strokeLinejoin="round"
+                                          strokeWidth={2}
+                                          d="M12 6v6m0 0v6m0-6h6m-6 0H6"
+                                        />
+                                      </svg>
+                                      <span className="font-medium text-gray-700">
+                                        Assign Credits
+                                      </span>
+                                    </button>
+                                    <button
+                                      onClick={() => {
+                                        setOpenActionMenuId(null);
+                                        handleViewOperator(op);
+                                      }}
+                                      className="w-full text-left px-4 py-3 hover:bg-green-50 transition-colors flex items-center gap-2"
+                                    >
+                                      <svg
+                                        className="w-5 h-5 text-green-600"
+                                        fill="none"
+                                        stroke="currentColor"
+                                        viewBox="0 0 24 24"
+                                      >
+                                        <path
+                                          strokeLinecap="round"
+                                          strokeLinejoin="round"
+                                          strokeWidth={2}
+                                          d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                                        />
+                                        <path
+                                          strokeLinecap="round"
+                                          strokeLinejoin="round"
+                                          strokeWidth={2}
+                                          d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
+                                        />
+                                      </svg>
+                                      <span className="font-medium text-gray-700">
+                                        View Operator
+                                      </span>
+                                    </button>
+                                    <button
+                                      onClick={() => {
+                                        setOpenActionMenuId(null);
+                                        handleDeleteOperator(op);
+                                      }}
+                                      className="w-full text-left px-4 py-3 hover:bg-red-50 transition-colors flex items-center gap-2 last:rounded-b-lg"
+                                    >
+                                      <svg
+                                        className="w-5 h-5 text-red-600"
+                                        fill="none"
+                                        stroke="currentColor"
+                                        viewBox="0 0 24 24"
+                                      >
+                                        <path
+                                          strokeLinecap="round"
+                                          strokeLinejoin="round"
+                                          strokeWidth={2}
+                                          d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                                        />
+                                      </svg>
+                                      <span className="font-medium text-gray-700">
+                                        Delete Operator
+                                      </span>
+                                    </button>
+                                  </div>
+                                )}
+                              </div>
                             </div>
                           </div>
                         ))}
@@ -1485,23 +1818,108 @@ export default function DonatorDashboard() {
                 </div>
 
                 <div className="p-6 space-y-4">
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">
-                      Number of Employee Credits *
-                    </label>
-                    <input
-                      type="number"
-                      min="1"
-                      value={employeeCreditsToAssign}
-                      onChange={(e) =>
-                        setEmployeeCreditsToAssign(e.target.value)
-                      }
-                      placeholder="Enter number of credits (e.g., 1000)"
-                      className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-[#007cb6] focus:border-transparent"
-                    />
-                    <p className="text-xs text-gray-500 mt-1">
-                      Current credits: {selectedOperatorForAssign.credits ?? 0}
-                    </p>
+                  <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <div className="text-xs text-gray-500">Operator</div>
+                        <div className="font-semibold text-gray-800">
+                          {selectedOperatorForAssign.name ||
+                            selectedOperatorForAssign.email}
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <div className="text-xs text-gray-500">
+                          Current Credits
+                        </div>
+                        <div className="font-bold text-blue-700 text-lg">
+                          {selectedOperatorForAssign.credits ?? 0}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 gap-3">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-xs text-gray-500">
+                          Available to assign
+                        </p>
+                        <p className="font-semibold text-gray-800 text-lg">
+                          {donatorSummary?.purchasesSummary
+                            ?.leftCreditsEmployee ?? "—"}
+                          <span className="ml-2 text-xs text-gray-500">
+                            employee credits
+                          </span>
+                        </p>
+                      </div>
+                      <div className="flex gap-2">
+                        <button
+                          type="button"
+                          onClick={() => setEmployeeCreditsToAssign("100")}
+                          className="px-3 py-1 bg-gray-100 rounded-md text-sm text-gray-700 border border-gray-200 hover:bg-gray-200"
+                        >
+                          +100
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setEmployeeCreditsToAssign("500")}
+                          className="px-3 py-1 bg-gray-100 rounded-md text-sm text-gray-700 border border-gray-200 hover:bg-gray-200"
+                        >
+                          +500
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setEmployeeCreditsToAssign("1000")}
+                          className="px-3 py-1 bg-gray-100 rounded-md text-sm text-gray-700 border border-gray-200 hover:bg-gray-200"
+                        >
+                          +1000
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setEmployeeCreditsToAssign(
+                              String(
+                                donatorSummary?.purchasesSummary
+                                  ?.leftCreditsEmployee ?? "",
+                              ),
+                            )
+                          }
+                          className="px-3 py-1 bg-white rounded-md text-sm text-[#007cb6] border border-[#007cb6] hover:bg-[#007cb6] hover:text-white transition"
+                        >
+                          Max
+                        </button>
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-700 mb-2">
+                        Number of Employee Credits *
+                      </label>
+                      <input
+                        type="number"
+                        min="1"
+                        value={employeeCreditsToAssign}
+                        onChange={(e) =>
+                          setEmployeeCreditsToAssign(e.target.value)
+                        }
+                        placeholder="Enter number of credits (e.g., 1000)"
+                        className="w-full px-4 py-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-[#007cb6] focus:border-transparent text-lg font-medium"
+                      />
+                      <div className="flex justify-between mt-2 text-xs text-gray-500">
+                        <div>Minimum 1 credit</div>
+                        <div>
+                          {employeeCreditsToAssign &&
+                          !isNaN(parseInt(employeeCreditsToAssign)) ? (
+                            <span>
+                              Will assign:{" "}
+                              <strong>{employeeCreditsToAssign}</strong>
+                            </span>
+                          ) : (
+                            <span>—</span>
+                          )}
+                        </div>
+                      </div>
+                    </div>
                   </div>
 
                   {assignCreditsError && (
@@ -1510,17 +1928,271 @@ export default function DonatorDashboard() {
                     </div>
                   )}
 
+                  <div className="flex gap-3">
+                    <button
+                      onClick={() => {
+                        setAssignCreditsModal(false);
+                        setEmployeeCreditsToAssign("");
+                        setAssignCreditsError(null);
+                      }}
+                      className="flex-1 px-4 py-2 bg-gray-100 text-gray-800 rounded-md font-semibold hover:bg-gray-200"
+                      disabled={assignCreditsLoading}
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      onClick={handleAssignCredits}
+                      disabled={
+                        assignCreditsLoading ||
+                        !employeeCreditsToAssign.trim() ||
+                        parseInt(employeeCreditsToAssign) <= 0 ||
+                        (typeof donatorSummary?.purchasesSummary
+                          ?.leftCreditsEmployee === "number" &&
+                          parseInt(employeeCreditsToAssign) >
+                            (donatorSummary?.purchasesSummary
+                              ?.leftCreditsEmployee ?? 0))
+                      }
+                      className="flex-1 px-4 py-2 bg-[#007cb6] text-white rounded-md font-semibold hover:bg-[#005f8e] disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {assignCreditsLoading ? "Assigning..." : "Assign Credits"}
+                    </button>
+                  </div>
+
+                  <p className="text-xs text-gray-400 mt-2">
+                    Tip: Use the quick buttons to set common amounts or press{" "}
+                    <strong>Max</strong> to assign all available employee
+                    credits.
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* View Operator Modal */}
+          {viewOperatorModal && selectedOperatorForView && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40 p-4">
+              <div className="bg-white rounded-xl shadow-xl w-full max-w-4xl max-h-[90vh] overflow-hidden">
+                <div className="bg-gradient-to-r from-[#007cb6] to-[#005f8e] text-white p-4 flex justify-between items-center">
+                  <h3 className="text-lg font-bold">
+                    {selectedOperatorForView.name || "Operator"}
+                  </h3>
                   <button
-                    onClick={handleAssignCredits}
-                    disabled={
-                      assignCreditsLoading ||
-                      !employeeCreditsToAssign.trim() ||
-                      parseInt(employeeCreditsToAssign) <= 0
-                    }
-                    className="w-full bg-[#007cb6] text-white py-2 rounded-md font-semibold hover:bg-[#005f8e] disabled:opacity-50 disabled:cursor-not-allowed"
+                    onClick={() => {
+                      setViewOperatorModal(false);
+                      setSelectedOperatorForView(null);
+                      setOperatorDetails(null);
+                      setOperatorDetailsError(null);
+                    }}
+                    className="text-white hover:text-gray-200 text-2xl font-bold"
                   >
-                    {assignCreditsLoading ? "Assigning..." : "Assign Credits"}
+                    ×
                   </button>
+                </div>
+
+                <div className="p-6 overflow-y-auto max-h-[calc(90vh-80px)]">
+                  {/* Operator Info */}
+                  <div className="bg-gradient-to-r from-blue-50 to-blue-100 p-4 rounded-lg mb-6 border border-blue-200">
+                    <h4 className="font-bold text-gray-800 mb-3">
+                      Operator Details
+                    </h4>
+                    <div className="grid grid-cols-2 gap-4 text-sm">
+                      <div>
+                        <span className="text-gray-600">Status:</span>
+                        <span
+                          className={`ml-2 font-semibold ${selectedOperatorForView.isActive ? "text-green-600" : "text-red-600"}`}
+                        >
+                          {selectedOperatorForView.isActive
+                            ? "Active"
+                            : "Inactive"}
+                        </span>
+                      </div>
+                      <div>
+                        <span className="text-gray-600">Credits:</span>
+                        <span className="ml-2 font-bold text-blue-600">
+                          {selectedOperatorForView.credits ?? 0}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Employees List */}
+                  <div>
+                    <h4 className="font-bold text-gray-800 mb-3 flex items-center gap-2">
+                      <svg
+                        className="w-5 h-5 text-[#007cb6]"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
+                        />
+                      </svg>
+                      Created Employees
+                    </h4>
+
+                    {operatorDetailsLoading ? (
+                      <div className="text-center py-8">
+                        <div className="inline-block animate-spin rounded-full h-8 w-8 border-4 border-gray-300 border-t-[#007cb6]"></div>
+                        <p className="text-gray-600 mt-2">
+                          Loading employees...
+                        </p>
+                      </div>
+                    ) : operatorDetailsError ? (
+                      <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">
+                        {operatorDetailsError}
+                      </div>
+                    ) : operatorDetails?.employees &&
+                      operatorDetails.employees.length > 0 ? (
+                      <div className="border border-gray-200 rounded-lg overflow-hidden">
+                        <div className="overflow-x-auto max-h-96 overflow-y-auto">
+                          <table className="min-w-full divide-y divide-gray-200">
+                            <thead className="bg-gray-50 sticky top-0">
+                              <tr>
+                                <th className="px-4 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
+                                  Name
+                                </th>
+                                <th className="px-4 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
+                                  Email
+                                </th>
+                                <th className="px-4 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
+                                  Username
+                                </th>
+                                <th className="px-4 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
+                                  Membership
+                                </th>
+                                <th className="px-4 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
+                                  Created
+                                </th>
+                              </tr>
+                            </thead>
+                            <tbody className="bg-white divide-y divide-gray-200">
+                              {operatorDetails.employees.map(
+                                (employee: any, idx: number) => (
+                                  <tr
+                                    key={employee._id || idx}
+                                    className="hover:bg-gray-50"
+                                  >
+                                    <td className="px-4 py-3 text-sm text-gray-800">
+                                      {employee.owner_name_english ||
+                                        employee.name ||
+                                        "-"}
+                                    </td>
+                                    <td className="px-4 py-3 text-sm text-gray-600">
+                                      {employee.email || "-"}
+                                    </td>
+                                    <td className="px-4 py-3 text-sm text-gray-600">
+                                      {employee.username ||
+                                        employee.tgid ||
+                                        "-"}
+                                    </td>
+                                    <td className="px-4 py-3 text-sm">
+                                      {employee.enddate ? (
+                                        <span
+                                          className={`px-2 py-1 rounded text-xs font-semibold ${
+                                            new Date(employee.enddate) >
+                                            new Date()
+                                              ? "bg-green-100 text-green-700"
+                                              : "bg-red-100 text-red-700"
+                                          }`}
+                                        >
+                                          {new Date(
+                                            employee.enddate,
+                                          ).toLocaleDateString()}
+                                        </span>
+                                      ) : (
+                                        "-"
+                                      )}
+                                    </td>
+                                    <td className="px-4 py-3 text-sm text-gray-500">
+                                      {employee.createdAt
+                                        ? new Date(
+                                            employee.createdAt,
+                                          ).toLocaleDateString()
+                                        : "-"}
+                                    </td>
+                                  </tr>
+                                ),
+                              )}
+                            </tbody>
+                          </table>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="text-center py-8 bg-gray-50 rounded-lg">
+                        <svg
+                          className="mx-auto h-12 w-12 text-gray-400"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
+                          />
+                        </svg>
+                        <p className="text-gray-500 mt-2">
+                          No employees created yet
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Delete Operator Confirmation Modal */}
+          {operatorToDelete && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-4">
+              <div className="bg-white rounded-xl shadow-xl w-full max-w-md">
+                <div className="p-6">
+                  <div className="flex items-center justify-center w-12 h-12 mx-auto bg-red-100 rounded-full mb-4">
+                    <svg
+                      className="w-6 h-6 text-red-600"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+                      />
+                    </svg>
+                  </div>
+                  <h3 className="text-lg font-bold text-center text-gray-900 mb-2">
+                    Delete Operator
+                  </h3>
+                  <p className="text-sm text-gray-600 text-center mb-6">
+                    Are you sure you want to delete{" "}
+                    <strong>
+                      {operatorToDelete.name || operatorToDelete.email}
+                    </strong>
+                    ? This action cannot be undone.
+                  </p>
+                  <div className="flex gap-3">
+                    <button
+                      onClick={() => setOperatorToDelete(null)}
+                      disabled={deleteOperatorLoading}
+                      className="flex-1 px-4 py-2 bg-gray-200 text-gray-800 rounded-md font-semibold hover:bg-gray-300 disabled:opacity-50"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      onClick={confirmDeleteOperator}
+                      disabled={deleteOperatorLoading}
+                      className="flex-1 px-4 py-2 bg-red-600 text-white rounded-md font-semibold hover:bg-red-700 disabled:opacity-50"
+                    >
+                      {deleteOperatorLoading ? "Deleting..." : "Delete"}
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>

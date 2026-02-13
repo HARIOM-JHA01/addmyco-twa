@@ -493,3 +493,47 @@ export const searchEmployees = async (
     );
   }
 };
+
+/**
+ * Get operator details with employees
+ * GET /donator/me/operators/:operatorId
+ */
+export const getOperatorDetails = async (operatorId: string): Promise<any> => {
+  try {
+    const response = await axios.get(
+      `${API_BASE_URL}/donator/me/operators/${operatorId}`,
+      {
+        headers: getOperatorAuthHeaders(),
+      },
+    );
+    return response.data.data;
+  } catch (error: any) {
+    if (error instanceof OperatorAuthError) throw error;
+    console.error("Failed to get operator details:", error);
+    throw new Error(
+      error?.response?.data?.message || "Failed to get operator details",
+    );
+  }
+};
+
+/**
+ * Delete operator
+ * DELETE /donator/me/operators/:operatorId
+ */
+export const deleteOperator = async (operatorId: string): Promise<any> => {
+  try {
+    const response = await axios.delete(
+      `${API_BASE_URL}/donator/me/operators/${operatorId}`,
+      {
+        headers: getOperatorAuthHeaders(),
+      },
+    );
+    return response.data;
+  } catch (error: any) {
+    if (error instanceof OperatorAuthError) throw error;
+    console.error("Failed to delete operator:", error);
+    throw new Error(
+      error?.response?.data?.message || "Failed to delete operator",
+    );
+  }
+};
