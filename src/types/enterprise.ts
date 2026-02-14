@@ -1,6 +1,6 @@
-// Donator Module Types
+// Enterprise Module Types
 
-export interface DonatorPackage {
+export interface EnterprisePackage {
   _id: string;
   name: string;
   description?: string;
@@ -51,8 +51,8 @@ export interface Purchase {
   createdAt: string;
 }
 
-// Donator purchase with full details
-export interface DonatorPurchase {
+// Enterprise purchase with full details
+export interface EnterprisePurchase {
   _id: string;
   packageName: string;
   amount: number;
@@ -68,8 +68,8 @@ export interface DonatorPurchase {
 }
 
 // Purchase list response
-export interface DonatorPurchasesResponse {
-  data: DonatorPurchase[];
+export interface EnterprisePurchasesResponse {
+  data: EnterprisePurchase[];
   meta: {
     total: number;
     page: number;
@@ -151,8 +151,8 @@ export interface SearchResponse<T> {
   limit: number;
 }
 
-// Donator summary aggregated response
-export interface DonatorSummary {
+// Enterprise summary aggregated response
+export interface EnterpriseSummary {
   profile: {
     _id: string;
     username: string;
@@ -190,7 +190,7 @@ export interface DonatorSummary {
   };
 }
 
-export type DonatorTabType =
+export type EnterpriseTabType =
   | "dashboard"
   | "buy-credits"
   | "create-operator"

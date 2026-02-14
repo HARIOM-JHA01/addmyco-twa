@@ -4,7 +4,7 @@ import Footer from "../components/Footer";
 import i18n from "../i18n";
 import {
   getPackages,
-  donatorBuyPackage,
+  enterpriseBuyPackage,
   getUsers,
   getOperators,
   getOperatorsEmployeesAdmin,
@@ -12,40 +12,42 @@ import {
   searchOperators,
   buyPackageForOperator,
   searchEmployees,
-  getDonatorSummary,
-  getDonatorPurchases,
+  getEnterpriseSummary,
+  getEnterprisePurchases,
   getOperatorProfile,
   assignCreditsToOperator,
   OperatorAuthError,
   operatorLogin,
   getOperatorDetails,
   deleteOperator,
-} from "../services/donatorService";
+} from "../services/enterpriseService";
 import { useNavigate } from "react-router-dom";
 import {
-  DonatorTabType,
-  DonatorPackage,
+  EnterpriseTabType,
+  EnterprisePackage,
   OperatorUsers,
   CreateOperatorPayload,
   SubOperator,
   SearchResponse,
-  DonatorSummary,
-  DonatorPurchase,
-} from "../types/donator";
+  EnterpriseSummary,
+  EnterprisePurchase,
+} from "../types/enterprise";
 import WebApp from "@twa-dev/sdk";
-import { DonatorUsdtPaymentModal } from "../components/donator/DonatorUsdtPaymentModal";
+import { EnterpriseUsdtPaymentModal } from "../components/enterprise/EnterpriseUsdtPaymentModal";
 import { formatDate } from "../utils/date";
 
-export default function DonatorDashboard() {
+export default function EnterpriseDashboard() {
   const [activeTab, setActiveTab] = useState<
-    DonatorTabType | "create-operator" | "manage-operators" | "search-employees"
+    | EnterpriseTabType
+    | "create-operator"
+    | "manage-operators"
+    | "search-employees"
   >("dashboard");
   const [menuOpen, setMenuOpen] = useState(false);
 
   // Dashboard state
-  const [donatorSummary, setDonatorSummary] = useState<DonatorSummary | null>(
-    null,
-  );
+  const [enterpriseSummary, setEnterpriseSummary] =
+    useState<EnterpriseSummary | null>(null);
   const [_, setUsers] = useState<OperatorUsers | null>(null);
   const [dashboardLoading, setDashboardLoading] = useState(false);
   const [dashboardError, setDashboardError] = useState<string | null>(null);
@@ -70,12 +72,11 @@ export default function DonatorDashboard() {
   );
 
   // Buy Credits state
-  const [packages, setPackages] = useState<DonatorPackage[]>([]);
+  const [packages, setPackages] = useState<EnterprisePackage[]>([]);
   const [packagesLoading, setPackagesLoading] = useState(false);
   const [packagesError, setPackagesError] = useState<string | null>(null);
-  const [selectedPackage, setSelectedPackage] = useState<DonatorPackage | null>(
-    null,
-  );
+  const [selectedPackage, setSelectedPackage] =
+    useState<EnterprisePackage | null>(null);
   const [buyModalOpen, setBuyModalOpen] = useState(false);
   const [transactionId, setTransactionId] = useState("");
   const [walletAddress, setWalletAddress] = useState("");
@@ -110,6 +111,10 @@ export default function DonatorDashboard() {
     string | null
   >(null);
 
+  // Sub-tab for Manage Operators (Create / Manage)
+  const [manageOperatorsSubTab, setManageOperatorsSubTab] =
+    useState<"manage" | "create">("manage");
+
   // Buy for Operator state (now Assign Credits)
   const [assignCreditsLoading, setAssignCreditsLoading] = useState(false);
   const [assignCreditsError, setAssignCreditsError] = useState<string | null>(
@@ -131,7 +136,7 @@ export default function DonatorDashboard() {
   const [buyForOperatorTxn, setBuyForOperatorTxn] = useState("");
   const [buyForOperatorWallet, setBuyForOperatorWallet] = useState("");
   const [selectedPackageForOperator, setSelectedPackageForOperator] =
-    useState<DonatorPackage | null>(null);
+    useState<EnterprisePackage | null>(null);
 
   // Search Employees state
   const [employeesSearchQuery, setEmployeesSearchQuery] = useState("");
@@ -146,7 +151,9 @@ export default function DonatorDashboard() {
   const [employeesSearchTotal, setEmployeesSearchTotal] = useState(0);
 
   // Purchase History state
-  const [purchaseHistory, setPurchaseHistory] = useState<DonatorPurchase[]>([]);
+  const [purchaseHistory, setPurchaseHistory] = useState<EnterprisePurchase[]>(
+    [],
+  );
   const [purchaseHistoryLoading, setPurchaseHistoryLoading] = useState(false);
   const [purchaseHistoryError, setPurchaseHistoryError] = useState<
     string | null
@@ -196,14 +203,14 @@ export default function DonatorDashboard() {
     }
   }, [activeTab]);
 
-  // Fetch operators when manage-operators or create-operator tab is active
+  // Fetch operators when manage-operators tab (or its sub-tabs) is active
   useEffect(() => {
-    if (activeTab === "manage-operators" || activeTab === "create-operator") {
+    if (activeTab === "manage-operators") {
       // Check if operator is authenticated
       const token = localStorage.getItem("token");
       if (!token) {
         setOperatorsError(
-          "Please login as a donator. Authentication token not found.",
+          "Please login as an enterprise. Authentication token not found.",
         );
         return;
       }
@@ -214,11 +221,11 @@ export default function DonatorDashboard() {
   // Fetch purchase history
   useEffect(() => {
     if (activeTab === "purchase-history") {
-      // Check if donator is authenticated
+      // Check if enterprise is authenticated
       const token = localStorage.getItem("token");
       if (!token) {
         setPurchaseHistoryError(
-          "Please login as a donator. Authentication token not found.",
+          "Please login as an enterprise. Authentication token not found.",
         );
         return;
       }
@@ -233,9 +240,9 @@ export default function DonatorDashboard() {
     setOperatorEmployees(null);
 
     try {
-      // Fetch aggregated donator summary (profile, operators, employees, purchases, credits)
-      const summary = await getDonatorSummary();
-      setDonatorSummary(summary);
+      // Fetch aggregated enterprise summary (profile, operators, employees, purchases, credits)
+      const summary = await getEnterpriseSummary();
+      setEnterpriseSummary(summary);
 
       // Store operators list for other tabs
       setOperatorsList(summary.operators || []);
@@ -273,7 +280,7 @@ export default function DonatorDashboard() {
     } catch (error: any) {
       if (error instanceof OperatorAuthError) {
         setDashboardError(
-          "Donator not authenticated — please login as a donator.",
+          "Enterprise not authenticated — please login as an enterprise.",
         );
       } else {
         setDashboardError(error.message || "Failed to load dashboard data");
@@ -337,7 +344,7 @@ export default function DonatorDashboard() {
     } catch (error: any) {
       if (error instanceof OperatorAuthError) {
         setEmployeesError(
-          "Please login as a donator. Authentication token not found.",
+          "Please login as an enterprise. Authentication token not found.",
         );
       } else {
         setEmployeesError(error.message || "Failed to load operators");
@@ -352,7 +359,7 @@ export default function DonatorDashboard() {
     setPurchaseHistoryLoading(true);
     setPurchaseHistoryError(null);
     try {
-      const response = await getDonatorPurchases(
+      const response = await getEnterprisePurchases(
         purchaseHistoryPage,
         20, // limit
         purchaseStatusFilter,
@@ -363,7 +370,7 @@ export default function DonatorDashboard() {
     } catch (error: any) {
       if (error instanceof OperatorAuthError) {
         setPurchaseHistoryError(
-          "Donator not authenticated — please login as a donator.",
+          "Enterprise not authenticated — please login as an enterprise.",
         );
       } else {
         setPurchaseHistoryError(
@@ -385,14 +392,16 @@ export default function DonatorDashboard() {
     // Check authentication first
     const token = localStorage.getItem("token");
     if (!token) {
-      setBuyError("Please login as a donator. Authentication token not found.");
+      setBuyError(
+        "Please login as an enterprise. Authentication token not found.",
+      );
       return;
     }
 
     setBuyLoading(true);
     setBuyError(null);
     try {
-      await donatorBuyPackage({
+      await enterpriseBuyPackage({
         packageId: selectedPackage._id,
         transactionId: transactionId.trim(),
         walletAddress: walletAddress.trim(),
@@ -557,9 +566,9 @@ export default function DonatorDashboard() {
       return;
     }
 
-    // Client-side check against donator available employee credits (if available)
+    // Client-side check against enterprise available employee credits (if available)
     const available =
-      donatorSummary?.purchasesSummary?.leftCreditsEmployee ?? undefined;
+      enterpriseSummary?.purchasesSummary?.leftCreditsEmployee ?? undefined;
     if (typeof available === "number" && credits > available) {
       setAssignCreditsError(
         `You only have ${available} employee credits available`,
@@ -683,7 +692,7 @@ export default function DonatorDashboard() {
           <div className="bg-[#005f8e] border border-gray-200 rounded-lg shadow-md p-4 mb-6 mt-2 relative">
             <div className="flex items-center justify-between">
               <h1 className="text-2xl font-bold text-white text-center flex-1">
-                {i18n.t("donator_dashboard")}
+                {i18n.t("enterprise_dashboard")}
               </h1>
               <button
                 className="text-white hover:bg-[#004570] p-2 rounded transition"
@@ -727,15 +736,7 @@ export default function DonatorDashboard() {
                 >
                   {i18n.t("buy_credits")}
                 </button>
-                <button
-                  onClick={() => {
-                    setActiveTab("create-operator" as any);
-                    setMenuOpen(false);
-                  }}
-                  className="block w-full text-left px-4 py-2 text-white font-semibold hover:bg-gray-800 transition"
-                >
-                  Create Operator
-                </button>
+
                 <button
                   onClick={() => {
                     setActiveTab("manage-operators" as any);
@@ -774,13 +775,13 @@ export default function DonatorDashboard() {
                 ? i18n.t("dashboard")
                 : activeTab === "buy-credits"
                   ? i18n.t("buy_credits")
-                  : activeTab === "create-operator"
-                    ? "Create Operator"
-                    : activeTab === "manage-operators"
-                      ? i18n.t("manage_operators")
-                      : activeTab === "purchase-history"
-                        ? i18n.t("purchase_history")
-                        : "Search Employees"}
+                  : activeTab === "manage-operators"
+                    ? manageOperatorsSubTab === "create"
+                      ? "Create Operator"
+                      : i18n.t("manage_operators")
+                    : activeTab === "purchase-history"
+                      ? i18n.t("purchase_history")
+                      : "Search Employees"}
             </h2>
           </div>
           {/* Dashboard Tab */}
@@ -792,7 +793,8 @@ export default function DonatorDashboard() {
                 dashboardError.includes("Operator authentication") ? (
                   <div className="bg-yellow-50 border border-yellow-300 text-yellow-800 px-4 py-4 rounded mb-4">
                     <h4 className="font-semibold mb-1">
-                      {i18n.t("donator_dashboard")} — Operator access required
+                      {i18n.t("enterprise_dashboard")} — Operator access
+                      required
                     </h4>
                     <p className="text-sm mb-3">
                       This area is the operator dashboard (managing credits &
@@ -838,7 +840,7 @@ export default function DonatorDashboard() {
 
                     <p className="text-xs opacity-80 mt-3">
                       If you do not manage credits or employees, ignore this —
-                      public Donator features are available elsewhere.
+                      public Enterprise features are available elsewhere.
                     </p>
                   </div>
                 ) : (
@@ -846,6 +848,16 @@ export default function DonatorDashboard() {
                     {dashboardError}
                   </div>
                 ))}
+
+              {enterpriseSummary?.purchasesSummary &&
+                (enterpriseSummary.purchasesSummary.leftCreditsOperator === 0 ||
+                  enterpriseSummary.purchasesSummary.leftCreditsEmployee ===
+                    0) && (
+                  <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
+                    Kindly Purchase credits to create profiles of your staff
+                    /Operators
+                  </div>
+                )}
 
               {dashboardLoading ? (
                 <div className="text-center py-8">
@@ -925,7 +937,7 @@ export default function DonatorDashboard() {
                   )}
 
                   {/* Credits Overview */}
-                  {donatorSummary?.purchasesSummary && (
+                  {enterpriseSummary?.purchasesSummary && (
                     <div className="bg-white rounded-lg shadow-md p-6">
                       <h3 className="text-lg text-center font-bold text-gray-800 mb-4">
                         Credits Overview
@@ -944,7 +956,7 @@ export default function DonatorDashboard() {
                             </span>
                             <span className="text-xl font-bold text-purple-600">
                               {
-                                donatorSummary.purchasesSummary
+                                enterpriseSummary.purchasesSummary
                                   .totalCreditsOperator
                               }
                             </span>
@@ -957,7 +969,7 @@ export default function DonatorDashboard() {
                             </span>
                             <span className="text-xl font-bold text-purple-600">
                               {
-                                donatorSummary.purchasesSummary
+                                enterpriseSummary.purchasesSummary
                                   .usedCreditsOperator
                               }
                             </span>
@@ -973,7 +985,7 @@ export default function DonatorDashboard() {
                             </span>
                             <span className="text-2xl font-bold text-purple-700">
                               {
-                                donatorSummary.purchasesSummary
+                                enterpriseSummary.purchasesSummary
                                   .leftCreditsOperator
                               }
                             </span>
@@ -993,7 +1005,7 @@ export default function DonatorDashboard() {
                             </span>
                             <span className="text-xl font-bold text-green-600">
                               {
-                                donatorSummary.purchasesSummary
+                                enterpriseSummary.purchasesSummary
                                   .totalCreditsEmployee
                               }
                             </span>
@@ -1006,7 +1018,7 @@ export default function DonatorDashboard() {
                             </span>
                             <span className="text-xl font-bold text-green-600">
                               {
-                                donatorSummary.purchasesSummary
+                                enterpriseSummary.purchasesSummary
                                   .usedCreditsEmployee
                               }
                             </span>
@@ -1022,7 +1034,7 @@ export default function DonatorDashboard() {
                             </span>
                             <span className="text-2xl font-bold text-green-700">
                               {
-                                donatorSummary.purchasesSummary
+                                enterpriseSummary.purchasesSummary
                                   .leftCreditsEmployee
                               }
                             </span>
@@ -1033,7 +1045,7 @@ export default function DonatorDashboard() {
                   )}
 
                   {/* Operators & Employees Summary */}
-                  {donatorSummary && (
+                  {enterpriseSummary && (
                     <div className="bg-white rounded-lg shadow-md p-6">
                       <h3 className="text-lg text-center font-bold text-gray-800 mb-4">
                         Operators & Employees
@@ -1044,10 +1056,10 @@ export default function DonatorDashboard() {
                             Total Operators
                           </p>
                           <p className="text-3xl font-bold text-blue-600">
-                            {donatorSummary.operators?.length || 0}
+                            {enterpriseSummary.operators?.length || 0}
                           </p>
                           <p className="text-xs text-blue-600 mt-1">
-                            {donatorSummary.operators?.filter(
+                            {enterpriseSummary.operators?.filter(
                               (op: any) => op.isActive,
                             ).length || 0}{" "}
                             active
@@ -1059,7 +1071,7 @@ export default function DonatorDashboard() {
                           </p>
                           <p className="text-3xl font-bold text-green-600">
                             {
-                              donatorSummary.employeesSummary
+                              enterpriseSummary.employeesSummary
                                 .totalEmployeesCreated
                             }
                           </p>
@@ -1072,14 +1084,14 @@ export default function DonatorDashboard() {
                   )}
 
                   {/* Recent Transactions */}
-                  {donatorSummary?.purchases &&
-                    donatorSummary.purchases.length > 0 && (
+                  {enterpriseSummary?.purchases &&
+                    enterpriseSummary.purchases.length > 0 && (
                       <div className="bg-white rounded-lg shadow-md p-6">
                         <h3 className="text-lg text-center font-bold text-gray-800 mb-4">
                           Recent Transactions
                         </h3>
                         <div className="space-y-3 max-h-96 overflow-y-auto">
-                          {donatorSummary.purchases.map((purchase, idx) => (
+                          {enterpriseSummary.purchases.map((purchase, idx) => (
                             <div
                               key={purchase._id || idx}
                               className="bg-gradient-to-br from-gray-50 to-gray-100 p-4 rounded-lg border border-gray-200"
@@ -1415,7 +1427,7 @@ export default function DonatorDashboard() {
           )}
 
           {buyModalOpen && selectedPackage && (
-            <DonatorUsdtPaymentModal
+            <EnterpriseUsdtPaymentModal
               isOpen={buyModalOpen}
               selectedPackage={selectedPackage}
               transactionId={transactionId}
@@ -1435,8 +1447,10 @@ export default function DonatorDashboard() {
             />
           )}
 
-          {/* Create Operator Tab */}
-          {activeTab === "create-operator" && (
+
+
+          {/* Manage Operators Tab */}
+          {activeTab === "manage-operators" && (
             <>
               {operatorsError && (
                 <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
@@ -1444,9 +1458,36 @@ export default function DonatorDashboard() {
                 </div>
               )}
 
-              <div className="space-y-6">
-                {/* Create Operator Form */}
-                <div className="bg-white rounded-lg shadow-md p-6">
+              {/* Sub-tabs: Manage / Create (pills like Create Ad) */}
+              <div className="flex gap-2 mb-4">
+                <button
+                  type="button"
+                  onClick={() => setManageOperatorsSubTab("manage")}
+                  className={`flex-1 py-2 rounded font-semibold ${
+                    manageOperatorsSubTab === "manage"
+                      ? "bg-[#007cb6] text-white"
+                      : "bg-white border border-gray-200 text-gray-700"
+                  }`}
+                >
+                  Manage
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setManageOperatorsSubTab("create")}
+                  className={`flex-1 py-2 rounded font-semibold ${
+                    manageOperatorsSubTab === "create"
+                      ? "bg-[#007cb6] text-white"
+                      : "bg-white border border-gray-200 text-gray-700"
+                  }`}
+                >
+                  Create Operator
+                </button>
+              </div>
+
+              {/* Create form (shown when Create sub-tab active) */}
+              {manageOperatorsSubTab === "create" && (
+                <div className="bg-white rounded-lg shadow-md p-6 mb-6">
                   <h3 className="text-lg font-bold text-gray-800 mb-4">
                     Create New Operator
                   </h3>
@@ -1454,16 +1495,13 @@ export default function DonatorDashboard() {
                   <form onSubmit={handleCreateOperator} className="space-y-4">
                     <div>
                       <label className="block text-sm font-semibold text-gray-700 mb-2">
-                        Telegram Username *
+                        Username *
                       </label>
                       <input
                         type="text"
                         value={operatorForm.tgid}
                         onChange={(e) =>
-                          setOperatorForm({
-                            ...operatorForm,
-                            tgid: e.target.value,
-                          })
+                          setOperatorForm({ ...operatorForm, tgid: e.target.value })
                         }
                         className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-[#007cb6] focus:border-transparent"
                         placeholder="john_operator_01"
@@ -1479,10 +1517,7 @@ export default function DonatorDashboard() {
                         type="password"
                         value={operatorForm.password}
                         onChange={(e) =>
-                          setOperatorForm({
-                            ...operatorForm,
-                            password: e.target.value,
-                          })
+                          setOperatorForm({ ...operatorForm, password: e.target.value })
                         }
                         className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-[#007cb6] focus:border-transparent"
                         placeholder="Enter password"
@@ -1504,29 +1539,19 @@ export default function DonatorDashboard() {
 
                     <button
                       type="submit"
-                      disabled={createOperatorLoading}
+                      disabled={
+                        createOperatorLoading ||
+                        enterpriseSummary?.purchasesSummary?.leftCreditsOperator === 0
+                      }
                       className="w-full bg-[#007cb6] text-white py-2 rounded-md font-semibold hover:bg-[#005f8e] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                      {createOperatorLoading
-                        ? "Creating..."
-                        : "Create Operator"}
+                      {createOperatorLoading ? "Creating..." : "Create Operator"}
                     </button>
                   </form>
                 </div>
-              </div>
-            </>
-          )}
-
-          {/* Manage Operators Tab */}
-          {activeTab === "manage-operators" && (
-            <>
-              {operatorsError && (
-                <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
-                  {operatorsError}
-                </div>
               )}
 
-              <div className="space-y-6">
+              <div className={`space-y-6 ${manageOperatorsSubTab === "create" ? "hidden" : ""}`}>
                 {/* My Operators List */}
                 {employeesLoading ? (
                   <div className="text-center py-8">
@@ -1951,7 +1976,7 @@ export default function DonatorDashboard() {
                           Available to assign
                         </p>
                         <p className="font-semibold text-gray-800 text-lg">
-                          {donatorSummary?.purchasesSummary
+                          {enterpriseSummary?.purchasesSummary
                             ?.leftCreditsEmployee ?? "—"}
                           <span className="ml-2 text-xs text-gray-500">
                             employee credits
@@ -1985,7 +2010,7 @@ export default function DonatorDashboard() {
                           onClick={() =>
                             setEmployeeCreditsToAssign(
                               String(
-                                donatorSummary?.purchasesSummary
+                                enterpriseSummary?.purchasesSummary
                                   ?.leftCreditsEmployee ?? "",
                               ),
                             )
@@ -2052,10 +2077,10 @@ export default function DonatorDashboard() {
                         assignCreditsLoading ||
                         !employeeCreditsToAssign.trim() ||
                         parseInt(employeeCreditsToAssign) <= 0 ||
-                        (typeof donatorSummary?.purchasesSummary
+                        (typeof enterpriseSummary?.purchasesSummary
                           ?.leftCreditsEmployee === "number" &&
                           parseInt(employeeCreditsToAssign) >
-                            (donatorSummary?.purchasesSummary
+                            (enterpriseSummary?.purchasesSummary
                               ?.leftCreditsEmployee ?? 0))
                       }
                       className="flex-1 px-4 py-2 bg-[#007cb6] text-white rounded-md font-semibold hover:bg-[#005f8e] disabled:opacity-50 disabled:cursor-not-allowed"
@@ -2310,8 +2335,7 @@ export default function DonatorDashboard() {
             <div className="w-full max-w-md bg-white rounded-lg shadow-xl p-6">
               <h3 className="text-lg font-semibold mb-2">Operator login</h3>
               <p className="text-sm text-gray-600 mb-4">
-                Sign in with your operator credentials to manage credits and
-                employees.
+                Sign in with your operator credentials to manage employees.
               </p>
 
               {operatorLoginError && (

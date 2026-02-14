@@ -59,11 +59,11 @@ const translations: Record<Lang, Record<string, string>> = {
     basic_membership: "Basic Membership",
     renew_membership: "Renew your membership",
     payment_history: "Payment History",
-    donator_section: "Donator section",
-    donator_dashboard: "Donator Section",
+    enterprise_section: "Enterprise section",
+    enterprise_dashboard: "Enterprise Section",
     dashboard: "Dashboard",
     buy_credits: "Buy Credits",
-    create_donator: "Create Donator",
+    create_enterprise: "Create Enterprise",
     my_operators: "My Operators",
     purchase_history: "Purchase History",
     employee_credits: "No. Of Employees",
@@ -147,6 +147,8 @@ const translations: Record<Lang, Record<string, string>> = {
     upgrade_to_upload: "Upgrade to upload",
     download_qr: "Download QR Code",
     manage_operators: "Manage Operators",
+    no_purchases_found:
+      "No purchases found. Please buy a package to see it here.",
   },
   zh: {
     membership: "會員",
@@ -203,8 +205,8 @@ const translations: Record<Lang, Record<string, string>> = {
     premium_expiring: "您的尊貴會員資格將到期於：",
     upgrade_to_premium: "升級為尊貴會員以獲得更多功能！",
     payment_history: "付款記錄",
-    donator_section: "捐助者專區",
-    donator_dashboard: "捐助者儀表板",
+    enterprise_section: "企業專區",
+    enterprise_dashboard: "企業儀表板",
     dashboard: "儀表板",
     buy_credits: "購買積分",
     create_operator: "創建員工",
@@ -284,6 +286,7 @@ const translations: Record<Lang, Record<string, string>> = {
     upgrade_to_upload: "升級以上傳",
     download_qr: "下載二維碼",
     manage_operators: "管理員工",
+    no_purchases_found: "找不到購買記錄。請先購買套餐以在此處查看。",
   },
 };
 

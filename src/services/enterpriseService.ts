@@ -1,6 +1,6 @@
 import axios from "axios";
 import {
-  DonatorPackage,
+  EnterprisePackage,
   OperatorProfile,
   OperatorCredits,
   SubOperator,
@@ -14,9 +14,9 @@ import {
   BuyPackageForOperatorPayload,
   BuyPackageForOperatorResponse,
   SearchResponse,
-  DonatorSummary,
-  DonatorPurchasesResponse,
-} from "../types/donator";
+  EnterpriseSummary,
+  EnterprisePurchasesResponse,
+} from "../types/enterprise";
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
@@ -27,7 +27,7 @@ export const assignCreditsToOperator = async (
 ): Promise<any> => {
   try {
     const response = await axios.post(
-      `${API_BASE_URL}/donator/assign-credits`,
+      `${API_BASE_URL}/enterprise/assign-credits`,
       {
         operatorId,
         employeeCreditsToAssign,
@@ -70,7 +70,7 @@ const getOperatorAuthHeaders = () => {
 export const getOperatorProfile = async (): Promise<OperatorProfile> => {
   try {
     const response = await axios.get(
-      `${API_BASE_URL}/donator/operator/profile`,
+      `${API_BASE_URL}/enterprise/operator/profile`,
       {
         headers: getOperatorAuthHeaders(),
       },
@@ -89,7 +89,7 @@ export const getOperatorProfile = async (): Promise<OperatorProfile> => {
 export const getOperatorCredits = async (): Promise<OperatorCredits> => {
   try {
     const response = await axios.get(
-      `${API_BASE_URL}/donator/operator/credits`,
+      `${API_BASE_URL}/enterprise/operator/credits`,
       {
         headers: getOperatorAuthHeaders(),
       },
@@ -105,9 +105,9 @@ export const getOperatorCredits = async (): Promise<OperatorCredits> => {
 };
 
 // Get all active packages (public endpoint)
-export const getPackages = async (): Promise<DonatorPackage[]> => {
+export const getPackages = async (): Promise<EnterprisePackage[]> => {
   try {
-    const response = await axios.get(`${API_BASE_URL}/donator/packages`);
+    const response = await axios.get(`${API_BASE_URL}/enterprise/packages`);
     return response.data.data || [];
   } catch (error: any) {
     console.error("Failed to fetch packages:", error);
@@ -117,28 +117,28 @@ export const getPackages = async (): Promise<DonatorPackage[]> => {
   }
 };
 
-// Get donator summary (aggregated: profile, operators, employees, purchases, credits)
-export const getDonatorSummary = async (): Promise<DonatorSummary> => {
+// Get enterprise summary (aggregated: profile, operators, employees, purchases, credits)
+export const getEnterpriseSummary = async (): Promise<EnterpriseSummary> => {
   try {
-    const response = await axios.get(`${API_BASE_URL}/donator/me/summary`, {
+    const response = await axios.get(`${API_BASE_URL}/enterprise/me/summary`, {
       headers: getOperatorAuthHeaders(),
     });
     return response.data.data;
   } catch (error: any) {
     if (error instanceof OperatorAuthError) throw error;
-    console.error("Failed to fetch donator summary:", error);
+    console.error("Failed to fetch enterprise summary:", error);
     throw new Error(
-      error?.response?.data?.message || "Failed to fetch donator summary",
+      error?.response?.data?.message || "Failed to fetch enterprise summary",
     );
   }
 };
 
-// Buy a package (for donators)
+// Buy a package (for enterprises)
 export const buyPackage = async (
   payload: BuyPackagePayload,
 ): Promise<BuyPackageResponse> => {
   try {
-    const response = await axios.post(`${API_BASE_URL}/donator/buy`, payload, {
+    const response = await axios.post(`${API_BASE_URL}/enterprise/buy`, payload, {
       headers: getOperatorAuthHeaders(),
     });
     return response.data.data;
@@ -151,14 +151,14 @@ export const buyPackage = async (
   }
 };
 
-// Donator purchase package
-// POST /donator/purchase
-export const donatorBuyPackage = async (
+// Enterprise purchase package
+// POST /enterprise/purchase
+export const enterpriseBuyPackage = async (
   payload: BuyPackagePayload,
 ): Promise<BuyPackageResponse> => {
   try {
     const response = await axios.post(
-      `${API_BASE_URL}/donator/purchase`,
+      `${API_BASE_URL}/enterprise/purchase`,
       payload,
       {
         headers: getOperatorAuthHeaders(),
@@ -174,13 +174,13 @@ export const donatorBuyPackage = async (
   }
 };
 
-// Get donator purchases
-// GET /donator/purchases?page=<page>&limit=<limit>&status=<status>
-export const getDonatorPurchases = async (
+// Get enterprise purchases
+// GET /enterprise/purchases?page=<page>&limit=<limit>&status=<status>
+export const getEnterprisePurchases = async (
   page: number = 1,
   limit: number = 20,
   status?: number,
-): Promise<DonatorPurchasesResponse> => {
+): Promise<EnterprisePurchasesResponse> => {
   try {
     const params = new URLSearchParams();
     params.append("page", page.toString());
@@ -190,7 +190,7 @@ export const getDonatorPurchases = async (
     }
 
     const response = await axios.get(
-      `${API_BASE_URL}/donator/purchases?${params.toString()}`,
+      `${API_BASE_URL}/enterprise/purchases?${params.toString()}`,
       {
         headers: getOperatorAuthHeaders(),
       },
@@ -198,7 +198,7 @@ export const getDonatorPurchases = async (
     return response.data;
   } catch (error: any) {
     if (error instanceof OperatorAuthError) throw error;
-    console.error("Failed to fetch donator purchases:", error);
+    console.error("Failed to fetch enterprise purchases:", error);
     throw new Error(
       error?.response?.data?.message || "Failed to fetch purchases",
     );
@@ -211,7 +211,7 @@ export const createEmployee = async (
 ): Promise<CreateEmployeeResponse> => {
   try {
     const response = await axios.post(
-      `${API_BASE_URL}/donator/operator/create-employee`,
+      `${API_BASE_URL}/enterprise/operator/create-employee`,
       payload,
       {
         headers: getOperatorAuthHeaders(),
@@ -236,14 +236,14 @@ export const createEmployee = async (
 };
 
 // Get sub-operators list
-// Tries the newer `/donator/me/operators` path first and falls back to the
-// owner-friendly alias `/donator/operators` for backwards compatibility.
+// Tries the newer `/enterprise/me/operators` path first and falls back to the
+// owner-friendly alias `/enterprise/operators` for backwards compatibility.
 export const getOperators = async (): Promise<{
   data: SubOperator[];
   total: number;
 }> => {
   try {
-    const response = await axios.get(`${API_BASE_URL}/donator/operators`, {
+    const response = await axios.get(`${API_BASE_URL}/enterprise/operators`, {
       headers: getOperatorAuthHeaders(),
     });
     return {
@@ -262,12 +262,12 @@ export const getOperators = async (): Promise<{
 };
 
 // Get employees/users list
-// Primary: /donator/me/employees. If the server doesn't expose that path, try
-// the shorter `/donator/employees` as a fallback for compatibility.
+// Primary: /enterprise/me/employees. If the server doesn't expose that path, try
+// the shorter `/enterprise/employees` as a fallback for compatibility.
 export const getUsers = async (): Promise<OperatorUsers> => {
   const token = localStorage.getItem("token");
   try {
-    const response = await axios.get(`${API_BASE_URL}/donator/me/employees`, {
+    const response = await axios.get(`${API_BASE_URL}/enterprise/me/employees`, {
       headers: { Authorization: `Bearer ${token}` },
     });
     return response.data.data;
@@ -277,12 +277,12 @@ export const getUsers = async (): Promise<OperatorUsers> => {
     const status = error?.response?.status;
     if (status === 404 || status === 405) {
       try {
-        const aliasRes = await axios.get(`${API_BASE_URL}/donator/employees`, {
+        const aliasRes = await axios.get(`${API_BASE_URL}/enterprise/employees`, {
           headers: { Authorization: `Bearer ${token}` },
         });
         return aliasRes.data.data;
       } catch (aliasErr: any) {
-        console.error("Alias /donator/employees also failed:", aliasErr);
+        console.error("Alias /enterprise/employees also failed:", aliasErr);
         throw new Error(
           aliasErr?.response?.data?.message ||
             "Failed to fetch employees (alias)",
@@ -298,10 +298,10 @@ export const getUsers = async (): Promise<OperatorUsers> => {
 };
 
 /**
- * Admin-only: fetch operators + employees across donator module.
+ * Admin-only: fetch operators + employees across enterprise module.
  * Uses the JWT stored in localStorage under `token`.
  * This mirrors the curl the app maintainer provided:
- *   GET /admin/donator/operators-employees
+ *   GET /admin/enterprise/operators-employees
  */
 export const getOperatorsEmployeesAdmin = async (
   tokenFromStorage?: string,
@@ -313,7 +313,7 @@ export const getOperatorsEmployeesAdmin = async (
 
   try {
     const response = await axios.get(
-      `${API_BASE_URL}/admin/donator/operators-employees`,
+      `${API_BASE_URL}/admin/enterprise/operators-employees`,
       {
         headers: { Authorization: `Bearer ${token}` },
       },
@@ -338,7 +338,7 @@ export const operatorLogin = async (
 ): Promise<OperatorProfile & { token: string }> => {
   try {
     const response = await axios.post(
-      `${API_BASE_URL}/donator/operator/login`,
+      `${API_BASE_URL}/enterprise/operator/login`,
       {
         username,
         password,
@@ -364,15 +364,15 @@ export const operatorLogout = () => {
 };
 
 /**
- * Create a new sub-operator under the current donator
- * POST /donator/me/operators
+ * Create a new sub-operator under the current enterprise
+ * POST /enterprise/me/operators
  */
 export const createOperator = async (
   payload: CreateOperatorPayload,
 ): Promise<CreateOperatorResponse> => {
   try {
     const response = await axios.post(
-      `${API_BASE_URL}/donator/operators`,
+      `${API_BASE_URL}/enterprise/operators`,
       payload,
       {
         headers: getOperatorAuthHeaders(),
@@ -389,8 +389,8 @@ export const createOperator = async (
 };
 
 /**
- * Search/list sub-operators under the current donator
- * GET /donator/me/operators?q=<query>&page=<page>&limit=<limit>
+ * Search/list sub-operators under the current enterprise
+ * GET /enterprise/me/operators?q=<query>&page=<page>&limit=<limit>
  */
 export const searchOperators = async (
   query?: string,
@@ -404,7 +404,7 @@ export const searchOperators = async (
 
   try {
     const response = await axios.get(
-      `${API_BASE_URL}/donator/me/operators?${params.toString()}`,
+      `${API_BASE_URL}/enterprise/me/operators?${params.toString()}`,
       {
         headers: getOperatorAuthHeaders(),
       },
@@ -417,12 +417,12 @@ export const searchOperators = async (
     if (status === 404 || status === 405) {
       try {
         const aliasRes = await axios.get(
-          `${API_BASE_URL}/donator/operators?${params.toString()}`,
+          `${API_BASE_URL}/enterprise/operators?${params.toString()}`,
           { headers: getOperatorAuthHeaders() },
         );
         return aliasRes.data.data;
       } catch (aliasErr: any) {
-        console.error("Alias search /donator/operators failed:", aliasErr);
+        console.error("Alias search /enterprise/operators failed:", aliasErr);
         throw new Error(
           aliasErr?.response?.data?.message ||
             "Failed to search operators (alias)",
@@ -439,14 +439,14 @@ export const searchOperators = async (
 
 /**
  * Buy a package for a specific operator
- * POST /donator/me/buy
+ * POST /enterprise/me/buy
  */
 export const buyPackageForOperator = async (
   payload: BuyPackageForOperatorPayload,
 ): Promise<BuyPackageForOperatorResponse> => {
   try {
     const response = await axios.post(
-      `${API_BASE_URL}/donator/me/buy`,
+      `${API_BASE_URL}/enterprise/me/buy`,
       payload,
       {
         headers: getOperatorAuthHeaders(),
@@ -464,8 +464,8 @@ export const buyPackageForOperator = async (
 };
 
 /**
- * Search/list employees under the current donator
- * GET /donator/me/employees?q=<query>&page=<page>&limit=<limit>
+ * Search/list employees under the current enterprise
+ * GET /enterprise/me/employees?q=<query>&page=<page>&limit=<limit>
  */
 export const searchEmployees = async (
   query?: string,
@@ -479,7 +479,7 @@ export const searchEmployees = async (
     params.append("limit", limit.toString());
 
     const response = await axios.get(
-      `${API_BASE_URL}/donator/me/employees?${params.toString()}`,
+      `${API_BASE_URL}/enterprise/me/employees?${params.toString()}`,
       {
         headers: getOperatorAuthHeaders(),
       },
@@ -496,12 +496,12 @@ export const searchEmployees = async (
 
 /**
  * Get operator details with employees
- * GET /donator/me/operators/:operatorId
+ * GET /enterprise/me/operators/:operatorId
  */
 export const getOperatorDetails = async (operatorId: string): Promise<any> => {
   try {
     const response = await axios.get(
-      `${API_BASE_URL}/donator/me/operators/${operatorId}`,
+      `${API_BASE_URL}/enterprise/me/operators/${operatorId}`,
       {
         headers: getOperatorAuthHeaders(),
       },
@@ -518,12 +518,12 @@ export const getOperatorDetails = async (operatorId: string): Promise<any> => {
 
 /**
  * Delete operator
- * DELETE /donator/me/operators/:operatorId
+ * DELETE /enterprise/me/operators/:operatorId
  */
 export const deleteOperator = async (operatorId: string): Promise<any> => {
   try {
     const response = await axios.delete(
-      `${API_BASE_URL}/donator/me/operators/${operatorId}`,
+      `${API_BASE_URL}/enterprise/me/operators/${operatorId}`,
       {
         headers: getOperatorAuthHeaders(),
       },

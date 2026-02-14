@@ -8,14 +8,14 @@ import {
   getOperatorDetails,
   createEmployee,
   operatorLogout,
-} from "../services/donatorService";
+} from "../services/enterpriseService";
 import WebApp from "@twa-dev/sdk";
 
 interface OperatorProfile {
   _id: string;
   tgid: string;
   creditsAllocated: number;
-  donatorId: string;
+  enterpriseId: string;
   createdAt: string;
 }
 

@@ -3,7 +3,7 @@ import { Package } from "../../types/advertisement";
 
 interface UsdtPaymentModalProps {
   isOpen: boolean;
-  // support both advertisement Package and donator package shape
+  // support both advertisement Package and enterprise package shape
   selectedPackage:
     | (Package & {
         employeeCredits?: number;
@@ -34,7 +34,7 @@ export const UsdtPaymentModal: React.FC<UsdtPaymentModalProps> = ({
 }) => {
   if (!isOpen || !selectedPackage) return null;
 
-  const isDonatorPackage =
+  const isEnterprisePackage =
     typeof selectedPackage.employeeCredits === "number" ||
     typeof selectedPackage.operatorCredits === "number";
 
@@ -50,7 +50,7 @@ export const UsdtPaymentModal: React.FC<UsdtPaymentModalProps> = ({
         </button>
         <div className="overflow-y-auto p-6">
           <h3 className="text-lg font-bold text-[#007cb6] mb-4 text-center">
-            {isDonatorPackage
+            {isEnterprisePackage
               ? "Purchase Package"
               : "Purchase Advertisement Credits"}
           </h3>
@@ -64,7 +64,7 @@ export const UsdtPaymentModal: React.FC<UsdtPaymentModalProps> = ({
                 <span className="font-semibold">Name:</span>{" "}
                 {selectedPackage.name}
               </p>
-              {isDonatorPackage ? (
+              {isEnterprisePackage ? (
                 <>
                   <p>
                     <span className="font-semibold">Employees:</span>{" "}

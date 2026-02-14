@@ -1,9 +1,9 @@
 import React from "react";
-import { DonatorPackage } from "../../types/donator";
+import { EnterprisePackage } from "../../types/enterprise";
 
-interface DonatorUsdtPaymentModalProps {
+interface EnterpriseUsdtPaymentModalProps {
   isOpen: boolean;
-  selectedPackage: DonatorPackage | null;
+  selectedPackage: EnterprisePackage | null;
   transactionId: string;
   walletAddress: string;
   loading: boolean;
@@ -14,8 +14,8 @@ interface DonatorUsdtPaymentModalProps {
   onSubmit: () => void;
 }
 
-export const DonatorUsdtPaymentModal: React.FC<
-  DonatorUsdtPaymentModalProps
+export const EnterpriseUsdtPaymentModal: React.FC<
+  EnterpriseUsdtPaymentModalProps
 > = ({
   isOpen,
   selectedPackage,
@@ -43,7 +43,7 @@ export const DonatorUsdtPaymentModal: React.FC<
 
         <div className="overflow-y-auto p-6">
           <h3 className="text-lg font-bold text-[#007cb6] mb-4 text-center">
-            Donator Package Details
+            Enterprise Package Details
           </h3>
 
           <div className="bg-blue-50 p-4 rounded-lg mb-4">

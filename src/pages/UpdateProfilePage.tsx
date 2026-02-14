@@ -406,7 +406,7 @@ export default function UpdateProfilePage() {
             <input
               type="text"
               className="w-full bg-transparent text-[#00AEEF] outline-none placeholder-[#00AEEF]"
-              placeholder="Telegram Username"
+              placeholder="Username"
               value={telegramId}
               onChange={(e) => setTelegramId(e.target.value)}
             />

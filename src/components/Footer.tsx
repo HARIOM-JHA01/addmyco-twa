@@ -74,10 +74,10 @@ export default function Footer() {
                 className="text-white font-semibold px-4 py-2 text-left hover:bg-gray-800"
                 onClick={() => {
                   setShowSettings(false);
-                  router("/donator");
+                  router("/enterprise");
                 }}
               >
-                {i18n.t("donator_section")}
+                {i18n.t("enterprise_section")}
               </button>
             )}
             <button

@@ -101,7 +101,7 @@ const WelcomePage: React.FC<WelcomePageProps> = ({ onLogin, partnerCode }) => {
     setOperatorLoginError(null);
     try {
       // lazy-import service to keep top imports minimal
-      const { operatorLogin } = await import("../services/donatorService");
+      const { operatorLogin } = await import("../services/enterpriseService");
       await operatorLogin(operatorLoginUsername.trim(), operatorLoginPassword);
       // Set flag to indicate operator login before reload
       localStorage.setItem("operator_logged_in", "true");
@@ -219,8 +219,8 @@ const WelcomePage: React.FC<WelcomePageProps> = ({ onLogin, partnerCode }) => {
                         Enterprise operator login
                       </h3>
                       <p className="text-sm text-gray-600 mb-4">
-                        Sign in with your operator credentials to manage credits
-                        and employees.
+                        Sign in with your operator credentials to manage
+                        employees.
                       </p>
 
                       {operatorLoginError && (

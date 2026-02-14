@@ -1,4 +1,4 @@
-# Donator Module - User Data Retrieval APIs
+# Enterprise Module - User Data Retrieval APIs
 
 ## Summary
 
@@ -10,7 +10,7 @@ Three new endpoints have been implemented to allow operators to view their curre
 
 ### 1. Get Operator Credits
 
-**Endpoint**: `GET /donator/operator/credits`
+**Endpoint**: `GET /enterprise/operator/credits`
 
 **Authentication**: Bearer JWT token (operator)
 
@@ -34,7 +34,7 @@ Three new endpoints have been implemented to allow operators to view their curre
 
 ### 2. Get Sub-Operators List
 
-**Endpoint**: `GET /donator/operator/operators`
+**Endpoint**: `GET /enterprise/operator/operators`
 
 **Authentication**: Bearer JWT token (operator)
 
@@ -66,7 +66,7 @@ Three new endpoints have been implemented to allow operators to view their curre
 
 ### 3. Get Employees/Users List
 
-**Endpoint**: `GET /donator/operator/users`
+**Endpoint**: `GET /enterprise/operator/users`
 
 **Authentication**: Bearer JWT token (operator)
 
@@ -101,21 +101,21 @@ Three new endpoints have been implemented to allow operators to view their curre
 
 ### Files Modified
 
-1. **Controllers/DonatorController.js**
+1. **Controllers/EnterpriseController.js**
    - Added `GetOperatorCredits()` method
    - Added `GetOperatorsList()` method
    - Added `GetOperatorUsers()` method
 
-2. **Routes/Donator.js**
-   - Added route: `GET /donator/operator/credits`
-   - Added route: `GET /donator/operator/operators`
-   - Added route: `GET /donator/operator/users`
+2. **Routes/Enterprise.js**
+   - Added route: `GET /enterprise/operator/credits`
+   - Added route: `GET /enterprise/operator/operators`
+   - Added route: `GET /enterprise/operator/users`
 
-3. **DONATOR_MODULE_API.md**
+3. **ENTERPRISE_MODULE_API.md**
    - Documented all three new endpoints
    - Added operator endpoints quick reference table
 
-4. **DONATOR_MODULE_IMPLEMENTATION.md**
+4. **ENTERPRISE_MODULE_IMPLEMENTATION.md**
    - Updated routes list with new endpoints
    - Added new "User Data Retrieval APIs" section with implementation details
    - Updated testing quick start guide
@@ -137,7 +137,7 @@ Three new endpoints have been implemented to allow operators to view their curre
 
 #### Get Employees List
 
-- Queries DonatorPurchase records for approved purchases
+- Queries EnterprisePurchase records for approved purchases
 - Calculates:
   - `creditsUsed`: Sum of creditsGrantedEmployee from all purchases
   - `potentialUsers`: Total user capacity created
@@ -182,21 +182,21 @@ All endpoints return standard error responses:
 ### Get Credits
 
 ```bash
-curl -X GET http://localhost:3000/donator/operator/credits \
+curl -X GET http://localhost:3000/enterprise/operator/credits \
   -H "Authorization: Bearer <token>"
 ```
 
 ### Get Sub-Operators
 
 ```bash
-curl -X GET http://localhost:3000/donator/operator/operators \
+curl -X GET http://localhost:3000/enterprise/operator/operators \
   -H "Authorization: Bearer <token>"
 ```
 
 ### Get Employees
 
 ```bash
-curl -X GET http://localhost:3000/donator/operator/users \
+curl -X GET http://localhost:3000/enterprise/operator/users \
   -H "Authorization: Bearer <token>"
 ```
 
@@ -217,12 +217,12 @@ curl -X GET http://localhost:3000/donator/operator/users \
 No new indexes required - uses existing:
 
 - Operator: `createdByAdmin` index (implicit through foreign key)
-- DonatorPurchase: `operator` and `status` indexes already exist
+- EnterprisePurchase: `operator` and `status` indexes already exist
 
 ---
 
 ## Version
 
 - **Date**: February 6, 2026
-- **Module**: Donator Module v1.1
+- **Module**: Enterprise Module v1.1
 - **Status**: Implemented and Documented
