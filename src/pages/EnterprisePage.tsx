@@ -1288,12 +1288,6 @@ export default function EnterpriseDashboard() {
                           <p className="text-3xl font-bold text-blue-600">
                             {enterpriseSummary.operators?.length || 0}
                           </p>
-                          <p className="text-xs text-blue-600 mt-1">
-                            {enterpriseSummary.operators?.filter(
-                              (op: any) => op.isActive,
-                            ).length || 0}{" "}
-                            active
-                          </p>
                         </div>
                         <div className="bg-gradient-to-br from-green-50 to-green-100 p-4 rounded-lg border border-green-200">
                           <p className="text-xs text-gray-600 mb-1">
@@ -1304,9 +1298,6 @@ export default function EnterpriseDashboard() {
                               enterpriseSummary.employeesSummary
                                 .totalEmployeesCreated
                             }
-                          </p>
-                          <p className="text-xs text-green-600 mt-1">
-                            Created by your operators
                           </p>
                         </div>
                       </div>
@@ -1474,7 +1465,10 @@ export default function EnterpriseDashboard() {
 
           {/* Employee Namecards Tab */}
           {activeTab === "employee-namecards" && (
-            <EmployeeNamecardPage isOperator={false} />
+            <EmployeeNamecardPage
+              isOperator={false}
+              leftEmployeeCredits={leftEmployeeCredits}
+            />
           )}
 
           {/* Manage Templates Tab */}

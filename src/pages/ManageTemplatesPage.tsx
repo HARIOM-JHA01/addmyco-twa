@@ -220,12 +220,14 @@ const FileUploadField = ({
 // ─── Company Template Form ────────────────────────────────────────────────────
 function CompanyTemplateForm({
   initial,
+  existingVideoUrl,
   onSave,
   onCancel,
   saving,
 }: {
   initial: CompanyTemplateFormData;
-  onSave: (data: CompanyTemplateFormData) => void;
+  existingVideoUrl?: string;
+  onSave: (data: CompanyTemplateFormData, videoFile: File | null) => void;
   onCancel: () => void;
   saving: boolean;
 }) {
@@ -242,8 +244,7 @@ function CompanyTemplateForm({
     <form
       onSubmit={(e) => {
         e.preventDefault();
-        // Don't pass videoFile in form data - it will be handled separately by the parent
-        onSave(form);
+        onSave(form, videoFile);
       }}
       className="space-y-4"
     >
@@ -393,11 +394,23 @@ function CompanyTemplateForm({
           value={form.fanpage || ""}
           onChange={handleChange}
         />
-        <FileUploadField
-          label="Video"
-          onFileSelect={(file) => setVideoFile(file)}
-          fileName={videoFile?.name}
-        />
+        <div>
+          <FileUploadField
+            label="Video"
+            onFileSelect={(file) => setVideoFile(file)}
+            fileName={videoFile?.name}
+          />
+          {!videoFile && existingVideoUrl && (
+            <div className="mt-2">
+              <p className="text-xs text-gray-500 mb-1">Current video:</p>
+              <video
+                src={existingVideoUrl}
+                controls
+                className="w-full max-w-xs rounded-lg border border-gray-300"
+              />
+            </div>
+          )}
+        </div>
       </div>
 
       <div className="flex gap-3 pt-2">
@@ -423,12 +436,14 @@ function CompanyTemplateForm({
 // ─── Chamber Template Form ────────────────────────────────────────────────────
 function ChamberTemplateForm({
   initial,
+  existingVideoUrl,
   onSave,
   onCancel,
   saving,
 }: {
   initial: ChamberTemplateFormData;
-  onSave: (data: ChamberTemplateFormData) => void;
+  existingVideoUrl?: string;
+  onSave: (data: ChamberTemplateFormData, videoFile: File | null) => void;
   onCancel: () => void;
   saving: boolean;
 }) {
@@ -445,8 +460,7 @@ function ChamberTemplateForm({
     <form
       onSubmit={(e) => {
         e.preventDefault();
-        // Don't pass videoFile in form data - it will be handled separately by the parent
-        onSave(form);
+        onSave(form, videoFile);
       }}
       className="space-y-4"
     >
@@ -583,11 +597,23 @@ function ChamberTemplateForm({
           value={form.SnapChat || ""}
           onChange={handleChange}
         />
-        <FileUploadField
-          label="Video"
-          onFileSelect={(file) => setVideoFile(file)}
-          fileName={videoFile?.name}
-        />
+        <div>
+          <FileUploadField
+            label="Video"
+            onFileSelect={(file) => setVideoFile(file)}
+            fileName={videoFile?.name}
+          />
+          {!videoFile && existingVideoUrl && (
+            <div className="mt-2">
+              <p className="text-xs text-gray-500 mb-1">Current video:</p>
+              <video
+                src={existingVideoUrl}
+                controls
+                className="w-full max-w-xs rounded-lg border border-gray-300"
+              />
+            </div>
+          )}
+        </div>
       </div>
 
       <div className="flex gap-3 pt-2">
@@ -650,6 +676,14 @@ export default function ManageTemplatesPage({
   const [showDeleteChamber, setShowDeleteChamber] =
     useState<ChamberTemplate | null>(null);
 
+  // Accordion state
+  const [expandedCompanyId, setExpandedCompanyId] = useState<string | null>(
+    null,
+  );
+  const [expandedChamberId, setExpandedChamberId] = useState<string | null>(
+    null,
+  );
+
   const formRef = useRef<HTMLDivElement>(null);
 
   // ─── Loaders ────────────────────────────────────────────────────────────────
@@ -692,7 +726,10 @@ export default function ManageTemplatesPage({
   }, [companyView, chamberView]);
 
   // ─── Company Handlers ────────────────────────────────────────────────────────
-  const handleSaveCompany = async (data: CompanyTemplateFormData) => {
+  const handleSaveCompany = async (
+    data: CompanyTemplateFormData,
+    videoFile: File | null,
+  ) => {
     setCompanySaving(true);
     try {
       if (editingCompany) {
@@ -700,7 +737,7 @@ export default function ManageTemplatesPage({
           editingCompany._id,
           data,
           undefined,
-          undefined,
+          videoFile ?? undefined,
           role,
         );
         setCompanies((prev) =>
@@ -710,7 +747,7 @@ export default function ManageTemplatesPage({
         const created = await createCompanyTemplate(
           data,
           undefined,
-          undefined,
+          videoFile ?? undefined,
           role,
         );
         setCompanies((prev) => [created, ...prev]);
@@ -738,7 +775,10 @@ export default function ManageTemplatesPage({
   };
 
   // ─── Chamber Handlers ─────────────────────────────────────────────────────────
-  const handleSaveChamber = async (data: ChamberTemplateFormData) => {
+  const handleSaveChamber = async (
+    data: ChamberTemplateFormData,
+    videoFile: File | null,
+  ) => {
     setChamberSaving(true);
     try {
       if (editingChamber) {
@@ -746,7 +786,7 @@ export default function ManageTemplatesPage({
           editingChamber._id,
           data,
           undefined,
-          undefined,
+          videoFile ?? undefined,
           role,
         );
         setChambers((prev) =>
@@ -756,7 +796,7 @@ export default function ManageTemplatesPage({
         const created = await createChamberTemplate(
           data,
           undefined,
-          undefined,
+          videoFile ?? undefined,
           role,
         );
         setChambers((prev) => [created, ...prev]);
@@ -893,6 +933,7 @@ export default function ManageTemplatesPage({
                       }
                     : blankCompany()
                 }
+                existingVideoUrl={editingCompany?.video || undefined}
                 onSave={handleSaveCompany}
                 onCancel={() => {
                   setCompanyView("list");
@@ -928,76 +969,227 @@ export default function ManageTemplatesPage({
                 </div>
               )}
               {!companyLoading && companies.length > 0 && (
-                <div className="space-y-3">
+                <div className="space-y-2">
                   {companies.map((tpl) => (
                     <div
                       key={tpl._id}
-                      className="bg-white border border-gray-200 rounded-xl p-4 flex items-start justify-between gap-3 shadow-sm"
+                      className="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden"
                     >
-                      <div className="flex gap-3 items-start min-w-0">
-                        {tpl.image ? (
-                          <img
-                            src={tpl.image}
-                            alt={tpl.template_title}
-                            className="h-12 w-12 rounded-lg object-cover flex-shrink-0 border border-gray-100"
-                          />
-                        ) : (
-                          <div className="h-12 w-12 rounded-lg bg-blue-50 flex items-center justify-center flex-shrink-0 text-[#007cb6] text-xl font-bold">
-                            {(
-                              tpl.template_title ||
-                              tpl.company_name_english ||
-                              "C"
-                            )
-                              .charAt(0)
-                              .toUpperCase()}
-                          </div>
-                        )}
-                        <div className="min-w-0">
-                          <p className="font-semibold text-gray-800 text-sm truncate">
-                            {tpl.template_title || "(No title)"}
-                          </p>
-                          <p className="text-xs text-gray-500 truncate">
-                            {tpl.company_name_english}
-                            {tpl.company_name_chinese
-                              ? ` · ${tpl.company_name_chinese}`
-                              : ""}
-                          </p>
-                          {tpl.companydesignation && (
-                            <p className="text-xs text-gray-400 truncate">
-                              {tpl.companydesignation}
+                      {/* Accordion Header */}
+                      <button
+                        onClick={() =>
+                          setExpandedCompanyId(
+                            expandedCompanyId === tpl._id ? null : tpl._id,
+                          )
+                        }
+                        className="w-full px-4 py-3 flex items-start justify-between gap-3 hover:bg-gray-50 transition text-left"
+                      >
+                        <div className="flex gap-3 items-start min-w-0 flex-1">
+                          {tpl.image ? (
+                            <img
+                              src={tpl.image}
+                              alt={tpl.template_title}
+                              className="h-12 w-12 rounded-lg object-cover flex-shrink-0 border border-gray-100"
+                            />
+                          ) : (
+                            <div className="h-12 w-12 rounded-lg bg-blue-50 flex items-center justify-center flex-shrink-0 text-[#007cb6] text-xl font-bold">
+                              {(
+                                tpl.template_title ||
+                                tpl.company_name_english ||
+                                "C"
+                              )
+                                .charAt(0)
+                                .toUpperCase()}
+                            </div>
+                          )}
+                          <div className="min-w-0 flex-1">
+                            <p className="font-semibold text-gray-800 text-sm truncate">
+                              {tpl.template_title || "(No title)"}
                             </p>
-                          )}
-                          {tpl.owner_type && (
-                            <span
-                              className={`inline-block mt-1 px-1.5 py-0.5 text-[10px] rounded font-medium ${
-                                tpl.owner_type === "enterprise"
-                                  ? "bg-purple-100 text-purple-700"
-                                  : "bg-orange-100 text-orange-700"
-                              }`}
-                            >
-                              {tpl.owner_type}
-                            </span>
-                          )}
+                            <p className="text-xs text-gray-500 truncate">
+                              {tpl.company_name_english}
+                              {tpl.company_name_chinese
+                                ? ` · ${tpl.company_name_chinese}`
+                                : ""}
+                            </p>
+                          </div>
                         </div>
-                      </div>
-                      <div className="flex gap-2 flex-shrink-0">
-                        <button
-                          onClick={() => {
-                            setEditingCompany(tpl);
-                            setCompanyView("edit");
-                          }}
-                          className="px-3 py-1.5 text-xs bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition font-medium"
+                        <svg
+                          className={`w-5 h-5 text-gray-400 flex-shrink-0 transition-transform ${
+                            expandedCompanyId === tpl._id ? "rotate-180" : ""
+                          }`}
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
                         >
-                          Edit
-                        </button>
-                        <button
-                          onClick={() => setShowDeleteCompany(tpl)}
-                          disabled={deletingCompanyId === tpl._id}
-                          className="px-3 py-1.5 text-xs bg-red-50 hover:bg-red-100 text-red-600 rounded-lg transition font-medium disabled:opacity-50"
-                        >
-                          {deletingCompanyId === tpl._id ? "..." : "Delete"}
-                        </button>
-                      </div>
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M19 14l-7 7m0 0l-7-7m7 7V3"
+                          />
+                        </svg>
+                      </button>
+
+                      {/* Accordion Content */}
+                      {expandedCompanyId === tpl._id && (
+                        <div className="border-t border-gray-200 px-4 py-4 bg-gray-50 space-y-3">
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
+                            <div>
+                              <p className="font-medium text-gray-700">
+                                Designation
+                              </p>
+                              <p className="text-gray-600">
+                                {tpl.companydesignation || "—"}
+                              </p>
+                            </div>
+                            <div>
+                              <p className="font-medium text-gray-700">Email</p>
+                              <p className="text-gray-600">
+                                {tpl.email || "—"}
+                              </p>
+                            </div>
+                            <div>
+                              <p className="font-medium text-gray-700">
+                                Contact
+                              </p>
+                              <p className="text-gray-600">
+                                {tpl.contact || "—"}
+                              </p>
+                            </div>
+                            <div>
+                              <p className="font-medium text-gray-700">
+                                Website
+                              </p>
+                              <p className="text-gray-600">
+                                {tpl.website || "—"}
+                              </p>
+                            </div>
+                            <div>
+                              <p className="font-medium text-gray-700">
+                                Fanpage
+                              </p>
+                              <p className="text-gray-600">
+                                {tpl.fanpage || "—"}
+                              </p>
+                            </div>
+                            <div>
+                              <p className="font-medium text-gray-700">
+                                Telegram
+                              </p>
+                              <p className="text-gray-600">
+                                {tpl.telegramId || "—"}
+                              </p>
+                            </div>
+                          </div>
+
+                          {/* Social Media Links */}
+                          <div>
+                            <p className="font-medium text-gray-700 mb-2">
+                              Social Media
+                            </p>
+                            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 text-xs">
+                              {[
+                                { key: "WhatsApp", val: tpl.WhatsApp },
+                                { key: "WeChat", val: tpl.WeChat },
+                                { key: "Line", val: tpl.Line },
+                                { key: "Instagram", val: tpl.Instagram },
+                                { key: "Facebook", val: tpl.Facebook },
+                                { key: "Twitter", val: tpl.Twitter },
+                                { key: "Youtube", val: tpl.Youtube },
+                                { key: "Linkedin", val: tpl.Linkedin },
+                                { key: "TikTok", val: tpl.TikTok },
+                                { key: "Skype", val: tpl.Skype },
+                                { key: "SnapChat", val: tpl.SnapChat },
+                              ]
+                                .filter((item) => item.val)
+                                .map((item) => (
+                                  <span
+                                    key={item.key}
+                                    className="bg-white px-2 py-1 rounded text-gray-600"
+                                  >
+                                    {item.key}: {item.val}
+                                  </span>
+                                ))}
+                            </div>
+                          </div>
+
+                          {/* Description */}
+                          {tpl.description && (
+                            <div>
+                              <p className="font-medium text-gray-700 mb-1">
+                                Description
+                              </p>
+                              <p className="text-sm text-gray-600 whitespace-pre-wrap">
+                                {tpl.description}
+                              </p>
+                            </div>
+                          )}
+
+                          {/* Image Preview */}
+                          {tpl.image && (
+                            <div>
+                              <p className="font-medium text-gray-700 mb-2">
+                                Image
+                              </p>
+                              <img
+                                src={tpl.image}
+                                alt="Template"
+                                className="max-w-xs h-auto rounded-lg border border-gray-300"
+                              />
+                            </div>
+                          )}
+
+                          {/* Video Preview */}
+                          {tpl.video && (
+                            <div>
+                              <p className="font-medium text-gray-700 mb-2">
+                                Video
+                              </p>
+                              <video
+                                src={tpl.video}
+                                controls
+                                className="max-w-xs h-auto rounded-lg border border-gray-300"
+                              />
+                            </div>
+                          )}
+
+                          {/* Owner Type */}
+                          {tpl.owner_type && (
+                            <div className="flex gap-2 pt-2">
+                              <span
+                                className={`inline-block px-2 py-1 text-xs rounded font-medium ${
+                                  tpl.owner_type === "enterprise"
+                                    ? "bg-purple-100 text-purple-700"
+                                    : "bg-orange-100 text-orange-700"
+                                }`}
+                              >
+                                {tpl.owner_type}
+                              </span>
+                            </div>
+                          )}
+
+                          {/* Action Buttons */}
+                          <div className="flex gap-2 pt-2">
+                            <button
+                              onClick={() => {
+                                setEditingCompany(tpl);
+                                setCompanyView("edit");
+                              }}
+                              className="flex-1 px-3 py-2 text-sm bg-[#007cb6] hover:bg-[#006a9e] text-white rounded-lg transition font-medium"
+                            >
+                              Edit
+                            </button>
+                            <button
+                              onClick={() => setShowDeleteCompany(tpl)}
+                              disabled={deletingCompanyId === tpl._id}
+                              className="flex-1 px-3 py-2 text-sm bg-red-50 hover:bg-red-100 text-red-600 rounded-lg transition font-medium disabled:opacity-50"
+                            >
+                              {deletingCompanyId === tpl._id ? "..." : "Delete"}
+                            </button>
+                          </div>
+                        </div>
+                      )}
                     </div>
                   ))}
                 </div>
@@ -1080,6 +1272,7 @@ export default function ManageTemplatesPage({
                       }
                     : blankChamber()
                 }
+                existingVideoUrl={editingChamber?.video || undefined}
                 onSave={handleSaveChamber}
                 onCancel={() => {
                   setChamberView("list");
@@ -1115,76 +1308,213 @@ export default function ManageTemplatesPage({
                 </div>
               )}
               {!chamberLoading && chambers.length > 0 && (
-                <div className="space-y-3">
+                <div className="space-y-2">
                   {chambers.map((tpl) => (
                     <div
                       key={tpl._id}
-                      className="bg-white border border-gray-200 rounded-xl p-4 flex items-start justify-between gap-3 shadow-sm"
+                      className="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden"
                     >
-                      <div className="flex gap-3 items-start min-w-0">
-                        {tpl.image ? (
-                          <img
-                            src={tpl.image}
-                            alt={tpl.template_title}
-                            className="h-12 w-12 rounded-lg object-cover flex-shrink-0 border border-gray-100"
-                          />
-                        ) : (
-                          <div className="h-12 w-12 rounded-lg bg-green-50 flex items-center justify-center flex-shrink-0 text-green-600 text-xl font-bold">
-                            {(
-                              tpl.template_title ||
-                              tpl.chamber_name_english ||
-                              "C"
-                            )
-                              .charAt(0)
-                              .toUpperCase()}
-                          </div>
-                        )}
-                        <div className="min-w-0">
-                          <p className="font-semibold text-gray-800 text-sm truncate">
-                            {tpl.template_title || "(No title)"}
-                          </p>
-                          <p className="text-xs text-gray-500 truncate">
-                            {tpl.chamber_name_english}
-                            {tpl.chamber_name_chinese
-                              ? ` · ${tpl.chamber_name_chinese}`
-                              : ""}
-                          </p>
-                          {tpl.chamberdesignation && (
-                            <p className="text-xs text-gray-400 truncate">
-                              {tpl.chamberdesignation}
+                      {/* Accordion Header */}
+                      <button
+                        onClick={() =>
+                          setExpandedChamberId(
+                            expandedChamberId === tpl._id ? null : tpl._id,
+                          )
+                        }
+                        className="w-full px-4 py-3 flex items-start justify-between gap-3 hover:bg-gray-50 transition text-left"
+                      >
+                        <div className="flex gap-3 items-start min-w-0 flex-1">
+                          {tpl.image ? (
+                            <img
+                              src={tpl.image}
+                              alt={tpl.template_title}
+                              className="h-12 w-12 rounded-lg object-cover flex-shrink-0 border border-gray-100"
+                            />
+                          ) : (
+                            <div className="h-12 w-12 rounded-lg bg-green-50 flex items-center justify-center flex-shrink-0 text-green-600 text-xl font-bold">
+                              {(
+                                tpl.template_title ||
+                                tpl.chamber_name_english ||
+                                "C"
+                              )
+                                .charAt(0)
+                                .toUpperCase()}
+                            </div>
+                          )}
+                          <div className="min-w-0 flex-1">
+                            <p className="font-semibold text-gray-800 text-sm truncate">
+                              {tpl.template_title || "(No title)"}
                             </p>
-                          )}
-                          {tpl.owner_type && (
-                            <span
-                              className={`inline-block mt-1 px-1.5 py-0.5 text-[10px] rounded font-medium ${
-                                tpl.owner_type === "enterprise"
-                                  ? "bg-purple-100 text-purple-700"
-                                  : "bg-orange-100 text-orange-700"
-                              }`}
-                            >
-                              {tpl.owner_type}
-                            </span>
-                          )}
+                            <p className="text-xs text-gray-500 truncate">
+                              {tpl.chamber_name_english}
+                              {tpl.chamber_name_chinese
+                                ? ` · ${tpl.chamber_name_chinese}`
+                                : ""}
+                            </p>
+                          </div>
                         </div>
-                      </div>
-                      <div className="flex gap-2 flex-shrink-0">
-                        <button
-                          onClick={() => {
-                            setEditingChamber(tpl);
-                            setChamberView("edit");
-                          }}
-                          className="px-3 py-1.5 text-xs bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition font-medium"
+                        <svg
+                          className={`w-5 h-5 text-gray-400 flex-shrink-0 transition-transform ${
+                            expandedChamberId === tpl._id ? "rotate-180" : ""
+                          }`}
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
                         >
-                          Edit
-                        </button>
-                        <button
-                          onClick={() => setShowDeleteChamber(tpl)}
-                          disabled={deletingChamberId === tpl._id}
-                          className="px-3 py-1.5 text-xs bg-red-50 hover:bg-red-100 text-red-600 rounded-lg transition font-medium disabled:opacity-50"
-                        >
-                          {deletingChamberId === tpl._id ? "..." : "Delete"}
-                        </button>
-                      </div>
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M19 14l-7 7m0 0l-7-7m7 7V3"
+                          />
+                        </svg>
+                      </button>
+
+                      {/* Accordion Content */}
+                      {expandedChamberId === tpl._id && (
+                        <div className="border-t border-gray-200 px-4 py-4 bg-gray-50 space-y-3">
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
+                            <div>
+                              <p className="font-medium text-gray-700">
+                                Designation
+                              </p>
+                              <p className="text-gray-600">
+                                {tpl.chamberdesignation || "—"}
+                              </p>
+                            </div>
+                            <div>
+                              <p className="font-medium text-gray-700">
+                                Website
+                              </p>
+                              <p className="text-gray-600">
+                                {tpl.chamberwebsite || "—"}
+                              </p>
+                            </div>
+                            <div>
+                              <p className="font-medium text-gray-700">
+                                Fanpage
+                              </p>
+                              <p className="text-gray-600">
+                                {tpl.chamberfanpage || "—"}
+                              </p>
+                            </div>
+                            <div>
+                              <p className="font-medium text-gray-700">
+                                TG Channel
+                              </p>
+                              <p className="text-gray-600">
+                                {tpl.tgchannel || "—"}
+                              </p>
+                            </div>
+                          </div>
+
+                          {/* Social Media Links */}
+                          <div>
+                            <p className="font-medium text-gray-700 mb-2">
+                              Social Media
+                            </p>
+                            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 text-xs">
+                              {[
+                                { key: "WhatsApp", val: tpl.WhatsApp },
+                                { key: "WeChat", val: tpl.WeChat },
+                                { key: "Line", val: tpl.Line },
+                                { key: "Instagram", val: tpl.Instagram },
+                                { key: "Facebook", val: tpl.Facebook },
+                                { key: "Twitter", val: tpl.Twitter },
+                                { key: "Youtube", val: tpl.Youtube },
+                                { key: "Linkedin", val: tpl.Linkedin },
+                                { key: "TikTok", val: tpl.TikTok },
+                                { key: "Skype", val: tpl.Skype },
+                                { key: "SnapChat", val: tpl.SnapChat },
+                              ]
+                                .filter((item) => item.val)
+                                .map((item) => (
+                                  <span
+                                    key={item.key}
+                                    className="bg-white px-2 py-1 rounded text-gray-600"
+                                  >
+                                    {item.key}: {item.val}
+                                  </span>
+                                ))}
+                            </div>
+                          </div>
+
+                          {/* Description */}
+                          {tpl.detail && (
+                            <div>
+                              <p className="font-medium text-gray-700 mb-1">
+                                Details
+                              </p>
+                              <p className="text-sm text-gray-600 whitespace-pre-wrap">
+                                {tpl.detail}
+                              </p>
+                            </div>
+                          )}
+
+                          {/* Image Preview */}
+                          {tpl.image && (
+                            <div>
+                              <p className="font-medium text-gray-700 mb-2">
+                                Image
+                              </p>
+                              <img
+                                src={tpl.image}
+                                alt="Template"
+                                className="max-w-xs h-auto rounded-lg border border-gray-300"
+                              />
+                            </div>
+                          )}
+
+                          {/* Video Preview */}
+                          {tpl.video && (
+                            <div>
+                              <p className="font-medium text-gray-700 mb-2">
+                                Video
+                              </p>
+                              <video
+                                src={tpl.video}
+                                controls
+                                className="max-w-xs h-auto rounded-lg border border-gray-300"
+                              />
+                            </div>
+                          )}
+
+                          {/* Owner Type */}
+                          {tpl.owner_type && (
+                            <div className="flex gap-2 pt-2">
+                              <span
+                                className={`inline-block px-2 py-1 text-xs rounded font-medium ${
+                                  tpl.owner_type === "enterprise"
+                                    ? "bg-purple-100 text-purple-700"
+                                    : "bg-orange-100 text-orange-700"
+                                }`}
+                              >
+                                {tpl.owner_type}
+                              </span>
+                            </div>
+                          )}
+
+                          {/* Action Buttons */}
+                          <div className="flex gap-2 pt-2">
+                            <button
+                              onClick={() => {
+                                setEditingChamber(tpl);
+                                setChamberView("edit");
+                              }}
+                              className="flex-1 px-3 py-2 text-sm bg-[#007cb6] hover:bg-[#006a9e] text-white rounded-lg transition font-medium"
+                            >
+                              Edit
+                            </button>
+                            <button
+                              onClick={() => setShowDeleteChamber(tpl)}
+                              disabled={deletingChamberId === tpl._id}
+                              className="flex-1 px-3 py-2 text-sm bg-red-50 hover:bg-red-100 text-red-600 rounded-lg transition font-medium disabled:opacity-50"
+                            >
+                              {deletingChamberId === tpl._id ? "..." : "Delete"}
+                            </button>
+                          </div>
+                        </div>
+                      )}
                     </div>
                   ))}
                 </div>

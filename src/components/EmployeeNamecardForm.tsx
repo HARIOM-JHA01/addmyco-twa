@@ -626,7 +626,7 @@ export default function EmployeeNamecardForm({
                 <option value="">Select a company template</option>
                 {companies.map((company) => (
                   <option key={company._id} value={company._id}>
-                    {company.company_name_english}
+                    {company.template_title}
                   </option>
                 ))}
               </select>
@@ -650,7 +650,7 @@ export default function EmployeeNamecardForm({
                 <option value="">Select a chamber template</option>
                 {chambers.map((chamber) => (
                   <option key={chamber._id} value={chamber._id}>
-                    {chamber.chamber_name_english}
+                    {chamber.template_title}
                   </option>
                 ))}
               </select>

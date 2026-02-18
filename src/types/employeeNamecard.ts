@@ -131,6 +131,7 @@ export interface EmployeeNamecard {
   _id: string;
   name_english: string;
   name_chinese: string;
+  designation: string;
   telegram_username: string;
   contact_number: string;
   address1: string;

@@ -11,11 +11,13 @@ import DeleteConfirmationModal from "../components/DeleteConfirmationModal";
 interface EmployeeNamecardPageProps {
   isOperator?: boolean;
   enterpriseId?: string;
+  leftEmployeeCredits?: number;
 }
 
 export default function EmployeeNamecardPage({
   isOperator = false,
   enterpriseId,
+  leftEmployeeCredits,
 }: EmployeeNamecardPageProps) {
   const [namecards, setNamecards] = useState<EmployeeNamecard[]>([]);
   const [loading, setLoading] = useState(true);
@@ -142,6 +144,17 @@ export default function EmployeeNamecardPage({
             <div className="mb-8">
               <button
                 onClick={() => {
+                  // Check for employee credits
+                  if (
+                    !isOperator &&
+                    typeof leftEmployeeCredits === "number" &&
+                    leftEmployeeCredits <= 0
+                  ) {
+                    setError(
+                      "You do not have employee credits remaining. Please buy employee credits before creating an employee namecard.",
+                    );
+                    return;
+                  }
                   setEditingNamecard(null);
                   setShowForm(true);
                 }}
