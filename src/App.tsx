@@ -22,6 +22,7 @@ import EnterprisePage from "./pages/EnterprisePage";
 import OperatorDashboardPage from "./pages/OperatorDashboardPage";
 import PaymentHistoryPage from "./pages/PaymentHistoryPage";
 import AdvertisementPage from "./pages/AdvertisementPage";
+import AdvertisementFAQPage from "./pages/AdvertisementFAQPage";
 import axios from "axios";
 import WebApp from "@twa-dev/sdk";
 import CreateCompanyPage from "./pages/CreateCompanyPage";
@@ -32,34 +33,45 @@ import { fetchBackgroundByUsername as fetchBgByUsername } from "./utils/theme";
 import WelcomePopup from "./components/WelcomePopup";
 import PartnerCodePopup from "./components/PartnerCodePopup";
 import { BottomCircleAdProvider } from "./contexts/BottomCircleAdContext";
+import { useProfileStore } from "./store/profileStore";
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
 function AppRoutes() {
   const navigate = useNavigate();
   const location = useLocation();
-  const [showWelcome, setShowWelcome] = useState(true);
+  // Check for operator session immediately on initialization
+  const operatorFlag = localStorage.getItem("operator_logged_in");
+  const hasToken = !!localStorage.getItem("token");
+  const isOperator = operatorFlag === "true" && hasToken;
+
+  const [showWelcome, setShowWelcome] = useState(!isOperator);
   const [showWelcomePopup, setShowWelcomePopup] = useState(false);
   const [showPartnerPopup, setShowPartnerPopup] = useState(false);
   const [partnerPopupResolver, setPartnerPopupResolver] = useState<
     ((code: string | null) => void) | null
   >(null);
   const [profile, setProfile] = useState<any>(null);
-  const [profileLoading, setProfileLoading] = useState(true);
+  const [profileLoading, setProfileLoading] = useState(!isOperator);
   const [deepLinkPartnerCode, setDeepLinkPartnerCode] = useState<string | null>(
     null,
   );
-  const [isOperatorSession, setIsOperatorSession] = useState(false);
+  // Check for operator session immediately on initialization
+  const [isOperatorSession, setIsOperatorSession] = useState(() => {
+    const operatorFlag = localStorage.getItem("operator_logged_in");
+    const hasToken = !!localStorage.getItem("token");
+    return operatorFlag === "true" && hasToken;
+  });
 
   const fetchBackgroundByUsername = fetchBgByUsername;
 
-  // Check for operator login flag on mount
+  // Check for operator login flag on mount and navigate
   useEffect(() => {
     const operatorFlag = localStorage.getItem("operator_logged_in");
     const hasToken = !!localStorage.getItem("token");
 
     if (operatorFlag === "true" && hasToken) {
-      // Clear the flag
+      // Clear the flag immediately
       localStorage.removeItem("operator_logged_in");
       // Set operator session flag
       setIsOperatorSession(true);
@@ -182,6 +194,7 @@ function AppRoutes() {
       "theme",
       "membership",
       "enterprise",
+      "operator-dashboard",
       "payment-history",
       "background",
       "advertisements",
@@ -239,6 +252,10 @@ function AppRoutes() {
         });
         const profileData = res.data.data || null;
         setProfile(profileData);
+        // Save profile to Zustand store so Footer and other components can access it immediately
+        if (profileData) {
+          useProfileStore.getState().setProfile(profileData);
+        }
         try {
           const username =
             profileData?.username ||
@@ -632,6 +649,10 @@ function AppRoutes() {
           <Route path="/membership" element={<MembershipPage />} />
           <Route path="/enterprise" element={<EnterprisePage />} />
           <Route path="/advertisements" element={<AdvertisementPage />} />
+          <Route
+            path="/advertisements/faq"
+            element={<AdvertisementFAQPage />}
+          />
           <Route path="/payment-history" element={<PaymentHistoryPage />} />
           <Route path="/background" element={<BackgroundPage />} />
           <Route path="*" element={<div>404 Not Found</div>} />

@@ -45,7 +45,7 @@ export default function MembershipPage() {
     const membership_id = usdtModalItem._id;
     if (!membership_id) {
       setUsdtModalError(
-        "Membership ID is required for payment. Please select a valid membership option or contact support."
+        "Membership ID is required for payment. Please select a valid membership option or contact support.",
       );
       setUsdtModalLoading(false);
       return;
@@ -68,11 +68,11 @@ export default function MembershipPage() {
             Authorization: `Bearer ${token}`,
             "Content-Type": "application/json",
           },
-        }
+        },
       );
       if (res.status === 200) {
         WebApp.showAlert(
-          "USDT payment submitted! Our team will verify and update your membership soon."
+          "USDT payment submitted! Our team will verify and update your membership soon.",
         );
         setUsdtModalOpen(false);
         setUsdtTransactionId("");
@@ -84,8 +84,8 @@ export default function MembershipPage() {
           err !== null &&
           "response" in err &&
           typeof (err as any).response === "object"
-          ? (err as any).response?.data?.message ?? "Unknown error"
-          : "Unknown error"
+          ? ((err as any).response?.data?.message ?? "Unknown error")
+          : "Unknown error",
       );
     } finally {
       setUsdtModalLoading(false);
@@ -172,7 +172,8 @@ export default function MembershipPage() {
     formattedExpiry = expiryDate.toLocaleDateString("en-GB");
   }
 
-  const isPremium = profile?.membertype === "premium";
+  const isLifetimeUser = profile?.usertype === 2;
+  const isPremium = profile?.membertype === "premium" || isLifetimeUser;
   const features = isPremium ? PREMIUM_FEATURES : BASIC_FEATURES;
   const partnerUserName = (profile as any)?.partner?.username || null;
 
@@ -232,7 +233,11 @@ export default function MembershipPage() {
             </button>
           </div>
           <div className="text-center justify-center mt-2 text-lg font-semibold text-pink-700">
-            {isPremium ? (
+            {isLifetimeUser ? (
+              <span className="font-bold text-green-600 mb-2">
+                You have lifetime premium membership
+              </span>
+            ) : isPremium ? (
               <>
                 {i18n.t("premium_expiring")}{" "}
                 <span className="font-bold text-black mb-2">
@@ -380,14 +385,14 @@ export default function MembershipPage() {
                                     onClick={async () => {
                                       try {
                                         await navigator.clipboard.writeText(
-                                          "TK2TMn99SBCrdbZpSef7rFE3vTccvR6dCz"
+                                          "TK2TMn99SBCrdbZpSef7rFE3vTccvR6dCz",
                                         );
                                         WebApp.showAlert(
-                                          i18n.t("wallet_address_copied")
+                                          i18n.t("wallet_address_copied"),
                                         );
                                       } catch (e) {
                                         WebApp.showAlert(
-                                          i18n.t("wallet_copy_failed")
+                                          i18n.t("wallet_copy_failed"),
                                         );
                                       }
                                     }}
@@ -407,7 +412,7 @@ export default function MembershipPage() {
                                   setUsdtTransactionId(e.target.value)
                                 }
                                 placeholder={i18n.t(
-                                  "transaction_id_placeholder"
+                                  "transaction_id_placeholder",
                                 )}
                                 disabled={usdtModalLoading}
                               />

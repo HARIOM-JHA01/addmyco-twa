@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
+import ThreeStageCreation from "../components/ThreeStageCreation";
 import i18n from "../i18n";
 import {
   getPackages,
@@ -20,6 +21,7 @@ import {
   operatorLogin,
   getOperatorDetails,
   deleteOperator,
+  resetOperatorPassword,
 } from "../services/enterpriseService";
 import { useNavigate } from "react-router-dom";
 import {
@@ -35,13 +37,19 @@ import {
 import WebApp from "@twa-dev/sdk";
 import { EnterpriseUsdtPaymentModal } from "../components/enterprise/EnterpriseUsdtPaymentModal";
 import { formatDate } from "../utils/date";
+import EmployeeNamecardPage from "./EmployeeNamecardPage";
+import FAQPage from "./FAQPage";
+import ManageTemplatesPage from "./ManageTemplatesPage";
 
 export default function EnterpriseDashboard() {
   const [activeTab, setActiveTab] = useState<
     | EnterpriseTabType
     | "create-operator"
     | "manage-operators"
-    | "search-employees"
+    | "manage-employees"
+    | "employee-namecards"
+    | "manage-templates"
+    | "faq"
   >("dashboard");
   const [menuOpen, setMenuOpen] = useState(false);
 
@@ -83,6 +91,45 @@ export default function EnterpriseDashboard() {
   const [buyLoading, setBuyLoading] = useState(false);
   const [buyError, setBuyError] = useState<string | null>(null);
 
+  // Helper: return Tailwind classes for named packages (Silver / Golden / Diamond)
+  const getPackageColorClasses = (name?: string) => {
+    const lower = (name || "").toLowerCase();
+    if (lower.includes("silver")) {
+      return {
+        barBg: "bg-gray-200",
+        titleText: "text-gray-800",
+        priceText: "text-gray-700",
+        borderClass: "border-gray-200",
+        accentBg: "bg-gray-50",
+      };
+    }
+    if (lower.includes("gold") || lower.includes("golden")) {
+      return {
+        barBg: "bg-yellow-200",
+        titleText: "text-yellow-800",
+        priceText: "text-yellow-700",
+        borderClass: "border-yellow-300",
+        accentBg: "bg-yellow-50",
+      };
+    }
+    if (lower.includes("diamond")) {
+      return {
+        barBg: "bg-sky-200",
+        titleText: "text-sky-800",
+        priceText: "text-sky-700",
+        borderClass: "border-sky-300",
+        accentBg: "bg-sky-50",
+      };
+    }
+    return {
+      barBg: "bg-transparent",
+      titleText: "text-gray-800",
+      priceText: "text-[#007cb6]",
+      borderClass: "",
+      accentBg: "bg-white",
+    };
+  };
+
   // Create Employee UI removed from this screen — server API remains available in services
   // (state & handler were unused in the current UI; re-add when wiring a form)
 
@@ -97,7 +144,10 @@ export default function EnterpriseDashboard() {
     tgid: "",
     password: "",
   });
-  const [, setOperatorsLoading] = useState(false);
+  // Inline validation error for password field
+  const [operatorPasswordError, setOperatorPasswordError] = useState<
+    string | null
+  >(null);
   const [operatorsError, setOperatorsError] = useState<string | null>(null);
   const [operatorsList, setOperatorsList] = useState<SubOperator[]>([]);
   const [operatorsPage] = useState(1);
@@ -112,8 +162,14 @@ export default function EnterpriseDashboard() {
   >(null);
 
   // Sub-tab for Manage Operators (Create / Manage)
-  const [manageOperatorsSubTab, setManageOperatorsSubTab] =
-    useState<"manage" | "create">("manage");
+  const [manageOperatorsSubTab, setManageOperatorsSubTab] = useState<
+    "manage" | "create"
+  >("create");
+
+  // Sub-tab for Manage Employees (Manage / Create)
+  const [manageEmployeesSubTab, setManageEmployeesSubTab] = useState<
+    "manage" | "create"
+  >("manage");
 
   // Buy for Operator state (now Assign Credits)
   const [assignCreditsLoading, setAssignCreditsLoading] = useState(false);
@@ -137,6 +193,20 @@ export default function EnterpriseDashboard() {
   const [buyForOperatorWallet, setBuyForOperatorWallet] = useState("");
   const [selectedPackageForOperator, setSelectedPackageForOperator] =
     useState<EnterprisePackage | null>(null);
+
+  // Reset password for operator
+  const [selectedOperatorForReset, setSelectedOperatorForReset] =
+    useState<SubOperator | null>(null);
+  const [resetPasswordModal, setResetPasswordModal] = useState(false);
+  const [resetPasswordLoading, setResetPasswordLoading] = useState(false);
+  const [resetPasswordError, setResetPasswordError] = useState<string | null>(
+    null,
+  );
+  const [resetPasswordSuccess, setResetPasswordSuccess] = useState<
+    string | null
+  >(null);
+  const [resetPasswordValue, setResetPasswordValue] = useState("");
+  const [resetPasswordConfirm, setResetPasswordConfirm] = useState("");
 
   // Search Employees state
   const [employeesSearchQuery, setEmployeesSearchQuery] = useState("");
@@ -453,13 +523,55 @@ export default function EnterpriseDashboard() {
     const token = localStorage.getItem("token");
     if (!token) {
       setCreateOperatorError(
-        "Please login as an operator. Authentication token not found.",
+        "Please login as enterprise. Authentication token not found.",
+      );
+      return;
+    }
+
+    // Ensure we know the enterprise credits before attempting to create
+    let leftOperatorCredits =
+      enterpriseSummary?.purchasesSummary?.leftCreditsOperator;
+    if (typeof leftOperatorCredits !== "number") {
+      try {
+        const summary = await getEnterpriseSummary();
+        setEnterpriseSummary(summary);
+        leftOperatorCredits = summary?.purchasesSummary?.leftCreditsOperator;
+      } catch (err) {
+        // if we cannot fetch summary, proceed with validation below (server will still enforce)
+        console.warn(
+          "Could not refresh enterprise summary before creating operator:",
+          err,
+        );
+      }
+    }
+
+    if (typeof leftOperatorCredits === "number" && leftOperatorCredits <= 0) {
+      setCreateOperatorError(
+        "You do not have operator credits remaining. Please buy operator credits before creating an operator.",
       );
       return;
     }
 
     if (!operatorForm.tgid.trim() || !operatorForm.password.trim()) {
-      setCreateOperatorError("Telegram username and password are required");
+      setCreateOperatorError("Username and password are required");
+      return;
+    }
+
+    // Password policy: alphanumeric only and minimum 8 characters
+    const pwd = operatorForm.password.trim();
+    const pwdRegex = /^[A-Za-z0-9]+$/;
+    if (pwd.length < 8) {
+      setCreateOperatorError("Password must be at least 8 characters long");
+      setOperatorPasswordError("Password must be at least 8 characters");
+      return;
+    }
+    if (!pwdRegex.test(pwd)) {
+      setCreateOperatorError(
+        "Password must be alphanumeric (letters and numbers only)",
+      );
+      setOperatorPasswordError(
+        "Password must be alphanumeric (letters and numbers only)",
+      );
       return;
     }
 
@@ -469,13 +581,23 @@ export default function EnterpriseDashboard() {
 
     try {
       const result = await createOperator(operatorForm);
-      setCreateOperatorSuccess(`Operator created: ${result.name}`);
+      setCreateOperatorSuccess(
+        `Operator created successfully: ${result.name || result.email || "Operator"}`,
+      );
       setOperatorForm({
         tgid: "",
         password: "",
       });
       // Refresh operators list
       await handleSearchOperators();
+      // Switch to manage tab after 2 seconds
+      setTimeout(() => {
+        setManageOperatorsSubTab("manage");
+        setCreateOperatorSuccess(null);
+      }, 2000);
+
+      // refresh dashboard to show updated credits
+      fetchDashboardData();
     } catch (error: any) {
       setCreateOperatorError(error.message || "Failed to create operator");
       console.error("Create operator error:", error);
@@ -491,7 +613,7 @@ export default function EnterpriseDashboard() {
       return;
     }
 
-    setOperatorsLoading(true);
+    setEmployeesLoading(true);
     setOperatorsError(null);
 
     try {
@@ -506,7 +628,7 @@ export default function EnterpriseDashboard() {
       setOperatorsError(error.message || "Failed to search operators");
       console.error("Search operators error:", error);
     } finally {
-      setOperatorsLoading(false);
+      setEmployeesLoading(false);
     }
   };
 
@@ -636,6 +758,16 @@ export default function EnterpriseDashboard() {
     }
   };
 
+  // Fetch enterprise employees when Manage Employees tab (manage sub-tab) is active
+  useEffect(() => {
+    if (
+      activeTab === "manage-employees" &&
+      manageEmployeesSubTab === "manage"
+    ) {
+      setEmployeesSearchPage(1);
+      handleSearchEmployees("");
+    }
+  }, [activeTab, manageEmployeesSubTab]);
   // Handle view operator details
   const handleViewOperator = async (operator: SubOperator) => {
     setSelectedOperatorForView(operator);
@@ -682,6 +814,67 @@ export default function EnterpriseDashboard() {
       setDeleteOperatorLoading(false);
     }
   };
+
+  // Handle reset operator password
+  const handleResetOperatorPassword = async () => {
+    if (!selectedOperatorForReset) return;
+
+    // Basic validations
+    const pwd = resetPasswordValue.trim();
+    const confirm = resetPasswordConfirm.trim();
+    if (!pwd || !confirm) {
+      setResetPasswordError("Both password fields are required");
+      return;
+    }
+    if (pwd.length < 8) {
+      setResetPasswordError("Password must be at least 8 characters long");
+      return;
+    }
+    if (!/^[A-Za-z0-9]+$/.test(pwd)) {
+      setResetPasswordError(
+        "Password must be alphanumeric (letters and numbers only)",
+      );
+      return;
+    }
+    if (pwd !== confirm) {
+      setResetPasswordError("Passwords do not match");
+      return;
+    }
+
+    setResetPasswordLoading(true);
+    setResetPasswordError(null);
+
+    try {
+      await resetOperatorPassword(selectedOperatorForReset._id, pwd, confirm);
+      WebApp.showAlert("Operator password reset successfully");
+      setResetPasswordModal(false);
+      setSelectedOperatorForReset(null);
+      setResetPasswordValue("");
+      setResetPasswordConfirm("");
+
+      // Refresh operators list
+      await handleSearchOperators();
+    } catch (error: any) {
+      setResetPasswordError(error.message || "Failed to reset password");
+      console.error("Reset password error:", error);
+    } finally {
+      setResetPasswordLoading(false);
+    }
+  };
+
+  // Derived enterprise credit totals used by Assign Credits UI
+  const totalEmployeeCredits =
+    enterpriseSummary?.purchasesSummary?.totalCreditsEmployee ?? 0;
+  const leftEmployeeCredits =
+    enterpriseSummary?.purchasesSummary?.leftCreditsEmployee ?? 0;
+  const usedEmployeeCredits = Math.max(
+    0,
+    totalEmployeeCredits - leftEmployeeCredits,
+  );
+  const employeeCreditsPercentUsed =
+    totalEmployeeCredits > 0
+      ? Math.round((usedEmployeeCredits / totalEmployeeCredits) * 100)
+      : 0;
 
   return (
     <div className="min-h-screen w-full overflow-x-hidden flex flex-col bg-gray-300">
@@ -748,21 +941,39 @@ export default function EnterpriseDashboard() {
                 </button>
                 <button
                   onClick={() => {
+                    setActiveTab("employee-namecards" as any);
+                    setMenuOpen(false);
+                  }}
+                  className="block w-full text-left px-4 py-2 text-white font-semibold hover:bg-gray-800 transition"
+                >
+                  Employee Namecards
+                </button>
+                <button
+                  onClick={() => {
+                    setActiveTab("manage-templates" as any);
+                    setMenuOpen(false);
+                  }}
+                  className="block w-full text-left px-4 py-2 text-white font-semibold hover:bg-gray-800 transition"
+                >
+                  Manage Templates
+                </button>
+                <button
+                  onClick={() => {
                     setActiveTab("purchase-history");
                     setMenuOpen(false);
                   }}
                   className="block w-full text-left px-4 py-2 text-white font-semibold hover:bg-gray-800 transition"
                 >
-                  {i18n.t("purchase_history")}
+                  {i18n.t("payment_history")}
                 </button>
                 <button
                   onClick={() => {
-                    setActiveTab("search-employees" as any);
+                    setActiveTab("faq");
                     setMenuOpen(false);
                   }}
                   className="block w-full text-left px-4 py-2 text-white font-semibold hover:bg-gray-800 transition last:rounded-b-lg"
                 >
-                  Search Employees
+                  FAQ
                 </button>
               </div>
             )}
@@ -779,9 +990,19 @@ export default function EnterpriseDashboard() {
                     ? manageOperatorsSubTab === "create"
                       ? "Create Operator"
                       : i18n.t("manage_operators")
-                    : activeTab === "purchase-history"
-                      ? i18n.t("purchase_history")
-                      : "Search Employees"}
+                    : activeTab === "manage-employees"
+                      ? manageEmployeesSubTab === "create"
+                        ? "Create Employee"
+                        : "Manage Employees"
+                      : activeTab === "employee-namecards"
+                        ? "Employee Namecards"
+                        : activeTab === "manage-templates"
+                          ? "Manage Templates"
+                          : activeTab === "faq"
+                            ? "FAQ"
+                            : activeTab === "purchase-history"
+                              ? i18n.t("payment_history")
+                              : "Search Employees"}
             </h2>
           </div>
           {/* Dashboard Tab */}
@@ -854,8 +1075,17 @@ export default function EnterpriseDashboard() {
                   enterpriseSummary.purchasesSummary.leftCreditsEmployee ===
                     0) && (
                   <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
-                    Kindly Purchase credits to create profiles of your staff
-                    /Operators
+                    <span>
+                      Kindly{" "}
+                      <button
+                        className="text-[#005f8e] underline font-semibold"
+                        onClick={() => setActiveTab("buy-credits")}
+                        aria-label="Buy credits"
+                      >
+                        purchase credits
+                      </button>{" "}
+                      to create profiles of your staff / operators
+                    </span>
                   </div>
                 )}
 
@@ -1173,68 +1403,88 @@ export default function EnterpriseDashboard() {
                 </div>
               ) : (
                 <div className="space-y-4">
-                  {packages.map((pkg) => (
-                    <div
-                      key={pkg._id}
-                      className={`bg-white rounded-lg shadow-md p-5 ${
-                        pkg.isPopular ? "border-2 border-[#007cb6]" : ""
-                      }`}
-                    >
-                      {pkg.isPopular && (
-                        <div className="text-xs font-bold text-[#007cb6] mb-2">
-                          ⭐ {i18n.t("popular")}
-                        </div>
-                      )}
-                      <h3 className="text-xl font-bold text-gray-800 mb-2">
-                        {pkg.name}
-                      </h3>
-                      {pkg.description && (
-                        <p className="text-sm text-gray-600 mb-4">
-                          {pkg.description}
-                        </p>
-                      )}
-                      <div className="space-y-2 mb-4">
-                        <div className="flex justify-between text-sm">
-                          <span className="text-gray-600">
-                            {i18n.t("employee_credits")}:
-                          </span>
-                          <span className="font-bold text-green-600">
-                            {pkg.employeeCredits}
-                          </span>
-                        </div>
-                        <div className="flex justify-between text-sm">
-                          <span className="text-gray-600">
-                            {i18n.t("operator_credits")}:
-                          </span>
-                          <span className="font-bold text-blue-600">
-                            {pkg.operatorCredits}
-                          </span>
-                        </div>
-                      </div>
-                      <div className="text-3xl font-bold text-gray-800 mb-4">
-                        ${pkg.price}
-                        <span className="text-sm font-normal text-gray-500 ml-1">
-                          USDT
-                        </span>
-                      </div>
-                      <button
-                        onClick={() => {
-                          setSelectedPackage(pkg);
-                          setBuyModalOpen(true);
-                          setBuyError(null);
-                        }}
-                        className="w-full bg-[#007cb6] text-white py-2 rounded-md font-semibold hover:bg-[#005f8e] transition-colors"
+                  {packages.map((pkg) => {
+                    const color = getPackageColorClasses(pkg.name);
+                    return (
+                      <div
+                        key={pkg._id}
+                        className={`bg-white rounded-lg shadow-md p-5 ${pkg.isPopular ? "border-2 border-[#007cb6]" : ""} ${color.borderClass ? `border ${color.borderClass}` : ""}`}
                       >
-                        {i18n.t("buy_now")}
-                      </button>
-                    </div>
-                  ))}
+                        <div
+                          className={`${color.barBg} h-1 rounded-t-md -mx-5 mb-3`}
+                        />
+                        {pkg.isPopular && (
+                          <div className="text-xs font-bold text-[#007cb6] mb-2">
+                            ⭐ {i18n.t("popular")}
+                          </div>
+                        )}
+                        <h3
+                          className={`text-xl font-bold ${color.titleText} mb-2`}
+                        >
+                          {pkg.name}
+                        </h3>
+                        {pkg.description && (
+                          <p className="text-sm text-gray-600 mb-4">
+                            {pkg.description}
+                          </p>
+                        )}
+                        <div className="space-y-2 mb-4">
+                          <div className="flex justify-between text-sm">
+                            <span className="text-gray-600">
+                              {i18n.t("employee_credits")}:
+                            </span>
+                            <span className="font-bold text-green-600">
+                              {pkg.employeeCredits}
+                            </span>
+                          </div>
+                          <div className="flex justify-between text-sm">
+                            <span className="text-gray-600">
+                              {i18n.t("operator_credits")}:
+                            </span>
+                            <span className="font-bold text-blue-600">
+                              {pkg.operatorCredits}
+                            </span>
+                          </div>
+                        </div>
+                        <div
+                          className={`text-3xl font-bold ${color.priceText} mb-4`}
+                        >
+                          ${pkg.price}
+                          <span className="text-sm font-normal text-gray-500 ml-1">
+                            USDT
+                          </span>
+                        </div>
+                        <button
+                          onClick={() => {
+                            setSelectedPackage(pkg);
+                            setBuyModalOpen(true);
+                            setBuyError(null);
+                          }}
+                          className="w-full bg-[#007cb6] text-white py-2 rounded-md font-semibold hover:bg-[#005f8e] transition-colors"
+                        >
+                          {i18n.t("buy_now")}
+                        </button>
+                      </div>
+                    );
+                  })}
                 </div>
               )}
             </>
           )}
 
-          {/* Create Operator Tab */}
+          {/* Employee Namecards Tab */}
+          {activeTab === "employee-namecards" && (
+            <EmployeeNamecardPage isOperator={false} />
+          )}
+
+          {/* Manage Templates Tab */}
+          {activeTab === "manage-templates" && (
+            <ManageTemplatesPage role="donator" />
+          )}
+
+          {/* FAQ Tab */}
+          {activeTab === "faq" && <FAQPage />}
+
           {/* Purchase History Tab */}
           {activeTab === "purchase-history" && (
             <>
@@ -1447,8 +1697,6 @@ export default function EnterpriseDashboard() {
             />
           )}
 
-
-
           {/* Manage Operators Tab */}
           {activeTab === "manage-operators" && (
             <>
@@ -1458,20 +1706,8 @@ export default function EnterpriseDashboard() {
                 </div>
               )}
 
-              {/* Sub-tabs: Manage / Create (pills like Create Ad) */}
+              {/* Sub-tabs: Create / Manage (pills like Create Ad) */}
               <div className="flex gap-2 mb-4">
-                <button
-                  type="button"
-                  onClick={() => setManageOperatorsSubTab("manage")}
-                  className={`flex-1 py-2 rounded font-semibold ${
-                    manageOperatorsSubTab === "manage"
-                      ? "bg-[#007cb6] text-white"
-                      : "bg-white border border-gray-200 text-gray-700"
-                  }`}
-                >
-                  Manage
-                </button>
-
                 <button
                   type="button"
                   onClick={() => setManageOperatorsSubTab("create")}
@@ -1482,6 +1718,18 @@ export default function EnterpriseDashboard() {
                   }`}
                 >
                   Create Operator
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setManageOperatorsSubTab("manage")}
+                  className={`flex-1 py-2 rounded font-semibold ${
+                    manageOperatorsSubTab === "manage"
+                      ? "bg-[#007cb6] text-white"
+                      : "bg-white border border-gray-200 text-gray-700"
+                  }`}
+                >
+                  Manage
                 </button>
               </div>
 
@@ -1494,36 +1742,88 @@ export default function EnterpriseDashboard() {
 
                   <form onSubmit={handleCreateOperator} className="space-y-4">
                     <div>
-                      <label className="block text-sm font-semibold text-gray-700 mb-2">
+                      <label className="block text-sm font-semibold text-blue-700 mb-2">
                         Username *
                       </label>
                       <input
                         type="text"
                         value={operatorForm.tgid}
                         onChange={(e) =>
-                          setOperatorForm({ ...operatorForm, tgid: e.target.value })
+                          setOperatorForm({
+                            ...operatorForm,
+                            tgid: e.target.value,
+                          })
                         }
                         className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-[#007cb6] focus:border-transparent"
-                        placeholder="john_operator_01"
+                        placeholder="operator_username"
                         required
                       />
                     </div>
 
                     <div>
-                      <label className="block text-sm font-semibold text-gray-700 mb-2">
+                      <label className="block text-sm font-semibold text-blue-700 mb-2">
                         Password *
                       </label>
                       <input
                         type="password"
                         value={operatorForm.password}
-                        onChange={(e) =>
-                          setOperatorForm({ ...operatorForm, password: e.target.value })
-                        }
-                        className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-[#007cb6] focus:border-transparent"
+                        onChange={(e) => {
+                          const v = e.target.value;
+                          setOperatorForm({ ...operatorForm, password: v });
+                          // live validation: min 8 chars, alphanumeric only
+                          if (v.length > 0 && v.length < 8) {
+                            setOperatorPasswordError(
+                              "Password must be at least 8 characters",
+                            );
+                          } else if (v && !/^[A-Za-z0-9]+$/.test(v)) {
+                            setOperatorPasswordError(
+                              "Password must be alphanumeric (letters and numbers only)",
+                            );
+                          } else {
+                            setOperatorPasswordError(null);
+                          }
+                          // clear global error when user edits
+                          setCreateOperatorError(null);
+                        }}
+                        className={`w-full px-4 py-2 border rounded-md focus:ring-2 focus:ring-[#007cb6] focus:border-transparent ${operatorPasswordError ? "border-red-300" : "border-gray-300"}`}
                         placeholder="Enter password"
                         required
                       />
+                      {operatorPasswordError && (
+                        <div className="text-red-500 text-sm mt-2">
+                          {operatorPasswordError}
+                        </div>
+                      )}
                     </div>
+
+                    {/* show remaining operator credits (if available) and block creation when none left */}
+                    {typeof enterpriseSummary?.purchasesSummary
+                      ?.leftCreditsOperator === "number" && (
+                      <div className="text-sm text-gray-600 mb-3">
+                        Operator credits available:{" "}
+                        <strong className="text-blue-600">
+                          {
+                            enterpriseSummary!.purchasesSummary!
+                              .leftCreditsOperator
+                          }
+                        </strong>
+                      </div>
+                    )}
+
+                    {(enterpriseSummary?.purchasesSummary
+                      ?.leftCreditsOperator ?? 1) <= 0 && (
+                      <div className="bg-yellow-50 border border-yellow-200 text-yellow-800 p-3 rounded mb-4">
+                        ⚠️ You do not have operator credits remaining. Please{" "}
+                        <button
+                          type="button"
+                          onClick={() => setActiveTab("buy-credits")}
+                          className="underline"
+                        >
+                          buy credits
+                        </button>{" "}
+                        to create an operator.
+                      </div>
+                    )}
 
                     {createOperatorError && (
                       <div className="text-red-500 text-sm bg-red-50 p-3 rounded-md">
@@ -1541,17 +1841,23 @@ export default function EnterpriseDashboard() {
                       type="submit"
                       disabled={
                         createOperatorLoading ||
-                        enterpriseSummary?.purchasesSummary?.leftCreditsOperator === 0
+                        !!operatorPasswordError ||
+                        (enterpriseSummary?.purchasesSummary
+                          ?.leftCreditsOperator ?? 1) <= 0
                       }
                       className="w-full bg-[#007cb6] text-white py-2 rounded-md font-semibold hover:bg-[#005f8e] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                      {createOperatorLoading ? "Creating..." : "Create Operator"}
+                      {createOperatorLoading
+                        ? "Creating..."
+                        : "Create Operator"}
                     </button>
                   </form>
                 </div>
               )}
 
-              <div className={`space-y-6 ${manageOperatorsSubTab === "create" ? "hidden" : ""}`}>
+              <div
+                className={`space-y-6 ${manageOperatorsSubTab === "create" ? "hidden" : ""}`}
+              >
                 {/* My Operators List */}
                 {employeesLoading ? (
                   <div className="text-center py-8">
@@ -1559,9 +1865,33 @@ export default function EnterpriseDashboard() {
                   </div>
                 ) : (
                   <div className="bg-white rounded-lg shadow-md p-6">
-                    <h3 className="text-lg font-bold text-gray-800 mb-4">
-                      My Operators
-                    </h3>
+                    <div className="flex items-center justify-between mb-4">
+                      <h3 className="text-lg font-bold text-gray-800">
+                        My Operators
+                      </h3>
+                      <button
+                        type="button"
+                        onClick={() => fetchEmployees()}
+                        disabled={employeesLoading}
+                        aria-label="Refresh operators list"
+                        className={`inline-flex items-center gap-2 text-sm px-2 py-1 rounded border ${employeesLoading ? "opacity-60 cursor-not-allowed" : "hover:bg-gray-100"}`}
+                      >
+                        <svg
+                          className={`w-4 h-4 ${employeesLoading ? "animate-spin" : ""}`}
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M20 11a8 8 0 10-9.95 7.88M21 3v5h-5"
+                          />
+                        </svg>
+                        Refresh
+                      </button>
+                    </div>
 
                     {operatorsList && operatorsList.length > 0 ? (
                       <div className="space-y-3">
@@ -1634,7 +1964,7 @@ export default function EnterpriseDashboard() {
                                 </button>
 
                                 {openActionMenuId === op._id && (
-                                  <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-xl border border-gray-200 z-10">
+                                  <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-xl border border-gray-200 z-10 max-h-56 overflow-y-scroll">
                                     <button
                                       onClick={() => {
                                         setOpenActionMenuId(null);
@@ -1690,6 +2020,43 @@ export default function EnterpriseDashboard() {
                                         View Operator
                                       </span>
                                     </button>
+
+                                    <button
+                                      onClick={() => {
+                                        setOpenActionMenuId(null);
+                                        setSelectedOperatorForReset(op);
+                                        setResetPasswordValue("");
+                                        setResetPasswordConfirm("");
+                                        setResetPasswordError(null);
+                                        setResetPasswordSuccess(null);
+                                        setResetPasswordModal(true);
+                                      }}
+                                      className="w-full text-left px-4 py-3 hover:bg-yellow-50 transition-colors flex items-center gap-2"
+                                    >
+                                      <svg
+                                        className="w-5 h-5 text-yellow-600"
+                                        fill="none"
+                                        stroke="currentColor"
+                                        viewBox="0 0 24 24"
+                                      >
+                                        <path
+                                          strokeLinecap="round"
+                                          strokeLinejoin="round"
+                                          strokeWidth={2}
+                                          d="M12 11c0-1.657-1.343-3-3-3S6 9.343 6 11s1.343 3 3 3 3-1.343 3-3z"
+                                        />
+                                        <path
+                                          strokeLinecap="round"
+                                          strokeLinejoin="round"
+                                          strokeWidth={2}
+                                          d="M19 11c0 4.418-3.582 8-8 8s-8-3.582-8-8 3.582-8 8-8 8 3.582 8 8z"
+                                        />
+                                      </svg>
+                                      <span className="font-medium text-gray-700">
+                                        Reset Password
+                                      </span>
+                                    </button>
+
                                     <button
                                       onClick={() => {
                                         setOpenActionMenuId(null);
@@ -1714,6 +2081,10 @@ export default function EnterpriseDashboard() {
                                         Delete Operator
                                       </span>
                                     </button>
+                                    <br />
+                                    <br />
+                                    <br />
+                                    <br />
                                   </div>
                                 )}
                               </div>
@@ -1736,8 +2107,8 @@ export default function EnterpriseDashboard() {
             </>
           )}
 
-          {/* Search Employees Tab */}
-          {activeTab === "search-employees" && (
+          {/* Manage Employees Tab (formerly Search Employees) */}
+          {activeTab === "manage-employees" && (
             <>
               {employeesSearchError && (
                 <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
@@ -1745,74 +2116,162 @@ export default function EnterpriseDashboard() {
                 </div>
               )}
 
-              <div className="space-y-4">
-                <div className="bg-white rounded-lg shadow-md p-6">
-                  <h3 className="text-lg font-bold text-gray-800 mb-4">
-                    Search Employees
-                  </h3>
-
-                  <div className="flex gap-2 mb-4">
-                    <input
-                      type="text"
-                      value={employeesSearchQuery}
-                      onChange={(e) => setEmployeesSearchQuery(e.target.value)}
-                      placeholder="Search by name, email, username..."
-                      className="flex-1 px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-[#007cb6] focus:border-transparent"
-                    />
-                    <button
-                      onClick={() => {
-                        setEmployeesSearchPage(1);
-                        handleSearchEmployees(employeesSearchQuery);
-                      }}
-                      disabled={employeesSearchLoading}
-                      className="px-4 py-2 bg-[#007cb6] text-white rounded-md font-semibold hover:bg-[#005f8e] disabled:opacity-50"
-                    >
-                      Search
-                    </button>
-                  </div>
-
-                  {employeesSearchLoading ? (
-                    <div className="text-center py-4 text-gray-600">
-                      Loading...
-                    </div>
-                  ) : employeesSearchResults.length > 0 ? (
-                    <div className="space-y-3">
-                      {employeesSearchResults.map((emp: any, idx: number) => (
-                        <div
-                          key={emp._id || idx}
-                          className="bg-gray-50 border border-gray-200 rounded-lg p-4"
-                        >
-                          <div className="font-semibold text-gray-800">
-                            {emp.name || emp.username || "N/A"}
-                          </div>
-                          <div className="text-sm text-gray-600">
-                            {emp.email || emp.tgid || "—"}
-                          </div>
-                          {emp.membershipEnd && (
-                            <div className="text-xs text-gray-500 mt-1">
-                              Membership until:{" "}
-                              {new Date(emp.membershipEnd).toLocaleDateString()}
-                            </div>
-                          )}
-                        </div>
-                      ))}
-                    </div>
-                  ) : (
-                    <div className="text-center py-4 text-gray-500">
-                      {employeesSearchQuery
-                        ? "No employees found"
-                        : "Enter a search term to find employees"}
-                    </div>
-                  )}
-
-                  {employeesSearchTotal > 50 && (
-                    <div className="text-center mt-4 text-sm text-gray-600">
-                      Showing {employeesSearchResults.length} of{" "}
-                      {employeesSearchTotal} employees
-                    </div>
-                  )}
-                </div>
+              {/* Sub-tabs (Create / Manage) */}
+              <div className="flex gap-2 mb-4">
+                <button
+                  type="button"
+                  onClick={() => setManageEmployeesSubTab("create")}
+                  className={`flex-1 py-2 rounded font-semibold ${
+                    manageEmployeesSubTab === "create"
+                      ? "bg-[#007cb6] text-white"
+                      : "bg-white border border-gray-200 text-gray-700"
+                  }`}
+                >
+                  Create Employee
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setManageEmployeesSubTab("manage")}
+                  className={`flex-1 py-2 rounded font-semibold ${
+                    manageEmployeesSubTab === "manage"
+                      ? "bg-[#007cb6] text-white"
+                      : "bg-white border border-gray-200 text-gray-700"
+                  }`}
+                >
+                  Manage
+                </button>
               </div>
+
+              {manageEmployeesSubTab === "create" && (
+                <div className="mb-6">
+                  <ThreeStageCreation
+                    userType="employee"
+                    onSuccess={() => {
+                      setManageEmployeesSubTab("manage");
+                      handleSearchEmployees("");
+                      fetchDashboardData();
+                    }}
+                    onCancel={() => setManageEmployeesSubTab("manage")}
+                  />
+                </div>
+              )}
+
+              {manageEmployeesSubTab === "manage" && (
+                <div className="space-y-4">
+                  <div className="bg-white rounded-lg shadow-md p-6">
+                    <h3 className="text-lg font-bold text-gray-800 mb-4">
+                      Search Employees
+                    </h3>
+
+                    <div className="flex gap-2 mb-4">
+                      <input
+                        type="text"
+                        value={employeesSearchQuery}
+                        onChange={(e) =>
+                          setEmployeesSearchQuery(e.target.value)
+                        }
+                        placeholder="Search by username..."
+                        className="flex-1 px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-[#007cb6] focus:border-transparent"
+                      />
+                      <button
+                        onClick={() => {
+                          setEmployeesSearchPage(1);
+                          handleSearchEmployees(employeesSearchQuery);
+                        }}
+                        disabled={employeesSearchLoading}
+                        className="px-4 py-2 bg-[#007cb6] text-white rounded-md font-semibold hover:bg-[#005f8e] disabled:opacity-50"
+                      >
+                        Search
+                      </button>
+                    </div>
+
+                    {employeesSearchLoading ? (
+                      <div className="text-center py-4 text-gray-600">
+                        Loading...
+                      </div>
+                    ) : employeesSearchResults.length > 0 ? (
+                      <div className="border border-gray-200 rounded-lg overflow-hidden">
+                        <div className="overflow-x-auto max-h-96 overflow-y-auto">
+                          <table className="min-w-full divide-y divide-gray-200">
+                            <thead className="bg-gray-50 sticky top-0">
+                              <tr>
+                                <th className="px-4 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
+                                  Name
+                                </th>
+                                <th className="px-4 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
+                                  Email
+                                </th>
+                                <th className="px-4 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
+                                  Username
+                                </th>
+                                <th className="px-4 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
+                                  Membership
+                                </th>
+                                <th className="px-4 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
+                                  Created
+                                </th>
+                              </tr>
+                            </thead>
+                            <tbody className="bg-white divide-y divide-gray-200">
+                              {employeesSearchResults.map(
+                                (emp: any, idx: number) => (
+                                  <tr
+                                    key={emp._id || idx}
+                                    className="hover:bg-gray-50"
+                                  >
+                                    <td className="px-4 py-3 text-sm text-gray-800">
+                                      {emp.name || emp.username || "-"}
+                                    </td>
+                                    <td className="px-4 py-3 text-sm text-gray-600">
+                                      {emp.email || emp.tgid || "-"}
+                                    </td>
+                                    <td className="px-4 py-3 text-sm text-gray-600">
+                                      {emp.username || emp.tgid || "-"}
+                                    </td>
+                                    <td className="px-4 py-3 text-sm">
+                                      {emp.membershipEnd ? (
+                                        <span
+                                          className={`px-2 py-1 rounded text-xs font-semibold ${new Date(emp.membershipEnd) > new Date() ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"}`}
+                                        >
+                                          {new Date(
+                                            emp.membershipEnd,
+                                          ).toLocaleDateString()}
+                                        </span>
+                                      ) : (
+                                        "-"
+                                      )}
+                                    </td>
+                                    <td className="px-4 py-3 text-sm text-gray-500">
+                                      {emp.createdAt
+                                        ? new Date(
+                                            emp.createdAt,
+                                          ).toLocaleDateString()
+                                        : "-"}
+                                    </td>
+                                  </tr>
+                                ),
+                              )}
+                            </tbody>
+                          </table>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="text-center py-4 text-gray-500">
+                        {employeesSearchQuery
+                          ? "No employees found"
+                          : "Enter a search term to find employees"}
+                      </div>
+                    )}
+
+                    {employeesSearchTotal > 50 && (
+                      <div className="text-center mt-4 text-sm text-gray-600">
+                        Showing {employeesSearchResults.length} of{" "}
+                        {employeesSearchTotal} employees
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
             </>
           )}
 
@@ -1844,28 +2303,31 @@ export default function EnterpriseDashboard() {
                       Select Package *
                     </label>
                     <div className="space-y-2 max-h-48 overflow-y-auto">
-                      {packages.map((pkg) => (
-                        <button
-                          key={pkg._id}
-                          onClick={() => setSelectedPackageForOperator(pkg)}
-                          className={`w-full text-left p-3 rounded border-2 transition ${
-                            selectedPackageForOperator?._id === pkg._id
-                              ? "border-[#007cb6] bg-blue-50"
-                              : "border-gray-200 hover:border-[#007cb6]"
-                          }`}
-                        >
-                          <div className="font-semibold text-gray-800">
-                            {pkg.name}
-                          </div>
-                          <div className="text-sm text-gray-600">
-                            Employees: {pkg.employeeCredits} | Operators:{" "}
-                            {pkg.operatorCredits}
-                          </div>
-                          <div className="text-sm font-bold text-[#007cb6]">
-                            ${pkg.price} USDT
-                          </div>
-                        </button>
-                      ))}
+                      {packages.map((pkg) => {
+                        const color = getPackageColorClasses(pkg.name);
+                        const isSelected =
+                          selectedPackageForOperator?._id === pkg._id;
+                        return (
+                          <button
+                            key={pkg._id}
+                            onClick={() => setSelectedPackageForOperator(pkg)}
+                            className={`w-full text-left p-3 rounded border-2 transition ${isSelected ? "border-[#007cb6] bg-blue-50" : `border ${color.borderClass} hover:border-[#007cb6]`}`}
+                          >
+                            <div className={`font-semibold ${color.titleText}`}>
+                              {pkg.name}
+                            </div>
+                            <div className="text-sm text-gray-600">
+                              Employees: {pkg.employeeCredits} | Operators:{" "}
+                              {pkg.operatorCredits}
+                            </div>
+                            <div
+                              className={`text-sm font-bold ${color.priceText}`}
+                            >
+                              ${pkg.price} USDT
+                            </div>
+                          </button>
+                        );
+                      })}
                     </div>
                   </div>
 
@@ -1929,7 +2391,7 @@ export default function EnterpriseDashboard() {
           {/* Assign Credits Modal */}
           {assignCreditsModal && selectedOperatorForAssign && (
             <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40 p-4">
-              <div className="bg-white rounded-xl shadow-xl w-full max-w-md">
+              <div className="bg-white rounded-xl shadow-xl w-full max-w-4xl">
                 <div className="bg-white border-b p-4 flex justify-between items-center rounded-t-xl">
                   <h3 className="text-lg font-bold text-gray-800">
                     Assign Credits to{" "}
@@ -1949,76 +2411,90 @@ export default function EnterpriseDashboard() {
                 </div>
 
                 <div className="p-6 space-y-4">
-                  <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <div className="text-xs text-gray-500">Operator</div>
-                        <div className="font-semibold text-gray-800">
-                          {selectedOperatorForAssign.name ||
-                            selectedOperatorForAssign.email}
-                        </div>
+                  <div className="bg-gradient-to-r from-white to-blue-50 p-4 rounded-lg border border-gray-100 flex items-center gap-4">
+                    <div className="w-14 h-14 rounded-full bg-[#007cb6] text-white flex items-center justify-center text-xl font-bold">
+                      {(
+                        (
+                          selectedOperatorForAssign?.name ||
+                          selectedOperatorForAssign?.email ||
+                          "O"
+                        ).charAt(0) || "O"
+                      ).toUpperCase()}
+                    </div>
+                    <div className="flex-1">
+                      <div className="text-sm font-semibold text-gray-800">
+                        {selectedOperatorForAssign.name ||
+                          selectedOperatorForAssign.email}
                       </div>
-                      <div className="text-right">
-                        <div className="text-xs text-gray-500">
-                          Current Credits
-                        </div>
-                        <div className="font-bold text-blue-700 text-lg">
-                          {selectedOperatorForAssign.credits ?? 0}
-                        </div>
+                      <div className="text-xs text-gray-500 mt-1">
+                        {selectedOperatorForAssign.email}
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <div className="text-xs text-gray-500">Credits</div>
+                      <div className="text-2xl font-bold text-blue-700">
+                        {selectedOperatorForAssign.credits ?? 0}
                       </div>
                     </div>
                   </div>
 
                   <div className="grid grid-cols-1 gap-3">
                     <div className="flex items-center justify-between">
-                      <div>
-                        <p className="text-xs text-gray-500">
+                      <div className="flex-1">
+                        <div className="text-xs text-gray-500">
                           Available to assign
-                        </p>
-                        <p className="font-semibold text-gray-800 text-lg">
-                          {enterpriseSummary?.purchasesSummary
-                            ?.leftCreditsEmployee ?? "—"}
+                        </div>
+                        <div className="font-semibold text-gray-800 text-lg">
+                          {leftEmployeeCredits ?? "—"}{" "}
                           <span className="ml-2 text-xs text-gray-500">
                             employee credits
                           </span>
-                        </p>
-                      </div>
-                      <div className="flex gap-2">
-                        <button
-                          type="button"
-                          onClick={() => setEmployeeCreditsToAssign("100")}
-                          className="px-3 py-1 bg-gray-100 rounded-md text-sm text-gray-700 border border-gray-200 hover:bg-gray-200"
-                        >
-                          +100
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => setEmployeeCreditsToAssign("500")}
-                          className="px-3 py-1 bg-gray-100 rounded-md text-sm text-gray-700 border border-gray-200 hover:bg-gray-200"
-                        >
-                          +500
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => setEmployeeCreditsToAssign("1000")}
-                          className="px-3 py-1 bg-gray-100 rounded-md text-sm text-gray-700 border border-gray-200 hover:bg-gray-200"
-                        >
-                          +1000
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() =>
-                            setEmployeeCreditsToAssign(
-                              String(
-                                enterpriseSummary?.purchasesSummary
-                                  ?.leftCreditsEmployee ?? "",
-                              ),
-                            )
-                          }
-                          className="px-3 py-1 bg-white rounded-md text-sm text-[#007cb6] border border-[#007cb6] hover:bg-[#007cb6] hover:text-white transition"
-                        >
-                          Max
-                        </button>
+                        </div>
+                        <div className="w-full bg-gray-100 h-2 rounded-full mt-2 overflow-hidden">
+                          <div
+                            className="h-2 bg-green-400"
+                            style={{ width: `${employeeCreditsPercentUsed}%` }}
+                          />
+                        </div>
+                        <div className="text-xs text-gray-400 mt-2">
+                          Used {usedEmployeeCredits}/{totalEmployeeCredits} (
+                          {employeeCreditsPercentUsed}%)
+                        </div>
+
+                        <div className="mt-3 flex flex-wrap gap-2">
+                          <button
+                            type="button"
+                            onClick={() => setEmployeeCreditsToAssign("100")}
+                            className="px-3 py-1 bg-gray-50 border border-gray-200 rounded text-sm hover:bg-gray-100"
+                          >
+                            +100
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setEmployeeCreditsToAssign("500")}
+                            className="px-3 py-1 bg-gray-50 border border-gray-200 rounded text-sm hover:bg-gray-100"
+                          >
+                            +500
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setEmployeeCreditsToAssign("1000")}
+                            className="px-3 py-1 bg-gray-50 border border-gray-200 rounded text-sm hover:bg-gray-100"
+                          >
+                            +1000
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() =>
+                              setEmployeeCreditsToAssign(
+                                String(leftEmployeeCredits),
+                              )
+                            }
+                            className="px-3 py-1 bg-white text-[#007cb6] border border-[#007cb6] rounded text-sm hover:bg-[#007cb6] hover:text-white transition"
+                          >
+                            Max
+                          </button>
+                        </div>
                       </div>
                     </div>
 
@@ -2026,17 +2502,51 @@ export default function EnterpriseDashboard() {
                       <label className="block text-sm font-semibold text-gray-700 mb-2">
                         Number of Employee Credits *
                       </label>
-                      <input
-                        type="number"
-                        min="1"
-                        value={employeeCreditsToAssign}
-                        onChange={(e) =>
-                          setEmployeeCreditsToAssign(e.target.value)
-                        }
-                        placeholder="Enter number of credits (e.g., 1000)"
-                        className="w-full px-4 py-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-[#007cb6] focus:border-transparent text-lg font-medium"
-                      />
-                      <div className="flex justify-between mt-2 text-xs text-gray-500">
+                      <div className="flex items-center gap-3 justify-center">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const curr = Math.max(
+                              0,
+                              (parseInt(employeeCreditsToAssign || "0") || 0) -
+                                1,
+                            );
+                            setEmployeeCreditsToAssign(String(curr));
+                            setAssignCreditsError(null);
+                          }}
+                          className="px-3 py-2 bg-gray-50 rounded-l-md border border-r-0 border-gray-200"
+                          aria-label="Decrease credits"
+                        >
+                          −
+                        </button>
+
+                        <input
+                          type="number"
+                          min={1}
+                          value={employeeCreditsToAssign}
+                          onChange={(e) =>
+                            setEmployeeCreditsToAssign(e.target.value)
+                          }
+                          placeholder="Enter number of credits"
+                          className="w-48 mx-auto text-right px-4 py-2 border-t border-b border-gray-200 appearance-none"
+                        />
+
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const curr =
+                              (parseInt(employeeCreditsToAssign || "0") || 0) +
+                              1;
+                            setEmployeeCreditsToAssign(String(curr));
+                            setAssignCreditsError(null);
+                          }}
+                          className="px-3 py-2 bg-gray-50 rounded-r-md border border-l-0 border-gray-200"
+                          aria-label="Increase credits"
+                        >
+                          +
+                        </button>
+                      </div>
+                      <div className="flex flex-col sm:flex-row sm:justify-between mt-2 text-xs text-gray-500 items-center gap-2">
                         <div>Minimum 1 credit</div>
                         <div>
                           {employeeCreditsToAssign &&
@@ -2059,31 +2569,29 @@ export default function EnterpriseDashboard() {
                     </div>
                   )}
 
-                  <div className="flex gap-3">
+                  <div className="mt-6 flex gap-4 justify-center">
                     <button
                       onClick={() => {
                         setAssignCreditsModal(false);
                         setEmployeeCreditsToAssign("");
                         setAssignCreditsError(null);
                       }}
-                      className="flex-1 px-4 py-2 bg-gray-100 text-gray-800 rounded-md font-semibold hover:bg-gray-200"
+                      className="w-36 px-4 py-2 bg-white border border-gray-200 text-gray-800 rounded-md font-semibold hover:bg-gray-50"
                       disabled={assignCreditsLoading}
                     >
                       Cancel
                     </button>
+
                     <button
                       onClick={handleAssignCredits}
                       disabled={
                         assignCreditsLoading ||
-                        !employeeCreditsToAssign.trim() ||
-                        parseInt(employeeCreditsToAssign) <= 0 ||
-                        (typeof enterpriseSummary?.purchasesSummary
-                          ?.leftCreditsEmployee === "number" &&
-                          parseInt(employeeCreditsToAssign) >
-                            (enterpriseSummary?.purchasesSummary
-                              ?.leftCreditsEmployee ?? 0))
+                        !(parseInt(employeeCreditsToAssign || "0") > 0) ||
+                        (typeof leftEmployeeCredits === "number" &&
+                          parseInt(employeeCreditsToAssign || "0") >
+                            (leftEmployeeCredits ?? 0))
                       }
-                      className="flex-1 px-4 py-2 bg-[#007cb6] text-white rounded-md font-semibold hover:bg-[#005f8e] disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="w-44 px-4 py-2 bg-[#007cb6] text-white rounded-md font-semibold hover:bg-[#005f8e] disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       {assignCreditsLoading ? "Assigning..." : "Assign Credits"}
                     </button>
@@ -2093,6 +2601,117 @@ export default function EnterpriseDashboard() {
                     Tip: Use the quick buttons to set common amounts or press{" "}
                     <strong>Max</strong> to assign all available employee
                     credits.
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Reset Password Modal */}
+          {resetPasswordModal && selectedOperatorForReset && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40 p-4">
+              <div className="bg-white rounded-xl shadow-xl w-full max-w-md">
+                <div className="bg-white border-b p-4 flex justify-between items-center rounded-t-xl">
+                  <h3 className="text-lg font-bold text-gray-800">
+                    Reset Password —{" "}
+                    {selectedOperatorForReset.name ||
+                      selectedOperatorForReset.email}
+                  </h3>
+                  <button
+                    onClick={() => {
+                      setResetPasswordModal(false);
+                      setSelectedOperatorForReset(null);
+                      setResetPasswordValue("");
+                      setResetPasswordConfirm("");
+                      setResetPasswordError(null);
+                      setResetPasswordSuccess(null);
+                    }}
+                    className="text-gray-400 hover:text-gray-700 text-xl"
+                  >
+                    ×
+                  </button>
+                </div>
+
+                <div className="p-6 space-y-4">
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                      New Password *
+                    </label>
+                    <input
+                      type="password"
+                      value={resetPasswordValue}
+                      onChange={(e) => {
+                        setResetPasswordValue(e.target.value);
+                        setResetPasswordError(null);
+                        setResetPasswordSuccess(null);
+                      }}
+                      placeholder="Enter new password"
+                      className={`w-full px-4 py-2 border rounded-md focus:ring-2 focus:ring-[#007cb6] focus:border-transparent ${resetPasswordError ? "border-red-300" : "border-gray-300"}`}
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                      Confirm Password *
+                    </label>
+                    <input
+                      type="password"
+                      value={resetPasswordConfirm}
+                      onChange={(e) => {
+                        setResetPasswordConfirm(e.target.value);
+                        setResetPasswordError(null);
+                        setResetPasswordSuccess(null);
+                      }}
+                      placeholder="Confirm new password"
+                      className={`w-full px-4 py-2 border rounded-md focus:ring-2 focus:ring-[#007cb6] focus:border-transparent ${resetPasswordError ? "border-red-300" : "border-gray-300"}`}
+                    />
+                  </div>
+
+                  {resetPasswordError && (
+                    <div className="text-red-500 text-sm bg-red-50 p-3 rounded-md">
+                      {resetPasswordError}
+                    </div>
+                  )}
+
+                  {resetPasswordSuccess && (
+                    <div className="text-green-600 text-sm bg-green-50 p-3 rounded-md">
+                      {resetPasswordSuccess}
+                    </div>
+                  )}
+
+                  <div className="flex gap-3">
+                    <button
+                      onClick={() => {
+                        setResetPasswordModal(false);
+                        setSelectedOperatorForReset(null);
+                        setResetPasswordValue("");
+                        setResetPasswordConfirm("");
+                        setResetPasswordError(null);
+                        setResetPasswordSuccess(null);
+                      }}
+                      className="flex-1 px-4 py-2 bg-gray-100 text-gray-800 rounded-md font-semibold hover:bg-gray-200"
+                      disabled={resetPasswordLoading}
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      onClick={handleResetOperatorPassword}
+                      disabled={
+                        resetPasswordLoading ||
+                        !resetPasswordValue.trim() ||
+                        !resetPasswordConfirm.trim() ||
+                        resetPasswordValue.trim().length < 8 ||
+                        !/^[A-Za-z0-9]+$/.test(resetPasswordValue.trim()) ||
+                        resetPasswordValue !== resetPasswordConfirm
+                      }
+                      className="flex-1 px-4 py-2 bg-[#007cb6] text-white rounded-md font-semibold hover:bg-[#005f8e] disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {resetPasswordLoading ? "Resetting..." : "Reset Password"}
+                    </button>
+                  </div>
+
+                  <p className="text-xs text-gray-400 mt-2">
+                    Password must be alphanumeric and at least 8 characters.
                   </p>
                 </div>
               </div>

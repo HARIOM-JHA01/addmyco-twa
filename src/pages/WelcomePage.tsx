@@ -82,7 +82,11 @@ const WelcomePage: React.FC<WelcomePageProps> = ({ onLogin, partnerCode }) => {
   }, [banners]);
 
   useEffect(() => {
-    localStorage.removeItem("token");
+    // Don't clear token if operator just logged in
+    const operatorFlag = localStorage.getItem("operator_logged_in");
+    if (operatorFlag !== "true") {
+      localStorage.removeItem("token");
+    }
   }, []);
 
   const handleLogin = async () => {

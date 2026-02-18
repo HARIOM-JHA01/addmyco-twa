@@ -158,6 +158,9 @@ export const EnterpriseUsdtPaymentModal: React.FC<
           >
             {loading ? "Submitting..." : "Submit Payment Details"}
           </button>
+          <br />
+          <br />
+          <br />
         </div>
       </div>
     </div>

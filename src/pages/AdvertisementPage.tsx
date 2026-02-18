@@ -20,6 +20,7 @@ import { useAdvertisementData } from "../hooks/useAdvertisementData";
 import { UsdtPaymentModal } from "../components/advertisement/UsdtPaymentModal";
 import { AddCreditsModal } from "../components/advertisement/AddCreditsModal";
 import { BuyCreditsTab } from "../components/advertisement/BuyCreditsTab";
+import AdvertisementFAQPage from "./AdvertisementFAQPage";
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
@@ -757,9 +758,18 @@ export default function AdvertisementPage() {
                     setActiveTab("payment-history");
                     setMenuOpen(false);
                   }}
-                  className="block w-full text-left px-4 py-2 text-white font-semibold hover:bg-gray-800 transition last:rounded-b-lg"
+                  className="block w-full text-left px-4 py-2 text-white font-semibold hover:bg-gray-800 transition"
                 >
                   Payments
+                </button>
+                <button
+                  onClick={() => {
+                    setActiveTab("faq");
+                    setMenuOpen(false);
+                  }}
+                  className="block w-full text-left px-4 py-2 text-white font-semibold hover:bg-gray-800 transition last:rounded-b-lg"
+                >
+                  FAQ
                 </button>
               </div>
             )}
@@ -778,7 +788,9 @@ export default function AdvertisementPage() {
                     ? "My Advertisements"
                     : activeTab === "buy-credits"
                       ? "Buy Credits"
-                      : "Payment History"}
+                      : activeTab === "payment-history"
+                        ? "Payment History"
+                        : "FAQ"}
             </h2>
           </div>
 
@@ -2041,6 +2053,9 @@ export default function AdvertisementPage() {
               )}
             </div>
           )}
+
+          {/* FAQ Tab */}
+          {activeTab === "faq" && <AdvertisementFAQPage />}
 
           {/* Payment History Tab */}
           {activeTab === "payment-history" && !loading && (

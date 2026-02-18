@@ -2,11 +2,12 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
+import ThreeStageCreation from "../components/ThreeStageCreation";
+import ManageTemplatesPage from "./ManageTemplatesPage";
 import {
   getOperatorProfile,
   getOperatorCredits,
   getOperatorDetails,
-  createEmployee,
   operatorLogout,
 } from "../services/enterpriseService";
 import WebApp from "@twa-dev/sdk";
@@ -21,8 +22,6 @@ interface OperatorProfile {
 
 interface OperatorCredits {
   employeeCredits: number;
-  slotsUsed: number;
-  remainingSlots: number;
 }
 
 interface Employee {
@@ -42,18 +41,12 @@ export default function OperatorDashboardPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<
-    "overview" | "employees" | "create"
+    | "overview"
+    | "employees"
+    | "create-employee"
+    | "create-donator"
+    | "manage-templates"
   >("overview");
-
-  // Create employee form state
-  const [createEmployeeForm, setCreateEmployeeForm] = useState({
-    employeeTgid: "",
-    employeeName: "",
-    employeeEmail: "",
-  });
-  const [createLoading, setCreateLoading] = useState(false);
-  const [createError, setCreateError] = useState<string | null>(null);
-  const [createSuccess, setCreateSuccess] = useState<string | null>(null);
 
   useEffect(() => {
     fetchOperatorData();
@@ -131,43 +124,13 @@ export default function OperatorDashboardPage() {
     }
   };
 
-  const handleCreateEmployee = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setCreateLoading(true);
-    setCreateError(null);
-    setCreateSuccess(null);
+  const handleCreationSuccess = async () => {
+    await fetchOperatorData();
+    setActiveTab("employees");
+  };
 
-    try {
-      const result = await createEmployee({
-        employeeTgid: createEmployeeForm.employeeTgid.trim(),
-        employeeName: createEmployeeForm.employeeName.trim(),
-        employeeEmail: createEmployeeForm.employeeEmail.trim() || undefined,
-      });
-      setCreateSuccess(
-        `Employee created successfully! Username: ${result.username}`,
-      );
-
-      // Reset form
-      setCreateEmployeeForm({
-        employeeTgid: "",
-        employeeName: "",
-        employeeEmail: "",
-      });
-
-      // Refresh data
-      await fetchOperatorData();
-
-      // Switch to employees tab
-      setTimeout(() => {
-        setActiveTab("employees");
-        setCreateSuccess(null);
-      }, 2000);
-    } catch (err: any) {
-      setCreateError(err?.message || "Failed to create employee");
-      console.error("Create employee error:", err);
-    } finally {
-      setCreateLoading(false);
-    }
+  const handleCreationCancel = () => {
+    setActiveTab("overview");
   };
 
   if (loading) {
@@ -244,14 +207,34 @@ export default function OperatorDashboardPage() {
             Employees ({employees.length})
           </button>
           <button
-            onClick={() => setActiveTab("create")}
+            onClick={() => setActiveTab("create-employee")}
             className={`px-4 py-2 font-medium transition ${
-              activeTab === "create"
+              activeTab === "create-employee"
                 ? "border-b-2 border-blue-500 text-blue-500"
                 : "text-gray-600 hover:text-gray-800"
             }`}
           >
             Create Employee
+          </button>
+          <button
+            onClick={() => setActiveTab("create-donator")}
+            className={`px-4 py-2 font-medium transition ${
+              activeTab === "create-donator"
+                ? "border-b-2 border-blue-500 text-blue-500"
+                : "text-gray-600 hover:text-gray-800"
+            }`}
+          >
+            Create Donator
+          </button>
+          <button
+            onClick={() => setActiveTab("manage-templates")}
+            className={`px-4 py-2 font-medium transition ${
+              activeTab === "manage-templates"
+                ? "border-b-2 border-blue-500 text-blue-500"
+                : "text-gray-600 hover:text-gray-800"
+            }`}
+          >
+            Manage Templates
           </button>
         </div>
 
@@ -291,33 +274,24 @@ export default function OperatorDashboardPage() {
 
             {/* Credits Card */}
             <div className="bg-white rounded-lg shadow p-6">
-              <h2 className="text-xl font-bold mb-4">Credits & Slots</h2>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="text-center p-4 bg-green-50 rounded-lg">
-                  <p className="text-sm text-gray-600 mb-1">
+              <h2 className="text-xl font-bold mb-4">Credits</h2>
+              <div className="flex justify-center">
+                <div className="text-center p-6 bg-green-50 rounded-lg min-w-[250px]">
+                  <p className="text-sm text-gray-600 mb-2">
                     Available Credits
                   </p>
-                  <p className="text-3xl font-bold text-green-600">
+                  <p className="text-5xl font-bold text-green-600">
                     {credits?.employeeCredits || 0}
                   </p>
-                </div>
-                <div className="text-center p-4 bg-blue-50 rounded-lg">
-                  <p className="text-sm text-gray-600 mb-1">Slots Used</p>
-                  <p className="text-3xl font-bold text-blue-600">
-                    {credits?.slotsUsed || 0}
-                  </p>
-                </div>
-                <div className="text-center p-4 bg-purple-50 rounded-lg">
-                  <p className="text-sm text-gray-600 mb-1">Remaining Slots</p>
-                  <p className="text-3xl font-bold text-purple-600">
-                    {credits?.remainingSlots || 0}
+                  <p className="text-xs text-gray-500 mt-2">
+                    Credits remaining for creating employees
                   </p>
                 </div>
               </div>
-              {(credits?.remainingSlots || 0) === 0 && (
+              {(credits?.employeeCredits || 0) === 0 && (
                 <div className="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded text-sm text-yellow-800">
-                  ⚠️ You have no remaining slots. Contact your administrator to
-                  get more credits.
+                  ⚠️ You have no remaining credits. Contact your administrator
+                  to get more credits.
                 </div>
               )}
             </div>
@@ -347,7 +321,8 @@ export default function OperatorDashboardPage() {
                 <div className="text-center">
                   <p className="text-2xl font-bold text-purple-600">
                     {(
-                      ((credits?.slotsUsed || 0) /
+                      (((profile?.creditsAllocated || 0) -
+                        (credits?.employeeCredits || 0)) /
                         (profile?.creditsAllocated || 1)) *
                       100
                     ).toFixed(0)}
@@ -374,7 +349,7 @@ export default function OperatorDashboardPage() {
                 <div className="p-8 text-center text-gray-500">
                   <p className="mb-2">No employees created yet</p>
                   <button
-                    onClick={() => setActiveTab("create")}
+                    onClick={() => setActiveTab("create-employee")}
                     className="text-blue-500 hover:text-blue-600 underline"
                   >
                     Create your first employee
@@ -439,115 +414,26 @@ export default function OperatorDashboardPage() {
         )}
 
         {/* Create Employee Tab */}
-        {activeTab === "create" && (
-          <div className="bg-white rounded-lg shadow p-6">
-            <h2 className="text-xl font-bold mb-4">Create New Employee</h2>
+        {activeTab === "create-employee" && (
+          <ThreeStageCreation
+            userType="employee"
+            onSuccess={handleCreationSuccess}
+            onCancel={handleCreationCancel}
+          />
+        )}
 
-            {(credits?.remainingSlots || 0) === 0 ? (
-              <div className="p-4 bg-red-50 border border-red-200 rounded text-red-800">
-                <p className="font-medium">Cannot create employee</p>
-                <p className="text-sm mt-1">
-                  You have no remaining slots. Please contact your administrator
-                  to get more credits.
-                </p>
-              </div>
-            ) : (
-              <form onSubmit={handleCreateEmployee} className="space-y-4">
-                {createError && (
-                  <div className="p-3 bg-red-50 border border-red-200 rounded text-sm text-red-800">
-                    {createError}
-                  </div>
-                )}
-                {createSuccess && (
-                  <div className="p-3 bg-green-50 border border-green-200 rounded text-sm text-green-800">
-                    {createSuccess}
-                  </div>
-                )}
+        {/* Create Donator Tab */}
+        {activeTab === "create-donator" && (
+          <ThreeStageCreation
+            userType="donator"
+            onSuccess={handleCreationSuccess}
+            onCancel={handleCreationCancel}
+          />
+        )}
 
-                <div>
-                  <label className="block text-sm font-medium mb-1">
-                    Telegram ID *
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    value={createEmployeeForm.employeeTgid}
-                    onChange={(e) =>
-                      setCreateEmployeeForm({
-                        ...createEmployeeForm,
-                        employeeTgid: e.target.value,
-                      })
-                    }
-                    className="w-full px-3 py-2 border rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    placeholder="telegram_username or user_id"
-                  />
-                  <p className="text-xs text-gray-500 mt-1">
-                    Enter the employee's Telegram username or user ID
-                  </p>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium mb-1">
-                    Employee Name *
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    value={createEmployeeForm.employeeName}
-                    onChange={(e) =>
-                      setCreateEmployeeForm({
-                        ...createEmployeeForm,
-                        employeeName: e.target.value,
-                      })
-                    }
-                    className="w-full px-3 py-2 border rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    placeholder="John Doe"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium mb-1">
-                    Email (Optional)
-                  </label>
-                  <input
-                    type="email"
-                    value={createEmployeeForm.employeeEmail}
-                    onChange={(e) =>
-                      setCreateEmployeeForm({
-                        ...createEmployeeForm,
-                        employeeEmail: e.target.value,
-                      })
-                    }
-                    className="w-full px-3 py-2 border rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    placeholder="john@example.com"
-                  />
-                </div>
-
-                <div className="flex gap-3 pt-4">
-                  <button
-                    type="submit"
-                    disabled={createLoading}
-                    className="flex-1 px-6 py-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition disabled:opacity-50 disabled:cursor-not-allowed font-medium"
-                  >
-                    {createLoading ? "Creating..." : "Create Employee"}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() =>
-                      setCreateEmployeeForm({
-                        employeeTgid: "",
-                        employeeName: "",
-                        employeeEmail: "",
-                      })
-                    }
-                    className="px-6 py-3 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition"
-                  >
-                    Reset
-                  </button>
-                </div>
-              </form>
-            )}
-          </div>
+        {/* Manage Templates Tab */}
+        {activeTab === "manage-templates" && (
+          <ManageTemplatesPage role="operator" />
         )}
       </main>
       <Footer />

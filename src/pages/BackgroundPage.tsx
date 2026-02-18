@@ -28,8 +28,10 @@ export default function BackgroundPage() {
 
   const profile = useProfileStore((s) => s.profile);
   const memberType = profile?.membertype || profile?.membertype || "free";
+  const isLifetimeUser = profile?.usertype === 2;
   const isFree =
-    memberType === "free" || memberType === "Free" || memberType === "FREE";
+    (memberType === "free" || memberType === "Free" || memberType === "FREE") &&
+    !isLifetimeUser;
 
   useEffect(() => {
     const fetchAll = async () => {
@@ -50,7 +52,8 @@ export default function BackgroundPage() {
         ]);
         const rawSystem = sysRes?.data?.data || [];
         const normalizedSystem = rawSystem.map((it: any) => {
-          const thumbnails = it.Thumbnail || it.thumbnail || it.Thumbnail || [];
+          // Handle both Thumbnail (system images) and fileUrl (user-uploaded images)
+          const thumbnails = it.Thumbnail || it.thumbnail || it.fileUrl || [];
           const primary = Array.isArray(thumbnails)
             ? thumbnails[0]
             : thumbnails;
@@ -79,9 +82,43 @@ export default function BackgroundPage() {
               null,
           };
         });
+
+        // Normalize user images - fetch from fileUrl array
+        const rawUser = userRes?.data?.data || [];
+        const normalizedUser = rawUser.map((it: any, idx: number) => {
+          const fileUrls = it.fileUrl || [];
+          const primaryUrl =
+            Array.isArray(fileUrls) && fileUrls.length > 0
+              ? fileUrls[0]
+              : it.url || it.image || it.imgUrl || it.src;
+
+          const normalized = {
+            ...it,
+            _id: it._id || `user-img-${idx}`,
+            url: primaryUrl,
+            thumbnails:
+              Array.isArray(fileUrls) && fileUrls.length > 0
+                ? fileUrls
+                : primaryUrl
+                  ? [primaryUrl]
+                  : [],
+            uniqueKey: it._id || `user-img-${idx}`,
+          };
+
+          // Debug log to check if images are being normalized properly
+          console.log("Normalized user image:", normalized);
+
+          return normalized;
+        });
+
         setSystemImages(normalizedSystem || []);
-        setUserImages(userRes.data.data || []);
+        setUserImages(normalizedUser || []);
         setCategories(catRes.data.data || []);
+
+        // Debug logs
+        console.log("API Response - Raw user images:", rawUser);
+        console.log("Normalized user images:", normalizedUser);
+        console.log("Total user images:", normalizedUser.length);
       } catch (err: any) {
         setError("Failed to load background images or categories");
       } finally {
@@ -156,7 +193,15 @@ export default function BackgroundPage() {
       });
 
       const combined = [...(userImages || []), ...yourImagesFromSystem];
-      return expandThumbnails(combined);
+      const expanded = expandThumbnails(combined);
+
+      // Debug log for "my" tab
+      console.log("My tab - userImages:", userImages);
+      console.log("My tab - yourImagesFromSystem:", yourImagesFromSystem);
+      console.log("My tab - combined:", combined);
+      console.log("My tab - expanded:", expanded);
+
+      return expanded;
     }
 
     if (activeTab === "all") {
@@ -479,6 +524,16 @@ export default function BackgroundPage() {
                       (Array.isArray(img.thumbnails) && img.thumbnails[0]) ||
                       null;
                     const isSelected = selectedImage === url;
+
+                    // Debug log for "my" tab images
+                    if (activeTab === "my") {
+                      console.log("Rendering 'my' tab image:", {
+                        img,
+                        url,
+                        hasUrl: !!url,
+                      });
+                    }
+
                     return (
                       <button
                         key={img.uniqueKey || img.id || img._id || idx}
@@ -503,6 +558,15 @@ export default function BackgroundPage() {
                             alt="bg"
                             className="absolute inset-0 w-full h-full object-cover"
                             loading="lazy"
+                            onError={(e) => {
+                              console.error("Image failed to load:", url);
+                              if (activeTab === "my") {
+                                console.log(
+                                  "Image load error for user image:",
+                                  url,
+                                );
+                              }
+                            }}
                           />
                         ) : (
                           <div className="absolute inset-0 w-full h-full flex items-center justify-center text-gray-400 bg-gray-100">

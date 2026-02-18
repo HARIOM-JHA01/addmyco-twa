@@ -77,3 +77,15 @@ select,
 .text-app {
     color: var(--app-font-color) !important;
 }
+
+/* Prevent layout shift when vertical scrollbar appears/disappears.
+   - reserve scrollbar gutter where supported
+   - fallback to always-reserved vertical scrollbar for consistent layout
+*/
+html {
+  scrollbar-gutter: stable;
+}
+body {
+  /* Reserve vertical scrollbar space to avoid content shifting when pages change height */
+  overflow-y: scroll;
+}

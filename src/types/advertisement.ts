@@ -72,7 +72,8 @@ export type TabType =
   | "buy-credits"
   | "create-ad"
   | "my-ads"
-  | "payment-history";
+  | "payment-history"
+  | "faq";
 
 export interface AdForm {
   position: string;

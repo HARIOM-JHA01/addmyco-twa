@@ -138,9 +138,13 @@ export const buyPackage = async (
   payload: BuyPackagePayload,
 ): Promise<BuyPackageResponse> => {
   try {
-    const response = await axios.post(`${API_BASE_URL}/enterprise/buy`, payload, {
-      headers: getOperatorAuthHeaders(),
-    });
+    const response = await axios.post(
+      `${API_BASE_URL}/enterprise/buy`,
+      payload,
+      {
+        headers: getOperatorAuthHeaders(),
+      },
+    );
     return response.data.data;
   } catch (error: any) {
     if (error instanceof OperatorAuthError) throw error;
@@ -267,9 +271,12 @@ export const getOperators = async (): Promise<{
 export const getUsers = async (): Promise<OperatorUsers> => {
   const token = localStorage.getItem("token");
   try {
-    const response = await axios.get(`${API_BASE_URL}/enterprise/me/employees`, {
-      headers: { Authorization: `Bearer ${token}` },
-    });
+    const response = await axios.get(
+      `${API_BASE_URL}/enterprise/me/employees`,
+      {
+        headers: { Authorization: `Bearer ${token}` },
+      },
+    );
     return response.data.data;
   } catch (error: any) {
     if (error instanceof OperatorAuthError) throw error;
@@ -277,9 +284,12 @@ export const getUsers = async (): Promise<OperatorUsers> => {
     const status = error?.response?.status;
     if (status === 404 || status === 405) {
       try {
-        const aliasRes = await axios.get(`${API_BASE_URL}/enterprise/employees`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
+        const aliasRes = await axios.get(
+          `${API_BASE_URL}/enterprise/employees`,
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          },
+        );
         return aliasRes.data.data;
       } catch (aliasErr: any) {
         console.error("Alias /enterprise/employees also failed:", aliasErr);
@@ -535,5 +545,210 @@ export const deleteOperator = async (operatorId: string): Promise<any> => {
     throw new Error(
       error?.response?.data?.message || "Failed to delete operator",
     );
+  }
+};
+
+/**
+ * Reset operator password
+ * POST /enterprise/me/operators/:operatorId/reset-password
+ * Body: { password, confirmPassword }
+ */
+export const resetOperatorPassword = async (
+  operatorId: string,
+  password: string,
+  confirmPassword: string,
+): Promise<any> => {
+  try {
+    const response = await axios.post(
+      `${API_BASE_URL}/enterprise/me/operators/${operatorId}/reset-password`,
+      { password, confirmPassword },
+      { headers: getOperatorAuthHeaders() },
+    );
+    return response.data;
+  } catch (error: any) {
+    if (error instanceof OperatorAuthError) throw error;
+    console.error("Failed to reset operator password:", error);
+    throw new Error(
+      error?.response?.data?.message || "Failed to reset operator password",
+    );
+  }
+};
+
+// ============================================================================
+// 3-STAGE CREATION PROCESS
+// ============================================================================
+
+// EMPLOYEE 3-STAGE CREATION
+
+export const createEmployeeStage1 = async (telegramUsername: string) => {
+  try {
+    const response = await axios.post(
+      `${API_BASE_URL}/enterprise/operator/three-stage/employee/stage1`,
+      { telegramUsername },
+      { headers: getOperatorAuthHeaders() },
+    );
+    return response.data.data;
+  } catch (error: any) {
+    if (error instanceof OperatorAuthError) throw error;
+    const message =
+      error?.response?.data?.message || "Failed to create employee";
+    throw new Error(message);
+  }
+};
+
+export const createEmployeeStage2 = async (
+  userId: string,
+  profileData: any,
+) => {
+  try {
+    const response = await axios.put(
+      `${API_BASE_URL}/enterprise/operator/three-stage/employee/${userId}/stage2`,
+      profileData,
+      { headers: getOperatorAuthHeaders() },
+    );
+    return response.data.data;
+  } catch (error: any) {
+    if (error instanceof OperatorAuthError) throw error;
+    const message =
+      error?.response?.data?.message || "Failed to update profile";
+    throw new Error(message);
+  }
+};
+
+export const createEmployeeStage3 = async (
+  userId: string,
+  formData: FormData,
+) => {
+  try {
+    const response = await axios.put(
+      `${API_BASE_URL}/enterprise/operator/three-stage/employee/${userId}/stage3`,
+      formData,
+      {
+        headers: {
+          ...getOperatorAuthHeaders(),
+          "Content-Type": "multipart/form-data",
+        },
+      },
+    );
+    return response.data.data;
+  } catch (error: any) {
+    if (error instanceof OperatorAuthError) throw error;
+    const message =
+      error?.response?.data?.message || "Failed to update company info";
+    throw new Error(message);
+  }
+};
+
+// DONATOR 3-STAGE CREATION
+
+export const createDonatorStage1 = async (telegramUsername: string) => {
+  try {
+    const response = await axios.post(
+      `${API_BASE_URL}/enterprise/operator/three-stage/donator/stage1`,
+      { telegramUsername },
+      { headers: getOperatorAuthHeaders() },
+    );
+    return response.data.data;
+  } catch (error: any) {
+    if (error instanceof OperatorAuthError) throw error;
+    const message =
+      error?.response?.data?.message || "Failed to create donator";
+    throw new Error(message);
+  }
+};
+
+export const createDonatorStage2 = async (userId: string, profileData: any) => {
+  try {
+    const response = await axios.put(
+      `${API_BASE_URL}/enterprise/operator/three-stage/donator/${userId}/stage2`,
+      profileData,
+      { headers: getOperatorAuthHeaders() },
+    );
+    return response.data.data;
+  } catch (error: any) {
+    if (error instanceof OperatorAuthError) throw error;
+    const message =
+      error?.response?.data?.message || "Failed to update profile";
+    throw new Error(message);
+  }
+};
+
+export const createDonatorStage3 = async (
+  userId: string,
+  formData: FormData,
+) => {
+  try {
+    const response = await axios.put(
+      `${API_BASE_URL}/enterprise/operator/three-stage/donator/${userId}/stage3`,
+      formData,
+      {
+        headers: {
+          ...getOperatorAuthHeaders(),
+          "Content-Type": "multipart/form-data",
+        },
+      },
+    );
+    return response.data.data;
+  } catch (error: any) {
+    if (error instanceof OperatorAuthError) throw error;
+    const message =
+      error?.response?.data?.message || "Failed to update company info";
+    throw new Error(message);
+  }
+};
+
+// OPERATOR 3-STAGE CREATION (Enterprise creates operators)
+
+export const createOperatorStage1 = async (telegramUsername: string) => {
+  try {
+    const response = await axios.post(
+      `${API_BASE_URL}/enterprise/me/three-stage/operator/stage1`,
+      { telegramUsername },
+      { headers: getOperatorAuthHeaders() },
+    );
+    return response.data.data;
+  } catch (error: any) {
+    if (error instanceof OperatorAuthError) throw error;
+    const message =
+      error?.response?.data?.message || "Failed to create operator";
+    throw new Error(message);
+  }
+};
+
+export const createOperatorStage2 = async (
+  operatorId: string,
+  profileData: any,
+) => {
+  try {
+    const response = await axios.put(
+      `${API_BASE_URL}/enterprise/me/three-stage/operator/${operatorId}/stage2`,
+      profileData,
+      { headers: getOperatorAuthHeaders() },
+    );
+    return response.data.data;
+  } catch (error: any) {
+    if (error instanceof OperatorAuthError) throw error;
+    const message =
+      error?.response?.data?.message || "Failed to update profile";
+    throw new Error(message);
+  }
+};
+
+export const createOperatorStage3 = async (
+  operatorId: string,
+  companyData: any,
+) => {
+  try {
+    const response = await axios.put(
+      `${API_BASE_URL}/enterprise/me/three-stage/operator/${operatorId}/stage3`,
+      companyData,
+      { headers: getOperatorAuthHeaders() },
+    );
+    return response.data.data;
+  } catch (error: any) {
+    if (error instanceof OperatorAuthError) throw error;
+    const message =
+      error?.response?.data?.message || "Failed to update company info";
+    throw new Error(message);
   }
 };
