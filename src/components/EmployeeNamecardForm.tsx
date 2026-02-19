@@ -179,7 +179,7 @@ export default function EmployeeNamecardForm({
 
     try {
       const response = await fetch(
-        `http://localhost:3000/user-exists/${username}`,
+        `https://admin.addmy.co/user-exists/${username}`,
       );
       const data = await response.json();
 
