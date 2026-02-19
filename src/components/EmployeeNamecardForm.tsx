@@ -57,6 +57,12 @@ export default function EmployeeNamecardForm({
   const [submitting, setSubmitting] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
+  // Username availability check state
+  const [usernameCheckLoading, setUsernameCheckLoading] = useState(false);
+  const [usernameExists, setUsernameExists] = useState<boolean | null>(null);
+  const [usernameCheckMessage, setUsernameCheckMessage] = useState<string>("");
+  const [usernameChecked, setUsernameChecked] = useState(false);
+
   // Fetch templates on mount
   useEffect(() => {
     const fetchTemplates = async () => {
@@ -121,6 +127,13 @@ export default function EmployeeNamecardForm({
         [name]: "",
       }));
     }
+
+    // Reset username check status if user changes the username
+    if (name === "telegram_username" && !editingNamecard) {
+      setUsernameChecked(false);
+      setUsernameExists(null);
+      setUsernameCheckMessage("");
+    }
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -149,6 +162,59 @@ export default function EmployeeNamecardForm({
     }
   };
 
+  const checkTelegramAvailability = async () => {
+    const username = formData.telegram_username.trim();
+
+    if (!username) {
+      setErrors((prev) => ({
+        ...prev,
+        telegram_username: "Please enter a telegram username",
+      }));
+      return;
+    }
+
+    setUsernameCheckLoading(true);
+    setUsernameCheckMessage("");
+    setUsernameExists(null);
+
+    try {
+      const response = await fetch(
+        `http://localhost:3000/user-exists/${username}`,
+      );
+      const data = await response.json();
+
+      if (data.success) {
+        if (data.exists) {
+          setUsernameExists(true);
+          setUsernameCheckMessage(
+            "Username already exists. Please choose another one.",
+          );
+          setErrors((prev) => ({
+            ...prev,
+            telegram_username: "Username is already taken",
+          }));
+        } else {
+          setUsernameExists(false);
+          setUsernameCheckMessage("Username is available!");
+          setUsernameChecked(true);
+          // Clear any previous error for this field
+          setErrors((prev) => {
+            const newErrors = { ...prev };
+            delete newErrors.telegram_username;
+            return newErrors;
+          });
+        }
+      } else {
+        setUsernameCheckMessage("Error checking username availability");
+      }
+    } catch (error) {
+      setUsernameCheckMessage("Failed to check username availability");
+      console.error(error);
+    } finally {
+      setUsernameCheckLoading(false);
+    }
+  };
+
   const validateForm = (): boolean => {
     const newErrors: Record<string, string> = {};
 
@@ -159,6 +225,15 @@ export default function EmployeeNamecardForm({
       newErrors.name_chinese = "Full name (Chinese) is required";
     if (!formData.telegram_username)
       newErrors.telegram_username = "Telegram username is required";
+
+    // Check if username has been verified (only for new records)
+    if (!editingNamecard && formData.telegram_username) {
+      if (!usernameChecked || usernameExists) {
+        newErrors.telegram_username =
+          "Please verify that your telegram username is available";
+      }
+    }
+
     if (!formData.contact_number)
       newErrors.contact_number = "Contact number is required";
     if (!formData.address1) newErrors.address1 = "Address 1 is required";
@@ -263,6 +338,80 @@ export default function EmployeeNamecardForm({
       )}
 
       <form onSubmit={handleSubmit} className="space-y-4 md:space-y-6">
+        {/* Telegram Username Section - TOP PRIORITY */}
+        <div className="border-b pb-4 md:pb-6 bg-blue-50 p-4 rounded-lg">
+          <h3 className="text-base md:text-lg font-semibold mb-4 md:mb-5 text-blue-600">
+            🔐 Verify Your Telegram Username
+          </h3>
+          <div>
+            <label className="block text-xs md:text-sm font-medium text-blue-600 mb-2">
+              Telegram Username * (Required to log in to AddMy)
+            </label>
+            <div className="flex gap-2 flex-col sm:flex-row">
+              <div className="flex-1">
+                <input
+                  type="text"
+                  name="telegram_username"
+                  value={formData.telegram_username}
+                  onChange={handleInputChange}
+                  placeholder="without @ e.g., john_doe_123"
+                  className={`w-full px-3 py-2 text-sm border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                    errors.telegram_username
+                      ? "border-red-500"
+                      : "border-gray-300"
+                  }`}
+                />
+              </div>
+              <button
+                type="button"
+                onClick={checkTelegramAvailability}
+                disabled={
+                  usernameCheckLoading ||
+                  !formData.telegram_username.trim() ||
+                  (usernameChecked && !usernameExists)
+                }
+                className={`px-4 py-2 rounded-md font-medium text-sm transition-colors whitespace-nowrap ${
+                  usernameCheckLoading
+                    ? "bg-gray-300 text-gray-600 cursor-not-allowed"
+                    : usernameChecked && !usernameExists
+                      ? "bg-green-100 text-green-700 cursor-default"
+                      : "bg-blue-600 text-white hover:bg-blue-700"
+                }`}
+              >
+                {usernameCheckLoading ? (
+                  <span className="flex items-center gap-1">
+                    <div className="animate-spin rounded-full h-4 w-4 border-2 border-current border-t-transparent"></div>
+                    Checking...
+                  </span>
+                ) : usernameChecked && !usernameExists ? (
+                  "✓ Available"
+                ) : (
+                  "Check Availability"
+                )}
+              </button>
+            </div>
+
+            {/* Telegram Username Status Messages */}
+            {usernameCheckMessage && (
+              <div
+                className={`mt-3 p-3 rounded-md text-sm ${
+                  usernameExists
+                    ? "bg-red-50 border border-red-200 text-red-700"
+                    : "bg-green-50 border border-green-200 text-green-700"
+                }`}
+              >
+                {usernameExists ? "❌" : "✓"} {usernameCheckMessage}
+              </div>
+            )}
+
+            {errors.telegram_username && (
+              <span className="text-red-500 text-xs mt-2 block">
+                {errors.telegram_username}
+              </span>
+            )}
+          </div>
+        </div>
+
         {/* Basic Information Section */}
         <div className="border-b pb-4 md:pb-6 text-blue-500">
           <h3 className="text-base md:text-lg font-semibold mb-3 md:mb-4">
@@ -307,29 +456,6 @@ export default function EmployeeNamecardForm({
               {errors.name_chinese && (
                 <span className="text-red-500 text-xs">
                   {errors.name_chinese}
-                </span>
-              )}
-            </div>
-
-            <div>
-              <label className="block text-xs md:text-sm font-medium text-blue-500 mb-1">
-                Telegram Username *( Required to log in to adddmy)
-              </label>
-              <input
-                type="text"
-                name="telegram_username"
-                value={formData.telegram_username}
-                onChange={handleInputChange}
-                placeholder="without @ e.g., john_doe_123"
-                className={`w-full px-3 py-2 text-sm border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                  errors.telegram_username
-                    ? "border-red-500"
-                    : "border-gray-300"
-                }`}
-              />
-              {errors.telegram_username && (
-                <span className="text-red-500 text-xs">
-                  {errors.telegram_username}
                 </span>
               )}
             </div>
@@ -686,7 +812,12 @@ export default function EmployeeNamecardForm({
             type="submit"
             disabled={
               submitting ||
-              (isOperator && !editingNamecard && availableCredits === 0)
+              (isOperator && !editingNamecard && availableCredits === 0) ||
+              (!editingNamecard &&
+                Boolean(
+                  formData.telegram_username &&
+                  (!usernameChecked || usernameExists === true),
+                ))
             }
             className="px-6 py-2 bg-blue-600 text-white rounded-md font-medium hover:bg-blue-700 transition disabled:bg-gray-400 disabled:cursor-not-allowed text-sm"
           >
