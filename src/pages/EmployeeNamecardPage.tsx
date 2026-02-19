@@ -16,7 +16,6 @@ interface EmployeeNamecardPageProps {
 
 export default function EmployeeNamecardPage({
   isOperator = false,
-  enterpriseId,
   leftEmployeeCredits,
 }: EmployeeNamecardPageProps) {
   const [namecards, setNamecards] = useState<EmployeeNamecard[]>([]);

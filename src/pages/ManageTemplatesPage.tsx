@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import {
   CompanyTemplate,
   ChamberTemplate,
@@ -15,6 +15,7 @@ import {
   updateChamberTemplate,
   deleteChamberTemplate,
 } from "../services/employeeNamecardService";
+import VideoPlayer from "../components/VideoPlayer";
 
 type TemplateRole = "me" | "donator" | "operator";
 
@@ -146,11 +147,11 @@ const Field = ({
 const FileUploadField = ({
   label,
   onFileSelect,
-  fileName,
+  videoPreviewUrl,
 }: {
   label: string;
   onFileSelect: (file: File) => void;
-  fileName?: string;
+  videoPreviewUrl?: string;
 }) => {
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -170,49 +171,48 @@ const FileUploadField = ({
         }}
         className="hidden"
       />
-      <button
-        type="button"
-        onClick={() => inputRef.current?.click()}
-        className="w-full h-48 border-2 border-dashed border-gray-300 rounded-lg flex items-center justify-center hover:border-[#007cb6] hover:bg-blue-50 transition"
-      >
-        <div className="text-center">
-          {fileName ? (
-            <>
-              <svg
-                className="w-12 h-12 mx-auto mb-2 text-green-600"
-                fill="currentColor"
-                viewBox="0 0 20 20"
-              >
-                <path
-                  fillRule="evenodd"
-                  d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
-                  clipRule="evenodd"
-                />
-              </svg>
-              <p className="text-sm text-gray-600 truncate max-w-[200px]">
-                {fileName.substring(0, 30)}
-              </p>
-            </>
-          ) : (
-            <>
-              <svg
-                className="w-12 h-12 mx-auto mb-2 text-gray-400"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M12 4v16m8-8H4"
-                />
-              </svg>
-              <p className="text-sm text-gray-500">Video</p>
-            </>
-          )}
+      {videoPreviewUrl ? (
+        <div className="w-full border-2 border-gray-300 rounded-lg overflow-hidden bg-black flex flex-col">
+          <VideoPlayer
+            src={videoPreviewUrl}
+            autoPlay={true}
+            loop={true}
+            controls={true}
+            playsInline={true}
+            className="w-full h-48 object-cover"
+          />
+          <button
+            type="button"
+            onClick={() => inputRef.current?.click()}
+            className="bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 text-sm font-medium transition"
+          >
+            Change Video
+          </button>
         </div>
-      </button>
+      ) : (
+        <button
+          type="button"
+          onClick={() => inputRef.current?.click()}
+          className="w-full h-48 border-2 border-dashed border-gray-300 rounded-lg flex items-center justify-center hover:border-[#007cb6] hover:bg-blue-50 transition"
+        >
+          <div className="text-center">
+            <svg
+              className="w-12 h-12 mx-auto mb-2 text-gray-400"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M12 4v16m8-8H4"
+              />
+            </svg>
+            <p className="text-sm text-gray-500">Click to upload video</p>
+          </div>
+        </button>
+      )}
     </div>
   );
 };
@@ -233,6 +233,14 @@ function CompanyTemplateForm({
 }) {
   const [form, setForm] = useState<CompanyTemplateFormData>(initial);
   const [videoFile, setVideoFile] = useState<File | null>(null);
+
+  // Memoize video preview URL
+  const videoPreviewUrl = useMemo(() => {
+    if (videoFile) {
+      return URL.createObjectURL(videoFile);
+    }
+    return undefined;
+  }, [videoFile]);
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
@@ -289,21 +297,21 @@ function CompanyTemplateForm({
           name="description"
           value={form.description || ""}
           onChange={handleChange}
-          rows={3}
+          rows={8}
           required
           className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#007cb6]"
         />
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <Field
+        {/* <Field
           label="Email"
           name="email"
           value={form.email || ""}
           onChange={handleChange}
           type="email"
-        />
-        <Field
+        /> */}
+        {/* <Field
           label="Contact"
           name="contact"
           value={form.contact || ""}
@@ -326,17 +334,18 @@ function CompanyTemplateForm({
           name="Line"
           value={form.Line || ""}
           onChange={handleChange}
+        /> */}
+        <Field
+          label="Website"
+          name="website"
+          value={form.website || ""}
+          onChange={handleChange}
+          required
         />
         <Field
           label="Telegram ID"
           name="telegramId"
           value={form.telegramId || ""}
-          onChange={handleChange}
-        />
-        <Field
-          label="Instagram"
-          name="Instagram"
-          value={form.Instagram || ""}
           onChange={handleChange}
         />
         <Field
@@ -346,9 +355,9 @@ function CompanyTemplateForm({
           onChange={handleChange}
         />
         <Field
-          label="Twitter / X"
-          name="Twitter"
-          value={form.Twitter || ""}
+          label="Instagram"
+          name="Instagram"
+          value={form.Instagram || ""}
           onChange={handleChange}
         />
         <Field
@@ -357,6 +366,13 @@ function CompanyTemplateForm({
           value={form.Youtube || ""}
           onChange={handleChange}
         />
+        {/* <Field
+          label="Twitter / X"
+          name="Twitter"
+          value={form.Twitter || ""}
+          onChange={handleChange}
+        />
+        
         <Field
           label="LinkedIn"
           name="Linkedin"
@@ -380,25 +396,18 @@ function CompanyTemplateForm({
           name="SnapChat"
           value={form.SnapChat || ""}
           onChange={handleChange}
-        />
-        <Field
-          label="Website"
-          name="website"
-          value={form.website || ""}
-          onChange={handleChange}
-          required
-        />
-        <Field
+        /> */}
+        {/* <Field
           label="Fanpage"
           name="fanpage"
           value={form.fanpage || ""}
           onChange={handleChange}
-        />
+        /> */}
         <div>
           <FileUploadField
-            label="Video"
+            label="Video (Max file size: 10MB)"
             onFileSelect={(file) => setVideoFile(file)}
-            fileName={videoFile?.name}
+            videoPreviewUrl={videoPreviewUrl}
           />
           {!videoFile && existingVideoUrl && (
             <div className="mt-2">
@@ -450,6 +459,14 @@ function ChamberTemplateForm({
   const [form, setForm] = useState<ChamberTemplateFormData>(initial);
   const [videoFile, setVideoFile] = useState<File | null>(null);
 
+  // Memoize video preview URL
+  const videoPreviewUrl = useMemo(() => {
+    if (videoFile) {
+      return URL.createObjectURL(videoFile);
+    }
+    return undefined;
+  }, [videoFile]);
+
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
   ) => {
@@ -499,31 +516,19 @@ function ChamberTemplateForm({
 
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-1">
-          Detail <span className="text-red-500">*</span>
+          Description <span className="text-red-500">*</span>
         </label>
         <textarea
           name="detail"
           value={form.detail || ""}
           onChange={handleChange}
-          rows={3}
+          rows={8}
           required
           className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#007cb6]"
         />
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <Field
-          label="Telegram Channel"
-          name="tgchannel"
-          value={form.tgchannel || ""}
-          onChange={handleChange}
-        />
-        <Field
-          label="Fanpage"
-          name="chamberfanpage"
-          value={form.chamberfanpage || ""}
-          onChange={handleChange}
-        />
         <Field
           label="Website"
           name="chamberwebsite"
@@ -532,21 +537,9 @@ function ChamberTemplateForm({
           required
         />
         <Field
-          label="WhatsApp"
-          name="WhatsApp"
-          value={form.WhatsApp || ""}
-          onChange={handleChange}
-        />
-        <Field
-          label="WeChat"
-          name="WeChat"
-          value={form.WeChat || ""}
-          onChange={handleChange}
-        />
-        <Field
-          label="Line"
-          name="Line"
-          value={form.Line || ""}
+          label="Telegram Channel"
+          name="tgchannel"
+          value={form.tgchannel || ""}
           onChange={handleChange}
         />
         <Field
@@ -562,46 +555,16 @@ function ChamberTemplateForm({
           onChange={handleChange}
         />
         <Field
-          label="Twitter / X"
-          name="Twitter"
-          value={form.Twitter || ""}
-          onChange={handleChange}
-        />
-        <Field
           label="YouTube"
           name="Youtube"
           value={form.Youtube || ""}
           onChange={handleChange}
         />
-        <Field
-          label="LinkedIn"
-          name="Linkedin"
-          value={form.Linkedin || ""}
-          onChange={handleChange}
-        />
-        <Field
-          label="TikTok"
-          name="TikTok"
-          value={form.TikTok || ""}
-          onChange={handleChange}
-        />
-        <Field
-          label="Skype"
-          name="Skype"
-          value={form.Skype || ""}
-          onChange={handleChange}
-        />
-        <Field
-          label="SnapChat"
-          name="SnapChat"
-          value={form.SnapChat || ""}
-          onChange={handleChange}
-        />
         <div>
           <FileUploadField
-            label="Video"
+            label="Video (Max file size: 10MB)"
             onFileSelect={(file) => setVideoFile(file)}
-            fileName={videoFile?.name}
+            videoPreviewUrl={videoPreviewUrl}
           />
           {!videoFile && existingVideoUrl && (
             <div className="mt-2">
@@ -1043,20 +1006,7 @@ export default function ManageTemplatesPage({
                                 {tpl.companydesignation || "—"}
                               </p>
                             </div>
-                            <div>
-                              <p className="font-medium text-gray-700">Email</p>
-                              <p className="text-gray-600">
-                                {tpl.email || "—"}
-                              </p>
-                            </div>
-                            <div>
-                              <p className="font-medium text-gray-700">
-                                Contact
-                              </p>
-                              <p className="text-gray-600">
-                                {tpl.contact || "—"}
-                              </p>
-                            </div>
+
                             <div>
                               <p className="font-medium text-gray-700">
                                 Website
@@ -1065,14 +1015,7 @@ export default function ManageTemplatesPage({
                                 {tpl.website || "—"}
                               </p>
                             </div>
-                            <div>
-                              <p className="font-medium text-gray-700">
-                                Fanpage
-                              </p>
-                              <p className="text-gray-600">
-                                {tpl.fanpage || "—"}
-                              </p>
-                            </div>
+
                             <div>
                               <p className="font-medium text-gray-700">
                                 Telegram
@@ -1390,14 +1333,7 @@ export default function ManageTemplatesPage({
                                 {tpl.chamberwebsite || "—"}
                               </p>
                             </div>
-                            <div>
-                              <p className="font-medium text-gray-700">
-                                Fanpage
-                              </p>
-                              <p className="text-gray-600">
-                                {tpl.chamberfanpage || "—"}
-                              </p>
-                            </div>
+
                             <div>
                               <p className="font-medium text-gray-700">
                                 TG Channel

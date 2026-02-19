@@ -94,7 +94,13 @@ export const getOperatorCredits = async (): Promise<OperatorCredits> => {
         headers: getOperatorAuthHeaders(),
       },
     );
-    return response.data.data;
+
+    // Normalize response shape - API may return { credits } or { employeeCredits }
+    const d = response.data?.data ?? {};
+    const credits = Number(d.credits ?? d.employeeCredits ?? 0);
+    const operatorSlots = Number(d.operatorSlots ?? d.operator_slots ?? 0);
+
+    return { credits, operatorSlots } as OperatorCredits;
   } catch (error: any) {
     if (error instanceof OperatorAuthError) throw error;
     console.error("Failed to fetch operator credits:", error);

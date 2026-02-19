@@ -558,7 +558,7 @@ export default function BackgroundPage() {
                             alt="bg"
                             className="absolute inset-0 w-full h-full object-cover"
                             loading="lazy"
-                            onError={(e) => {
+                            onError={() => {
                               console.error("Image failed to load:", url);
                               if (activeTab === "my") {
                                 console.log(

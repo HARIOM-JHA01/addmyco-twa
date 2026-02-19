@@ -21,10 +21,6 @@ const getToken = (): string => {
   return localStorage.getItem("token") || "";
 };
 
-const getOperatorToken = (): string => {
-  return localStorage.getItem("operatorToken") || "";
-};
-
 // Get company templates
 export const getCompanyTemplates = async (
   isOperator: boolean = false,
@@ -34,7 +30,7 @@ export const getCompanyTemplates = async (
       ? `${API_BASE_URL}/enterprise/operator/company-templates`
       : `${API_BASE_URL}/company-templates`;
 
-    const token = isOperator ? getOperatorToken() : getToken();
+    const token = getToken();
 
     const response = await axios.get<GetTemplatesResponse>(endpoint, {
       headers: {
@@ -65,7 +61,7 @@ export const getChamberTemplates = async (
       ? `${API_BASE_URL}/enterprise/operator/chamber-templates`
       : `${API_BASE_URL}/chamber-templates`;
 
-    const token = isOperator ? getOperatorToken() : getToken();
+    const token = getToken();
 
     const response = await axios.get<GetTemplatesResponse>(endpoint, {
       headers: {
@@ -116,7 +112,7 @@ export const createEmployeeNamecard = async (
       ? `${API_BASE_URL}/enterprise/operator/employee-namecard`
       : `${API_BASE_URL}/employee-namecard`;
 
-    const token = isOperator ? getOperatorToken() : getToken();
+    const token = getToken();
 
     const response = await axios.post<CreateEmployeeNamecardResponse>(
       endpoint,
@@ -152,7 +148,7 @@ export const getEmployeeNamecards = async (
       ? `${API_BASE_URL}/enterprise/operator/employee-namecards`
       : `${API_BASE_URL}/employee-namecards`;
 
-    const token = isOperator ? getOperatorToken() : getToken();
+    const token = getToken();
 
     const response = await axios.get<GetEmployeeNamecardsResponse>(endpoint, {
       headers: {
@@ -207,7 +203,7 @@ export const updateEmployeeNamecard = async (
       ? `${API_BASE_URL}/enterprise/operator/update-employee-namecard`
       : `${API_BASE_URL}/update-employee-namecard`;
 
-    const token = isOperator ? getOperatorToken() : getToken();
+    const token = getToken();
 
     const response = await axios.post<UpdateEmployeeNamecardResponse>(
       endpoint,
@@ -244,7 +240,7 @@ export const deleteEmployeeNamecard = async (
       ? `${API_BASE_URL}/enterprise/operator/employee-namecard/${namecardId}`
       : `${API_BASE_URL}/employee-namecard/${namecardId}`;
 
-    const token = isOperator ? getOperatorToken() : getToken();
+    const token = getToken();
 
     const response = await axios.delete<DeleteEmployeeNamecardResponse>(
       endpoint,
@@ -298,8 +294,8 @@ const chamberTemplateEndpoint = (
 
 type TemplateRole = "me" | "donator" | "operator";
 
-const authHeader = (role: TemplateRole) => ({
-  Authorization: `Bearer ${role === "operator" ? getOperatorToken() : getToken()}`,
+const authHeader = () => ({
+  Authorization: `Bearer ${getToken()}`,
 });
 
 // List company templates
@@ -308,7 +304,7 @@ export const listCompanyTemplates = async (
 ): Promise<CompanyTemplate[]> => {
   const res = await axios.get<TemplateResponse<CompanyTemplate[]>>(
     companyTemplateEndpoint(role),
-    { headers: authHeader(role) },
+    { headers: authHeader() },
   );
   if (res.data.success) return res.data.data;
   throw new Error(res.data.message);
@@ -321,7 +317,7 @@ export const getCompanyTemplate = async (
 ): Promise<CompanyTemplate> => {
   const res = await axios.get<TemplateResponse<CompanyTemplate>>(
     companyTemplateEndpoint(role, id),
-    { headers: authHeader(role) },
+    { headers: authHeader() },
   );
   if (res.data.success) return res.data.data;
   throw new Error(res.data.message);
@@ -343,7 +339,7 @@ export const createCompanyTemplate = async (
   const res = await axios.post<TemplateResponse<CompanyTemplate>>(
     companyTemplateEndpoint(role),
     form,
-    { headers: { ...authHeader(role), "Content-Type": "multipart/form-data" } },
+    { headers: { ...authHeader(), "Content-Type": "multipart/form-data" } },
   );
   if (res.data.success) return res.data.data;
   throw new Error(res.data.message);
@@ -366,7 +362,7 @@ export const updateCompanyTemplate = async (
   const res = await axios.put<TemplateResponse<CompanyTemplate>>(
     companyTemplateEndpoint(role, id),
     form,
-    { headers: { ...authHeader(role), "Content-Type": "multipart/form-data" } },
+    { headers: { ...authHeader(), "Content-Type": "multipart/form-data" } },
   );
   if (res.data.success) return res.data.data;
   throw new Error(res.data.message);
@@ -379,7 +375,7 @@ export const deleteCompanyTemplate = async (
 ): Promise<void> => {
   const res = await axios.delete<DeleteTemplateResponse>(
     companyTemplateEndpoint(role, id),
-    { headers: authHeader(role) },
+    { headers: authHeader() },
   );
   if (!res.data.success) throw new Error(res.data.message);
 };
@@ -392,7 +388,7 @@ export const listChamberTemplates = async (
 ): Promise<ChamberTemplate[]> => {
   const res = await axios.get<TemplateResponse<ChamberTemplate[]>>(
     chamberTemplateEndpoint(role),
-    { headers: authHeader(role) },
+    { headers: authHeader() },
   );
   if (res.data.success) return res.data.data;
   throw new Error(res.data.message);
@@ -405,7 +401,7 @@ export const getChamberTemplate = async (
 ): Promise<ChamberTemplate> => {
   const res = await axios.get<TemplateResponse<ChamberTemplate>>(
     chamberTemplateEndpoint(role, id),
-    { headers: authHeader(role) },
+    { headers: authHeader() },
   );
   if (res.data.success) return res.data.data;
   throw new Error(res.data.message);
@@ -427,7 +423,7 @@ export const createChamberTemplate = async (
   const res = await axios.post<TemplateResponse<ChamberTemplate>>(
     chamberTemplateEndpoint(role),
     form,
-    { headers: { ...authHeader(role), "Content-Type": "multipart/form-data" } },
+    { headers: { ...authHeader(), "Content-Type": "multipart/form-data" } },
   );
   if (res.data.success) return res.data.data;
   throw new Error(res.data.message);
@@ -450,7 +446,7 @@ export const updateChamberTemplate = async (
   const res = await axios.put<TemplateResponse<ChamberTemplate>>(
     chamberTemplateEndpoint(role, id),
     form,
-    { headers: { ...authHeader(role), "Content-Type": "multipart/form-data" } },
+    { headers: { ...authHeader(), "Content-Type": "multipart/form-data" } },
   );
   if (res.data.success) return res.data.data;
   throw new Error(res.data.message);
@@ -463,7 +459,7 @@ export const deleteChamberTemplate = async (
 ): Promise<void> => {
   const res = await axios.delete<DeleteTemplateResponse>(
     chamberTemplateEndpoint(role, id),
-    { headers: authHeader(role) },
+    { headers: authHeader() },
   );
   if (!res.data.success) throw new Error(res.data.message);
 };

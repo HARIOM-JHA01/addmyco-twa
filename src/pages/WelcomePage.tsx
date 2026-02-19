@@ -217,76 +217,153 @@ const WelcomePage: React.FC<WelcomePageProps> = ({ onLogin, partnerCode }) => {
 
                 {/* Enterprise operator login modal (from welcome) */}
                 {operatorLoginOpen && (
-                  <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4">
-                    <div className="w-full max-w-md bg-white rounded-lg shadow-xl p-6">
-                      <h3 className="text-lg font-semibold mb-2">
-                        Enterprise operator login
-                      </h3>
-                      <p className="text-sm text-gray-600 mb-4">
-                        Sign in with your operator credentials to manage
-                        employees.
-                      </p>
-
-                      {operatorLoginError && (
-                        <div className="text-sm text-red-600 bg-red-50 p-3 rounded mb-3">
-                          {operatorLoginError}
+                  <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4">
+                    <div className="w-full max-w-md bg-white rounded-xl shadow-2xl overflow-hidden">
+                      {/* Header */}
+                      <div className="bg-gradient-to-r from-[#007cb6] via-[#005f8e] to-[#004570] px-6 py-6 text-white relative overflow-hidden">
+                        <div className="absolute top-0 right-0 w-24 h-24 bg-white opacity-10 rounded-full -mr-12 -mt-12"></div>
+                        <div className="relative z-10">
+                          <div className="flex items-center gap-3 mb-2">
+                            <svg
+                              className="w-6 h-6"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
+                              />
+                            </svg>
+                            <h3 className="text-xl font-bold">
+                              Operator Login
+                            </h3>
+                          </div>
+                          <p className="text-blue-100 text-sm">
+                            Access your operator dashboard
+                          </p>
                         </div>
-                      )}
+                      </div>
 
-                      <form
-                        onSubmit={handleOperatorLoginFromWelcome}
-                        className="space-y-3"
-                      >
-                        <div>
-                          <label className="text-xs font-medium text-gray-700">
-                            Username
-                          </label>
-                          <input
-                            type="text"
-                            value={operatorLoginUsername}
-                            onChange={(e) =>
-                              setOperatorLoginUsername(e.target.value)
-                            }
-                            className="w-full mt-1 px-3 py-2 border rounded-md"
-                            required
-                          />
-                        </div>
+                      {/* Content */}
+                      <div className="p-6">
+                        {operatorLoginError && (
+                          <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700 flex items-start gap-2">
+                            <svg
+                              className="w-5 h-5 mt-0.5 flex-shrink-0"
+                              fill="currentColor"
+                              viewBox="0 0 20 20"
+                            >
+                              <path
+                                fillRule="evenodd"
+                                d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
+                                clipRule="evenodd"
+                              />
+                            </svg>
+                            <span>{operatorLoginError}</span>
+                          </div>
+                        )}
 
-                        <div>
-                          <label className="text-xs font-medium text-gray-700">
-                            Password
-                          </label>
-                          <input
-                            type="password"
-                            value={operatorLoginPassword}
-                            onChange={(e) =>
-                              setOperatorLoginPassword(e.target.value)
-                            }
-                            className="w-full mt-1 px-3 py-2 border rounded-md"
-                            required
-                          />
-                        </div>
+                        <form
+                          onSubmit={handleOperatorLoginFromWelcome}
+                          className="space-y-4"
+                        >
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-2">
+                              Username
+                            </label>
+                            <input
+                              type="text"
+                              value={operatorLoginUsername}
+                              onChange={(e) =>
+                                setOperatorLoginUsername(e.target.value)
+                              }
+                              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#007cb6] focus:border-transparent transition"
+                              placeholder="Enter your username"
+                              required
+                            />
+                          </div>
 
-                        <div className="flex gap-2 mt-2">
-                          <button
-                            type="submit"
-                            disabled={operatorLoginLoading}
-                            className="flex-1 bg-[#007cb6] text-white py-2 rounded-md font-semibold disabled:opacity-50"
-                          >
-                            {operatorLoginLoading ? "Processing..." : "Login"}
-                          </button>
-                          <button
-                            type="button"
-                            className="flex-1 bg-gray-100 border rounded-md"
-                            onClick={() => {
-                              setOperatorLoginOpen(false);
-                              setOperatorLoginError(null);
-                            }}
-                          >
-                            Cancel
-                          </button>
-                        </div>
-                      </form>
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-2">
+                              Password
+                            </label>
+                            <input
+                              type="password"
+                              value={operatorLoginPassword}
+                              onChange={(e) =>
+                                setOperatorLoginPassword(e.target.value)
+                              }
+                              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#007cb6] focus:border-transparent transition"
+                              placeholder="Enter your password"
+                              required
+                            />
+                          </div>
+
+                          <div className="flex gap-3 mt-6 pt-4 border-t border-gray-200">
+                            <button
+                              type="submit"
+                              disabled={operatorLoginLoading}
+                              className="flex-1 bg-[#007cb6] hover:bg-[#005f8e] text-white py-2.5 rounded-lg font-semibold transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                            >
+                              {operatorLoginLoading ? (
+                                <>
+                                  <svg
+                                    className="animate-spin h-4 w-4"
+                                    xmlns="http://www.w3.org/2000/svg"
+                                    fill="none"
+                                    viewBox="0 0 24 24"
+                                  >
+                                    <circle
+                                      className="opacity-25"
+                                      cx="12"
+                                      cy="12"
+                                      r="10"
+                                      stroke="currentColor"
+                                      strokeWidth="4"
+                                    ></circle>
+                                    <path
+                                      className="opacity-75"
+                                      fill="currentColor"
+                                      d="M4 12a8 8 0 018-8v8z"
+                                    ></path>
+                                  </svg>
+                                  Processing...
+                                </>
+                              ) : (
+                                <>
+                                  <svg
+                                    className="w-4 h-4"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    viewBox="0 0 24 24"
+                                  >
+                                    <path
+                                      strokeLinecap="round"
+                                      strokeLinejoin="round"
+                                      strokeWidth={2}
+                                      d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v2a2 2 0 01-2 2H7a2 2 0 01-2-2v-2m14 0V9a2 2 0 00-2-2h-6a2 2 0 00-2 2v9a2 2 0 002 2h6a2 2 0 002-2z"
+                                    />
+                                  </svg>
+                                  Login
+                                </>
+                              )}
+                            </button>
+                            <button
+                              type="button"
+                              className="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 py-2.5 rounded-lg font-semibold transition"
+                              onClick={() => {
+                                setOperatorLoginOpen(false);
+                                setOperatorLoginError(null);
+                              }}
+                            >
+                              Cancel
+                            </button>
+                          </div>
+                        </form>
+                      </div>
                     </div>
                   </div>
                 )}
