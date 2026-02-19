@@ -191,11 +191,11 @@ export default function EmployeeNamecardForm({
           );
           setErrors((prev) => ({
             ...prev,
-            telegram_username: "Username is already taken",
+            telegram_username: "",
           }));
         } else {
           setUsernameExists(false);
-          setUsernameCheckMessage("Username is available!");
+          setUsernameCheckMessage("");
           setUsernameChecked(true);
           // Clear any previous error for this field
           setErrors((prev) => {
