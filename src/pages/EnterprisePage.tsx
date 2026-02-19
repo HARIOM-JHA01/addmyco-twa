@@ -1394,70 +1394,72 @@ export default function EnterpriseDashboard() {
                 </div>
               ) : (
                 <div className="space-y-4">
-                  {packages.map((pkg) => {
-                    const color = getPackageColorClasses(pkg.name);
-                    return (
-                      <div
-                        key={pkg._id}
-                        className={`bg-white rounded-lg shadow-md p-5 ${pkg.isPopular ? "border-2 border-[#007cb6]" : ""} ${color.borderClass ? `border ${color.borderClass}` : ""}`}
-                      >
+                  {packages
+                    .sort((a, b) => b.price - a.price)
+                    .map((pkg) => {
+                      const color = getPackageColorClasses(pkg.name);
+                      return (
                         <div
-                          className={`${color.barBg} h-1 rounded-t-md -mx-5 mb-3`}
-                        />
-                        {pkg.isPopular && (
-                          <div className="text-xs font-bold text-[#007cb6] mb-2">
-                            ⭐ {i18n.t("popular")}
-                          </div>
-                        )}
-                        <h3
-                          className={`text-xl font-bold ${color.titleText} mb-2`}
+                          key={pkg._id}
+                          className={`bg-white rounded-lg shadow-md p-5 ${pkg.isPopular ? "border-2 border-[#007cb6]" : ""} ${color.borderClass ? `border ${color.borderClass}` : ""}`}
                         >
-                          {pkg.name}
-                        </h3>
-                        {pkg.description && (
-                          <p className="text-sm text-gray-600 mb-4">
-                            {pkg.description}
-                          </p>
-                        )}
-                        <div className="space-y-2 mb-4">
-                          <div className="flex justify-between text-sm">
-                            <span className="text-gray-600">
-                              {i18n.t("employee_credits")}:
-                            </span>
-                            <span className="font-bold text-green-600">
-                              {pkg.employeeCredits}
+                          <div
+                            className={`${color.barBg} h-1 rounded-t-md -mx-5 mb-3`}
+                          />
+                          {pkg.isPopular && (
+                            <div className="text-xs font-bold text-[#007cb6] mb-2">
+                              ⭐ {i18n.t("popular")}
+                            </div>
+                          )}
+                          <h3
+                            className={`text-xl font-bold ${color.titleText} mb-2`}
+                          >
+                            {pkg.name}
+                          </h3>
+                          {pkg.description && (
+                            <p className="text-sm text-gray-600 mb-4">
+                              {pkg.description}
+                            </p>
+                          )}
+                          <div className="space-y-2 mb-4">
+                            <div className="flex justify-between text-sm">
+                              <span className="text-gray-600">
+                                {i18n.t("employee_credits")}:
+                              </span>
+                              <span className="font-bold text-green-600">
+                                {pkg.employeeCredits}
+                              </span>
+                            </div>
+                            <div className="flex justify-between text-sm">
+                              <span className="text-gray-600">
+                                {i18n.t("operator_credits")}:
+                              </span>
+                              <span className="font-bold text-blue-600">
+                                {pkg.operatorCredits}
+                              </span>
+                            </div>
+                          </div>
+                          <div
+                            className={`text-3xl font-bold ${color.priceText} mb-4`}
+                          >
+                            ${pkg.price}
+                            <span className="text-sm font-normal text-gray-500 ml-1">
+                              USDT
                             </span>
                           </div>
-                          <div className="flex justify-between text-sm">
-                            <span className="text-gray-600">
-                              {i18n.t("operator_credits")}:
-                            </span>
-                            <span className="font-bold text-blue-600">
-                              {pkg.operatorCredits}
-                            </span>
-                          </div>
+                          <button
+                            onClick={() => {
+                              setSelectedPackage(pkg);
+                              setBuyModalOpen(true);
+                              setBuyError(null);
+                            }}
+                            className="w-full bg-[#007cb6] text-white py-2 rounded-md font-semibold hover:bg-[#005f8e] transition-colors"
+                          >
+                            {i18n.t("buy_now")}
+                          </button>
                         </div>
-                        <div
-                          className={`text-3xl font-bold ${color.priceText} mb-4`}
-                        >
-                          ${pkg.price}
-                          <span className="text-sm font-normal text-gray-500 ml-1">
-                            USDT
-                          </span>
-                        </div>
-                        <button
-                          onClick={() => {
-                            setSelectedPackage(pkg);
-                            setBuyModalOpen(true);
-                            setBuyError(null);
-                          }}
-                          className="w-full bg-[#007cb6] text-white py-2 rounded-md font-semibold hover:bg-[#005f8e] transition-colors"
-                        >
-                          {i18n.t("buy_now")}
-                        </button>
-                      </div>
-                    );
-                  })}
+                      );
+                    })}
                 </div>
               )}
             </>
