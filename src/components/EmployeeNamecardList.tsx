@@ -192,6 +192,19 @@ export default function EmployeeNamecardList({
                       </a>
                     </div>
                   )}
+                  {namecard.profile_url && (
+                    <div>
+                      <p className="font-medium text-gray-700">Profile URL</p>
+                      <a
+                        href={namecard.profile_url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-blue-600 hover:underline break-all text-xs"
+                      >
+                        {namecard.profile_url}
+                      </a>
+                    </div>
+                  )}
                 </div>
 
                 {/* Address */}

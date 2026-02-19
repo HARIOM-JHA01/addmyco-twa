@@ -155,6 +155,7 @@ export interface EmployeeNamecard {
   status: number;
   createdAt: string;
   updatedAt: string;
+  profile_url?: string;
 }
 
 export interface EmployeeNamecardFormData {
