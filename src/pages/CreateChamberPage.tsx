@@ -48,7 +48,7 @@ export default function CreateChamberPage() {
   const fileInputRef2 = useRef<HTMLInputElement>(null);
   const fileInputRef3 = useRef<HTMLInputElement>(null);
   const profile = useProfileStore((state) => state.profile);
-  const isPremium = profile?.membertype === "premium";
+  const isPremium = profile?.usertype === 1 || profile?.usertype === 2;
   const [occupiedOrders, setOccupiedOrders] = useState<number[]>([]);
   const [activeFileTab, setActiveFileTab] = useState<number>(1);
 

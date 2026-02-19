@@ -258,7 +258,7 @@ export default function ChamberPage() {
   ) => {
     if (e.target.files && e.target.files[0]) {
       const selectedFile = e.target.files[0];
-      const isPremium = profile?.membertype === "premium";
+      const isPremium = profile?.usertype === 1 || profile?.usertype === 2;
       const fileInputRef =
         fileNumber === 1
           ? fileInputRef1
@@ -614,7 +614,7 @@ export default function ChamberPage() {
               disabled={editLoading}
             />
             {/* File Upload Section */}
-            {profile?.membertype === "premium" ? (
+            {profile?.usertype === 1 || profile?.usertype === 2 ? (
               /* Premium User: Single Video Upload */
               <div className="w-full mb-6">
                 <div className="w-full flex justify-center mb-2">

@@ -317,7 +317,7 @@ export default function SubCompanyPage() {
     if (e.target.files && e.target.files[0]) {
       const selectedFile = e.target.files[0];
 
-      const isPremium = profile?.membertype === "premium";
+      const isPremium = profile?.usertype === 1 || profile?.usertype === 2;
 
       // Check if file is a video
       if (selectedFile.type.startsWith("video/")) {
@@ -582,7 +582,7 @@ export default function SubCompanyPage() {
                 disabled={editLoading}
               />
               {/* File Upload Section */}
-              {profile?.membertype === "premium" ? (
+              {profile?.usertype === 1 || profile?.usertype === 2 ? (
                 /* Premium User: Single Video Upload */
                 <div className="w-full mb-4">
                   <div className="w-full rounded-xl flex items-center justify-center mb-2 h-48 relative">

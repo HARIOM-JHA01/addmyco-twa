@@ -38,7 +38,7 @@ export default function CreateCompanyPage() {
   const fileInputRef2 = useRef<HTMLInputElement>(null);
   const fileInputRef3 = useRef<HTMLInputElement>(null);
   const profile = useProfileStore((state) => state.profile);
-  const isPremium = profile?.membertype === "premium";
+  const isPremium = profile?.usertype === 1 || profile?.usertype === 2;
 
   // Memoize preview URLs so they don't reload on description change
   const previewUrl1 = useMemo(() => {
