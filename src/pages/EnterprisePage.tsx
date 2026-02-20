@@ -1581,7 +1581,7 @@ export default function EnterpriseDashboard() {
                           <div className="grid grid-cols-2 gap-3">
                             <div className="bg-white p-2 rounded shadow-sm">
                               <p className="text-xs text-gray-600">Amount</p>
-                              <p className="font-bold">
+                              <p className="font-bold text-black">
                                 ${purchase.amount} {purchase.currency}
                               </p>
                             </div>
@@ -1605,7 +1605,7 @@ export default function EnterpriseDashboard() {
                               <p className="text-xs text-gray-600">
                                 Transaction ID
                               </p>
-                              <p className="text-xs font-mono break-all">
+                              <p className="text-xs font-mono break-all text-black">
                                 {purchase.transactionId}
                               </p>
                             </div>
@@ -1613,7 +1613,7 @@ export default function EnterpriseDashboard() {
                               <p className="text-xs text-gray-600">
                                 Wallet Address
                               </p>
-                              <p className="text-xs font-mono break-all">
+                              <p className="text-xs font-mono break-all text-black">
                                 {purchase.walletAddress}
                               </p>
                             </div>
