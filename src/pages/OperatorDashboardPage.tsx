@@ -21,9 +21,9 @@ interface OperatorProfile {
 
 interface Employee {
   _id: string;
-  telegram_username: string;
-  owner_name_english?: string;
-  owner_name_chinese?: string;
+  username: string;
+  firstname?: string;
+  lastname?: string;
   createdAt: string;
   membertype?: string;
 }
@@ -421,9 +421,6 @@ export default function OperatorDashboardPage() {
                         English Name
                       </th>
                       <th className="px-6 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
-                        Chinese Name
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
                         Type
                       </th>
                       <th className="px-6 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
@@ -438,13 +435,10 @@ export default function OperatorDashboardPage() {
                         className="hover:bg-blue-50 transition"
                       >
                         <td className="px-6 py-4 text-sm font-medium text-gray-800">
-                          {employee.telegram_username}
+                          {employee.username}
                         </td>
                         <td className="px-6 py-4 text-sm text-gray-600">
-                          {employee.owner_name_english || "—"}
-                        </td>
-                        <td className="px-6 py-4 text-sm text-gray-600">
-                          {employee.owner_name_chinese || "—"}
+                          {employee.firstname || "—"}
                         </td>
                         <td className="px-6 py-4">
                           <span
