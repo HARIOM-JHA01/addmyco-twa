@@ -347,7 +347,7 @@ export default function HomePage() {
     return (
       <div
         className="bg-cover bg-center min-h-screen w-full overflow-x-hidden flex items-center justify-center"
-        style={{ backgroundImage: `url(${backgroundImg})` }}
+        style={{ backgroundImage: `var(--app-background-image, url(${backgroundImg}))` }}
       >
         <div className="text-white text-xl">Loading...</div>
       </div>

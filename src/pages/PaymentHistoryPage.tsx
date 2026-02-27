@@ -39,7 +39,7 @@ export default function PaymentHistoryPage() {
   return (
     <div
       className="bg-cover px-2 bg-center min-h-screen w-full overflow-x-hidden flex flex-col"
-      style={{ backgroundImage: `url(${backgroundImg})` }}
+      style={{ backgroundImage: `var(--app-background-image, url(${backgroundImg}))` }}
     >
       <Header />
       <div className="flex flex-col items-center justify-start flex-1 pb-32">

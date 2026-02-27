@@ -404,7 +404,7 @@ export default function BackgroundPage() {
     <Layout>
       <div
         className="bg-cover bg-center min-h-screen w-full overflow-x-hidden flex flex-col"
-        style={{ backgroundImage: `url(${backgroundImg})` }}
+        style={{ backgroundImage: `var(--app-background-image, url(${backgroundImg}))` }}
       >
         <div className="px-2 pt-3 pb-28 flex-1 flex justify-center">
           <div className="w-full max-w-[880px] bg-white/20 backdrop-blur-sm rounded-2xl p-4 shadow-md">

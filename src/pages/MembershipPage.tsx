@@ -148,7 +148,7 @@ export default function MembershipPage() {
     return (
       <div
         className="bg-cover bg-center min-h-screen w-full overflow-x-hidden flex justify-center items-center"
-        style={{ backgroundImage: `url(${backgroundImg})` }}
+        style={{ backgroundImage: `var(--app-background-image, url(${backgroundImg}))` }}
       >
         <Header />
         <div className="flex-1 flex justify-center items-center text-red-500">
@@ -180,7 +180,7 @@ export default function MembershipPage() {
   return (
     <div
       className="bg-cover bg-center min-h-screen w-full overflow-x-hidden flex flex-col"
-      style={{ backgroundImage: `url(${backgroundImg})` }}
+      style={{ backgroundImage: `var(--app-background-image, url(${backgroundImg}))` }}
     >
       <Header />
       <div className="flex flex-col items-center px-4 justify-start flex-1 pb-32">
