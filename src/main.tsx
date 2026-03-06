@@ -4,6 +4,13 @@ import App from "./App.tsx";
 import "./index.css";
 
 import WebApp from "@twa-dev/sdk";
+import { applyCachedThemeFromStorage } from "./utils/theme";
+
+// Restore last-known theme/background before first render only for active sessions.
+// Keep welcome screen on default background for logged-out users.
+if (localStorage.getItem("token")) {
+  applyCachedThemeFromStorage();
+}
 
 WebApp.ready();
 

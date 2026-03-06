@@ -17,6 +17,7 @@ import i18n from "../i18n";
 interface EmployeeNamecardFormProps {
   isOperator?: boolean;
   editingNamecard?: EmployeeNamecard | null;
+  isCopyMode?: boolean;
   availableCredits?: number;
   onSuccess: (namecard: EmployeeNamecard) => void;
   onCancel: () => void;
@@ -25,6 +26,7 @@ interface EmployeeNamecardFormProps {
 export default function EmployeeNamecardForm({
   isOperator = false,
   editingNamecard = null,
+  isCopyMode = false,
   availableCredits = 0,
   onSuccess,
   onCancel,
@@ -32,7 +34,7 @@ export default function EmployeeNamecardForm({
   const [formData, setFormData] = useState<EmployeeNamecardFormData>({
     name_english: editingNamecard?.name_english || "",
     name_chinese: editingNamecard?.name_chinese || "",
-    telegram_username: editingNamecard?.telegram_username || "",
+    telegram_username: isCopyMode ? "" : editingNamecard?.telegram_username || "",
     telegram_link: editingNamecard?.telegram_link || "",
     contact_number: editingNamecard?.contact_number || "",
     address1: editingNamecard?.address1 || "",
@@ -107,19 +109,21 @@ export default function EmployeeNamecardForm({
     fetchCountries();
   }, []);
 
-  // Set existing media preview (image OR video)
+  // Set existing media preview (image OR video) - only in edit mode, not copy
   useEffect(() => {
-    if (editingNamecard?.profile_image) {
-      setMediaPreview(editingNamecard.profile_image);
-      setMediaType("image");
-    } else if (editingNamecard?.profile_video) {
-      setMediaPreview(editingNamecard.profile_video);
-      setMediaType("video");
+    if (editingNamecard && !isCopyMode) {
+      if (editingNamecard.profile_image) {
+        setMediaPreview(editingNamecard.profile_image);
+        setMediaType("image");
+      } else if (editingNamecard.profile_video) {
+        setMediaPreview(editingNamecard.profile_video);
+        setMediaType("video");
+      }
     } else {
       setMediaPreview("");
       setMediaType(null);
     }
-  }, [editingNamecard]);
+  }, [editingNamecard, isCopyMode]);
 
   // Revoke blob URL previews when they change/unmount to avoid memory leaks
   useEffect(() => {
@@ -150,7 +154,7 @@ export default function EmployeeNamecardForm({
     }
 
     // Reset username check status if user changes the username
-    if (name === "telegram_username" && !editingNamecard) {
+    if (name === "telegram_username" && (!editingNamecard || isCopyMode)) {
       setUsernameChecked(false);
       setUsernameExists(null);
       setUsernameCheckMessage("");
@@ -247,8 +251,8 @@ export default function EmployeeNamecardForm({
     if (!formData.telegram_username)
       newErrors.telegram_username = "Telegram username is required";
 
-    // Check if username has been verified (only for new records)
-    if (!editingNamecard && formData.telegram_username) {
+    // Check if username has been verified (only for new records or copy)
+    if ((!editingNamecard || isCopyMode) && formData.telegram_username) {
       if (!usernameChecked || usernameExists) {
         newErrors.telegram_username =
           "Please verify that your telegram username is available";
@@ -269,8 +273,8 @@ export default function EmployeeNamecardForm({
     if (!formData.company_template_id)
       newErrors.company_template_id = "Company template is required";
 
-    // File validation (only for create, not edit)
-    if (!editingNamecard && !profileMedia) {
+    // File validation (only for create and copy, not edit)
+    if ((!editingNamecard || isCopyMode) && !profileMedia) {
       newErrors.files = "Please upload at least one profile image or video";
     }
 
@@ -377,16 +381,16 @@ export default function EmployeeNamecardForm({
                   value={formData.telegram_username}
                   onChange={handleInputChange}
                   placeholder="without @ e.g., john_doe_123"
-                  disabled={!!editingNamecard}
+                  disabled={!!editingNamecard && !isCopyMode}
                   maxLength={12}
                   className={`w-full px-3 py-2 text-sm border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
                     errors.telegram_username
                       ? "border-red-500"
                       : "border-gray-300"
-                  } ${editingNamecard ? "bg-gray-100 cursor-not-allowed" : ""}`}
+                  } ${editingNamecard && !isCopyMode ? "bg-gray-100 cursor-not-allowed" : ""}`}
                 />
               </div>
-              {!editingNamecard && (
+              {(!editingNamecard || isCopyMode) && (
                 <button
                   type="button"
                   onClick={checkTelegramAvailability}
@@ -890,18 +894,18 @@ export default function EmployeeNamecardForm({
             type="submit"
             disabled={
               submitting ||
-              (isOperator && !editingNamecard && availableCredits === 0) ||
-              (!editingNamecard &&
+              (isOperator && !editingNamecard && !isCopyMode && availableCredits === 0) ||
+              ((!editingNamecard || isCopyMode) &&
                 Boolean(
                   formData.telegram_username &&
-                  (!usernameChecked || usernameExists === true),
+                    (!usernameChecked || usernameExists === true),
                 ))
             }
             className="px-6 py-2 bg-blue-600 text-white rounded-md font-medium hover:bg-blue-700 transition disabled:bg-gray-400 disabled:cursor-not-allowed text-sm"
           >
             {submitting
               ? "Saving..."
-              : editingNamecard
+              : editingNamecard && !isCopyMode
                 ? "Update Namecard"
                 : "Create Namecard"}
           </button>

@@ -250,6 +250,11 @@ export default function BackgroundPage() {
 
   useEffect(() => {
     if (!selectedImage) return;
+    localStorage.setItem("app-background-image-url", selectedImage);
+    document.documentElement.style.setProperty(
+      "--app-background-image",
+      `url(${selectedImage})`,
+    );
     document.body.style.backgroundImage = `url(${selectedImage})`;
     document.body.style.backgroundSize = "cover";
     document.body.style.backgroundPosition = "center";

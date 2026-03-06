@@ -23,6 +23,8 @@ export default function EmployeeNamecardPage({
   const [showForm, setShowForm] = useState(false);
   const [editingNamecard, setEditingNamecard] =
     useState<EmployeeNamecard | null>(null);
+  const [copyingNamecard, setCopyingNamecard] =
+    useState<EmployeeNamecard | null>(null);
   const [deleteConfirmation, setDeleteConfirmation] =
     useState<EmployeeNamecard | null>(null);
   const [deleteLoading, setDeleteLoading] = useState(false);
@@ -71,6 +73,13 @@ export default function EmployeeNamecardPage({
   const handleFormCancel = () => {
     setShowForm(false);
     setEditingNamecard(null);
+    setCopyingNamecard(null);
+  };
+
+  const handleCopy = (namecard: EmployeeNamecard) => {
+    setCopyingNamecard(namecard);
+    setEditingNamecard(null);
+    setShowForm(true);
   };
 
   const handleFormSuccess = (namecard: EmployeeNamecard) => {
@@ -132,7 +141,8 @@ export default function EmployeeNamecardPage({
           <div className="mb-8">
             <EmployeeNamecardForm
               isOperator={isOperator}
-              editingNamecard={editingNamecard}
+              editingNamecard={copyingNamecard}
+              isCopyMode={!!copyingNamecard}
               onSuccess={handleFormSuccess}
               onCancel={handleFormCancel}
             />
@@ -169,6 +179,7 @@ export default function EmployeeNamecardPage({
                 namecards={namecards}
                 loading={loading}
                 onEdit={handleEdit}
+                onCopy={handleCopy}
                 onDelete={handleDelete}
               />
             </div>

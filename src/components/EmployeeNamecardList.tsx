@@ -7,6 +7,7 @@ interface EmployeeNamecardListProps {
   namecards: EmployeeNamecard[];
   loading: boolean;
   onEdit: (namecard: EmployeeNamecard) => void;
+  onCopy: (namecard: EmployeeNamecard) => void;
   onDelete: (namecard: EmployeeNamecard) => void;
 }
 
@@ -14,6 +15,7 @@ export default function EmployeeNamecardList({
   namecards,
   loading,
   onEdit,
+  onCopy,
   onDelete,
 }: EmployeeNamecardListProps) {
   const [expandedId, setExpandedId] = useState<string | null>(null);
@@ -300,6 +302,12 @@ export default function EmployeeNamecardList({
                     className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-md font-medium hover:bg-blue-700 transition text-sm"
                   >
                     Edit
+                  </button>
+                  <button
+                    onClick={() => onCopy(namecard)}
+                    className="flex-1 px-4 py-2 bg-green-600 text-white rounded-md font-medium hover:bg-green-700 transition text-sm"
+                  >
+                    Copy
                   </button>
                   <button
                     onClick={() => onDelete(namecard)}

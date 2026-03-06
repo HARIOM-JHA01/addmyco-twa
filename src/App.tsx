@@ -48,14 +48,15 @@ function AppRoutes() {
   const hasToken = !!localStorage.getItem("token");
   const isOperator = operatorFlag === "true" && hasToken;
 
-  const [showWelcome, setShowWelcome] = useState(!isOperator);
+  // Non-operator users with a valid token should not see Welcome on first paint.
+  const [showWelcome, setShowWelcome] = useState(!isOperator && !hasToken);
   const [showWelcomePopup, setShowWelcomePopup] = useState(false);
   const [showPartnerPopup, setShowPartnerPopup] = useState(false);
   const [partnerPopupResolver, setPartnerPopupResolver] = useState<
     ((code: string | null) => void) | null
   >(null);
   const [profile, setProfile] = useState<any>(null);
-  const [profileLoading, setProfileLoading] = useState(!isOperator);
+  const [profileLoading, setProfileLoading] = useState(hasToken && !isOperator);
   const [deepLinkPartnerCode, setDeepLinkPartnerCode] = useState<string | null>(
     null,
   );

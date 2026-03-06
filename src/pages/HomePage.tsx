@@ -363,7 +363,7 @@ export default function HomePage() {
   return (
     <div
       className="bg-cover bg-center min-h-screen w-full overflow-x-hidden"
-      style={{ backgroundImage: `url(${backgroundImg})` }}
+      style={{ backgroundImage: `var(--app-background-image, url(${backgroundImg}))` }}
     >
       <Header />
       <div className="flex flex-col items-center justify-center flex-grow py-4 px-2 pb-32">
