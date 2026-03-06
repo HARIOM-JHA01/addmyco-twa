@@ -11,7 +11,10 @@ import {
   getOperatorCredits,
   getOperatorDetails,
 } from "../services/enterpriseService";
-import { getEmployeeNamecards, deleteEmployeeNamecard } from "../services/employeeNamecardService";
+import {
+  getEmployeeNamecards,
+  deleteEmployeeNamecard,
+} from "../services/employeeNamecardService";
 import { EmployeeNamecard } from "../types/employeeNamecard";
 import type { OperatorCredits } from "../types/enterprise";
 import WebApp from "@twa-dev/sdk";
@@ -44,14 +47,18 @@ export default function OperatorDashboardPage() {
     "overview" | "manage-employees" | "manage-templates"
   >("overview");
   const [menuOpen, setMenuOpen] = useState(false);
-  const [manageEmployeesSubTab, setManageEmployeesSubTab] = useState<"create" | "manage">("manage");
+  const [manageEmployeesSubTab, setManageEmployeesSubTab] = useState<
+    "create" | "manage"
+  >("manage");
 
   // Employee namecards state
   const [namecards, setNamecards] = useState<EmployeeNamecard[]>([]);
   const [namecardsLoading, setNamecardsLoading] = useState(false);
-  const [editingNamecard, setEditingNamecard] = useState<EmployeeNamecard | null>(null);
+  const [editingNamecard, setEditingNamecard] =
+    useState<EmployeeNamecard | null>(null);
   const [isCopyMode, setIsCopyMode] = useState(false);
-  const [deleteConfirmation, setDeleteConfirmation] = useState<EmployeeNamecard | null>(null);
+  const [deleteConfirmation, setDeleteConfirmation] =
+    useState<EmployeeNamecard | null>(null);
   const [deleteLoading, setDeleteLoading] = useState(false);
   const [namecardSuccess, setNamecardSuccess] = useState<string | null>(null);
 
@@ -63,13 +70,16 @@ export default function OperatorDashboardPage() {
   useEffect(() => {
     document.documentElement.style.setProperty(
       "--app-background-image",
-      `url(${backgroundImg})`
+      `url(${backgroundImg})`,
     );
   }, []);
 
   // Fetch namecards when Manage tab is opened
   useEffect(() => {
-    if (activeTab === "manage-employees" && manageEmployeesSubTab === "manage") {
+    if (
+      activeTab === "manage-employees" &&
+      manageEmployeesSubTab === "manage"
+    ) {
       fetchNamecards();
     }
   }, [activeTab, manageEmployeesSubTab]);
@@ -107,7 +117,9 @@ export default function OperatorDashboardPage() {
     try {
       setDeleteLoading(true);
       await deleteEmployeeNamecard(deleteConfirmation._id, true);
-      setNamecards((prev) => prev.filter((nc) => nc._id !== deleteConfirmation._id));
+      setNamecards((prev) =>
+        prev.filter((nc) => nc._id !== deleteConfirmation._id),
+      );
       setDeleteConfirmation(null);
       setNamecardSuccess("Deleted successfully");
       setTimeout(() => setNamecardSuccess(null), 3000);
@@ -217,9 +229,11 @@ export default function OperatorDashboardPage() {
   }
 
   return (
-    <div 
+    <div
       className="flex flex-col min-h-screen"
-      style={{ backgroundImage: `var(--app-background-image, url(${backgroundImg}))` }}
+      style={{
+        backgroundImage: `var(--app-background-image, url(${backgroundImg}))`,
+      }}
     >
       <Header />
       <main className="flex-1 p-4 max-w-7xl mx-auto w-full">
@@ -274,7 +288,7 @@ export default function OperatorDashboardPage() {
                 }}
                 className="block w-full text-left px-4 py-2 text-white font-semibold hover:bg-gray-800 transition"
               >
-                Manage Employee ({employees.length})
+                Manage Employee
               </button>
               <button
                 onClick={() => {
