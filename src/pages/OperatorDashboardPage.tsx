@@ -9,7 +9,6 @@ import ManageTemplatesPage from "./ManageTemplatesPage";
 import {
   getOperatorProfile,
   getOperatorCredits,
-  getOperatorDetails,
 } from "../services/enterpriseService";
 import {
   getEmployeeNamecards,
@@ -27,20 +26,10 @@ interface OperatorProfile {
   createdAt: string;
 }
 
-interface Employee {
-  _id: string;
-  username: string;
-  firstname?: string;
-  lastname?: string;
-  createdAt: string;
-  membertype?: string;
-}
-
 export default function OperatorDashboardPage() {
   const navigate = useNavigate();
   const [profile, setProfile] = useState<OperatorProfile | null>(null);
   const [credits, setCredits] = useState<OperatorCredits | null>(null);
-  const [employees, setEmployees] = useState<Employee[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<
@@ -158,17 +147,6 @@ export default function OperatorDashboardPage() {
 
       setProfile(profileData as any);
       setCredits(creditsData as any);
-
-      // Fetch employees created by this operator
-      if (profileData._id) {
-        try {
-          const details = await getOperatorDetails(profileData._id);
-          setEmployees(details?.employees || []);
-        } catch (err) {
-          console.error("Failed to fetch employees:", err);
-          setEmployees([]);
-        }
-      }
     } catch (err: any) {
       console.error("Failed to fetch operator data:", err);
       setError(err?.message || "Failed to load operator dashboard");
