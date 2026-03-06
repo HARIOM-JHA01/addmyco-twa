@@ -48,8 +48,8 @@ function AppRoutes() {
   const hasToken = !!localStorage.getItem("token");
   const isOperator = operatorFlag === "true" && hasToken;
 
-  // Non-operator users with a valid token should not see Welcome on first paint.
-  const [showWelcome, setShowWelcome] = useState(!isOperator && !hasToken);
+  // Non-operator users will always see WelcomePage first
+  const [showWelcome, setShowWelcome] = useState(true);
   const [showWelcomePopup, setShowWelcomePopup] = useState(false);
   const [showPartnerPopup, setShowPartnerPopup] = useState(false);
   const [partnerPopupResolver, setPartnerPopupResolver] = useState<
