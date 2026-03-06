@@ -3,12 +3,16 @@ import { useNavigate } from "react-router-dom";
 import Header from "../components/Header";
 import backgroundImg from "../assets/background.jpg";
 import EmployeeNamecardForm from "../components/EmployeeNamecardForm";
+import EmployeeNamecardList from "../components/EmployeeNamecardList";
+import DeleteConfirmationModal from "../components/DeleteConfirmationModal";
 import ManageTemplatesPage from "./ManageTemplatesPage";
 import {
   getOperatorProfile,
   getOperatorCredits,
   getOperatorDetails,
 } from "../services/enterpriseService";
+import { getEmployeeNamecards, deleteEmployeeNamecard } from "../services/employeeNamecardService";
+import { EmployeeNamecard } from "../types/employeeNamecard";
 import type { OperatorCredits } from "../types/enterprise";
 import WebApp from "@twa-dev/sdk";
 
@@ -42,6 +46,15 @@ export default function OperatorDashboardPage() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [manageEmployeesSubTab, setManageEmployeesSubTab] = useState<"create" | "manage">("manage");
 
+  // Employee namecards state
+  const [namecards, setNamecards] = useState<EmployeeNamecard[]>([]);
+  const [namecardsLoading, setNamecardsLoading] = useState(false);
+  const [editingNamecard, setEditingNamecard] = useState<EmployeeNamecard | null>(null);
+  const [isCopyMode, setIsCopyMode] = useState(false);
+  const [deleteConfirmation, setDeleteConfirmation] = useState<EmployeeNamecard | null>(null);
+  const [deleteLoading, setDeleteLoading] = useState(false);
+  const [namecardSuccess, setNamecardSuccess] = useState<string | null>(null);
+
   useEffect(() => {
     fetchOperatorData();
   }, []);
@@ -53,6 +66,66 @@ export default function OperatorDashboardPage() {
       `url(${backgroundImg})`
     );
   }, []);
+
+  // Fetch namecards when Manage tab is opened
+  useEffect(() => {
+    if (activeTab === "manage-employees" && manageEmployeesSubTab === "manage") {
+      fetchNamecards();
+    }
+  }, [activeTab, manageEmployeesSubTab]);
+
+  const fetchNamecards = async () => {
+    try {
+      setNamecardsLoading(true);
+      const data = await getEmployeeNamecards(true);
+      setNamecards(data);
+    } catch (error) {
+      console.error("Failed to fetch namecards:", error);
+    } finally {
+      setNamecardsLoading(false);
+    }
+  };
+
+  const handleEditNamecard = (namecard: EmployeeNamecard) => {
+    setEditingNamecard(namecard);
+    setIsCopyMode(false);
+    setManageEmployeesSubTab("create");
+  };
+
+  const handleCopyNamecard = (namecard: EmployeeNamecard) => {
+    setEditingNamecard(namecard);
+    setIsCopyMode(true);
+    setManageEmployeesSubTab("create");
+  };
+
+  const handleDeleteNamecard = (namecard: EmployeeNamecard) => {
+    setDeleteConfirmation(namecard);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!deleteConfirmation) return;
+    try {
+      setDeleteLoading(true);
+      await deleteEmployeeNamecard(deleteConfirmation._id, true);
+      setNamecards((prev) => prev.filter((nc) => nc._id !== deleteConfirmation._id));
+      setDeleteConfirmation(null);
+      setNamecardSuccess("Deleted successfully");
+      setTimeout(() => setNamecardSuccess(null), 3000);
+    } catch (error) {
+      console.error("Failed to delete:", error);
+    } finally {
+      setDeleteLoading(false);
+    }
+  };
+
+  const handleNamecardSuccess = () => {
+    setEditingNamecard(null);
+    setIsCopyMode(false);
+    setManageEmployeesSubTab("manage");
+    fetchNamecards();
+    setNamecardSuccess("Saved successfully");
+    setTimeout(() => setNamecardSuccess(null), 3000);
+  };
 
   const fetchOperatorData = async () => {
     setLoading(true);
@@ -97,17 +170,6 @@ export default function OperatorDashboardPage() {
     } finally {
       setLoading(false);
     }
-  };
-
-  const handleCreationSuccess = async () => {
-    await fetchOperatorData();
-    setManageEmployeesSubTab("manage");
-    setActiveTab("manage-employees");
-  };
-
-  const handleCreationCancel = () => {
-    setManageEmployeesSubTab("manage");
-    setActiveTab("overview");
   };
 
   const handleLogout = () => {
@@ -405,109 +467,38 @@ export default function OperatorDashboardPage() {
               <EmployeeNamecardForm
                 isOperator={true}
                 availableCredits={credits?.credits || 0}
-                onSuccess={handleCreationSuccess}
-                onCancel={handleCreationCancel}
+                editingNamecard={editingNamecard}
+                isCopyMode={isCopyMode}
+                onSuccess={handleNamecardSuccess}
+                onCancel={() => {
+                  setEditingNamecard(null);
+                  setIsCopyMode(false);
+                  setManageEmployeesSubTab("manage");
+                }}
               />
             )}
 
             {manageEmployeesSubTab === "manage" && (
-              <div className="bg-white rounded-lg shadow-md border border-gray-200">
-                <div className="p-6 border-b border-gray-200 bg-gradient-to-r from-blue-50 to-transparent">
-                  <h2 className="text-xl font-bold text-gray-800">
-                    Employees Created
-                  </h2>
-                  <p className="text-sm text-gray-600 mt-2">
-                    Total:{" "}
-                    <span className="font-bold text-blue-600">
-                      {employees.length}
-                    </span>{" "}
-                    employees
-                  </p>
-                </div>
-                <div className="overflow-x-auto">
-                  {employees.length === 0 ? (
-                    <div className="p-12 text-center text-gray-500">
-                      <svg
-                        className="w-12 h-12 mx-auto mb-4 text-gray-300"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={1.5}
-                          d="M17 20h5v-2a3 3 0 00-5.856-1.487M15 10a3 3 0 11-6 0 3 3 0 016 0zM6 20h12a6 6 0 006-6V4a6 6 0 00-6-6H6a6 6 0 00-6 6v10a6 6 0 006 6z"
-                        />
-                      </svg>
-                      <p className="mb-4 font-medium">No employees created yet</p>
-                      <button
-                        onClick={() => setManageEmployeesSubTab("create")}
-                        className="text-blue-600 hover:text-blue-700 font-semibold underline"
-                      >
-                        Create your first employee
-                      </button>
-                    </div>
-                  ) : (
-                    <table className="w-full">
-                      <thead className="bg-gray-100 border-b border-gray-200">
-                        <tr>
-                          <th className="px-6 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
-                            Username
-                          </th>
-                          <th className="px-6 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
-                            English Name
-                          </th>
-                          <th className="px-6 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
-                            Type
-                          </th>
-                          <th className="px-6 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
-                            Created
-                          </th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-gray-200">
-                        {employees.map((employee) => (
-                          <tr
-                            key={employee._id}
-                            className="hover:bg-blue-50 transition"
-                          >
-                            <td className="px-6 py-4 text-sm font-medium text-gray-800">
-                              {employee.username}
-                            </td>
-                            <td className="px-6 py-4 text-sm text-gray-600">
-                              {employee.firstname || "—"}
-                            </td>
-                            <td className="px-6 py-4">
-                              <span
-                                className={`inline-block px-3 py-1 text-xs font-bold rounded-full ${
-                                  employee.membertype === "premium"
-                                    ? "bg-green-100 text-green-700"
-                                    : "bg-gray-100 text-gray-700"
-                                }`}
-                              >
-                                {employee.membertype || "free"}
-                              </span>
-                            </td>
-                            <td className="px-6 py-4 text-sm text-gray-600">
-                              {employee.createdAt
-                                ? new Date(employee.createdAt).toLocaleDateString(
-                                    "en-US",
-                                    {
-                                      year: "numeric",
-                                      month: "short",
-                                      day: "numeric",
-                                    },
-                                  )
-                                : "—"}
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  )}
-                </div>
-              </div>
+              <>
+                {namecardSuccess && (
+                  <div className="mb-4 p-3 bg-green-100 border border-green-400 text-green-700 rounded">
+                    {namecardSuccess}
+                  </div>
+                )}
+                <EmployeeNamecardList
+                  namecards={namecards}
+                  loading={namecardsLoading}
+                  onEdit={handleEditNamecard}
+                  onCopy={handleCopyNamecard}
+                  onDelete={handleDeleteNamecard}
+                />
+                <DeleteConfirmationModal
+                  namecard={deleteConfirmation}
+                  loading={deleteLoading}
+                  onConfirm={handleConfirmDelete}
+                  onCancel={() => setDeleteConfirmation(null)}
+                />
+              </>
             )}
           </>
         )}
