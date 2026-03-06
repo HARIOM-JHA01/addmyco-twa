@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import Header from "../components/Header";
+import backgroundImg from "../assets/background.jpg";
 import EmployeeNamecardForm from "../components/EmployeeNamecardForm";
 import ManageTemplatesPage from "./ManageTemplatesPage";
 import {
@@ -43,6 +44,14 @@ export default function OperatorDashboardPage() {
 
   useEffect(() => {
     fetchOperatorData();
+  }, []);
+
+  // Always show default background on Operator Dashboard
+  useEffect(() => {
+    document.documentElement.style.setProperty(
+      "--app-background-image",
+      `url(${backgroundImg})`
+    );
   }, []);
 
   const fetchOperatorData = async () => {
@@ -146,7 +155,10 @@ export default function OperatorDashboardPage() {
   }
 
   return (
-    <div className="flex flex-col min-h-screen">
+    <div 
+      className="flex flex-col min-h-screen"
+      style={{ backgroundImage: `var(--app-background-image, url(${backgroundImg}))` }}
+    >
       <Header />
       <main className="flex-1 p-4 max-w-7xl mx-auto w-full">
         {/* Page Title with Hamburger Menu */}
