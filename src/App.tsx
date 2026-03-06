@@ -94,6 +94,42 @@ function AppRoutes() {
     return `/${last}`;
   };
 
+  const readStartAppParam = (): string | null => {
+    try {
+      const fromWebApp = WebApp.initDataUnsafe?.start_param;
+      if (fromWebApp && String(fromWebApp).trim()) {
+        return String(fromWebApp).trim();
+      }
+    } catch (e) {
+      console.debug("Failed reading start_param from WebApp.initDataUnsafe", e);
+    }
+
+    try {
+      const searchParams = new URLSearchParams(window.location.search);
+      const fromQuery =
+        searchParams.get("tgWebAppStartParam") || searchParams.get("startapp");
+      if (fromQuery && fromQuery.trim()) return fromQuery.trim();
+    } catch (e) {
+      console.debug("Failed reading startapp from query string", e);
+    }
+
+    try {
+      // Telegram sometimes places launch params in hash fragment.
+      const hash = window.location.hash || "";
+      const queryLike = hash.includes("?") ? hash.split("?")[1] : "";
+      if (queryLike) {
+        const hashParams = new URLSearchParams(queryLike);
+        const fromHash =
+          hashParams.get("tgWebAppStartParam") || hashParams.get("startapp");
+        if (fromHash && fromHash.trim()) return fromHash.trim();
+      }
+    } catch (e) {
+      console.debug("Failed reading startapp from hash", e);
+    }
+
+    return null;
+  };
+
   // Check for operator login flag on mount and navigate
   useEffect(() => {
     const operatorFlag = localStorage.getItem("operator_logged_in");
@@ -114,7 +150,7 @@ function AppRoutes() {
   // Handle Telegram startParam (when app is opened via Telegram deep link)
   useEffect(() => {
     try {
-      const startParam = WebApp.initDataUnsafe?.start_param;
+      const startParam = readStartAppParam();
       const hasToken = !!localStorage.getItem("token");
       const path = location.pathname || "/";
 
@@ -128,11 +164,11 @@ function AppRoutes() {
       );
 
       const atAppRoot = path === "/" || path === "/start" || path === "";
-      const alreadyHandled =
-        sessionStorage.getItem("start_param_handled") === "1";
+      const handledValue = sessionStorage.getItem("start_param_handled_value");
+      const alreadyHandled = handledValue === startParam;
 
       if (startParam && !hasToken && atAppRoot && !alreadyHandled) {
-        sessionStorage.setItem("start_param_handled", "1");
+        sessionStorage.setItem("start_param_handled_value", startParam);
 
         const decodedParam = decodeURIComponent(startParam);
         console.log("Decoded startParam:", decodedParam);
@@ -392,7 +428,7 @@ function AppRoutes() {
 
       let deepLinkPath: string | null = null;
       try {
-        const startParam = WebApp.initDataUnsafe?.start_param;
+        const startParam = readStartAppParam();
         if (startParam) {
           const decodedParam = decodeURIComponent(startParam);
           // Don't set deepLinkPath if it's a partner code
