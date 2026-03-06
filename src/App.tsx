@@ -68,6 +68,31 @@ function AppRoutes() {
   });
 
   const fetchBackgroundByUsername = fetchBgByUsername;
+  const publicSubViews = new Set(["company", "chamber"]);
+
+  const normalizeDeepLinkPath = (rawParam?: string | null): string | null => {
+    if (!rawParam) return null;
+    const decoded = decodeURIComponent(rawParam).trim();
+    if (!decoded) return null;
+
+    // keep partner-code flow untouched
+    if (decoded.startsWith("ref-")) return `/${decoded}`;
+
+    const parts = decoded.split("/").filter(Boolean);
+    if (parts.length === 0) return null;
+    if (parts.length === 1) return `/${parts[0]}`;
+
+    const last = parts[parts.length - 1];
+    const first = parts[0];
+
+    // Preserve existing public subview routes: /:username/company|chamber
+    if (parts.length === 2 && publicSubViews.has(last.toLowerCase())) {
+      return `/${first}/${last}`;
+    }
+
+    // New format support: parent/employee -> open employee profile
+    return `/${last}`;
+  };
 
   // Check for operator login flag on mount and navigate
   useEffect(() => {
@@ -121,8 +146,11 @@ function AppRoutes() {
           return;
         }
 
-        // Otherwise navigate to the path (username or other)
-        navigate(`/${decodedParam}`, { replace: true });
+        const normalizedPath = normalizeDeepLinkPath(decodedParam);
+        if (normalizedPath) {
+          // Navigate to normalized public profile path
+          navigate(normalizedPath, { replace: true });
+        }
       }
     } catch (e) {
       console.error("Failed to read start_param", e);
@@ -157,7 +185,10 @@ function AppRoutes() {
       try {
         console.log("Checking for Telegram WebApp to navigate internally");
         if (window.Telegram && window.Telegram.WebApp) {
-          navigate(`/${param}`);
+          const normalizedPath = normalizeDeepLinkPath(param);
+          if (normalizedPath) {
+            navigate(normalizedPath, { replace: true });
+          }
           return;
         }
       } catch (e) {
@@ -366,7 +397,7 @@ function AppRoutes() {
           const decodedParam = decodeURIComponent(startParam);
           // Don't set deepLinkPath if it's a partner code
           if (!decodedParam.startsWith("ref-")) {
-            deepLinkPath = `/${decodedParam}`;
+            deepLinkPath = normalizeDeepLinkPath(decodedParam);
             console.log("Deep link path for navigation:", deepLinkPath);
           }
         }
