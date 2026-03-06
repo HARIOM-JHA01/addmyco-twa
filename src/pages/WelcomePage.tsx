@@ -90,6 +90,14 @@ const WelcomePage: React.FC<WelcomePageProps> = ({
     };
   }, [banners]);
 
+  // Always show default background on WelcomePage
+  useEffect(() => {
+    document.documentElement.style.setProperty(
+      "--app-background-image",
+      `url(${backgroundImg})`
+    );
+  }, []);
+
   useEffect(() => {
     // Don't clear token if operator just logged in
     const operatorFlag = localStorage.getItem("operator_logged_in");
