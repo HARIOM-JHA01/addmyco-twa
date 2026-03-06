@@ -1,5 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { EmployeeNamecard } from "../types/employeeNamecard";
+import { getCountries, CountryOption } from "../services/countryService";
 import i18n from "../i18n";
 
 interface EmployeeNamecardListProps {
@@ -16,6 +17,21 @@ export default function EmployeeNamecardList({
   onDelete,
 }: EmployeeNamecardListProps) {
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [countries, setCountries] = useState<CountryOption[]>([]);
+
+  useEffect(() => {
+    const fetchCountries = async () => {
+      const countryData = await getCountries();
+      setCountries(countryData);
+    };
+    fetchCountries();
+  }, []);
+
+  const getCountryName = (code?: string) => {
+    if (!code) return "—";
+    const country = countries.find((c) => c.code === code);
+    return country?.name || code;
+  };
 
   if (loading) {
     return (
@@ -158,6 +174,14 @@ export default function EmployeeNamecardList({
                       {namecard.company_template?.company_name_english || "—"}
                     </p>
                   </div>
+                  {namecard.country_code && (
+                    <div>
+                      <p className="font-medium text-gray-700">Country</p>
+                      <p className="text-gray-600">
+                        {getCountryName(namecard.country_code)}
+                      </p>
+                    </div>
+                  )}
                   {namecard.chamber_template && (
                     <div>
                       <p className="font-medium text-gray-700">Chamber</p>

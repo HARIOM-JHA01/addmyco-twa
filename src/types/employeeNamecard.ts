@@ -157,6 +157,7 @@ export interface EmployeeNamecard {
   createdAt: string;
   updatedAt: string;
   profile_url?: string;
+  country_code?: string;
   verificationCode?: string;
   isVerified?: boolean;
 }
@@ -180,6 +181,7 @@ export interface EmployeeNamecardFormData {
   website?: string;
   company_template_id: string;
   chamber_template_id?: string;
+  country_code?: string;
 }
 
 export interface CreateEmployeeNamecardResponse {

@@ -117,6 +117,7 @@ const Field = ({
   value,
   onChange,
   required,
+  maxLength,
   type = "text",
 }: {
   label: string;
@@ -126,6 +127,7 @@ const Field = ({
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
   ) => void;
   required?: boolean;
+  maxLength?: number;
   type?: string;
 }) => (
   <div>
@@ -138,6 +140,7 @@ const Field = ({
       value={value}
       onChange={onChange}
       required={required}
+      maxLength={maxLength}
       className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#007cb6]"
     />
   </div>
@@ -271,6 +274,7 @@ function CompanyTemplateForm({
           value={form.company_name_english || ""}
           onChange={handleChange}
           required
+          maxLength={10}
         />
         <Field
           label="Company Name (Chinese)"

@@ -5,6 +5,7 @@ import {
   createEmployeeNamecard,
   updateEmployeeNamecard,
 } from "../services/employeeNamecardService";
+import { getCountries, CountryOption } from "../services/countryService";
 import {
   CompanyTemplate,
   ChamberTemplate,
@@ -47,10 +48,13 @@ export default function EmployeeNamecardForm({
     website: editingNamecard?.website || "",
     company_template_id: editingNamecard?.company_template?._id || "",
     chamber_template_id: editingNamecard?.chamber_template?._id || "",
+    country_code: editingNamecard?.country_code || "",
   });
 
   const [companies, setCompanies] = useState<CompanyTemplate[]>([]);
   const [chambers, setChambers] = useState<ChamberTemplate[]>([]);
+  const [countries, setCountries] = useState<CountryOption[]>([]);
+  const [countriesLoading, setCountriesLoading] = useState(true);
   const [profileMedia, setProfileMedia] = useState<File | null>(null);
   const [mediaPreview, setMediaPreview] = useState<string>("");
   const [mediaType, setMediaType] = useState<"image" | "video" | null>(null);
@@ -86,6 +90,22 @@ export default function EmployeeNamecardForm({
 
     fetchTemplates();
   }, [isOperator]);
+
+  // Fetch countries on mount
+  useEffect(() => {
+    const fetchCountries = async () => {
+      try {
+        const countryData = await getCountries();
+        setCountries(countryData);
+      } catch (error) {
+        console.error("Failed to fetch countries:", error);
+      } finally {
+        setCountriesLoading(false);
+      }
+    };
+
+    fetchCountries();
+  }, []);
 
   // Set existing media preview (image OR video)
   useEffect(() => {
@@ -239,6 +259,8 @@ export default function EmployeeNamecardForm({
       newErrors.telegram_link = "Telegram link is required";
     if (!formData.contact_number)
       newErrors.contact_number = "Contact number is required";
+    if (!formData.country_code)
+      newErrors.country_code = "Country is required";
     if (!formData.address1) newErrors.address1 = "Address 1 is required";
     if (!formData.address2) newErrors.address2 = "Address 2 is required";
     if (!formData.address3) newErrors.address3 = "Address 3 is required";
@@ -356,7 +378,7 @@ export default function EmployeeNamecardForm({
                   onChange={handleInputChange}
                   placeholder="without @ e.g., john_doe_123"
                   disabled={!!editingNamecard}
-                  max={12}
+                  maxLength={12}
                   className={`w-full px-3 py-2 text-sm border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
                     errors.telegram_username
                       ? "border-red-500"
@@ -481,6 +503,35 @@ export default function EmployeeNamecardForm({
               {errors.contact_number && (
                 <span className="text-red-500 text-xs">
                   {errors.contact_number}
+                </span>
+              )}
+            </div>
+
+            <div>
+              <label className="block text-xs md:text-sm font-medium text-blue-500 mb-1">
+                Country *
+              </label>
+              <select
+                name="country_code"
+                value={formData.country_code || ""}
+                onChange={handleInputChange}
+                disabled={countriesLoading}
+                className={`w-full px-3 py-2 text-sm border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                  errors.country_code ? "border-red-500" : "border-gray-300"
+                } ${countriesLoading ? "bg-gray-100" : ""}`}
+              >
+                <option value="">
+                  {countriesLoading ? "Loading..." : "Select Country"}
+                </option>
+                {countries.map((country) => (
+                  <option key={country.code} value={country.code}>
+                    {country.name}
+                  </option>
+                ))}
+              </select>
+              {errors.country_code && (
+                <span className="text-red-500 text-xs">
+                  {errors.country_code}
                 </span>
               )}
             </div>
