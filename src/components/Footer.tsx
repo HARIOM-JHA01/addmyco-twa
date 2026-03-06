@@ -60,15 +60,17 @@ export default function Footer() {
       {showSettings && (
         <div className="fixed bottom-20 right-4 z-50">
           <div className="bg-[#007cb6] bg-opacity-90 rounded-lg shadow-lg flex flex-col min-w-[160px]">
-            <button
-              className="text-white font-semibold px-4 py-2 text-left hover:bg-gray-800"
-              onClick={() => {
-                setShowSettings(false);
-                router("/membership");
-              }}
-            >
-              {i18n.t("membership")}
-            </button>
+            {profile?.usertype !== 4 && (
+              <button
+                className="text-white font-semibold px-4 py-2 text-left hover:bg-gray-800"
+                onClick={() => {
+                  setShowSettings(false);
+                  router("/membership");
+                }}
+              >
+                {i18n.t("membership")}
+              </button>
+            )}
             {profile?.usertype === 2 && (
               <button
                 className="text-white font-semibold px-4 py-2 text-left hover:bg-gray-800"
@@ -80,42 +82,50 @@ export default function Footer() {
                 {i18n.t("enterprise_section")}
               </button>
             )}
-            <button
-              className="text-white font-semibold px-4 py-2 text-left hover:bg-gray-800"
-              onClick={() => {
-                setShowSettings(false);
-                router("/advertisements");
-              }}
-            >
-              {i18n.t("advertisement")}
-            </button>
-            <button
-              className="text-white font-semibold px-4 py-2 text-left hover:bg-gray-800"
-              onClick={() => {
-                setShowSettings(false);
-                router("/payment-history");
-              }}
-            >
-              {i18n.t("payment_history")}
-            </button>
-            <button
-              className="text-white font-semibold px-4 py-2 text-left hover:bg-gray-800"
-              onClick={() => {
-                setShowSettings(false);
-                router("/background");
-              }}
-            >
-              {i18n.t("background")}
-            </button>
-            <button
-              className="text-white font-semibold px-4 py-2 text-left hover:bg-gray-800"
-              onClick={() => {
-                setShowSettings(false);
-                router("/theme");
-              }}
-            >
-              {i18n.t("theme")}
-            </button>
+            {profile?.usertype !== 4 && (
+              <button
+                className="text-white font-semibold px-4 py-2 text-left hover:bg-gray-800"
+                onClick={() => {
+                  setShowSettings(false);
+                  router("/advertisements");
+                }}
+              >
+                {i18n.t("advertisement")}
+              </button>
+            )}
+            {profile?.usertype !== 4 && (
+              <button
+                className="text-white font-semibold px-4 py-2 text-left hover:bg-gray-800"
+                onClick={() => {
+                  setShowSettings(false);
+                  router("/payment-history");
+                }}
+              >
+                {i18n.t("payment_history")}
+              </button>
+            )}
+            {profile?.usertype !== 4 && (
+              <button
+                className="text-white font-semibold px-4 py-2 text-left hover:bg-gray-800"
+                onClick={() => {
+                  setShowSettings(false);
+                  router("/background");
+                }}
+              >
+                {i18n.t("background")}
+              </button>
+            )}
+            {profile?.usertype !== 4 && (
+              <button
+                className="text-white font-semibold px-4 py-2 text-left hover:bg-gray-800"
+                onClick={() => {
+                  setShowSettings(false);
+                  router("/theme");
+                }}
+              >
+                {i18n.t("theme")}
+              </button>
+            )}
             <button
               className="text-white font-semibold px-4 py-2 text-left hover:bg-gray-800"
               onClick={() => {

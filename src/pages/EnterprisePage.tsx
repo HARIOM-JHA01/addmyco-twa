@@ -1323,7 +1323,12 @@ export default function EnterpriseDashboard() {
                                     {purchase.packageName}
                                   </p>
                                   <p className="text-sm text-gray-600">
-                                    +{purchase.creditsGranted} Credits
+                                    +{purchase.creditsGrantedOperator} Operator
+                                    Credits
+                                  </p>
+                                  <p className="text-sm text-gray-600">
+                                    +{purchase.creditsGrantedEmployee} Employee
+                                    Credits
                                   </p>
                                 </div>
                                 <span

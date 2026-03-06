@@ -29,6 +29,7 @@ import CreateCompanyPage from "./pages/CreateCompanyPage";
 import BackgroundPage from "./pages/BackgroundPage";
 import HomePage from "./pages/HomePage";
 import PublicProfileContainer from "./pages/PublicProfileContainer";
+import { fetchUserProfile } from "./services/publicProfileService";
 import { fetchBackgroundByUsername as fetchBgByUsername } from "./utils/theme";
 import WelcomePopup from "./components/WelcomePopup";
 import PartnerCodePopup from "./components/PartnerCodePopup";
@@ -40,6 +41,8 @@ const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 function AppRoutes() {
   const navigate = useNavigate();
   const location = useLocation();
+  const clearProfileStore = useProfileStore((s) => s.clearProfile);
+  const setProfileStore = useProfileStore((s) => s.setProfile);
   // Check for operator session immediately on initialization
   const operatorFlag = localStorage.getItem("operator_logged_in");
   const hasToken = !!localStorage.getItem("token");
@@ -244,6 +247,7 @@ function AppRoutes() {
         const token = localStorage.getItem("token");
         if (!token) {
           setProfile(null);
+          clearProfileStore();
           setProfileLoading(false);
           return;
         }
@@ -252,6 +256,7 @@ function AppRoutes() {
         });
         const profileData = res.data.data || null;
         setProfile(profileData);
+        setShowWelcome(false);
         // Save profile to Zustand store so Footer and other components can access it immediately
         if (profileData) {
           useProfileStore.getState().setProfile(profileData);
@@ -267,6 +272,8 @@ function AppRoutes() {
         }
       } catch {
         setProfile(null);
+        clearProfileStore();
+        setShowWelcome(false);
       } finally {
         setProfileLoading(false);
       }
@@ -288,7 +295,13 @@ function AppRoutes() {
     const onProfileUpdated = (e: any) => {
       try {
         const data = e?.detail;
-        if (data) setProfile(data);
+        if (data) {
+          setProfile(data);
+          setProfileStore(data);
+        } else {
+          setProfile(null);
+          clearProfileStore();
+        }
       } catch (err) {
         console.warn("onProfileUpdated handler failed", err);
       }
@@ -302,7 +315,7 @@ function AppRoutes() {
         "profile-updated",
         onProfileUpdated as EventListener,
       );
-  }, []);
+  }, [clearProfileStore, setProfileStore]);
 
   const handleJoinChannel = () => {
     setShowWelcomePopup(false);
@@ -491,6 +504,11 @@ function AppRoutes() {
           });
           const profileData = res.data.data;
           setProfile(profileData || null);
+          if (profileData) {
+            setProfileStore(profileData);
+          } else {
+            clearProfileStore();
+          }
           try {
             const username =
               profileData?.username ||
@@ -536,6 +554,7 @@ function AppRoutes() {
           }
         } catch {
           setProfile(null);
+          clearProfileStore();
           setShowWelcome(false);
           setProfileLoading(false);
           console.log(
@@ -588,6 +607,71 @@ function AppRoutes() {
     }
   };
 
+  const handleStaffLoginSuccess = async () => {
+    const token = localStorage.getItem("token");
+    if (!token) {
+      setShowWelcome(true);
+      setProfileLoading(false);
+      return;
+    }
+
+    // Switch out of welcome flow immediately once a session token exists.
+    setShowWelcome(false);
+    setProfileLoading(true);
+    try {
+      const res = await axios.get(`${API_BASE_URL}/getProfile`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const profileData = res.data?.data || null;
+      setProfile(profileData);
+      if (profileData) {
+        useProfileStore.getState().setProfile(profileData);
+      }
+      try {
+        const username =
+          profileData?.username ||
+          profileData?.telegram_username ||
+          profileData?.telegramUsername;
+        if (username) await fetchBackgroundByUsername(username);
+      } catch (err) {
+        console.debug("fetchBackgroundByUsername after staff login failed", err);
+      }
+      // TODO(auth): centralize post-login session hydration for Telegram/staff/operator flows.
+      navigate("/");
+    } catch (err) {
+      console.error("Staff login profile hydration failed:", err);
+      const status = (err as any)?.response?.status;
+      const staffUsername = localStorage.getItem("staff_login_username");
+
+      if (status === 401 && staffUsername) {
+        try {
+          const publicProfile = await fetchUserProfile(staffUsername);
+          const fallbackProfile: any = {
+            _id: publicProfile?._id || "",
+            username: publicProfile?.username || staffUsername,
+            owner_name_english: publicProfile?.owner_name_english || "",
+            owner_name_chinese: publicProfile?.owner_name_chinese || "",
+            membertype: publicProfile?.membertype || "free",
+            usertype: 1,
+            companydata: publicProfile?.companydata,
+          };
+          setProfile(fallbackProfile);
+          useProfileStore.getState().setProfile(fallbackProfile);
+          navigate("/");
+          return;
+        } catch (fallbackErr) {
+          console.error("Staff profile fallback fetch failed:", fallbackErr);
+        }
+      }
+
+      setProfile(null);
+      clearProfileStore();
+      navigate("/");
+    } finally {
+      setProfileLoading(false);
+    }
+  };
+
   console.log("Rendering with:", {
     isPublicPath,
     showWelcome,
@@ -613,7 +697,11 @@ function AppRoutes() {
           <Route path="*" element={<OperatorDashboardPage />} />
         </Routes>
       ) : showWelcome ? (
-        <WelcomePage onLogin={handleLogin} partnerCode={deepLinkPartnerCode} />
+        <WelcomePage
+          onLogin={handleLogin}
+          onStaffLoginSuccess={handleStaffLoginSuccess}
+          partnerCode={deepLinkPartnerCode}
+        />
       ) : profileLoading ? (
         <div>Loading...</div>
       ) : !profile ? (

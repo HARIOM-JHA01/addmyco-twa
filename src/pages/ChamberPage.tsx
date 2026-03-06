@@ -1496,16 +1496,26 @@ export default function ChamberPage() {
                     {/* two buttons update add more */}
                     <div className="flex justify-center w-full gap-4 text-center mt-6">
                       <button
-                        className="p-2 w-full text-white bg-[#d50078] shadow-md rounded"
-                        onClick={() => openEditChamber(c)}
+                        className={`p-2 w-full shadow-md rounded ${
+                          profile?.usertype === 4
+                            ? "bg-gray-400 text-gray-200 cursor-not-allowed"
+                            : "text-white bg-[#d50078]"
+                        }`}
+                        onClick={() => profile?.usertype !== 4 && openEditChamber(c)}
                         type="button"
+                        disabled={profile?.usertype === 4}
                       >
                         {i18n.t("update")}
                       </button>
                       <button
-                        className="p-2 w-full text-white bg-[#009944] shadow-md rounded"
-                        onClick={() => navigate("/create-chamber")}
+                        className={`p-2 w-full shadow-md rounded ${
+                          profile?.usertype === 4
+                            ? "bg-gray-400 text-gray-200 cursor-not-allowed"
+                            : "text-white bg-[#009944]"
+                        }`}
+                        onClick={() => profile?.usertype !== 4 && navigate("/create-chamber")}
                         type="button"
+                        disabled={profile?.usertype === 4}
                       >
                         {i18n.t("add_more")}
                       </button>

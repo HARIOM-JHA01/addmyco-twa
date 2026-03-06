@@ -347,6 +347,100 @@ export const getOperatorsEmployeesAdmin = async (
   }
 };
 
+/**
+ * Staff login - Step 1: Request verification code
+ * POST /staff/login
+ * Accepts { staffUserName } and returns message to enter verification code
+ */
+export const staffLoginRequestCode = async (
+  staffUserName: string,
+): Promise<{
+  message: string;
+  token?: string;
+  requiresVerification?: boolean;
+  userId?: string;
+  username?: string;
+}> => {
+  try {
+    const response = await axios.post(`${API_BASE_URL}/staff/login`, {
+      staffUserName,
+    });
+    const payload = response.data?.data || response.data || {};
+    const token = payload?.token || response.data?.token;
+    const userId = payload?.userId || payload?._id;
+    const username = payload?.username || staffUserName;
+
+    // Support APIs that can directly authenticate verified users in step 1.
+    if (token) {
+      localStorage.setItem("token", token);
+      if (username) localStorage.setItem("staff_login_username", username);
+    }
+
+    return {
+      message:
+        payload?.message ||
+        response.data?.message ||
+        "Verification code sent. Please enter the code.",
+      token,
+      userId,
+      username,
+      requiresVerification:
+        typeof payload?.requiresVerification === "boolean"
+          ? payload.requiresVerification
+          : !token,
+    };
+  } catch (error: any) {
+    console.error("Staff login request code failed:", error);
+    throw new Error(
+      error?.response?.data?.message || "Failed to request verification code",
+    );
+  }
+};
+
+/**
+ * Staff login - Step 2: Verify code and login
+ * POST /staff/login
+ * Accepts { staffUserName, verificationCode } and returns token on success
+ */
+export const staffLoginVerifyCode = async (
+  staffUserName: string,
+  verificationCode: string,
+): Promise<{
+  token?: string;
+  message: string;
+  userId?: string;
+  username?: string;
+}> => {
+  try {
+    const response = await axios.post(`${API_BASE_URL}/staff/login`, {
+      staffUserName,
+      verificationCode,
+    });
+    const data = response.data?.data || response.data || {};
+    const token = data?.token || response.data?.token;
+    const userId = data?.userId || data?._id;
+    const username = data?.username || staffUserName;
+
+    // Store token for future requests
+    if (token) {
+      localStorage.setItem("token", token);
+      if (username) localStorage.setItem("staff_login_username", username);
+    }
+
+    return {
+      token,
+      message: data?.message || response.data?.message || "Login successful",
+      userId,
+      username,
+    };
+  } catch (error: any) {
+    console.error("Staff login verify code failed:", error);
+    throw new Error(
+      error?.response?.data?.message || "Invalid verification code",
+    );
+  }
+};
+
 // Operator login (for future use if needed)
 export const operatorLogin = async (
   username: string,

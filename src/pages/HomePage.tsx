@@ -484,7 +484,7 @@ export default function HomePage() {
               {profile?.tgid && (
                 <div
                   className="w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0 cursor-pointer"
-                  onClick={() => window.open(formatUrl(profile.tgid), "_blank")}
+                  onClick={() => window.open(formatUrl(profile.telegramId), "_blank")}
                   style={{
                     backgroundColor: "var(--app-background-color)",
                     scrollSnapAlign: "center" as any,

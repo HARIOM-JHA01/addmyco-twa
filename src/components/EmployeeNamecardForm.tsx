@@ -32,6 +32,7 @@ export default function EmployeeNamecardForm({
     name_english: editingNamecard?.name_english || "",
     name_chinese: editingNamecard?.name_chinese || "",
     telegram_username: editingNamecard?.telegram_username || "",
+    telegram_link: editingNamecard?.telegram_link || "",
     contact_number: editingNamecard?.contact_number || "",
     address1: editingNamecard?.address1 || "",
     address2: editingNamecard?.address2 || "",
@@ -234,6 +235,8 @@ export default function EmployeeNamecardForm({
       }
     }
 
+    if (!formData.telegram_link)
+      newErrors.telegram_link = "Telegram link is required";
     if (!formData.contact_number)
       newErrors.contact_number = "Contact number is required";
     if (!formData.address1) newErrors.address1 = "Address 1 is required";
@@ -340,12 +343,9 @@ export default function EmployeeNamecardForm({
       <form onSubmit={handleSubmit} className="space-y-4 md:space-y-6">
         {/* Telegram Username Section - TOP PRIORITY */}
         <div className="border-b pb-4 md:pb-6 bg-blue-50 p-4 rounded-lg">
-          <h3 className="text-base md:text-lg font-semibold mb-4 md:mb-5 text-blue-600">
-            🔐 Verify Your Telegram Username
-          </h3>
           <div>
-            <label className="block text-xs md:text-sm font-medium text-blue-600 mb-2">
-              Telegram Username * (Required to log in to AddMy)
+            <label className="block text-md md:text-sm font-medium text-blue-600 mb-2">
+              Staff Username * (Required to log in to AddMy)
             </label>
             <div className="flex gap-2 flex-col sm:flex-row">
               <div className="flex-1">
@@ -355,40 +355,44 @@ export default function EmployeeNamecardForm({
                   value={formData.telegram_username}
                   onChange={handleInputChange}
                   placeholder="without @ e.g., john_doe_123"
+                  disabled={!!editingNamecard}
+                  max={12}
                   className={`w-full px-3 py-2 text-sm border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
                     errors.telegram_username
                       ? "border-red-500"
                       : "border-gray-300"
-                  }`}
+                  } ${editingNamecard ? "bg-gray-100 cursor-not-allowed" : ""}`}
                 />
               </div>
-              <button
-                type="button"
-                onClick={checkTelegramAvailability}
-                disabled={
-                  usernameCheckLoading ||
-                  !formData.telegram_username.trim() ||
-                  (usernameChecked && !usernameExists)
-                }
-                className={`px-4 py-2 rounded-md font-medium text-sm transition-colors whitespace-nowrap ${
-                  usernameCheckLoading
-                    ? "bg-gray-300 text-gray-600 cursor-not-allowed"
-                    : usernameChecked && !usernameExists
-                      ? "bg-green-100 text-green-700 cursor-default"
-                      : "bg-blue-600 text-white hover:bg-blue-700"
-                }`}
-              >
-                {usernameCheckLoading ? (
-                  <span className="flex items-center gap-1">
-                    <div className="animate-spin rounded-full h-4 w-4 border-2 border-current border-t-transparent"></div>
-                    Checking...
-                  </span>
-                ) : usernameChecked && !usernameExists ? (
-                  "✓ Available"
-                ) : (
-                  "Check Availability"
-                )}
-              </button>
+              {!editingNamecard && (
+                <button
+                  type="button"
+                  onClick={checkTelegramAvailability}
+                  disabled={
+                    usernameCheckLoading ||
+                    !formData.telegram_username.trim() ||
+                    (usernameChecked && !usernameExists)
+                  }
+                  className={`px-4 py-2 rounded-md font-medium text-sm transition-colors whitespace-nowrap ${
+                    usernameCheckLoading
+                      ? "bg-gray-300 text-gray-600 cursor-not-allowed"
+                      : usernameChecked && !usernameExists
+                        ? "bg-green-100 text-green-700 cursor-default"
+                        : "bg-blue-600 text-white hover:bg-blue-700"
+                  }`}
+                >
+                  {usernameCheckLoading ? (
+                    <span className="flex items-center gap-1">
+                      <div className="animate-spin rounded-full h-4 w-4 border-2 border-current border-t-transparent"></div>
+                      Checking...
+                    </span>
+                  ) : usernameChecked && !usernameExists ? (
+                    "✓ Available"
+                  ) : (
+                    "Check Availability"
+                  )}
+                </button>
+              )}
             </div>
 
             {/* Telegram Username Status Messages */}
@@ -563,11 +567,34 @@ export default function EmployeeNamecardForm({
         </div>
 
         {/* Social & Contact Section */}
-        <div className="border-b pb-4 md:pb-6">
-          <h3 className="text-base md:text-lg font-semibold mb-3 md:mb-4">
-            Social Media & Contact
-          </h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
+          <div className="border-b pb-4 md:pb-6">
+            <h3 className="text-base md:text-lg font-semibold mb-3 md:mb-4">
+              Social Media & Contact
+            </h3>
+
+            <div>
+              <label className="block text-xs md:text-sm font-medium text-blue-500 mb-1">
+                Telegram Link *
+              </label>
+              <input
+                type="url"
+                name="telegram_link"
+                value={formData.telegram_link}
+                onChange={handleInputChange}
+                placeholder="e.g., https://t.me/username"
+                className={`w-full px-3 py-2 text-sm border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                  errors.telegram_link ? "border-red-500" : "border-gray-300"
+                }`}
+              />
+              {errors.telegram_link && (
+                <span className="text-red-500 text-xs">
+                  {errors.telegram_link}
+                </span>
+              )}
+            </div>
+            <br />
             <div>
               <label className="block text-xs md:text-sm font-medium text-blue-500 mb-1">
                 WhatsApp Link *

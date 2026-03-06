@@ -223,7 +223,7 @@ export default function ProfilePage() {
                         className="w-12 h-12 rounded-full flex items-center justify-center overflow-hidden cursor-pointer flex-shrink-0"
                         onClick={() =>
                           WebApp.openTelegramLink(
-                            `https://t.me/${profile.telegramId}`,
+                            formatUrl(profile.telegramId),
                           )
                         }
                         style={{
@@ -520,8 +520,12 @@ export default function ProfilePage() {
                 <div className="text-black">{profile.address3}</div>
               </div>
               <div
-                className="mb-2 p-2 w-full bg-[#d50078] text-center text-white"
-                onClick={() => navigate("/update-profile")}
+                className={`mb-2 p-2 w-full text-center ${
+                  profile?.usertype === 4
+                    ? "bg-gray-400 cursor-not-allowed text-gray-200"
+                    : "bg-[#d50078] text-white cursor-pointer"
+                }`}
+                onClick={() => profile?.usertype !== 4 && navigate("/update-profile")}
               >
                 {i18n.t("update_profile")}
               </div>

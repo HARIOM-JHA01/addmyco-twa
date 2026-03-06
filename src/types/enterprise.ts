@@ -44,7 +44,8 @@ export interface SubOperator {
 export interface Purchase {
   _id: string;
   packageName: string;
-  creditsGranted: number;
+  creditsGrantedOperator: number;
+  creditsGrantedEmployee: number;
   amount?: number;
   status?: number; // 0: pending, 1: approved, 2: rejected
   transactionId?: string;

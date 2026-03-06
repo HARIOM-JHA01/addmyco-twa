@@ -1313,11 +1313,11 @@ export default function SubCompanyPage() {
                     </div>
                   ) : null}
 
-                  {profile?.tgid ? (
+                  {profile?.telegramId ? (
                     <div
                       className="w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0 cursor-pointer"
                       onClick={() =>
-                        window.open(formatUrl(profile.tgid), "_blank")
+                        window.open(formatUrl(profile.telegramId), "_blank")
                       }
                       style={{
                         backgroundColor: "var(--app-background-color)",
@@ -1640,18 +1640,27 @@ export default function SubCompanyPage() {
               </div>
               <div className="flex justify-center w-full gap-3 text-center mt-6">
                 <button
-                  className="p-2 flex-1 text-white bg-[#d50078] shadow-md rounded-full"
-                  onClick={openEditProfile}
+                  className={`p-2 flex-1 shadow-md rounded-full ${
+                    profile?.usertype === 4
+                      ? "bg-gray-400 text-gray-200 cursor-not-allowed"
+                      : "text-white bg-[#d50078]"
+                  }`}
+                  onClick={() => profile?.usertype !== 4 && openEditProfile()}
+                  disabled={profile?.usertype === 4}
                 >
                   {i18n.t("update")}
                 </button>
                 <button
-                  className="p-2 flex-1 text-white bg-[#009944] shadow-md rounded-full"
-                  onClick={openCreateProfile}
+                  className={`p-2 flex-1 shadow-md rounded-full ${
+                    profile?.usertype === 4
+                      ? "bg-gray-400 text-gray-200 cursor-not-allowed"
+                      : "text-white bg-[#009944]"
+                  }`}
+                  onClick={() => profile?.usertype !== 4 && openCreateProfile()}
+                  disabled={profile?.usertype === 4}
                 >
                   {i18n.t("add_more")}
                 </button>
-                {/* Delete action is available only in the update/edit screen */}
               </div>
             </>
           ) : (

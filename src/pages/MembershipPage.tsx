@@ -226,8 +226,13 @@ export default function MembershipPage() {
               </tbody>
             </table>
             <button
-              className="w-full bg-[#2fa8e0] text-white font-semibold py-2 rounded-b-lg mt-2 hover:bg-[#1b7bb8] transition"
-              onClick={handleRenewClick}
+              className={`w-full font-semibold py-2 rounded-b-lg mt-2 transition ${
+                profile?.usertype === 4
+                  ? "bg-gray-400 text-gray-200 cursor-not-allowed"
+                  : "bg-[#2fa8e0] text-white hover:bg-[#1b7bb8]"
+              }`}
+              onClick={() => profile?.usertype !== 4 && handleRenewClick()}
+              disabled={profile?.usertype === 4}
             >
               {i18n.t("renew_membership")}
             </button>

@@ -133,6 +133,7 @@ export interface EmployeeNamecard {
   name_chinese: string;
   designation: string;
   telegram_username: string;
+  telegram_link: string;
   contact_number: string;
   address1: string;
   address2: string;
@@ -156,12 +157,15 @@ export interface EmployeeNamecard {
   createdAt: string;
   updatedAt: string;
   profile_url?: string;
+  verificationCode?: string;
+  isVerified?: boolean;
 }
 
 export interface EmployeeNamecardFormData {
   name_english: string;
   name_chinese: string;
   telegram_username: string;
+  telegram_link: string;
   contact_number: string;
   address1: string;
   address2: string;

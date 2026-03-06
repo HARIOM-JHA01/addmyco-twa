@@ -7,13 +7,19 @@ import {
   trackAdDisplay,
   trackAdClick,
 } from "../services/advertisementService";
+import StaffLoginModal from "../components/StaffLoginModal";
 
 interface WelcomePageProps {
   onLogin: (fromWelcome?: boolean) => void | Promise<void>;
+  onStaffLoginSuccess: () => void | Promise<void>;
   partnerCode?: string | null;
 }
 
-const WelcomePage: React.FC<WelcomePageProps> = ({ onLogin, partnerCode }) => {
+const WelcomePage: React.FC<WelcomePageProps> = ({
+  onLogin,
+  onStaffLoginSuccess,
+  partnerCode,
+}) => {
   const [banners, setBanners] = useState<any[]>([]);
   const [bannerLoading, setBannerLoading] = useState(false);
   const [bannerError, setBannerError] = useState<string | null>(null);
@@ -32,6 +38,9 @@ const WelcomePage: React.FC<WelcomePageProps> = ({ onLogin, partnerCode }) => {
   const [operatorLoginError, setOperatorLoginError] = useState<string | null>(
     null,
   );
+
+  // Staff login modal state
+  const [staffLoginOpen, setStaffLoginOpen] = useState(false);
 
   useEffect(() => {
     try {
@@ -174,7 +183,7 @@ const WelcomePage: React.FC<WelcomePageProps> = ({ onLogin, partnerCode }) => {
               <>
                 <button
                   ref={buttonRef}
-                  className="px-6 py-3 bg-green-600 text-white text-2xl rounded-lg shadow hover:bg-green-700 transition flex items-center justify-center min-w-[180px]"
+                  className="w-full px-6 py-3 bg-green-600 text-white text-xl rounded-lg shadow hover:bg-green-700 transition flex items-center justify-center"
                   onClick={handleLogin}
                   disabled={loginLoading}
                 >
@@ -203,16 +212,26 @@ const WelcomePage: React.FC<WelcomePageProps> = ({ onLogin, partnerCode }) => {
                       Loading...
                     </span>
                   ) : (
-                    "Log in to Smart MiniApp"
+                    "View my namecard"
                   )}
+                </button>
+
+                {/* Enterprise member button */}
+                <button
+                  className="w-full mt-3 px-4 py-3 bg-[#17a8eb] text-white font-semibold rounded-lg hover:bg-[#005f8e] transition"
+                  onClick={() => {
+                    setStaffLoginOpen(true);
+                  }}
+                >
+                  Enterprise member
                 </button>
 
                 {/* operator login text button */}
                 <button
                   onClick={() => setOperatorLoginOpen(true)}
-                  className="mt-3 px-4 py-2 bg-orange-500 text-white font-semibold rounded-lg hover:bg-orange-600 transition"
+                  className="w-full mt-3 px-4 py-3 bg-[#185f9f] text-white font-semibold rounded-lg hover:bg-[#005f8e] transition"
                 >
-                  Enterprise operator login
+                  Enterprise operator
                 </button>
 
                 {/* Enterprise operator login modal (from welcome) */}
@@ -445,6 +464,16 @@ const WelcomePage: React.FC<WelcomePageProps> = ({ onLogin, partnerCode }) => {
           &copy; {new Date().getFullYear()} AddMy. All rights reserved.
         </footer>
       </div>
+
+      {/* Staff Login Modal */}
+      <StaffLoginModal
+        isOpen={staffLoginOpen}
+        onClose={() => setStaffLoginOpen(false)}
+        onSuccess={async () => {
+          setStaffLoginOpen(false);
+          await onStaffLoginSuccess();
+        }}
+      />
     </div>
   );
 };

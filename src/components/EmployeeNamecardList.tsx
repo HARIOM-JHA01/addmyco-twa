@@ -58,10 +58,10 @@ export default function EmployeeNamecardList({
                   <img
                     src={namecard.profile_image}
                     alt={namecard.name_english}
-                    className="h-12 w-12 rounded-lg object-cover flex-shrink-0 border border-gray-100"
+                    className="h-12 w-12 rounded-full object-cover flex-shrink-0 border border-gray-100"
                   />
                 ) : (
-                  <div className="h-12 w-12 rounded-lg bg-blue-50 flex items-center justify-center flex-shrink-0 text-[#007cb6] text-xl font-bold">
+                  <div className="h-12 w-12 rounded-full bg-blue-50 flex items-center justify-center flex-shrink-0 text-[#007cb6] text-xl font-bold">
                     {(namecard.name_english || "E").charAt(0).toUpperCase()}
                   </div>
                 )}
@@ -101,12 +101,12 @@ export default function EmployeeNamecardList({
                       <img
                         src={namecard.profile_image}
                         alt={namecard.name_english}
-                        className="w-24 h-24 rounded-lg object-cover border border-gray-200"
+                        className="w-24 h-24 rounded-full object-cover border border-gray-200"
                       />
                     ) : (
                       <video
                         src={namecard.profile_video}
-                        className="w-24 h-24 rounded-lg object-cover border border-gray-200"
+                        className="w-24 h-24 rounded-full object-cover border border-gray-200"
                         controls
                       />
                     )}
@@ -114,6 +114,26 @@ export default function EmployeeNamecardList({
                 )}
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
+                  <div>
+                    {namecard.telegram_username && (
+                      <div>
+                        <p className="font-medium text-gray-700">
+                          Staff Username
+                        </p>
+                        <p className="text-gray-600">
+                          {namecard.telegram_username}
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                  <div>
+                    <p className="font-medium text-gray-700">
+                      Verification Code
+                    </p>
+                    <p className="text-gray-600 font-mono">
+                      {namecard.verificationCode}
+                    </p>
+                  </div>
                   <div>
                     <p className="font-medium text-gray-700">Name (EN)</p>
                     <p className="text-gray-600">
@@ -158,12 +178,18 @@ export default function EmployeeNamecardList({
                       <p className="text-gray-600">{namecard.email}</p>
                     </div>
                   )}
-                  {namecard.telegram_username && (
+
+                  {namecard.telegram_link && (
                     <div>
-                      <p className="font-medium text-gray-700">Telegram</p>
-                      <p className="text-gray-600">
-                        @{namecard.telegram_username}
-                      </p>
+                      <p className="font-medium text-gray-700">Telegram Link</p>
+                      <a
+                        href={namecard.telegram_link}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-blue-600 hover:underline"
+                      >
+                        {namecard.telegram_link}
+                      </a>
                     </div>
                   )}
                   {namecard.whatsapp_link && (
@@ -175,7 +201,7 @@ export default function EmployeeNamecardList({
                         rel="noopener noreferrer"
                         className="text-blue-600 hover:underline"
                       >
-                        Contact
+                        {namecard.whatsapp_link}
                       </a>
                     </div>
                   )}
@@ -205,6 +231,28 @@ export default function EmployeeNamecardList({
                       </a>
                     </div>
                   )}
+                  {/* {namecard.verificationCode && (
+                    <div>
+                      <p className="font-medium text-gray-700">
+                        Verification Code
+                      </p>
+                      <p className="text-gray-600 font-mono">
+                        {namecard.verificationCode}
+                      </p>
+                    </div>
+                  )} */}
+                  <div>
+                    <p className="font-medium text-gray-700">Verified</p>
+                    <span
+                      className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+                        namecard.isVerified
+                          ? "bg-green-100 text-green-800"
+                          : "bg-red-100 text-red-800"
+                      }`}
+                    >
+                      {namecard.isVerified ? "✓ Verified" : "✗ Not Verified"}
+                    </span>
+                  </div>
                 </div>
 
                 {/* Address */}
