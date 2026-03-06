@@ -78,6 +78,14 @@ function AppRoutes() {
     // keep partner-code flow untouched
     if (decoded.startsWith("ref-")) return `/${decoded}`;
 
+    // Handle companyname-username format: extract just the username after the hyphen
+    if (decoded.includes("-")) {
+      const username = decoded.split("-").pop();
+      if (username && username.trim()) {
+        return `/${username.trim()}`;
+      }
+    }
+
     const parts = decoded.split("/").filter(Boolean);
     if (parts.length === 0) return null;
     if (parts.length === 1) return `/${parts[0]}`;
