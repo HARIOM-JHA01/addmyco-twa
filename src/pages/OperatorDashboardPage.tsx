@@ -37,10 +37,10 @@ export default function OperatorDashboardPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<
-    "overview" | "employees" | "create-employee" | "manage-templates"
+    "overview" | "manage-employees" | "manage-templates"
   >("overview");
   const [menuOpen, setMenuOpen] = useState(false);
-  const [showEmployeeForm, setShowEmployeeForm] = useState(false);
+  const [manageEmployeesSubTab, setManageEmployeesSubTab] = useState<"create" | "manage">("manage");
 
   useEffect(() => {
     fetchOperatorData();
@@ -101,12 +101,12 @@ export default function OperatorDashboardPage() {
 
   const handleCreationSuccess = async () => {
     await fetchOperatorData();
-    setShowEmployeeForm(false);
-    setActiveTab("employees");
+    setManageEmployeesSubTab("manage");
+    setActiveTab("manage-employees");
   };
 
   const handleCreationCancel = () => {
-    setShowEmployeeForm(false);
+    setManageEmployeesSubTab("manage");
     setActiveTab("overview");
   };
 
@@ -167,11 +167,9 @@ export default function OperatorDashboardPage() {
             <h1 className="text-2xl font-bold text-white text-center flex-1">
               {activeTab === "overview"
                 ? "Operator Dashboard"
-                : activeTab === "employees"
-                  ? "Employees"
-                  : activeTab === "create-employee"
-                    ? "Create Employee"
-                    : "Manage Templates"}
+                : activeTab === "manage-employees"
+                  ? "Manage Employee"
+                  : "Manage Templates"}
             </h1>
             <button
               className="text-white hover:bg-[#004570] p-2 rounded transition"
@@ -208,22 +206,13 @@ export default function OperatorDashboardPage() {
               </button>
               <button
                 onClick={() => {
-                  setActiveTab("employees");
+                  setManageEmployeesSubTab("manage");
+                  setActiveTab("manage-employees");
                   setMenuOpen(false);
                 }}
                 className="block w-full text-left px-4 py-2 text-white font-semibold hover:bg-gray-800 transition"
               >
-                Employees ({employees.length})
-              </button>
-              <button
-                onClick={() => {
-                  setActiveTab("create-employee");
-                  setShowEmployeeForm(true);
-                  setMenuOpen(false);
-                }}
-                className="block w-full text-left px-4 py-2 text-white font-semibold hover:bg-gray-800 transition"
-              >
-                Create Employee
+                Manage Employee ({employees.length})
               </button>
               <button
                 onClick={() => {
@@ -383,127 +372,144 @@ export default function OperatorDashboardPage() {
           </div>
         )}
 
-        {/* Employees Tab */}
-        {activeTab === "employees" && (
-          <div className="bg-white rounded-lg shadow-md border border-gray-200">
-            <div className="p-6 border-b border-gray-200 bg-gradient-to-r from-blue-50 to-transparent">
-              <h2 className="text-xl font-bold text-gray-800">
-                Employees Created
-              </h2>
-              <p className="text-sm text-gray-600 mt-2">
-                Total:{" "}
-                <span className="font-bold text-blue-600">
-                  {employees.length}
-                </span>{" "}
-                employees
-              </p>
+        {/* Manage Employees Tab */}
+        {activeTab === "manage-employees" && (
+          <>
+            {/* Sub-tabs (Create / Manage) */}
+            <div className="flex gap-2 mb-4">
+              <button
+                type="button"
+                onClick={() => setManageEmployeesSubTab("create")}
+                className={`flex-1 py-2 rounded font-semibold ${
+                  manageEmployeesSubTab === "create"
+                    ? "bg-[#007cb6] text-white"
+                    : "bg-white border border-gray-200 text-gray-700"
+                }`}
+              >
+                Create Employee
+              </button>
+              <button
+                type="button"
+                onClick={() => setManageEmployeesSubTab("manage")}
+                className={`flex-1 py-2 rounded font-semibold ${
+                  manageEmployeesSubTab === "manage"
+                    ? "bg-[#007cb6] text-white"
+                    : "bg-white border border-gray-200 text-gray-700"
+                }`}
+              >
+                Manage
+              </button>
             </div>
-            <div className="overflow-x-auto">
-              {employees.length === 0 ? (
-                <div className="p-12 text-center text-gray-500">
-                  <svg
-                    className="w-12 h-12 mx-auto mb-4 text-gray-300"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={1.5}
-                      d="M17 20h5v-2a3 3 0 00-5.856-1.487M15 10a3 3 0 11-6 0 3 3 0 016 0zM6 20h12a6 6 0 006-6V4a6 6 0 00-6-6H6a6 6 0 00-6 6v10a6 6 0 006 6z"
-                    />
-                  </svg>
-                  <p className="mb-4 font-medium">No employees created yet</p>
-                  <button
-                    onClick={() => setActiveTab("create-employee")}
-                    className="text-blue-600 hover:text-blue-700 font-semibold underline"
-                  >
-                    Create your first employee
-                  </button>
+
+            {manageEmployeesSubTab === "create" && (
+              <EmployeeNamecardForm
+                isOperator={true}
+                availableCredits={credits?.credits || 0}
+                onSuccess={handleCreationSuccess}
+                onCancel={handleCreationCancel}
+              />
+            )}
+
+            {manageEmployeesSubTab === "manage" && (
+              <div className="bg-white rounded-lg shadow-md border border-gray-200">
+                <div className="p-6 border-b border-gray-200 bg-gradient-to-r from-blue-50 to-transparent">
+                  <h2 className="text-xl font-bold text-gray-800">
+                    Employees Created
+                  </h2>
+                  <p className="text-sm text-gray-600 mt-2">
+                    Total:{" "}
+                    <span className="font-bold text-blue-600">
+                      {employees.length}
+                    </span>{" "}
+                    employees
+                  </p>
                 </div>
-              ) : (
-                <table className="w-full">
-                  <thead className="bg-gray-100 border-b border-gray-200">
-                    <tr>
-                      <th className="px-6 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
-                        Username
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
-                        English Name
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
-                        Type
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
-                        Created
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-gray-200">
-                    {employees.map((employee) => (
-                      <tr
-                        key={employee._id}
-                        className="hover:bg-blue-50 transition"
+                <div className="overflow-x-auto">
+                  {employees.length === 0 ? (
+                    <div className="p-12 text-center text-gray-500">
+                      <svg
+                        className="w-12 h-12 mx-auto mb-4 text-gray-300"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
                       >
-                        <td className="px-6 py-4 text-sm font-medium text-gray-800">
-                          {employee.username}
-                        </td>
-                        <td className="px-6 py-4 text-sm text-gray-600">
-                          {employee.firstname || "—"}
-                        </td>
-                        <td className="px-6 py-4">
-                          <span
-                            className={`inline-block px-3 py-1 text-xs font-bold rounded-full ${
-                              employee.membertype === "premium"
-                                ? "bg-green-100 text-green-700"
-                                : "bg-gray-100 text-gray-700"
-                            }`}
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={1.5}
+                          d="M17 20h5v-2a3 3 0 00-5.856-1.487M15 10a3 3 0 11-6 0 3 3 0 016 0zM6 20h12a6 6 0 006-6V4a6 6 0 00-6-6H6a6 6 0 00-6 6v10a6 6 0 006 6z"
+                        />
+                      </svg>
+                      <p className="mb-4 font-medium">No employees created yet</p>
+                      <button
+                        onClick={() => setManageEmployeesSubTab("create")}
+                        className="text-blue-600 hover:text-blue-700 font-semibold underline"
+                      >
+                        Create your first employee
+                      </button>
+                    </div>
+                  ) : (
+                    <table className="w-full">
+                      <thead className="bg-gray-100 border-b border-gray-200">
+                        <tr>
+                          <th className="px-6 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
+                            Username
+                          </th>
+                          <th className="px-6 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
+                            English Name
+                          </th>
+                          <th className="px-6 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
+                            Type
+                          </th>
+                          <th className="px-6 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
+                            Created
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-gray-200">
+                        {employees.map((employee) => (
+                          <tr
+                            key={employee._id}
+                            className="hover:bg-blue-50 transition"
                           >
-                            {employee.membertype || "free"}
-                          </span>
-                        </td>
-                        <td className="px-6 py-4 text-sm text-gray-600">
-                          {employee.createdAt
-                            ? new Date(employee.createdAt).toLocaleDateString(
-                                "en-US",
-                                {
-                                  year: "numeric",
-                                  month: "short",
-                                  day: "numeric",
-                                },
-                              )
-                            : "—"}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              )}
-            </div>
-          </div>
-        )}
-
-        {/* Create Employee Tab */}
-        {activeTab === "create-employee" && !showEmployeeForm && (
-          <div className="bg-white rounded-lg shadow-md border border-gray-200 p-6">
-            <button
-              onClick={() => setShowEmployeeForm(true)}
-              className="w-full px-6 py-3 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition"
-            >
-              + Create New Employee
-            </button>
-          </div>
-        )}
-
-        {/* Create Employee Form */}
-        {activeTab === "create-employee" && showEmployeeForm && (
-          <EmployeeNamecardForm
-            isOperator={true}
-            availableCredits={credits?.credits || 0}
-            onSuccess={handleCreationSuccess}
-            onCancel={handleCreationCancel}
-          />
+                            <td className="px-6 py-4 text-sm font-medium text-gray-800">
+                              {employee.username}
+                            </td>
+                            <td className="px-6 py-4 text-sm text-gray-600">
+                              {employee.firstname || "—"}
+                            </td>
+                            <td className="px-6 py-4">
+                              <span
+                                className={`inline-block px-3 py-1 text-xs font-bold rounded-full ${
+                                  employee.membertype === "premium"
+                                    ? "bg-green-100 text-green-700"
+                                    : "bg-gray-100 text-gray-700"
+                                }`}
+                              >
+                                {employee.membertype || "free"}
+                              </span>
+                            </td>
+                            <td className="px-6 py-4 text-sm text-gray-600">
+                              {employee.createdAt
+                                ? new Date(employee.createdAt).toLocaleDateString(
+                                    "en-US",
+                                    {
+                                      year: "numeric",
+                                      month: "short",
+                                      day: "numeric",
+                                    },
+                                  )
+                                : "—"}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  )}
+                </div>
+              </div>
+            )}
+          </>
         )}
 
         {/* Manage Templates Tab */}
