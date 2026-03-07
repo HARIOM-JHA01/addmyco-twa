@@ -49,7 +49,7 @@ export default function MyQRPage() {
           String(data?.membertype).toLowerCase() === "premium";
         setIsPremium(premiumFlag);
 
-        const isType4 = data?.membertype === "4";
+        const isType4 = data?.usertype === 4;
         setIsUserType4(isType4);
 
         const getCompanySlug = (companyName: string) => {
@@ -350,7 +350,7 @@ export default function MyQRPage() {
       profile.title ||
       "";
 
-    const isType4 = profile?.membertype === "4";
+    const isType4 = profile?.usertype === 4;
     const getCompanySlug = (companyName: string) => {
       const firstWord = (companyName || "").split(" ")[0] || "";
       return firstWord.toLowerCase().replace(/[^a-z0-9]/g, "");

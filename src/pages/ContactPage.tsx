@@ -63,7 +63,7 @@ const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 export default function ContactPage() {
   const navigate = useNavigate();
   const profile = useProfileStore((s) => s.profile);
-  const isUserType4 = profile?.membertype == "4";
+  const isUserType4 = profile?.usertype === 4;
   const [folderName, setFolderName] = useState("");
   const [folders, setFolders] = useState<any[]>([]);
   // contactFolders are used only in Notifications accept flow; not needed here
