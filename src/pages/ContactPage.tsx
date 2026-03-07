@@ -23,6 +23,8 @@ interface ContactData {
   }>;
   contactfolders_data?: any[];
   profile_image?: string;
+  owner_name_english?: string;
+  owner_name_chinese?: string;
 }
 
 // Inline component to handle Add Folder button with membership check
@@ -675,11 +677,11 @@ export default function ContactPage() {
 
                       <div className="mt-2 max-w-[96px] truncate">
                         <div className="w-full bg-app text-app text-sm font-semibold py-1 rounded-full px-2 truncate">
-                          {userDetail?.owner_name_english || "Unknown"}
+                          {userDetail?.owner_name_english || contact.owner_name_english || "Unknown"}
                         </div>
-                        {userDetail?.owner_name_chinese && (
+                        {(userDetail?.owner_name_chinese || contact.owner_name_chinese) && (
                           <div className="w-full bg-app text-app text-xs py-1 rounded-full px-2 mt-1 truncate">
-                            {userDetail.owner_name_chinese}
+                            {userDetail?.owner_name_chinese || contact.owner_name_chinese}
                           </div>
                         )}
                       </div>
