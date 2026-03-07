@@ -305,7 +305,7 @@ export default function Notifications() {
                           src={
                             user?.profile_image
                               ? `https://admin.addmy.co/assets/${user.profile_image}`
-                              : undefined
+                              : c.profile_image || undefined
                           }
                           alt="avatar"
                           className="w-10 h-10 rounded-full bg-gray-200 object-cover"
@@ -317,7 +317,7 @@ export default function Notifications() {
                         />
                         <div className="text-sm">
                           <div className="font-semibold text-gray-800">
-                            {user?.owner_name_english || "Unknown"}
+                            {user?.owner_name_english || c.owner_name_english || "Unknown"}
                           </div>
                           <div className="text-xs text-gray-500">
                             {username}
