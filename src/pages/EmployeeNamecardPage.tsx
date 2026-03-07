@@ -141,7 +141,7 @@ export default function EmployeeNamecardPage({
           <div className="mb-8">
             <EmployeeNamecardForm
               isOperator={isOperator}
-              editingNamecard={copyingNamecard}
+              editingNamecard={editingNamecard}
               isCopyMode={!!copyingNamecard}
               onSuccess={handleFormSuccess}
               onCancel={handleFormCancel}
