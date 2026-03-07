@@ -62,6 +62,8 @@ const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
 export default function ContactPage() {
   const navigate = useNavigate();
+  const profile = useProfileStore((s) => s.profile);
+  const isUserType4 = profile?.membertype == "4";
   const [folderName, setFolderName] = useState("");
   const [folders, setFolders] = useState<any[]>([]);
   // contactFolders are used only in Notifications accept flow; not needed here
@@ -656,7 +658,7 @@ export default function ContactPage() {
                           </span>
                         )}
 
-                        {/* Always show delete icon overlay (no approve/reject on contact page) */}
+                        {!isUserType4 && (
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
@@ -668,6 +670,7 @@ export default function ContactPage() {
                         >
                           <FaTrash size={14} />
                         </button>
+                        )}
                       </div>
 
                       <div className="mt-2 max-w-[96px] truncate">

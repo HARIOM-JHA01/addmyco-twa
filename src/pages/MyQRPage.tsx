@@ -18,6 +18,7 @@ export default function MyQRPage() {
   const [freeLink, setFreeLink] = useState("");
   const [premiumLink, setPremiumLink] = useState("");
   const [isPremium, setIsPremium] = useState(false);
+  const [isUserType4, setIsUserType4] = useState(false);
   const qrRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -48,8 +49,32 @@ export default function MyQRPage() {
           String(data?.membertype).toLowerCase() === "premium";
         setIsPremium(premiumFlag);
 
-        // QR encodes premium link when user is premium, otherwise free link
-        setQrLink(premiumFlag && premium ? premium : free);
+        const isType4 = data?.membertype === "4";
+        setIsUserType4(isType4);
+
+        const getCompanySlug = (companyName: string) => {
+          const firstWord = (companyName || "").split(" ")[0] || "";
+          return firstWord.toLowerCase().replace(/[^a-z0-9]/g, "");
+        };
+
+        const companySlug = getCompanySlug(
+          data?.companydata?.company_name_english || ""
+        );
+        const staffSlug = data?.tgid || "";
+        const type4Base = "https://addmy.co/t.me";
+        const type4Link = companySlug && staffSlug 
+          ? `${type4Base}/${companySlug}-${staffSlug}` 
+          : "";
+
+        if (isType4 && type4Link) {
+          setFreeLink(type4Link);
+          setPremiumLink(type4Link);
+          setQrLink(type4Link);
+        } else {
+          setFreeLink(free);
+          setPremiumLink(premium);
+          setQrLink(premiumFlag && premium ? premium : free);
+        }
       } catch (err: any) {
         console.error(err);
         setError("Failed to load profile");
@@ -321,7 +346,21 @@ export default function MyQRPage() {
       profile.designation ||
       profile.title ||
       "";
-    const address = qrLink || "";
+
+    const isType4 = profile?.membertype === "4";
+    const getCompanySlug = (companyName: string) => {
+      const firstWord = (companyName || "").split(" ")[0] || "";
+      return firstWord.toLowerCase().replace(/[^a-z0-9]/g, "");
+    };
+    const companySlug = getCompanySlug(
+      profile.companydata?.company_name_english || ""
+    );
+    const staffSlug = profile.tgid || "";
+    const type4Link = companySlug && staffSlug
+      ? `https://addmy.co/t.me/${companySlug}-${staffSlug}`
+      : qrLink;
+
+    const address = isType4 && companySlug && staffSlug ? type4Link : qrLink;
 
     const text = `Name : ${name}\nCompany name : ${company}\nDesignation: ${designation}\nAddmyCo address : ${address}`;
     copyToClipboard(text);
@@ -421,7 +460,8 @@ export default function MyQRPage() {
             </div>
           </div>
 
-          {/* Premium Link (constructed from username) */}
+          {/* Premium Link (constructed from username) - hidden for user type 4 */}
+          {!isUserType4 && (
           <div
             className="w-full max-w-xs mb-4"
             onClick={() => {
@@ -459,6 +499,7 @@ export default function MyQRPage() {
               </button>
             </div>
           </div>
+          )}
 
           {/* Copy my Details Button */}
           <div className="w-full max-w-xs mb-4">
