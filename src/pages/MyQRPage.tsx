@@ -57,8 +57,11 @@ export default function MyQRPage() {
           return firstWord.toLowerCase().replace(/[^a-z0-9]/g, "");
         };
 
+        const companyData = Array.isArray(data?.companydata) 
+          ? data.companydata[0] 
+          : data?.companydata;
         const companySlug = getCompanySlug(
-          data?.companydata?.company_name_english || ""
+          companyData?.company_name_english || ""
         );
         const staffSlug = data?.tgid || "";
         const type4Base = "https://addmy.co/t.me";
@@ -352,8 +355,11 @@ export default function MyQRPage() {
       const firstWord = (companyName || "").split(" ")[0] || "";
       return firstWord.toLowerCase().replace(/[^a-z0-9]/g, "");
     };
+    const companyData = Array.isArray(profile?.companydata) 
+      ? profile.companydata[0] 
+      : profile?.companydata;
     const companySlug = getCompanySlug(
-      profile.companydata?.company_name_english || ""
+      companyData?.company_name_english || ""
     );
     const staffSlug = profile.tgid || "";
     const type4Link = companySlug && staffSlug
