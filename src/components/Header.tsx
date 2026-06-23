@@ -46,9 +46,11 @@ export default function Header({ hideNotification }: HeaderProps) {
         headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
       });
       const data = res.data?.data || [];
-      // count unread (view === 0)
+      // exclude contact-request notifications (already counted in pendingCount)
       const unread = (data || []).filter(
-        (n: any) => Number(n.view) === 0
+        (n: any) =>
+          Number(n.view) === 0 &&
+          !/has sent you a contact request/i.test(n.message || "")
       ).length;
       setUnreadNotifications(unread);
     } catch (err) {

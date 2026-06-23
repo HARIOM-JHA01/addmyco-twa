@@ -58,11 +58,11 @@ export default function Notifications() {
           },
         });
         const d = resp.data?.data || [];
-        // Keep only messages that mention 'has changed' or 'has added' (case-insensitive)
+        // Exclude contact-request notifications (covered by pendingContacts section)
         const filtered = (d || []).filter(
           (n: any) =>
-            (typeof n.message === "string" && /has changed/i.test(n.message)) ||
-            (typeof n.message === "string" && /has added/i.test(n.message))
+            typeof n.message === "string" &&
+            !/has sent you a contact request/i.test(n.message)
         );
         setNotifications(filtered);
         // notify header about unread notification count
