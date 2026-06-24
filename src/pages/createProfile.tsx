@@ -295,6 +295,7 @@ export default function CreateProfile() {
           >
             <div className="flex w-full gap-2 mb-2 flex-row justify-between">
               <input
+                type="text"
                 name="owner_name_english"
                 placeholder="Name in English"
                 value={form.owner_name_english}
@@ -303,6 +304,7 @@ export default function CreateProfile() {
                 required
               />
               <input
+                type="text"
                 name="owner_name_chinese"
                 placeholder="Name in Chinese"
                 value={form.owner_name_chinese}
@@ -366,15 +368,17 @@ export default function CreateProfile() {
             </div>
             <div className="flex w-full gap-2 mb-2 flex-row justify-between">
               <input
-                name="telegram_username"
-                placeholder="Username"
-                value={user?.username || ""}
+                type="text"
+                name="telegramId"
+                placeholder="TG Username"
+                value={form.telegramId}
                 onChange={handleChange}
                 className="w-44 rounded-full px-3 py-2 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-400"
                 readOnly
               />
               <div className="w-44">
                 <input
+                  type="text"
                   name="contact"
                   placeholder="Contact No."
                   value={form.contact}
@@ -411,6 +415,7 @@ export default function CreateProfile() {
               )}
             </div>
             <input
+              type="text"
               name="address1"
               placeholder="Enter Your Address line 1"
               value={form.address1}
@@ -418,6 +423,7 @@ export default function CreateProfile() {
               className="w-full rounded-full px-3 py-2 border border-gray-300 mb-2 focus:outline-none focus:ring-2 focus:ring-blue-400"
             />
             <input
+              type="text"
               name="address2"
               placeholder="Enter Your Address line 2"
               value={form.address2}
@@ -425,6 +431,7 @@ export default function CreateProfile() {
               className="w-full rounded-full px-3 py-2 border border-gray-300 mb-2 focus:outline-none focus:ring-2 focus:ring-blue-400"
             />
             <input
+              type="text"
               name="address3"
               placeholder="Enter Your Address line 3"
               value={form.address3}
