@@ -49,7 +49,8 @@ body {
     color: var(--app-font-color);
 }
 
-/* Ensure all text-entry controls always show typed text in black */
+/* Ensure all text-entry controls always show typed text in black.
+   input:not([type]) covers inputs without an explicit type attribute (defaults to text). */
 input[type="text"],
 input[type="email"],
 input[type="password"],
@@ -57,11 +58,20 @@ input[type="search"],
 input[type="tel"],
 input[type="url"],
 input[type="number"],
+input:not([type]),
 textarea,
 select,
 [contenteditable="true"] {
   color: #000 !important;
   -webkit-text-fill-color: #000 !important; /* for browser autofill */
+}
+
+/* Prevent placeholder text from inheriting --app-font-color (can be white from remote theme) */
+input::placeholder,
+textarea::placeholder {
+  color: #9ca3af !important;
+  -webkit-text-fill-color: #9ca3af !important;
+  opacity: 1;
 }
 
 /* Helper classes components can use to pick up the background color */

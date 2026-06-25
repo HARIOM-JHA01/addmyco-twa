@@ -261,9 +261,9 @@ export default function SubCompanyPage() {
       telegramId: companyProfile?.telegramId || "",
       website: companyProfile?.website || "",
       order: companyProfile?.company_order ?? companyProfile?.order ?? "",
-      file1_url: companyProfile?.file1 || companyProfile?.image || "",
-      file2_url: companyProfile?.file2 || "",
-      file3_url: companyProfile?.file3 || "",
+      file1_url: companyProfile?.images?.[0] || companyProfile?.image || "",
+      file2_url: companyProfile?.images?.[1] || "",
+      file3_url: companyProfile?.images?.[2] || "",
     };
     setEditProfile(mapped);
     // Show existing file previews
@@ -678,9 +678,9 @@ export default function SubCompanyPage() {
                       onClick={() => {
                         setFile1(null);
                         setFilePreview1(
-                          companyProfile?.file1 || companyProfile?.image
+                          companyProfile?.images?.[0] || companyProfile?.image
                             ? formatImageUrl(
-                                companyProfile.file1 || companyProfile.image,
+                                companyProfile.images?.[0] || companyProfile.image,
                               )
                             : null,
                         );
@@ -930,8 +930,8 @@ export default function SubCompanyPage() {
                           onClick={() => {
                             setFile2(null);
                             setFilePreview2(
-                              companyProfile?.file2
-                                ? formatImageUrl(companyProfile.file2)
+                              companyProfile?.images?.[1]
+                                ? formatImageUrl(companyProfile.images[1])
                                 : null,
                             );
                             const el = document.getElementById(
@@ -1052,8 +1052,8 @@ export default function SubCompanyPage() {
                           onClick={() => {
                             setFile3(null);
                             setFilePreview3(
-                              companyProfile?.file3
-                                ? formatImageUrl(companyProfile.file3)
+                              companyProfile?.images?.[2]
+                                ? formatImageUrl(companyProfile.images[2])
                                 : null,
                             );
                             const el = document.getElementById(
