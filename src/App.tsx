@@ -554,7 +554,7 @@ function AppRoutes() {
               "Welcome! You have been registered as a free user.",
             )
           ) {
-            setShowWelcomePopup(true);
+            // setShowWelcomePopup(true); // temporarily disabled
             shownFreePopup = true;
           }
         }
@@ -598,7 +598,7 @@ function AppRoutes() {
           try {
             const isPremium = profileData?.membertype === "premium";
             if (fromWelcome && !shownFreePopup && !isPremium) {
-              setShowWelcomePopup(true);
+              // setShowWelcomePopup(true); // temporarily disabled
             }
           } catch (err) {
             console.debug("free-user welcome popup check failed", err);
