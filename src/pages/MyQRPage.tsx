@@ -210,23 +210,20 @@ export default function MyQRPage() {
                   "QRCode";
                 const filename = `AddMyCo-${username}-QR.png`;
 
-                // Try Web Share API with files (mobile friendly)
-                const file = new File([blob], filename, { type: "image/png" });
-                // @ts-ignore navigator.canShare may not exist in all browsers
-                if (
-                  navigator.canShare &&
-                  navigator.canShare({ files: [file] })
-                ) {
+                // Try Web Share API — skip canShare() check since it returns false
+                // in Telegram WebView even though share works fine
+                if (navigator.share) {
+                  const file = new File([blob], filename, { type: "image/png" });
                   try {
-                    // @ts-ignore
                     await navigator.share({ files: [file], title: filename });
                     URL.revokeObjectURL(svgUrl);
                     return;
-                  } catch (shareErr) {
-                    console.warn(
-                      "Share failed, falling back to download:",
-                      shareErr
-                    );
+                  } catch (shareErr: any) {
+                    if (shareErr?.name === "AbortError") {
+                      URL.revokeObjectURL(svgUrl);
+                      return;
+                    }
+                    console.warn("Share failed, falling back to download:", shareErr);
                   }
                 }
 
@@ -300,6 +297,21 @@ export default function MyQRPage() {
                 profile?.tgid ||
                 "QRCode";
               const filename = `AddMyCo-${username}-QR.png`;
+
+              if (navigator.share) {
+                const file = new File([blob], filename, { type: "image/png" });
+                try {
+                  await navigator.share({ files: [file], title: filename });
+                  URL.revokeObjectURL(svgUrl);
+                  return;
+                } catch (shareErr: any) {
+                  if (shareErr?.name === "AbortError") {
+                    URL.revokeObjectURL(svgUrl);
+                    return;
+                  }
+                }
+              }
+
               const downloadUrl = URL.createObjectURL(blob);
               const link = document.createElement("a");
               link.download = filename;
