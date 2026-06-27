@@ -19,6 +19,7 @@ export default function MyQRPage() {
   const [premiumLink, setPremiumLink] = useState("");
   const [isPremium, setIsPremium] = useState(false);
   const [isUserType4, setIsUserType4] = useState(false);
+  const [shareImageUrl, setShareImageUrl] = useState<string | null>(null);
   const qrRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -227,48 +228,11 @@ export default function MyQRPage() {
                   }
                 }
 
-                const downloadUrl = URL.createObjectURL(blob);
-
-                // iOS Safari doesn't support the download attribute reliably.
-                const isIOS = /iP(hone|od|ad)/.test(navigator.userAgent);
-                if (isIOS) {
-                  const newWin = window.open(downloadUrl, "_blank");
-                  if (newWin) {
-                    alert(
-                      "A new tab was opened with the QR image. Long-press the image and choose 'Save Image' to download it."
-                    );
-                  } else {
-                    const link = document.createElement("a");
-                    link.href = downloadUrl;
-                    link.rel = "noopener noreferrer";
-                    link.target = "_blank";
-                    document.body.appendChild(link);
-                    link.click();
-                    document.body.removeChild(link);
-                  }
-
-                  setTimeout(() => {
-                    URL.revokeObjectURL(downloadUrl);
-                    URL.revokeObjectURL(svgUrl);
-                  }, 2000);
-
-                  return;
-                }
-
-                // Desktop / modern browsers: use anchor with download attribute
-                const link = document.createElement("a");
-                link.download = filename;
-                link.href = downloadUrl;
-                document.body.appendChild(link);
-                link.click();
-                document.body.removeChild(link);
-
-                setTimeout(() => {
-                  URL.revokeObjectURL(downloadUrl);
-                  URL.revokeObjectURL(svgUrl);
-                }, 100);
-
-                alert("QR Code downloaded successfully!");
+                // navigator.share unavailable (Telegram WebView) — show image
+                // in-app so the user can long-press to save
+                const dataUrl = canvas.toDataURL("image/png");
+                setShareImageUrl(dataUrl);
+                URL.revokeObjectURL(svgUrl);
               } catch (err) {
                 console.error("Download flow failed:", err);
                 alert(
@@ -312,17 +276,9 @@ export default function MyQRPage() {
                 }
               }
 
-              const downloadUrl = URL.createObjectURL(blob);
-              const link = document.createElement("a");
-              link.download = filename;
-              link.href = downloadUrl;
-              document.body.appendChild(link);
-              link.click();
-              document.body.removeChild(link);
-              setTimeout(() => {
-                URL.revokeObjectURL(downloadUrl);
-                URL.revokeObjectURL(svgUrl);
-              }, 100);
+              const dataUrl = canvas.toDataURL("image/png");
+              setShareImageUrl(dataUrl);
+              URL.revokeObjectURL(svgUrl);
             },
             "image/png",
             1.0
@@ -547,6 +503,28 @@ export default function MyQRPage() {
           </div>
         </div>
       </div>
+      {shareImageUrl && (
+        <div
+          className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-black bg-opacity-80"
+          onClick={() => setShareImageUrl(null)}
+        >
+          <p className="text-white text-sm mb-4 px-6 text-center">
+            Long-press the image and choose "Save Image" to save it
+          </p>
+          <img
+            src={shareImageUrl}
+            alt="QR Code"
+            className="max-w-[80vw] max-h-[80vh] rounded-xl"
+            onClick={(e) => e.stopPropagation()}
+          />
+          <button
+            className="mt-6 text-white text-sm underline"
+            onClick={() => setShareImageUrl(null)}
+          >
+            Close
+          </button>
+        </div>
+      )}
     </Layout>
   );
 }
