@@ -120,6 +120,77 @@ export default function MyQRPage() {
     }
   };
 
+  // Save a generated QR PNG across environments. The hard case is the Telegram
+  // WebView: it blocks <a download> and data:/blob: URLs can't be saved, so we
+  // host the PNG at a real https URL first, then use Telegram's native download.
+  const saveQrBlob = async (blob: Blob) => {
+    const username =
+      profile?.username ||
+      profile?.telegram_username ||
+      profile?.tgid ||
+      "QRCode";
+    const filename = `AddMyCo-${username}-QR.png`;
+
+    const tg = (window as any).Telegram?.WebApp;
+    const isTelegram = !!(
+      tg &&
+      (tg.initData || (tg.platform && tg.platform !== "unknown"))
+    );
+
+    // 1. Native share sheet — works on most mobile browsers (Android Chrome etc.)
+    if (navigator.share) {
+      const file = new File([blob], filename, { type: "image/png" });
+      try {
+        await navigator.share({ files: [file], title: filename });
+        return;
+      } catch (shareErr: any) {
+        if (shareErr?.name === "AbortError") return; // user dismissed
+        console.warn("Share failed, falling back:", shareErr);
+      }
+    }
+
+    // 2. Regular browser (not Telegram): plain anchor download works
+    if (!isTelegram) {
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.download = filename;
+      link.href = url;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+      return;
+    }
+
+    // 3. Telegram WebView: upload so we get a real https URL
+    let hostedUrl = "";
+    try {
+      const token = localStorage.getItem("token");
+      const form = new FormData();
+      form.append("file", new File([blob], filename, { type: "image/png" }));
+      const res = await axios.post(`${API_BASE_URL}/uploadqr`, form, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      hostedUrl = res.data?.data?.fileUrl || "";
+    } catch (err) {
+      console.warn("QR upload failed:", err);
+    }
+
+    // 3a. Telegram native download dialog (Bot API 8.0+)
+    if (hostedUrl && typeof tg?.downloadFile === "function") {
+      try {
+        tg.downloadFile({ url: hostedUrl, file_name: filename });
+        return;
+      } catch (e) {
+        console.warn("Telegram downloadFile failed:", e);
+      }
+    }
+
+    // 3b. Fallback: show the hosted image so the user can long-press / use the
+    //     ⋮ menu to save it (works because it's a real URL, unlike data:).
+    setShareImageUrl(hostedUrl || URL.createObjectURL(blob));
+  };
+
   const downloadQRCodeImage = async () => {
     try {
       if (!qrRef.current) {
@@ -193,7 +264,7 @@ export default function MyQRPage() {
           ctx.lineWidth = 2;
           ctx.strokeRect(padding - 10, padding - 10, qrSize + 20, qrSize + 20);
 
-          // Convert canvas to blob and download
+          // Convert canvas to blob and save
           canvas.toBlob(
             async (blob) => {
               if (!blob) {
@@ -201,43 +272,12 @@ export default function MyQRPage() {
                 URL.revokeObjectURL(svgUrl);
                 return;
               }
-
               try {
-                // Prepare filename
-                const username =
-                  profile?.username ||
-                  profile?.telegram_username ||
-                  profile?.tgid ||
-                  "QRCode";
-                const filename = `AddMyCo-${username}-QR.png`;
-
-                // Try Web Share API — skip canShare() check since it returns false
-                // in Telegram WebView even though share works fine
-                if (navigator.share) {
-                  const file = new File([blob], filename, { type: "image/png" });
-                  try {
-                    await navigator.share({ files: [file], title: filename });
-                    URL.revokeObjectURL(svgUrl);
-                    return;
-                  } catch (shareErr: any) {
-                    if (shareErr?.name === "AbortError") {
-                      URL.revokeObjectURL(svgUrl);
-                      return;
-                    }
-                    console.warn("Share failed, falling back to download:", shareErr);
-                  }
-                }
-
-                // navigator.share unavailable (Telegram WebView) — show image
-                // in-app so the user can long-press to save
-                const dataUrl = canvas.toDataURL("image/png");
-                setShareImageUrl(dataUrl);
-                URL.revokeObjectURL(svgUrl);
+                await saveQrBlob(blob);
               } catch (err) {
                 console.error("Download flow failed:", err);
-                alert(
-                  "Failed to download QR Code. Please try long-pressing the image to save it."
-                );
+                alert("Failed to save QR Code. Please try again.");
+              } finally {
                 URL.revokeObjectURL(svgUrl);
               }
             },
@@ -247,38 +287,22 @@ export default function MyQRPage() {
         };
 
         logoImg.onerror = () => {
-          // If logo fails to load, still download QR without logo
-          console.warn("Logo failed to load, downloading QR without logo");
+          // If logo fails to load, still save QR without logo
+          console.warn("Logo failed to load, saving QR without logo");
           canvas.toBlob(
             async (blob) => {
               if (!blob) {
                 URL.revokeObjectURL(svgUrl);
                 return;
               }
-              const username =
-                profile?.username ||
-                profile?.telegram_username ||
-                profile?.tgid ||
-                "QRCode";
-              const filename = `AddMyCo-${username}-QR.png`;
-
-              if (navigator.share) {
-                const file = new File([blob], filename, { type: "image/png" });
-                try {
-                  await navigator.share({ files: [file], title: filename });
-                  URL.revokeObjectURL(svgUrl);
-                  return;
-                } catch (shareErr: any) {
-                  if (shareErr?.name === "AbortError") {
-                    URL.revokeObjectURL(svgUrl);
-                    return;
-                  }
-                }
+              try {
+                await saveQrBlob(blob);
+              } catch (err) {
+                console.error("Download flow failed:", err);
+                alert("Failed to save QR Code. Please try again.");
+              } finally {
+                URL.revokeObjectURL(svgUrl);
               }
-
-              const dataUrl = canvas.toDataURL("image/png");
-              setShareImageUrl(dataUrl);
-              URL.revokeObjectURL(svgUrl);
             },
             "image/png",
             1.0
@@ -509,7 +533,7 @@ export default function MyQRPage() {
           onClick={() => setShareImageUrl(null)}
         >
           <p className="text-white text-sm mb-4 px-6 text-center">
-            Long-press the image and choose "Save Image" to save it
+            Long-press the image and choose "Save Image" / "Download" to save it
           </p>
           <img
             src={shareImageUrl}
