@@ -1,4 +1,5 @@
-import React from "react";
+import React, { useEffect, useRef, useState } from "react";
+import { Volume2, VolumeX } from "lucide-react";
 
 const TELEGRAM_CREATE_URL = "https://t.me/AddMyCo/49";
 
@@ -7,6 +8,60 @@ const TELEGRAM_CREATE_URL = "https://t.me/AddMyCo/49";
  * Inside Telegram we keep the existing WelcomePage flow untouched.
  */
 const OutsideTelegramLanding: React.FC = () => {
+  const videoRef = useRef<HTMLVideoElement | null>(null);
+  const [muted, setMuted] = useState(true);
+  // Once the user has explicitly chosen mute/unmute, stop auto-unmuting.
+  const userChoseRef = useRef(false);
+
+  const applyMuted = (next: boolean) => {
+    setMuted(next);
+    if (videoRef.current) {
+      videoRef.current.muted = next;
+      // Resume playback in case the browser paused it.
+      videoRef.current.play().catch(() => {});
+    }
+  };
+
+  const toggleMuted = () => {
+    userChoseRef.current = true;
+    applyMuted(!muted);
+  };
+
+  // Browsers block autoplay WITH sound, so the video starts muted. Unmute on
+  // the user's first interaction anywhere on the page (unless they've already
+  // used the toggle themselves).
+  useEffect(() => {
+    const unmuteOnFirstInteraction = () => {
+      if (!userChoseRef.current) {
+        applyMuted(false);
+      }
+      cleanup();
+    };
+
+    const events: (keyof DocumentEventMap)[] = [
+      "pointerdown",
+      "touchstart",
+      "keydown",
+      "scroll",
+    ];
+
+    const cleanup = () => {
+      events.forEach((evt) =>
+        document.removeEventListener(evt, unmuteOnFirstInteraction),
+      );
+    };
+
+    events.forEach((evt) =>
+      document.addEventListener(evt, unmuteOnFirstInteraction, {
+        once: false,
+        passive: true,
+      }),
+    );
+
+    return cleanup;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const handleGoToCreate = () => {
     window.open(TELEGRAM_CREATE_URL, "_blank", "noopener,noreferrer");
   };
@@ -48,14 +103,26 @@ const OutsideTelegramLanding: React.FC = () => {
 
         {/* Center video (replaces the sample namecard), ~85% scale */}
         <div className="flex flex-1 items-center justify-center">
-          <video
-            className="w-[85%] rounded-2xl shadow-xl"
-            src="/welcome-video.mp4"
-            autoPlay
-            muted
-            loop
-            playsInline
-          />
+          <div className="relative w-[85%]">
+            <video
+              ref={videoRef}
+              className="w-full rounded-2xl shadow-xl"
+              src="/welcome-video.mp4"
+              autoPlay
+              muted
+              loop
+              playsInline
+            />
+            {/* Mute / unmute toggle */}
+            <button
+              type="button"
+              onClick={toggleMuted}
+              aria-label={muted ? "Unmute video" : "Mute video"}
+              className="absolute bottom-3 right-3 flex h-10 w-10 items-center justify-center rounded-full bg-black/50 text-white backdrop-blur transition hover:bg-black/70"
+            >
+              {muted ? <VolumeX size={20} /> : <Volume2 size={20} />}
+            </button>
+          </div>
         </div>
 
         {/* Bottom CTA */}
