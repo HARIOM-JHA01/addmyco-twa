@@ -8,6 +8,7 @@ import {
   trackAdClick,
 } from "../services/advertisementService";
 import StaffLoginModal from "../components/StaffLoginModal";
+import OutsideTelegramLanding from "./OutsideTelegramLanding";
 
 interface WelcomePageProps {
   onLogin: (fromWelcome?: boolean) => void | Promise<void>;
@@ -151,6 +152,12 @@ const WelcomePage: React.FC<WelcomePageProps> = ({
     };
   }, [isInTelegram]);
 
+  // Outside Telegram: show the marketing landing page instead of the
+  // Telegram-only flow below.
+  if (!isInTelegram) {
+    return <OutsideTelegramLanding />;
+  }
+
   return (
     <div
       className="relative flex flex-col min-h-screen bg-cover bg-center"
@@ -181,13 +188,7 @@ const WelcomePage: React.FC<WelcomePageProps> = ({
               </div>
             )}
 
-            {!isInTelegram ? (
-              <div className="text-center">
-                <p className="text-white mb-4">
-                  This app must be opened inside Telegram.
-                </p>
-              </div>
-            ) : (
+            {(
               <>
                 <button
                   ref={buttonRef}
