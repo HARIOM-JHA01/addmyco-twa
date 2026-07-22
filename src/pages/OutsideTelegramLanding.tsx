@@ -2,7 +2,6 @@ import React, { useEffect, useRef, useState } from "react";
 import { ArrowRight, Volume2, VolumeX } from "lucide-react";
 
 const TELEGRAM_CREATE_URL = "https://t.me/AddMyCo/49";
-const SITE_URL = "https://addmy.co";
 
 /** Faint decorative dot grid (matches the mockup's dotted patterns). */
 const DotGrid: React.FC<{ className?: string }> = ({ className }) => (
@@ -165,22 +164,9 @@ const OutsideTelegramLanding: React.FC = () => {
       <DotGrid className="pointer-events-none absolute right-6 top-1/2 z-0 h-24 w-24" />
 
       <div className="relative z-10 flex w-full max-w-[440px] flex-1 flex-col px-6 pb-8 pt-6">
-        {/* Top bar: centered logo */}
-        <header className="mb-8 flex animate-fade-slide-up items-center justify-center">
-          <a
-            href={SITE_URL}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-2xl font-extrabold tracking-tight"
-          >
-            <span className="text-[#1b2340]">AddMy</span>
-            <span className="text-[#2f6bff]">.co</span>
-          </a>
-        </header>
-
         {/* Heading */}
         <div
-          className="mb-6 animate-fade-slide-up"
+          className="mb-6 mt-6 animate-fade-slide-up text-center"
           style={{ animationDelay: "80ms" }}
         >
           <h1 className="text-4xl font-extrabold leading-tight text-[#1b2340]">
@@ -208,10 +194,10 @@ const OutsideTelegramLanding: React.FC = () => {
             className="relative mx-auto w-[85%] animate-fade-slide-up"
             style={{ animationDelay: "240ms" }}
           >
-            <div className="relative aspect-[3/4] w-full overflow-hidden rounded-2xl">
+            <div className="relative aspect-[9/16] w-full overflow-hidden rounded-2xl">
               <video
                 ref={videoRef}
-                className="h-full w-full object-cover"
+                className="h-full w-full object-contain"
                 src="/welcome-video.mp4"
                 poster="/welcome-video-poster.jpg"
                 autoPlay
