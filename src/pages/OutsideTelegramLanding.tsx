@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
-import { ArrowRight, Volume2, VolumeX } from "lucide-react";
+import { ArrowRight, Play, Volume2, VolumeX } from "lucide-react";
 
 const TELEGRAM_CREATE_URL = "https://t.me/AddMyCo/49";
 
@@ -92,6 +92,9 @@ const Waves: React.FC = () => (
 const OutsideTelegramLanding: React.FC = () => {
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const [muted, setMuted] = useState(true);
+  // True when autoplay was blocked (e.g. iOS Low Power Mode) and we need the
+  // user to tap once to start playback.
+  const [needsTap, setNeedsTap] = useState(false);
   // Once the user has explicitly chosen mute/unmute, stop auto-unmuting.
   const userChoseRef = useRef(false);
 
@@ -107,6 +110,29 @@ const OutsideTelegramLanding: React.FC = () => {
   const toggleMuted = () => {
     userChoseRef.current = true;
     applyMuted(!muted);
+  };
+
+  // Force muted + attempt autoplay on mount. React does not reliably set the
+  // `muted` attribute in the initial markup, so mobile browsers (notably iOS
+  // Safari) may treat the video as unmuted and block autoplay. Setting it
+  // imperatively before calling play() guarantees a muted autoplay attempt;
+  // if it still fails, surface a tap-to-play overlay.
+  useEffect(() => {
+    const v = videoRef.current;
+    if (!v) return;
+    v.muted = true;
+    v.play()
+      .then(() => setNeedsTap(false))
+      .catch(() => setNeedsTap(true));
+  }, []);
+
+  const handleTapToPlay = () => {
+    const v = videoRef.current;
+    if (!v) return;
+    v.muted = true;
+    v.play()
+      .then(() => setNeedsTap(false))
+      .catch(() => {});
   };
 
   // Browsers block autoplay WITH sound, so the video starts muted. Unmute on
@@ -205,6 +231,20 @@ const OutsideTelegramLanding: React.FC = () => {
                 loop
                 playsInline
               />
+              {/* Tap-to-play overlay — shown only if autoplay was blocked */}
+              {needsTap && (
+                <button
+                  type="button"
+                  onClick={handleTapToPlay}
+                  aria-label="Play video"
+                  className="absolute inset-0 flex items-center justify-center bg-black/30"
+                >
+                  <span className="flex h-16 w-16 items-center justify-center rounded-full bg-white/90 text-[#2f6bff] shadow-lg">
+                    <Play size={28} className="ml-1" fill="currentColor" />
+                  </span>
+                </button>
+              )}
+
               {/* Mute / unmute toggle */}
               <button
                 type="button"
