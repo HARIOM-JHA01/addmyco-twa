@@ -100,11 +100,20 @@ const OutsideTelegramLanding: React.FC = () => {
 
   const applyMuted = (next: boolean) => {
     setMuted(next);
-    if (videoRef.current) {
-      videoRef.current.muted = next;
-      // Resume playback in case the browser paused it.
-      videoRef.current.play().catch(() => {});
-    }
+    const v = videoRef.current;
+    if (!v) return;
+    v.muted = next;
+    // Resume playback in case the browser paused it.
+    v.play().catch(() => {
+      // Unmuting was rejected (mobile browsers block unmuted playback without
+      // a valid user gesture). Fall back to muted so the video keeps playing
+      // instead of ending up paused.
+      if (!next) {
+        v.muted = true;
+        setMuted(true);
+        v.play().catch(() => {});
+      }
+    });
   };
 
   const toggleMuted = () => {
@@ -138,6 +147,11 @@ const OutsideTelegramLanding: React.FC = () => {
   // Browsers block autoplay WITH sound, so the video starts muted. Unmute on
   // the user's first interaction anywhere on the page (unless they've already
   // used the toggle themselves).
+  //
+  // Only listen for genuine tap/click/key gestures. Do NOT include `scroll` or
+  // `touchstart`: on mobile (especially iOS Safari) those fire during a scroll
+  // and are not valid user gestures for audio, so unmuting mid-scroll makes the
+  // browser pause the video and autoplay appears to "randomly" stop.
   useEffect(() => {
     const unmuteOnFirstInteraction = () => {
       if (!userChoseRef.current) {
@@ -146,12 +160,7 @@ const OutsideTelegramLanding: React.FC = () => {
       cleanup();
     };
 
-    const events: (keyof DocumentEventMap)[] = [
-      "pointerdown",
-      "touchstart",
-      "keydown",
-      "scroll",
-    ];
+    const events: (keyof DocumentEventMap)[] = ["pointerdown", "keydown"];
 
     const cleanup = () => {
       events.forEach((evt) =>
