@@ -288,7 +288,7 @@ const OutsideTelegramLanding: React.FC = () => {
               strokeLinejoin="round"
             />
           </svg>
-          <p className="text-sm font-medium text-[#4a5578]">
+          <p className="text-lg font-medium text-[#4a5578]">
             We&apos;ll direct you to{" "}
             <span className="font-semibold text-[#2f6bff]">Create One</span>
           </p>
@@ -298,7 +298,7 @@ const OutsideTelegramLanding: React.FC = () => {
         <button
           onClick={handleGoToCreate}
           style={{ animationDelay: "400ms" }}
-          className="mt-4 flex w-full animate-fade-slide-up items-center justify-center gap-2 rounded-2xl bg-[#2f6bff] py-4 text-center text-lg font-semibold text-white shadow-lg transition hover:bg-[#245ae0] hover:shadow-xl active:scale-[0.98]"
+          className="mx-auto mt-4 flex w-[85%] animate-fade-slide-up items-center justify-center gap-2 rounded-2xl bg-[#2f6bff] py-4 text-center text-lg font-semibold text-white shadow-lg transition hover:bg-[#245ae0] hover:shadow-xl active:scale-[0.98]"
         >
           Go to Create One
           <ArrowRight size={20} />
