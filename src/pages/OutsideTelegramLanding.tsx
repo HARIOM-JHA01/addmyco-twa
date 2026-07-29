@@ -198,30 +198,19 @@ const OutsideTelegramLanding: React.FC = () => {
       <DotGrid className="pointer-events-none absolute right-4 top-24 z-0 h-20 w-24" />
       <DotGrid className="pointer-events-none absolute right-6 top-1/2 z-0 h-24 w-24" />
 
-      <div className="relative z-10 flex w-full max-w-[440px] flex-1 flex-col px-6 pb-8 pt-6">
-        {/* Heading */}
+      <div className="relative z-10 flex w-full max-w-[440px] flex-1 flex-col px-6 pb-4 pt-4">
+        {/* Heading — width matches the video/CTA width below */}
         <div
-          className="mb-6 mt-6 animate-fade-slide-up text-center"
+          className="mx-auto mb-3 mt-2 w-[85%] animate-fade-slide-up text-center"
           style={{ animationDelay: "80ms" }}
         >
-          <h1 className="text-4xl font-extrabold leading-tight text-[#1b2340]">
-            Welcome to
-          </h1>
-          <h1 className="text-5xl font-extrabold leading-[1.05] text-[#2f6bff]">
-            AddMy.co
+          <h1 className="text-2xl font-bold leading-snug text-[#3a4363] [text-wrap:balance]">
+            Upgrade Your Namecard to Dynamic is{" "}
+            <span className="whitespace-nowrap font-semibold text-[#2f6bff]">
+              Free Forever
+            </span>
           </h1>
         </div>
-
-        {/* Subtitle */}
-        <p
-          className="mb-8 animate-fade-slide-up text-center text-lg font-medium text-[#4a5578] [text-wrap:balance]"
-          style={{ animationDelay: "160ms" }}
-        >
-          Upgrade Your Namecard to Dynamic is{" "}
-          <span className="whitespace-nowrap font-semibold text-[#2f6bff]">
-            Free Forever
-          </span>
-        </p>
 
         {/* Center video (replaces the sample namecard), ~85% scale */}
         <div className="flex flex-1 items-center justify-center">
@@ -237,8 +226,8 @@ const OutsideTelegramLanding: React.FC = () => {
                 poster="/welcome-video-poster.jpg"
                 autoPlay
                 muted
-                loop
                 playsInline
+                onEnded={handleGoToCreate}
               />
               {/* Tap-to-play overlay — shown only if autoplay was blocked */}
               {needsTap && (
@@ -269,7 +258,7 @@ const OutsideTelegramLanding: React.FC = () => {
 
         {/* Guiding caption + curved arrow (matches mockup) */}
         <div
-          className="mt-8 flex animate-fade-slide-up items-end gap-2 pl-2"
+          className="mt-3 flex animate-fade-slide-up items-end gap-2 pl-2"
           style={{ animationDelay: "320ms" }}
         >
           <svg
@@ -298,7 +287,7 @@ const OutsideTelegramLanding: React.FC = () => {
         <button
           onClick={handleGoToCreate}
           style={{ animationDelay: "400ms" }}
-          className="mx-auto mt-4 flex w-[85%] animate-fade-slide-up items-center justify-center gap-2 rounded-2xl bg-[#2f6bff] py-4 text-center text-lg font-semibold text-white shadow-lg transition hover:bg-[#245ae0] hover:shadow-xl active:scale-[0.98]"
+          className="mx-auto mt-3 flex w-[85%] animate-fade-slide-up items-center justify-center gap-2 rounded-2xl bg-[#2f6bff] py-4 text-center text-lg font-semibold text-white shadow-lg transition hover:bg-[#245ae0] hover:shadow-xl active:scale-[0.98]"
         >
           Go to Create One
           <ArrowRight size={20} />
