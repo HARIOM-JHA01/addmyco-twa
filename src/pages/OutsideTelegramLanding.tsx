@@ -201,10 +201,13 @@ const OutsideTelegramLanding: React.FC = () => {
       <div className="relative z-10 flex w-full max-w-[440px] flex-1 flex-col px-6 pb-4 pt-4">
         {/* Heading — width matches the video/CTA width below */}
         <div
-          className="mx-auto mb-3 mt-2 w-[85%] animate-fade-slide-up text-center"
+          className="mx-auto mb-3 mt-2 w-[85%] animate-fade-slide-up text-left"
           style={{ animationDelay: "80ms" }}
         >
-          <h1 className="text-2xl font-bold leading-snug text-[#3a4363] [text-wrap:balance]">
+          <h1
+            className="text-2xl font-bold leading-snug text-[#3a4363]"
+            style={{ textAlign: "justify", textAlignLast: "justify" }}
+          >
             Upgrade Your Namecard to Dynamic is{" "}
             <span className="whitespace-nowrap font-semibold text-[#2f6bff]">
               Free Forever
