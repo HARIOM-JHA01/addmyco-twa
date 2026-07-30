@@ -207,7 +207,8 @@ const OutsideTelegramLanding: React.FC = () => {
           <h1
             className="text-center text-2xl font-bold leading-snug text-[#3a4363]"
           >
-            Upgrade Your Namecard to Dynamic is{" "}
+            Upgrade Your Namecard to Dynamic is
+            <br />
             <span className="whitespace-nowrap font-semibold text-[#2f6bff]">
               Free Forever
             </span>
