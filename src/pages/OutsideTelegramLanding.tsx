@@ -215,7 +215,7 @@ const OutsideTelegramLanding: React.FC = () => {
         </div>
 
         {/* Center video (replaces the sample namecard), ~85% scale */}
-        <div className="flex justify-center" style={{ marginTop: 20, marginBottom: 20 }}>
+        <div className="flex justify-center" style={{ marginTop: 10, marginBottom: 10 }}>
           <div
             className="relative mx-auto w-[85%] animate-fade-slide-up"
             style={{ animationDelay: "240ms" }}
