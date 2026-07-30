@@ -205,8 +205,7 @@ const OutsideTelegramLanding: React.FC = () => {
           style={{ animationDelay: "80ms" }}
         >
           <h1
-            className="text-2xl font-bold leading-snug text-[#3a4363]"
-            style={{ textAlign: "justify", textAlignLast: "justify" }}
+            className="text-center text-2xl font-bold leading-snug text-[#3a4363]"
           >
             Upgrade Your Namecard to Dynamic is{" "}
             <span className="whitespace-nowrap font-semibold text-[#2f6bff]">
@@ -216,7 +215,7 @@ const OutsideTelegramLanding: React.FC = () => {
         </div>
 
         {/* Center video (replaces the sample namecard), ~85% scale */}
-        <div className="flex flex-1 items-center justify-center">
+        <div className="flex justify-center" style={{ marginTop: 20, marginBottom: 20 }}>
           <div
             className="relative mx-auto w-[85%] animate-fade-slide-up"
             style={{ animationDelay: "240ms" }}
