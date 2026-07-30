@@ -216,7 +216,7 @@ const OutsideTelegramLanding: React.FC = () => {
         </div>
 
         {/* Center video (replaces the sample namecard), ~85% scale */}
-        <div className="flex justify-center" style={{ marginTop: 10, marginBottom: 10 }}>
+        <div className="flex justify-center" style={{ marginTop: 10, marginBottom: 0 }}>
           <div
             className="relative mx-auto w-[85%] animate-fade-slide-up"
             style={{ animationDelay: "240ms" }}
@@ -261,7 +261,7 @@ const OutsideTelegramLanding: React.FC = () => {
 
         {/* Guiding caption + curved arrow (matches mockup) */}
         <div
-          className="mt-3 flex animate-fade-slide-up items-end gap-2 pl-2"
+          className="mt-1 flex animate-fade-slide-up items-end gap-2 pl-2"
           style={{ animationDelay: "320ms" }}
         >
           <svg
