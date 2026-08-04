@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import { ArrowRight, Play, Volume2, VolumeX } from "lucide-react";
+import { fetchActiveLandingVideo } from "../services/landingVideoService";
 
 const TELEGRAM_CREATE_URL = "https://t.me/AddMyCo/49";
 
@@ -97,6 +98,9 @@ const OutsideTelegramLanding: React.FC = () => {
   const [needsTap, setNeedsTap] = useState(false);
   // Once the user has explicitly chosen mute/unmute, stop auto-unmuting.
   const userChoseRef = useRef(false);
+  // Video + link fetched from API (fall back to local defaults)
+  const [videoSrc, setVideoSrc] = useState("/welcome-video.mp4");
+  const [linkUrl, setLinkUrl] = useState(TELEGRAM_CREATE_URL);
 
   const applyMuted = (next: boolean) => {
     setMuted(next);
@@ -121,7 +125,7 @@ const OutsideTelegramLanding: React.FC = () => {
     applyMuted(!muted);
   };
 
-  // Force muted + attempt autoplay on mount. React does not reliably set the
+   // Force muted + attempt autoplay on mount. React does not reliably set the
   // `muted` attribute in the initial markup, so mobile browsers (notably iOS
   // Safari) may treat the video as unmuted and block autoplay. Setting it
   // imperatively before calling play() guarantees a muted autoplay attempt;
@@ -133,6 +137,16 @@ const OutsideTelegramLanding: React.FC = () => {
     v.play()
       .then(() => setNeedsTap(false))
       .catch(() => setNeedsTap(true));
+  }, []);
+
+  // Fetch the active landing video + link from the backend API on mount.
+  // Falls back to the local video and default Telegram link if the API
+  // is unreachable or returns no active video.
+  useEffect(() => {
+    fetchActiveLandingVideo().then(({ videoUrl, linkUrl }) => {
+      setVideoSrc(videoUrl);
+      setLinkUrl(linkUrl);
+    });
   }, []);
 
   const handleTapToPlay = () => {
@@ -179,7 +193,7 @@ const OutsideTelegramLanding: React.FC = () => {
   }, []);
 
   const handleGoToCreate = () => {
-    window.open(TELEGRAM_CREATE_URL, "_blank", "noopener,noreferrer");
+    window.open(linkUrl, "_blank", "noopener,noreferrer");
   };
 
   return (
@@ -228,7 +242,7 @@ const OutsideTelegramLanding: React.FC = () => {
               <video
                 ref={videoRef}
                 className="h-full w-full object-contain"
-                src="/welcome-video.mp4"
+                src={videoSrc}
                 poster="/welcome-video-poster.jpg"
                 autoPlay
                 muted
