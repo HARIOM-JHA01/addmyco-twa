@@ -6,11 +6,8 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faWhatsapp,
   faTelegram,
-  faFacebook,
-  faInstagram,
-  faYoutube,
 } from "@fortawesome/free-brands-svg-icons";
-import { faPhone, faGlobe } from "@fortawesome/free-solid-svg-icons";
+import { faPhone } from "@fortawesome/free-solid-svg-icons";
 import PublicLayout from "../components/PublicLayout";
 import leftArrow from "../assets/left-arrow.png";
 import rightArrow from "../assets/right-arrow.png";
@@ -22,7 +19,10 @@ import {
 } from "../services/publicProfileService";
 import { formatUrl } from "../utils/validation";
 import { callOrCopyPhone } from "../utils/phone";
-import WebApp from "@twa-dev/sdk";
+import {
+  SocialLinksScroller,
+} from "../components/SocialLinks";
+import { buildOrderedLinks, getExtraLinks } from "../utils/socialLinks";
 
 interface PublicCompanyViewProps {
   profile: PublicProfileData;
@@ -328,92 +328,20 @@ export default function PublicCompanyView({
             </div>
           </div>
 
-          {/* Bottom Icons */}
-          <div className="w-full mb-6 flex items-center justify-between gap-3">
-            {[
+          {/* Bottom Icons: LinkedIn · Opt 1 · Website · Opt 2 · Channel 1 · extras */}
+          <SocialLinksScroller
+            links={buildOrderedLinks(
               {
-                key: "telegram",
-                enabled: !!companyProfile.telegramId,
-                icon: faTelegram,
-                onClick: () => {
-                  if (companyProfile.telegramId) {
-                    WebApp.openLink(`${companyProfile.telegramId}`);
-                  }
-                },
+                linkedin: companyProfile.Linkedin,
+                website: companyProfile.website,
+                channel1: companyProfile.telegramId,
               },
-              {
-                key: "facebook",
-                enabled: !!companyProfile.Facebook,
-                icon: faFacebook,
-                onClick: () =>
-                  window.open(formatUrl(companyProfile.Facebook!), "_blank"),
-              },
-              {
-                key: "instagram",
-                enabled: !!companyProfile.Instagram,
-                icon: faInstagram,
-                onClick: () =>
-                  window.open(formatUrl(companyProfile.Instagram!), "_blank"),
-              },
-              {
-                key: "youtube",
-                enabled: !!companyProfile.Youtube,
-                icon: faYoutube,
-                onClick: () =>
-                  window.open(formatUrl(companyProfile.Youtube!), "_blank"),
-              },
-              {
-                key: "website",
-                enabled: !!companyProfile.website,
-                icon: faGlobe,
-                onClick: () =>
-                  window.open(formatUrl(companyProfile.website!), "_blank"),
-              },
-            ]
-              .filter((item) => item.enabled)
-              .map((item) => (
-                <div
-                  key={item.key}
-                  className={`w-12 h-12 flex-shrink-0 ${
-                    item.enabled
-                      ? "cursor-pointer"
-                      : "opacity-40 pointer-events-none"
-                  }`}
-                  onClick={item.onClick}
-                  style={{ padding: 3 }}
-                >
-                  <div
-                    style={{
-                      clipPath:
-                        "polygon(30% 0%, 70% 0%, 100% 30%, 100% 70%, 70% 100%, 30% 100%, 0% 70%, 0% 30%)",
-                      backgroundColor:
-                        profile.theme?.backgroundcolor ||
-                        "var(--app-background-color)",
-                      width: "100%",
-                      height: "100%",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                    }}
-                  >
-                    <div
-                      className="w-full h-full flex items-center justify-center"
-                      style={{
-                        clipPath:
-                          "polygon(30% 0%, 70% 0%, 100% 30%, 100% 70%, 70% 100%, 30% 100%, 0% 70%, 0% 30%)",
-                        background: "rgba(255,255,255,0.15)",
-                      }}
-                    >
-                      <FontAwesomeIcon
-                        icon={item.icon}
-                        size="lg"
-                        color="white"
-                      />
-                    </div>
-                  </div>
-                </div>
-              ))}
-          </div>
+              getExtraLinks(companyProfile)
+            )}
+            bgColor={
+              profile.theme?.backgroundcolor || "var(--app-background-color)"
+            }
+          />
         </section>
       </div>
     </PublicLayout>

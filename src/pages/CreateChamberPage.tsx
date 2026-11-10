@@ -6,6 +6,9 @@ import { useNavigate } from "react-router-dom";
 import { formatUrl, getUrlError, validateVideo } from "../utils/validation";
 import WebApp from "@twa-dev/sdk";
 import VideoPlayer from "../components/VideoPlayer";
+import { SocialLinkPicker } from "../components/SocialLinks";
+import { COMPANY_EXTRA_KEYS } from "../config/linkTypes";
+import { SocialLink, cleanSocialLinks } from "../utils/socialLinks";
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
@@ -32,6 +35,7 @@ export default function CreateChamberPage() {
     chamberfanpage: "",
     order: "1",
   });
+  const [socialLinks, setSocialLinks] = useState<SocialLink[]>([]);
   const [file1, setFile1] = useState<File | null>(null);
   const [file2, setFile2] = useState<File | null>(null);
   const [file3, setFile3] = useState<File | null>(null);
@@ -229,6 +233,11 @@ export default function CreateChamberPage() {
       "chamberfanpage",
     ];
 
+    // LinkedIn, Website and Channel 1 are required
+    if (!form.linkedin.trim()) errors.linkedin = "LinkedIn is required";
+    if (!form.website.trim()) errors.website = "Website is required";
+    if (!form.tgchannel.trim()) errors.tgchannel = "Channel 1 is required";
+
     urlFields.forEach((field) => {
       const value = form[field as keyof typeof form];
       if (value && typeof value === "string") {
@@ -293,6 +302,10 @@ export default function CreateChamberPage() {
         "chamberfanpage",
         form.chamberfanpage ? formatUrl(form.chamberfanpage) : "",
       );
+      formData.append(
+        "socialLinks",
+        JSON.stringify(cleanSocialLinks(socialLinks)),
+      );
       formData.append("order", form.order);
 
       if (file1) {
@@ -336,6 +349,7 @@ export default function CreateChamberPage() {
         chamberfanpage: "",
         order: "1",
       });
+      setSocialLinks([]);
       setFile1(null);
       setFilePreview1(null);
       setFile2(null);
@@ -747,8 +761,26 @@ export default function CreateChamberPage() {
             />
             <div className="w-full">
               <input
+                name="linkedin"
+                placeholder="LinkedIn (required)"
+                value={form.linkedin}
+                onChange={handleChange}
+                className={`w-full rounded-full px-[12px] py-2 border-2 ${
+                  validationErrors.linkedin
+                    ? "border-red-500"
+                    : "border-blue-200"
+                } mb-2 focus:outline-none focus:ring-2 focus:ring-blue-400 bg-white placeholder-gray-500 text-black`}
+              />
+              {validationErrors.linkedin && (
+                <div className="text-red-500 text-xs px-2 mb-2">
+                  {validationErrors.linkedin}
+                </div>
+              )}
+            </div>
+            <div className="w-full">
+              <input
                 name="website"
-                placeholder="Website for Chamber"
+                placeholder="Website (required)"
                 value={form.website}
                 onChange={handleChange}
                 className={`w-full rounded-full px-[12px] py-2 border-2 ${
@@ -766,7 +798,7 @@ export default function CreateChamberPage() {
             <div className="w-full">
               <input
                 name="tgchannel"
-                placeholder="https://t.me/TG Channel"
+                placeholder="Channel 1 link (required)"
                 value={form.tgchannel}
                 onChange={handleChange}
                 className={`w-full rounded-full px-[12px] py-2 border-2 ${
@@ -781,38 +813,13 @@ export default function CreateChamberPage() {
                 </div>
               )}
             </div>
-            <div className="w-full">
-              <input
-                name="instagram"
-                placeholder="https://Instagram"
-                value={form.instagram}
-                onChange={handleChange}
-                className={`w-full rounded-full px-[12px] py-2 border-2 ${
-                  validationErrors.instagram
-                    ? "border-red-500"
-                    : "border-blue-200"
-                } mb-2 focus:outline-none focus:ring-2 focus:ring-blue-400 bg-white placeholder-gray-500 text-black`}
+            <div className="w-full mb-2">
+              <SocialLinkPicker
+                value={socialLinks}
+                onChange={setSocialLinks}
+                allowedKeys={COMPANY_EXTRA_KEYS}
               />
-              {validationErrors.instagram && (
-                <div className="text-red-500 text-xs px-2 mb-2">
-                  {validationErrors.instagram}
-                </div>
-              )}
             </div>
-            <input
-              name="youtube"
-              placeholder="https://Youtube"
-              value={form.youtube}
-              onChange={handleChange}
-              className="w-full rounded-full px-[12px] py-2 border-2 border-blue-200 mb-2 focus:outline-none focus:ring-2 focus:ring-blue-400 bg-white placeholder-gray-500 text-black"
-            />
-            <input
-              name="facebook"
-              placeholder="https://Facebook"
-              value={form.facebook}
-              onChange={handleChange}
-              className="w-full rounded-full px-[12px] py-2 border-2 border-blue-200 mb-2 focus:outline-none focus:ring-2 focus:ring-blue-400 bg-white placeholder-gray-500 text-black"
-            />
             <div className="w-full mb-2">
               <label className="block text-sm mb-1">Display Order</label>
               <select

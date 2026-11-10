@@ -8,11 +8,8 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faWhatsapp,
   faTelegram,
-  faFacebook,
-  faInstagram,
-  faYoutube,
 } from "@fortawesome/free-brands-svg-icons";
-import { faPhone, faGlobe } from "@fortawesome/free-solid-svg-icons";
+import { faPhone } from "@fortawesome/free-solid-svg-icons";
 import leftArrow from "../assets/left-arrow.png";
 import rightArrow from "../assets/right-arrow.png";
 import { callOrCopyPhone } from "../utils/phone";
@@ -27,7 +24,16 @@ import VideoPlayer from "../components/VideoPlayer";
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
 import i18n from "../i18n";
-import WebApp from "@twa-dev/sdk";
+import {
+  SocialLinkPicker,
+  SocialLinksScroller,
+} from "../components/SocialLinks";
+import { COMPANY_EXTRA_KEYS } from "../config/linkTypes";
+import {
+  buildOrderedLinks,
+  cleanSocialLinks,
+  getExtraLinks,
+} from "../utils/socialLinks";
 
 export default function SubCompanyPage() {
   const navigate = useNavigate();
@@ -255,9 +261,8 @@ export default function SubCompanyPage() {
       company_name_chinese: companyProfile?.company_name_chinese || "",
       companydesignation: companyProfile?.companydesignation || "",
       description: companyProfile?.description || "",
-      Instagram: companyProfile?.Instagram || "",
-      Facebook: companyProfile?.Facebook || "",
-      Youtube: companyProfile?.Youtube || "",
+      Linkedin: companyProfile?.Linkedin || "",
+      socialLinks: getExtraLinks(companyProfile),
       telegramId: companyProfile?.telegramId || "",
       website: companyProfile?.website || "",
       order: companyProfile?.company_order ?? companyProfile?.order ?? "",
@@ -292,13 +297,7 @@ export default function SubCompanyPage() {
     }
 
     // Real-time validation for URL fields
-    const urlFields = [
-      "website",
-      "telegramId",
-      "Facebook",
-      "Instagram",
-      "Youtube",
-    ];
+    const urlFields = ["Linkedin", "website", "telegramId"];
 
     if (urlFields.includes(name)) {
       const urlError = getUrlError(value, name);
@@ -364,12 +363,17 @@ export default function SubCompanyPage() {
 
     // Validate all URL fields
     const urlFields = {
+      Linkedin: editProfile.Linkedin,
       website: editProfile.website,
       telegramId: editProfile.telegramId,
-      Facebook: editProfile.Facebook,
-      Instagram: editProfile.Instagram,
-      Youtube: editProfile.Youtube,
     };
+    // LinkedIn, Website and Channel 1 are required
+    if (!String(editProfile.Linkedin || "").trim())
+      errors.Linkedin = "LinkedIn is required";
+    if (!String(editProfile.website || "").trim())
+      errors.website = "Website is required";
+    if (!String(editProfile.telegramId || "").trim())
+      errors.telegramId = "Channel 1 is required";
 
     Object.entries(urlFields).forEach(([field, value]) => {
       if (value) {
@@ -396,9 +400,7 @@ export default function SubCompanyPage() {
         company_name_chinese: editProfile.company_name_chinese || "",
         companydesignation: editProfile.companydesignation || "",
         description: editProfile.description || "",
-        Instagram: editProfile.Instagram || "",
-        Facebook: editProfile.Facebook || "",
-        Youtube: editProfile.Youtube || "",
+        Linkedin: editProfile.Linkedin || "",
         telegramId: editProfile.telegramId || "",
         website: editProfile.website || "",
         company_order:
@@ -441,9 +443,11 @@ export default function SubCompanyPage() {
         String(companyDoc.companydesignation || ""),
       );
       formData.append("description", String(companyDoc.description || ""));
-      formData.append("Instagram", String(companyDoc.Instagram || ""));
-      formData.append("Facebook", String(companyDoc.Facebook || ""));
-      formData.append("Youtube", String(companyDoc.Youtube || ""));
+      formData.append("Linkedin", String(companyDoc.Linkedin || ""));
+      formData.append(
+        "socialLinks",
+        JSON.stringify(cleanSocialLinks(editProfile.socialLinks || [])),
+      );
       formData.append("telegramId", String(companyDoc.telegramId || ""));
       formData.append("website", String(companyDoc.website || ""));
       formData.append(
@@ -1089,13 +1093,33 @@ export default function SubCompanyPage() {
               <div className="w-full">
                 <input
                   className={`rounded-full border-2 px-4 py-2 mb-1 w-full focus:outline-none focus:ring-2 focus:ring-blue-400 bg-white placeholder-gray-500 ${
+                    validationErrors.Linkedin
+                      ? "border-red-500"
+                      : "border-blue-200"
+                  }`}
+                  type="text"
+                  name="Linkedin"
+                  placeholder="LinkedIn (required)"
+                  value={editProfile?.Linkedin || ""}
+                  onChange={handleEditInput}
+                  disabled={editLoading}
+                />
+                {validationErrors.Linkedin && (
+                  <div className="text-red-500 text-xs mb-2 px-2">
+                    {validationErrors.Linkedin}
+                  </div>
+                )}
+              </div>
+              <div className="w-full">
+                <input
+                  className={`rounded-full border-2 px-4 py-2 mb-1 w-full focus:outline-none focus:ring-2 focus:ring-blue-400 bg-white placeholder-gray-500 ${
                     validationErrors.website
                       ? "border-red-500"
                       : "border-blue-200"
                   }`}
                   type="text"
                   name="website"
-                  placeholder="Website"
+                  placeholder="Website (required)"
                   value={editProfile?.website || ""}
                   onChange={handleEditInput}
                   disabled={editLoading}
@@ -1106,7 +1130,6 @@ export default function SubCompanyPage() {
                   </div>
                 )}
               </div>
-              {/* WhatsApp removed per UI request */}
               <div className="w-full">
                 <input
                   className={`rounded-full border-2 px-4 py-2 mb-1 w-full focus:outline-none focus:ring-2 focus:ring-blue-400 bg-white placeholder-gray-500 ${
@@ -1116,7 +1139,7 @@ export default function SubCompanyPage() {
                   }`}
                   type="text"
                   name="telegramId"
-                  placeholder="Telegram ID"
+                  placeholder="Channel 1 link (required)"
                   value={editProfile?.telegramId || ""}
                   onChange={handleEditInput}
                   disabled={editLoading}
@@ -1127,65 +1150,14 @@ export default function SubCompanyPage() {
                   </div>
                 )}
               </div>
-              <div className="w-full">
-                <input
-                  className={`rounded-full border-2 px-4 py-2 mb-1 w-full focus:outline-none focus:ring-2 focus:ring-blue-400 bg-white placeholder-gray-500 ${
-                    validationErrors.Facebook
-                      ? "border-red-500"
-                      : "border-blue-200"
-                  }`}
-                  type="text"
-                  name="Facebook"
-                  placeholder="Facebook URL"
-                  value={editProfile?.Facebook || ""}
-                  onChange={handleEditInput}
-                  disabled={editLoading}
+              <div className="w-full mb-2">
+                <SocialLinkPicker
+                  value={editProfile?.socialLinks || []}
+                  onChange={(next) =>
+                    setEditProfile({ ...editProfile, socialLinks: next })
+                  }
+                  allowedKeys={COMPANY_EXTRA_KEYS}
                 />
-                {validationErrors.Facebook && (
-                  <div className="text-red-500 text-xs mb-2 px-2">
-                    {validationErrors.Facebook}
-                  </div>
-                )}
-              </div>
-              <div className="w-full">
-                <input
-                  className={`rounded-full border-2 px-4 py-2 mb-1 w-full focus:outline-none focus:ring-2 focus:ring-blue-400 bg-white placeholder-gray-500 ${
-                    validationErrors.Instagram
-                      ? "border-red-500"
-                      : "border-blue-200"
-                  }`}
-                  type="text"
-                  name="Instagram"
-                  placeholder="Instagram URL"
-                  value={editProfile?.Instagram || ""}
-                  onChange={handleEditInput}
-                  disabled={editLoading}
-                />
-                {validationErrors.Instagram && (
-                  <div className="text-red-500 text-xs mb-2 px-2">
-                    {validationErrors.Instagram}
-                  </div>
-                )}
-              </div>
-              <div className="w-full">
-                <input
-                  className={`rounded-full border-2 px-4 py-2 mb-1 w-full focus:outline-none focus:ring-2 focus:ring-blue-400 bg-white placeholder-gray-500 ${
-                    validationErrors.Youtube
-                      ? "border-red-500"
-                      : "border-blue-200"
-                  }`}
-                  type="text"
-                  name="Youtube"
-                  placeholder="Youtube URL"
-                  value={editProfile?.Youtube || ""}
-                  onChange={handleEditInput}
-                  disabled={editLoading}
-                />
-                {validationErrors.Youtube && (
-                  <div className="text-red-500 text-xs mb-2 px-2">
-                    {validationErrors.Youtube}
-                  </div>
-                )}
               </div>
               <div className="w-full mb-2">
                 <label className="block text-sm mb-1">Display Order</label>
@@ -1511,133 +1483,18 @@ export default function SubCompanyPage() {
                 </div>
               </div>
 
-              {/* Bottom Icons: fixed 5 octagonal icons (Telegram, Facebook, Instagram, YouTube, Website) */}
-              <div className="w-full mb-6 flex items-center justify-between gap-3">
-                {[
+              {/* Bottom Icons: LinkedIn · Opt 1 · Website · Opt 2 · Channel 1 · extras */}
+              <SocialLinksScroller
+                links={buildOrderedLinks(
                   {
-                    key: "telegram",
-                    enabled: !!companyProfile?.telegramId,
-                    render: () => (
-                      <FontAwesomeIcon
-                        icon={faTelegram}
-                        size="lg"
-                        color="white"
-                      />
-                    ),
-                    onClick: () => {
-                      if (companyProfile?.telegramId) {
-                        WebApp.openLink(`${companyProfile.telegramId}`);
-                      }
-                    },
+                    linkedin: companyProfile?.Linkedin,
+                    website: companyProfile?.website,
+                    channel1: companyProfile?.telegramId,
                   },
-                  ...(companyProfile?.Facebook || companyProfile?.facebook
-                    ? [
-                        {
-                          key: "facebook",
-                          enabled: true,
-                          render: () => (
-                            <FontAwesomeIcon
-                              icon={faFacebook}
-                              size="lg"
-                              color="white"
-                            />
-                          ),
-                          onClick: () => {
-                            const url =
-                              companyProfile.Facebook ||
-                              companyProfile.facebook;
-                            window.open(formatUrl(url), "_blank");
-                          },
-                        },
-                      ]
-                    : []),
-                  ...(companyProfile?.Instagram || companyProfile?.instagram
-                    ? [
-                        {
-                          key: "instagram",
-                          enabled: true,
-                          render: () => (
-                            <FontAwesomeIcon
-                              icon={faInstagram}
-                              size="lg"
-                              color="white"
-                            />
-                          ),
-                          onClick: () => {
-                            const url =
-                              companyProfile.Instagram ||
-                              companyProfile.instagram;
-                            WebApp.openLink(formatUrl(url));
-                          },
-                        },
-                      ]
-                    : []),
-                  ...(companyProfile?.Youtube || companyProfile?.youtube
-                    ? [
-                        {
-                          key: "youtube",
-                          enabled: true,
-                          render: () => (
-                            <FontAwesomeIcon
-                              icon={faYoutube}
-                              size="lg"
-                              color="white"
-                            />
-                          ),
-                          onClick: () => {
-                            const url =
-                              companyProfile.Youtube || companyProfile.youtube;
-                            WebApp.openLink(formatUrl(url));
-                          },
-                        },
-                      ]
-                    : []),
-                  {
-                    key: "website",
-                    enabled: !!companyProfile?.website,
-                    render: () => (
-                      <FontAwesomeIcon icon={faGlobe} size="lg" color="white" />
-                    ),
-                    onClick: () => {
-                      if (companyProfile?.website)
-                        window.open(
-                          formatUrl(companyProfile.website),
-                          "_blank",
-                        );
-                    },
-                  },
-                ].map((item) => (
-                  <div
-                    key={item.key}
-                    className={`w-12 h-12 flex-shrink-0 ${
-                      item.enabled
-                        ? "cursor-pointer"
-                        : "opacity-40 pointer-events-none"
-                    }`}
-                    onClick={item.onClick}
-                    style={{
-                      clipPath:
-                        "polygon(30% 0%, 70% 0%, 100% 30%, 100% 70%, 70% 100%, 30% 100%, 0% 70%, 0% 30%)",
-                      backgroundColor: "var(--app-background-color)",
-                      padding: 3,
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                    }}
-                  >
-                    <div
-                      className="w-full h-full flex items-center justify-center"
-                      style={{
-                        clipPath:
-                          "polygon(30% 0%, 70% 0%, 100% 30%, 100% 70%, 70% 100%, 30% 100%, 0% 70%, 0% 30%)",
-                        background: "rgba(255,255,255,0.15)",
-                      }}
-                    >
-                      {item.render()}
-                    </div>
-                  </div>
-                ))}
-              </div>
+                  getExtraLinks(companyProfile),
+                )}
+                bgColor="var(--app-background-color)"
+              />
               <div className="flex justify-center w-full gap-3 text-center mt-6">
                 <button
                   className={`p-2 flex-1 shadow-md rounded-full ${

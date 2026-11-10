@@ -9,11 +9,8 @@ import logo from "../assets/logo.png";
 import {
   faWhatsapp,
   faTelegram,
-  faYoutube,
-  faInstagram,
-  faFacebook,
 } from "@fortawesome/free-brands-svg-icons";
-import { faGlobe, faPhone } from "@fortawesome/free-solid-svg-icons";
+import { faPhone } from "@fortawesome/free-solid-svg-icons";
 import leftArrow from "../assets/left-arrow.png";
 import rightArrow from "../assets/right-arrow.png";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -22,6 +19,16 @@ import i18n from "../i18n";
 import { formatUrl, getUrlError, validateVideo } from "../utils/validation";
 import { callOrCopyPhone } from "../utils/phone";
 import VideoPlayer from "../components/VideoPlayer";
+import {
+  SocialLinkPicker,
+  SocialLinksScroller,
+} from "../components/SocialLinks";
+import { COMPANY_EXTRA_KEYS } from "../config/linkTypes";
+import {
+  buildOrderedLinks,
+  cleanSocialLinks,
+  getExtraLinks,
+} from "../utils/socialLinks";
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
@@ -95,9 +102,7 @@ export default function ChamberPage() {
       details: chamber.detail,
       website: chamber.chamberwebsite,
       telegram: chamber.tgchannel,
-      instagram: chamber.Instagram,
-      youtube: chamber.Youtube,
-      facebook: chamber.Facebook,
+      socialLinks: getExtraLinks(chamber),
       order: chamber.chamber_order,
       _id: chamber._id,
       image: chamber.image,
@@ -228,9 +233,6 @@ export default function ChamberPage() {
     const urlFields = [
       "website",
       "telegram",
-      "instagram",
-      "youtube",
-      "facebook",
       "whatsapp",
       "wechat",
       "line",
@@ -339,10 +341,7 @@ export default function ChamberPage() {
     const errors: { [key: string]: string } = {};
     const urlFields = {
       website: editChamber?.website,
-      tgchannel: editChamber?.tgchannel,
-      instagram: editChamber?.instagram,
-      youtube: editChamber?.youtube,
-      facebook: editChamber?.facebook,
+      tgchannel: editChamber?.telegram,
       whatsapp: editChamber?.whatsapp,
       wechat: editChamber?.wechat,
       line: editChamber?.line,
@@ -353,6 +352,14 @@ export default function ChamberPage() {
       tiktok: editChamber?.tiktok,
       chamberfanpage: editChamber?.chamberfanpage,
     };
+
+    // LinkedIn, Website and Channel 1 are required
+    if (!String(editChamber?.linkedin || "").trim())
+      errors.linkedin = "LinkedIn is required";
+    if (!String(editChamber?.website || "").trim())
+      errors.website = "Website is required";
+    if (!String(editChamber?.telegram || "").trim())
+      errors.telegram = "Channel 1 is required";
 
     Object.entries(urlFields).forEach(([field, value]) => {
       if (value) {
@@ -396,10 +403,11 @@ export default function ChamberPage() {
         formData.append("WhatsApp", String(editChamber.whatsapp || ""));
         formData.append("WeChat", String(editChamber.wechat || ""));
         formData.append("Line", String(editChamber.line || ""));
-        formData.append("Instagram", String(editChamber.instagram || ""));
-        formData.append("Facebook", String(editChamber.facebook || ""));
+        formData.append(
+          "socialLinks",
+          JSON.stringify(cleanSocialLinks(editChamber.socialLinks || [])),
+        );
         formData.append("Twitter", String(editChamber.twitter || ""));
-        formData.append("Youtube", String(editChamber.youtube || ""));
         formData.append("Linkedin", String(editChamber.linkedin || ""));
         formData.append("SnapChat", String(editChamber.snapchat || ""));
         formData.append("Skype", String(editChamber.skype || ""));
@@ -442,10 +450,11 @@ export default function ChamberPage() {
         formData.append("WhatsApp", editChamber.whatsapp);
         formData.append("WeChat", editChamber.wechat);
         formData.append("Line", editChamber.line);
-        formData.append("Instagram", editChamber.instagram);
-        formData.append("Facebook", editChamber.facebook);
+        formData.append(
+          "socialLinks",
+          JSON.stringify(cleanSocialLinks(editChamber.socialLinks || [])),
+        );
         formData.append("Twitter", editChamber.twitter);
-        formData.append("Youtube", editChamber.youtube);
         formData.append("Linkedin", editChamber.linkedin);
         formData.append("SnapChat", editChamber.snapchat);
         formData.append("Skype", editChamber.skype);
@@ -947,15 +956,33 @@ export default function ChamberPage() {
             <div className="w-full">
               <input
                 className={`rounded-full border-2 px-4 py-2 mb-1 w-full focus:outline-none focus:ring-2 focus:ring-blue-400 bg-white placeholder-gray-500 ${
+                  validationErrors.linkedin
+                    ? "border-red-500"
+                    : "border-blue-200"
+                }`}
+                type="text"
+                name="linkedin"
+                placeholder="LinkedIn (required)"
+                value={editChamber?.linkedin || ""}
+                onChange={handleEditInput}
+                disabled={editLoading}
+              />
+              {validationErrors.linkedin && (
+                <div className="text-red-500 text-xs mb-2 px-2">
+                  {validationErrors.linkedin}
+                </div>
+              )}
+            </div>
+            <div className="w-full">
+              <input
+                className={`rounded-full border-2 px-4 py-2 mb-1 w-full focus:outline-none focus:ring-2 focus:ring-blue-400 bg-white placeholder-gray-500 ${
                   validationErrors.website
                     ? "border-red-500"
                     : "border-blue-200"
                 }`}
                 type="text"
                 name="website"
-                placeholder={
-                  i18n.t("website_for_chamber") || "Website for Chamber"
-                }
+                placeholder="Website (required)"
                 value={editChamber?.website || ""}
                 onChange={handleEditInput}
                 disabled={editLoading}
@@ -975,9 +1002,7 @@ export default function ChamberPage() {
                 }`}
                 type="text"
                 name="telegram"
-                placeholder={
-                  i18n.t("telegram_placeholder") || "https://t.me/Telegram Id"
-                }
+                placeholder="Channel 1 link (required)"
                 value={editChamber?.telegram || ""}
                 onChange={handleEditInput}
                 disabled={editLoading}
@@ -988,65 +1013,14 @@ export default function ChamberPage() {
                 </div>
               )}
             </div>
-            <div className="w-full">
-              <input
-                className={`rounded-full border-2 px-4 py-2 mb-1 w-full focus:outline-none focus:ring-2 focus:ring-blue-400 bg-white placeholder-gray-500 ${
-                  validationErrors.instagram
-                    ? "border-red-500"
-                    : "border-blue-200"
-                }`}
-                type="text"
-                name="instagram"
-                placeholder="https://Instagram"
-                value={editChamber?.instagram || ""}
-                onChange={handleEditInput}
-                disabled={editLoading}
+            <div className="w-full mb-2">
+              <SocialLinkPicker
+                value={editChamber?.socialLinks || []}
+                onChange={(next) =>
+                  setEditChamber({ ...editChamber, socialLinks: next })
+                }
+                allowedKeys={COMPANY_EXTRA_KEYS}
               />
-              {validationErrors.instagram && (
-                <div className="text-red-500 text-xs mb-2 px-2">
-                  {validationErrors.instagram}
-                </div>
-              )}
-            </div>
-            <div className="w-full">
-              <input
-                className={`rounded-full border-2 px-4 py-2 mb-1 w-full focus:outline-none focus:ring-2 focus:ring-blue-400 bg-white placeholder-gray-500 ${
-                  validationErrors.youtube
-                    ? "border-red-500"
-                    : "border-blue-200"
-                }`}
-                type="text"
-                name="youtube"
-                placeholder="https://Youtube"
-                value={editChamber?.youtube || ""}
-                onChange={handleEditInput}
-                disabled={editLoading}
-              />
-              {validationErrors.youtube && (
-                <div className="text-red-500 text-xs mb-2 px-2">
-                  {validationErrors.youtube}
-                </div>
-              )}
-            </div>
-            <div className="w-full">
-              <input
-                className={`rounded-full border-2 px-4 py-2 mb-1 w-full focus:outline-none focus:ring-2 focus:ring-blue-400 bg-white placeholder-gray-500 ${
-                  validationErrors.facebook
-                    ? "border-red-500"
-                    : "border-blue-200"
-                }`}
-                type="text"
-                name="facebook"
-                placeholder="https://Facebook"
-                value={editChamber?.facebook || ""}
-                onChange={handleEditInput}
-                disabled={editLoading}
-              />
-              {validationErrors.facebook && (
-                <div className="text-red-500 text-xs mb-2 px-2">
-                  {validationErrors.facebook}
-                </div>
-              )}
             </div>
             <div className="w-full mb-4">
               <label className="block text-sm mb-1">Display Order</label>
@@ -1378,121 +1352,18 @@ export default function ChamberPage() {
                       </div>
                     </div>
                     {/* (Details moved above with media block to match SubCompany layout) */}
-                    {/* Bottom Icons: fixed octagonal row (Telegram, Facebook, Instagram, YouTube, Website) */}
-                    <div className="w-full mb-6 flex items-center justify-between gap-3">
-                      {[
+                    {/* Bottom Icons: LinkedIn · Opt 1 · Website · Opt 2 · Channel 1 · extras */}
+                    <SocialLinksScroller
+                      links={buildOrderedLinks(
                         {
-                          key: "telegram",
-                          enabled: !!c.tgchannel,
-                          render: () => (
-                            <FontAwesomeIcon
-                              icon={faTelegram}
-                              size="lg"
-                              color="white"
-                            />
-                          ),
-                          onClick: () => {
-                            if (c.tgchannel) WebApp.openLink(c.tgchannel);
-                          },
+                          linkedin: c.Linkedin,
+                          website: c.chamberwebsite,
+                          channel1: c.tgchannel,
                         },
-                        ...(c.Facebook
-                          ? [
-                              {
-                                key: "facebook",
-                                enabled: true,
-                                render: () => (
-                                  <FontAwesomeIcon
-                                    icon={faFacebook}
-                                    size="lg"
-                                    color="white"
-                                  />
-                                ),
-                                onClick: () =>
-                                  WebApp.openLink(formatUrl(c.Facebook)),
-                              },
-                            ]
-                          : []),
-                        ...(c.Instagram
-                          ? [
-                              {
-                                key: "instagram",
-                                enabled: true,
-                                render: () => (
-                                  <FontAwesomeIcon
-                                    icon={faInstagram}
-                                    size="lg"
-                                    color="white"
-                                  />
-                                ),
-                                onClick: () =>
-                                  WebApp.openLink(formatUrl(c.Instagram)),
-                              },
-                            ]
-                          : []),
-                        ...(c.Youtube
-                          ? [
-                              {
-                                key: "youtube",
-                                enabled: true,
-                                render: () => (
-                                  <FontAwesomeIcon
-                                    icon={faYoutube}
-                                    size="lg"
-                                    color="white"
-                                  />
-                                ),
-                                onClick: () =>
-                                  WebApp.openLink(formatUrl(c.Youtube)),
-                              },
-                            ]
-                          : []),
-                        {
-                          key: "website",
-                          enabled: !!c.chamberwebsite,
-                          render: () => (
-                            <FontAwesomeIcon
-                              icon={faGlobe}
-                              size="lg"
-                              color="white"
-                            />
-                          ),
-                          onClick: () => {
-                            if (c.chamberwebsite)
-                              WebApp.openLink(formatUrl(c.chamberwebsite));
-                          },
-                        },
-                      ].map((item) => (
-                        <div
-                          key={item.key}
-                          className={`w-12 h-12 flex-shrink-0 ${
-                            item.enabled
-                              ? "cursor-pointer"
-                              : "opacity-40 pointer-events-none"
-                          }`}
-                          onClick={item.onClick}
-                          style={{
-                            clipPath:
-                              "polygon(30% 0%, 70% 0%, 100% 30%, 100% 70%, 70% 100%, 30% 100%, 0% 70%, 0% 30%)",
-                            backgroundColor: "var(--app-background-color)",
-                            padding: 3,
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "center",
-                          }}
-                        >
-                          <div
-                            className="w-full h-full flex items-center justify-center"
-                            style={{
-                              clipPath:
-                                "polygon(30% 0%, 70% 0%, 100% 30%, 100% 70%, 70% 100%, 30% 100%, 0% 70%, 0% 30%)",
-                              background: "rgba(255,255,255,0.15)",
-                            }}
-                          >
-                            {item.render()}
-                          </div>
-                        </div>
-                      ))}
-                    </div>
+                        getExtraLinks(c),
+                      )}
+                      bgColor="var(--app-background-color)"
+                    />
                     {/* two buttons update add more */}
                     <div className="flex justify-center w-full gap-4 text-center mt-6">
                       <button

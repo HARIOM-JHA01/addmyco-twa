@@ -36,6 +36,7 @@ export type Profile = {
   WeChat: string;
   WhatsApp: string;
   Youtube: string;
+  socialLinks?: { type: string; url: string }[];
   address1: string;
   address2: string;
   address3: string;

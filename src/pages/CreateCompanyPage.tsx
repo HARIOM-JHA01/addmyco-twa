@@ -6,6 +6,9 @@ import { useProfileStore } from "../store/profileStore";
 import { formatUrl, getUrlError, validateVideo } from "../utils/validation";
 import WebApp from "@twa-dev/sdk";
 import VideoPlayer from "../components/VideoPlayer";
+import { SocialLinkPicker } from "../components/SocialLinks";
+import { COMPANY_EXTRA_KEYS } from "../config/linkTypes";
+import { SocialLink, cleanSocialLinks } from "../utils/socialLinks";
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
@@ -18,15 +21,14 @@ export default function CreateCompanyPage() {
     companydesignation: "",
     description: "",
     website: "",
-    Facebook: "",
+    Linkedin: "",
     file1: null as File | null,
     file2: null as File | null,
     file3: null as File | null,
     telegramId: "",
-    Instagram: "",
-    Youtube: "",
     company_order: "1",
   });
+  const [socialLinks, setSocialLinks] = useState<SocialLink[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
@@ -106,9 +108,7 @@ export default function CreateCompanyPage() {
 
     // Real-time validation for URL fields
     if (
-      ["website", "telegramId", "Facebook", "Instagram", "Youtube"].includes(
-        name,
-      )
+      ["website", "telegramId", "Linkedin"].includes(name)
     ) {
       const urlError = getUrlError(value, name);
       if (urlError) {
@@ -178,13 +178,11 @@ export default function CreateCompanyPage() {
     }
 
     // Validate all URL fields
-    const urlFields = [
-      "website",
-      "telegramId",
-      "Facebook",
-      "Instagram",
-      "Youtube",
-    ];
+    const urlFields = ["Linkedin", "website", "telegramId"];
+    // LinkedIn, Website and Channel 1 are required
+    if (!form.Linkedin.trim()) errors.Linkedin = "LinkedIn is required";
+    if (!form.website.trim()) errors.website = "Website is required";
+    if (!form.telegramId.trim()) errors.telegramId = "Channel 1 is required";
     urlFields.forEach((field) => {
       const value = form[field as keyof typeof form];
       if (value && typeof value === "string") {
@@ -226,6 +224,10 @@ export default function CreateCompanyPage() {
           formData.append(key, value as string);
         }
       });
+      formData.append(
+        "socialLinks",
+        JSON.stringify(cleanSocialLinks(socialLinks)),
+      );
       await axios.post(`${API_BASE_URL}/companyprofile`, formData, {
         headers: {
           Authorization: `Bearer ${token}`,
@@ -239,15 +241,14 @@ export default function CreateCompanyPage() {
         companydesignation: "",
         description: "",
         website: "",
-        Facebook: "",
+        Linkedin: "",
         file1: null,
         file2: null,
         file3: null,
         telegramId: "",
-        Instagram: "",
-        Youtube: "",
         company_order: "1",
       });
+      setSocialLinks([]);
       // Re-fetch profile so the global store knows companydata exists
       try {
         const profileRes = await axios.get(`${API_BASE_URL}/getProfile`, {
@@ -582,9 +583,27 @@ export default function CreateCompanyPage() {
             />
             <div className="w-full">
               <input
+                name="Linkedin"
+                placeholder="LinkedIn (required)"
+                value={form.Linkedin || ""}
+                onChange={handleChange}
+                className={`w-full rounded-full px-[12px] py-2 border ${
+                  validationErrors.Linkedin
+                    ? "border-red-500"
+                    : "border-blue-500"
+                } mb-2 focus:outline-none focus:ring-2 focus:ring-blue-400 text-black`}
+              />
+              {validationErrors.Linkedin && (
+                <div className="text-red-500 text-xs mt-1 px-2 mb-2">
+                  {validationErrors.Linkedin}
+                </div>
+              )}
+            </div>
+            <div className="w-full">
+              <input
                 name="website"
-                placeholder="Website"
-                value={form.website}
+                placeholder="Website (required)"
+                value={form.website || ""}
                 onChange={handleChange}
                 className={`w-full rounded-full px-[12px] py-2 border ${
                   validationErrors.website
@@ -601,7 +620,7 @@ export default function CreateCompanyPage() {
             <div className="w-full">
               <input
                 name="telegramId"
-                placeholder="https://t.me/Telegram Id"
+                placeholder="Channel 1 link (required)"
                 value={form.telegramId || ""}
                 onChange={handleChange}
                 className={`w-full rounded-full px-[12px] py-2 border ${
@@ -616,59 +635,12 @@ export default function CreateCompanyPage() {
                 </div>
               )}
             </div>
-            <div className="w-full">
-              <input
-                name="Facebook"
-                placeholder="https://Facebook"
-                value={form.Facebook || ""}
-                onChange={handleChange}
-                className={`w-full rounded-full px-[12px] py-2 border ${
-                  validationErrors.Facebook
-                    ? "border-red-500"
-                    : "border-blue-500"
-                } mb-2 focus:outline-none focus:ring-2 focus:ring-blue-400 text-black`}
+            <div className="w-full mb-2">
+              <SocialLinkPicker
+                value={socialLinks}
+                onChange={setSocialLinks}
+                allowedKeys={COMPANY_EXTRA_KEYS}
               />
-              {validationErrors.Facebook && (
-                <div className="text-red-500 text-xs mt-1 px-2 mb-2">
-                  {validationErrors.Facebook}
-                </div>
-              )}
-            </div>
-            <div className="w-full">
-              <input
-                name="Instagram"
-                placeholder="https://Instagram"
-                value={form.Instagram || ""}
-                onChange={handleChange}
-                className={`w-full rounded-full px-[12px] py-2 border ${
-                  validationErrors.Instagram
-                    ? "border-red-500"
-                    : "border-blue-500"
-                } mb-2 focus:outline-none focus:ring-2 focus:ring-blue-400 text-black`}
-              />
-              {validationErrors.Instagram && (
-                <div className="text-red-500 text-xs mt-1 px-2 mb-2">
-                  {validationErrors.Instagram}
-                </div>
-              )}
-            </div>
-            <div className="w-full">
-              <input
-                name="Youtube"
-                placeholder="https://Youtube"
-                value={form.Youtube || ""}
-                onChange={handleChange}
-                className={`w-full rounded-full px-[12px] py-2 border ${
-                  validationErrors.Youtube
-                    ? "border-red-500"
-                    : "border-blue-500"
-                } mb-2 focus:outline-none focus:ring-2 focus:ring-blue-400 text-black`}
-              />
-              {validationErrors.Youtube && (
-                <div className="text-red-500 text-xs mt-1 px-2 mb-2">
-                  {validationErrors.Youtube}
-                </div>
-              )}
             </div>
             <div className="w-full mb-2">
               <label className="block text-sm mb-1">Display Order</label>

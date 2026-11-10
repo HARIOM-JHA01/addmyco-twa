@@ -13,6 +13,26 @@ import {
   validateVideo,
 } from "../utils/validation";
 import VideoPlayer from "../components/VideoPlayer";
+import { SocialLinkPicker } from "../components/SocialLinks";
+import { LINK_TYPES } from "../config/linkTypes";
+import { SocialLink, cleanSocialLinks } from "../utils/socialLinks";
+
+// Types already covered by the fixed fields on this form are not offered again.
+const PROFILE_FIXED_KEYS = [
+  "whatsapp",
+  "wechat",
+  "line",
+  "instagram",
+  "facebook",
+  "twitter",
+  "youtube",
+  "linkedin",
+  "telegram",
+  "tiktok",
+];
+const PROFILE_EXTRA_KEYS = LINK_TYPES.map((t) => t.key).filter(
+  (k) => !PROFILE_FIXED_KEYS.includes(k),
+);
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 export default function CreateProfile() {
@@ -39,6 +59,7 @@ export default function CreateProfile() {
     Linkedin: "",
     TikTok: "",
   });
+  const [socialLinks, setSocialLinks] = useState<SocialLink[]>([]);
   const [profile_image, setProfileImage] = useState<File | null>(null);
   const [mediaPreview, setMediaPreview] = useState<string | null>(null);
   const [mediaType, setMediaType] = useState<"image" | "video" | null>(null);
@@ -224,6 +245,10 @@ export default function CreateProfile() {
       const formData = new FormData();
       Object.entries(formattedForm).forEach(([key, value]) =>
         formData.append(key, value),
+      );
+      formData.append(
+        "socialLinks",
+        JSON.stringify(cleanSocialLinks(socialLinks)),
       );
       if (profile_image) formData.append("profile_image", profile_image);
       await axios.post(`${API_BASE_URL}/addprofile`, formData, {
@@ -596,6 +621,15 @@ export default function CreateProfile() {
                   {validationErrors.TikTok}
                 </div>
               )}
+            </div>
+            {/* More links: pick the platform from the dropdown */}
+            <div className="w-full mb-2">
+              <SocialLinkPicker
+                value={socialLinks}
+                onChange={setSocialLinks}
+                allowedKeys={PROFILE_EXTRA_KEYS}
+                addLabel="Add more links"
+              />
             </div>
             {error && mediaType !== "video" && (
               <div className="text-red-500 mt-2 text-center w-full">

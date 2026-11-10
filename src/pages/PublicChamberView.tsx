@@ -7,11 +7,8 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faWhatsapp,
   faTelegram,
-  faYoutube,
-  faInstagram,
-  faFacebook,
 } from "@fortawesome/free-brands-svg-icons";
-import { faGlobe, faPhone } from "@fortawesome/free-solid-svg-icons";
+import { faPhone } from "@fortawesome/free-solid-svg-icons";
 import { callOrCopyPhone } from "../utils/phone";
 import PublicLayout from "../components/PublicLayout";
 import leftArrow from "../assets/left-arrow.png";
@@ -23,7 +20,8 @@ import {
   ChamberData,
 } from "../services/publicProfileService";
 import { formatUrl } from "../utils/validation";
-import WebApp from "@twa-dev/sdk";
+import { SocialLinksScroller } from "../components/SocialLinks";
+import { buildOrderedLinks, getExtraLinks } from "../utils/socialLinks";
 
 interface PublicChamberViewProps {
   profile: PublicProfileData;
@@ -314,85 +312,20 @@ export default function PublicChamberView({
             </div>
           </div>
 
-          {/* Bottom Icons */}
-          <div className="w-full mb-6 flex items-center justify-between gap-3">
-            {[
+          {/* Bottom Icons: LinkedIn · Opt 1 · Website · Opt 2 · Channel 1 · extras */}
+          <SocialLinksScroller
+            links={buildOrderedLinks(
               {
-                key: "telegram",
-                enabled: !!c.tgchannel,
-                icon: faTelegram,
-                onClick: () => {
-                  if (c.tgchannel) {
-                    WebApp.openLink(`${c.tgchannel}`);
-                  }
-                },
+                linkedin: c.Linkedin,
+                website: c.chamberwebsite,
+                channel1: c.tgchannel,
               },
-              {
-                key: "facebook",
-                enabled: !!c.Facebook,
-                icon: faFacebook,
-                onClick: () => window.open(formatUrl(c.Facebook!), "_blank"),
-              },
-              {
-                key: "instagram",
-                enabled: !!c.Instagram,
-                icon: faInstagram,
-                onClick: () => window.open(formatUrl(c.Instagram!), "_blank"),
-              },
-              {
-                key: "youtube",
-                enabled: !!c.Youtube,
-                icon: faYoutube,
-                onClick: () => window.open(formatUrl(c.Youtube!), "_blank"),
-              },
-              {
-                key: "website",
-                enabled: !!c.chamberwebsite,
-                icon: faGlobe,
-                onClick: () =>
-                  window.open(formatUrl(c.chamberwebsite!), "_blank"),
-              },
-            ]
-              .filter((item) => item.enabled)
-              .map((item) => (
-                <div
-                  key={item.key}
-                  className="w-12 h-12 flex-shrink-0 cursor-pointer"
-                  onClick={item.onClick}
-                  style={{ padding: 3 }}
-                >
-                  <div
-                    style={{
-                      clipPath:
-                        "polygon(30% 0%, 70% 0%, 100% 30%, 100% 70%, 70% 100%, 30% 100%, 0% 70%, 0% 30%)",
-                      backgroundColor:
-                        profile.theme?.backgroundcolor ||
-                        "var(--app-background-color)",
-                      width: "100%",
-                      height: "100%",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                    }}
-                  >
-                    <div
-                      className="w-full h-full flex items-center justify-center"
-                      style={{
-                        clipPath:
-                          "polygon(30% 0%, 70% 0%, 100% 30%, 100% 70%, 70% 100%, 30% 100%, 0% 70%, 0% 30%)",
-                        background: "rgba(255,255,255,0.15)",
-                      }}
-                    >
-                      <FontAwesomeIcon
-                        icon={item.icon}
-                        size="lg"
-                        color="white"
-                      />
-                    </div>
-                  </div>
-                </div>
-              ))}
-          </div>
+              getExtraLinks(c)
+            )}
+            bgColor={
+              profile.theme?.backgroundcolor || "var(--app-background-color)"
+            }
+          />
         </div>
       </div>
     </PublicLayout>

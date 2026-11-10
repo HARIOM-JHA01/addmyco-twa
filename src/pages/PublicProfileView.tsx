@@ -40,6 +40,9 @@ import {
 import { formatUrl, formatImageUrl } from "../utils/validation";
 import WebApp from "@twa-dev/sdk";
 import axios from "axios";
+import { FaLink } from "react-icons/fa6";
+import { getLinkType } from "../config/linkTypes";
+import { getExtraLinks, openSocialLink } from "../utils/socialLinks";
 
 interface PublicProfileViewProps {
   profile: PublicProfileData;
@@ -685,6 +688,27 @@ export default function PublicProfileView({
                   >
                     <FontAwesomeIcon icon={faTiktok} size="2x" color="white" />
                   </div>
+                )}
+                {/* Extra links picked from the dropdown catalog */}
+                {getExtraLinks({ socialLinks: profile.socialLinks }).map(
+                  (l) => {
+                    const t = getLinkType(l.type);
+                    const Icon = t?.icon || FaLink;
+                    return (
+                      <div
+                        key={`extra-${l.type}`}
+                        title={t?.label || l.type}
+                        className="w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0 cursor-pointer"
+                        onClick={() => openSocialLink(l.url)}
+                        style={{
+                          backgroundColor: "var(--app-background-color)",
+                          scrollSnapAlign: "center" as any,
+                        }}
+                      >
+                        <Icon size={32} color="white" />
+                      </div>
+                    );
+                  }
                 )}
                 {profile.WeChat && (
                   <div

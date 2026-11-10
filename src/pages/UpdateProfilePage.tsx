@@ -13,6 +13,29 @@ import {
   validateVideo,
 } from "../utils/validation";
 import VideoPlayer from "../components/VideoPlayer";
+import { SocialLinkPicker } from "../components/SocialLinks";
+import { LINK_TYPES } from "../config/linkTypes";
+import {
+  SocialLink,
+  cleanSocialLinks,
+  getExtraLinks,
+} from "../utils/socialLinks";
+
+// Types already covered by the fixed fields on the profile form are not offered again.
+const PROFILE_FIXED_KEYS = [
+  "whatsapp",
+  "wechat",
+  "line",
+  "instagram",
+  "facebook",
+  "twitter",
+  "youtube",
+  "linkedin",
+  "telegram",
+];
+const PROFILE_EXTRA_KEYS = LINK_TYPES.map((t) => t.key).filter(
+  (k) => !PROFILE_FIXED_KEYS.includes(k),
+);
 
 export default function UpdateProfilePage() {
   const navigate = useNavigate();
@@ -33,6 +56,7 @@ export default function UpdateProfilePage() {
   const [twitter, setTwitter] = useState("");
   const [youtube, setYoutube] = useState("");
   const [linkedin, setLinkedin] = useState("");
+  const [socialLinks, setSocialLinks] = useState<SocialLink[]>([]);
   const [profileImage, setProfileImage] = useState<File | null>(null);
   const [video, setVideo] = useState<File | null>(null);
   const [mediaPreview, setMediaPreview] = useState<string | null>(null);
@@ -76,6 +100,7 @@ export default function UpdateProfilePage() {
         setTwitter(data.Twitter || "");
         setYoutube(data.Youtube || "");
         setLinkedin(data.Linkedin || "");
+        setSocialLinks(getExtraLinks({ socialLinks: data.socialLinks }));
         setMemberType(data.membertype || "");
         // Prefill profile image/video preview if present
         if (data.profile_image) {
@@ -182,6 +207,10 @@ export default function UpdateProfilePage() {
       formData.append("Twitter", twitter ? formatUrl(twitter) : "");
       formData.append("Youtube", youtube ? formatUrl(youtube) : "");
       formData.append("Linkedin", linkedin ? formatUrl(linkedin) : "");
+      formData.append(
+        "socialLinks",
+        JSON.stringify(cleanSocialLinks(socialLinks)),
+      );
       if (profileImage) formData.append("profile_image", profileImage);
       if (video) formData.append("video", video);
 
@@ -742,6 +771,14 @@ export default function UpdateProfilePage() {
               </div>
             )}
           </div>
+
+          {/* More links: pick the platform from the dropdown */}
+          <SocialLinkPicker
+            value={socialLinks}
+            onChange={setSocialLinks}
+            allowedKeys={PROFILE_EXTRA_KEYS}
+            addLabel="Add more links"
+          />
         </section>
 
         <div className="mt-6 w-full flex gap-3">

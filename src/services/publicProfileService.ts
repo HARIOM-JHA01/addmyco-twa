@@ -30,6 +30,7 @@ export interface PublicProfileData {
   SnapChat?: string;
   Skype?: string;
   TikTok?: string;
+  socialLinks?: { type: string; url: string }[];
   profile_image?: string;
   video?: string;
   website?: string;
@@ -56,6 +57,9 @@ export interface CompanyData {
   Instagram?: string;
   Youtube?: string;
   Facebook?: string;
+  Twitter?: string;
+  Linkedin?: string;
+  socialLinks?: { type: string; url: string }[];
   image?: string;
   video?: string;
   company_order?: number;
@@ -81,6 +85,7 @@ export interface ChamberData {
   Skype?: string;
   TikTok?: string;
   tgchannel?: string;
+  socialLinks?: { type: string; url: string }[];
   chamberfanpage?: string;
   image?: string;
   video?: string;
@@ -134,6 +139,7 @@ export const fetchUserProfile = async (
         SnapChat: profile.SnapChat,
         Skype: profile.Skype,
         TikTok: profile.TikTok,
+        socialLinks: profile.socialLinks,
         profile_image: profile.profile_image,
         video: profile.video,
         website: profile.website,
