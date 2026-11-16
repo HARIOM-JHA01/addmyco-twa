@@ -21,7 +21,7 @@ const VISIBLE = 5;
 export function SocialIconButton({
   link,
   bgColor,
-  size = 56,
+  size = 84,
 }: {
   link: DisplayLink;
   bgColor: string;
@@ -35,7 +35,8 @@ export function SocialIconButton({
       aria-label={link.label}
       onClick={() => openSocialLink(link.url)}
       className="flex-shrink-0 cursor-pointer"
-      style={{ width: size, height: size, padding: 3 }}
+      // Fills its slot (5 per row) up to `size` px, so it is as large as the card allows
+      style={{ width: "100%", maxWidth: size, aspectRatio: "1 / 1", padding: 3 }}
     >
       <div
         style={{
@@ -49,7 +50,7 @@ export function SocialIconButton({
           className="w-full h-full flex items-center justify-center"
           style={{ clipPath: OCTAGON, background: "rgba(255,255,255,0.15)" }}
         >
-          <Icon size={Math.round(size * 0.48)} color="white" />
+          <Icon style={{ width: "50%", height: "50%" }} color="white" />
         </div>
       </div>
     </button>
@@ -59,7 +60,7 @@ export function SocialIconButton({
 export function SocialLinksScroller({
   links,
   bgColor,
-  size = 56,
+  size = 84,
 }: {
   links: DisplayLink[];
   bgColor: string;
@@ -93,7 +94,8 @@ export function SocialLinksScroller({
   };
 
   return (
-    <div className="relative w-full mb-6">
+    // Extends 12px into the card padding on each side so the 5 icons can be larger
+    <div className="relative mb-6" style={{ width: "calc(100% + 24px)" }}>
       {overflowing && canLeft && (
         <button
           type="button"
@@ -117,7 +119,7 @@ export function SocialLinksScroller({
         {links.map((l) => (
           <div
             key={l.key}
-            className="flex items-center justify-center"
+            className="flex items-center justify-center px-px"
             style={{
               flex: `0 0 ${100 / VISIBLE}%`,
               scrollSnapAlign: "start" as any,
