@@ -21,7 +21,7 @@ const VISIBLE = 5;
 export function SocialIconButton({
   link,
   bgColor,
-  size = 84,
+  size = 56,
 }: {
   link: DisplayLink;
   bgColor: string;
@@ -35,7 +35,7 @@ export function SocialIconButton({
       aria-label={link.label}
       onClick={() => openSocialLink(link.url)}
       className="flex-shrink-0 cursor-pointer"
-      // Fills its slot (5 per row) up to `size` px, so it is as large as the card allows
+      // Octagon stays `size` px (fits 5 per row); only the glyph inside is enlarged
       style={{ width: "100%", maxWidth: size, aspectRatio: "1 / 1", padding: 3 }}
     >
       <div
@@ -50,7 +50,7 @@ export function SocialIconButton({
           className="w-full h-full flex items-center justify-center"
           style={{ clipPath: OCTAGON, background: "rgba(255,255,255,0.15)" }}
         >
-          <Icon style={{ width: "50%", height: "50%" }} color="white" />
+          <Icon style={{ width: "72%", height: "72%" }} color="white" />
         </div>
       </div>
     </button>
@@ -60,7 +60,7 @@ export function SocialIconButton({
 export function SocialLinksScroller({
   links,
   bgColor,
-  size = 84,
+  size = 56,
 }: {
   links: DisplayLink[];
   bgColor: string;
@@ -94,8 +94,7 @@ export function SocialLinksScroller({
   };
 
   return (
-    // Extends 12px into the card padding on each side so the 5 icons can be larger
-    <div className="relative mb-6" style={{ width: "calc(100% + 24px)" }}>
+    <div className="relative w-full mb-6">
       {overflowing && canLeft && (
         <button
           type="button"
